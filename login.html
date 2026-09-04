@@ -9,7 +9,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800;14..32,900&display=swap" rel="stylesheet" />
     <style>
-        /* ESTILOS (mantidos iguais) */
+        /* ===== ESTILOS ===== */
         :root {
             --verde-claro: #C1CE83;
             --verde-oliva: #7A816E;
@@ -113,7 +113,6 @@
             background: var(--preto);
             color: var(--branco);
         }
-        .login-tabs .tab-btn:hover:not(.active) { background: var(--border-color); }
 
         .form-group { margin-bottom: 1rem; }
         .form-group label {
@@ -126,7 +125,7 @@
             margin-bottom: 0.3rem;
         }
         .form-group label i { margin-right: 0.3rem; color: var(--verde-claro); }
-        .form-group input, .form-group select {
+        .form-group input {
             width: 100%;
             padding: 0.6rem 0.8rem;
             border: none;
@@ -139,28 +138,7 @@
             font-family: inherit;
             transition: 0.2s;
         }
-        .form-group input:focus, .form-group select:focus { border-bottom-color: var(--verde-claro); }
-        .form-group select {
-            cursor: pointer;
-            appearance: none;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%237A816E' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
-            background-repeat: no-repeat;
-            background-position: right 0.8rem center;
-            padding-right: 2rem;
-        }
-        .form-group .input-wrapper { position: relative; }
-        .form-group .input-wrapper .toggle-password {
-            position: absolute;
-            right: 0;
-            top: 50%;
-            transform: translateY(-50%);
-            background: none;
-            border: none;
-            color: var(--text-secondary);
-            cursor: pointer;
-            font-size: 0.8rem;
-            padding: 0.3rem;
-        }
+        .form-group input:focus { border-bottom-color: var(--verde-claro); }
 
         .btn-login {
             width: 100%;
@@ -184,13 +162,12 @@
             margin-bottom: 1rem;
             display: none;
         }
-        .message.error { display: block; background: rgba(139,58,58,0.1); color: var(--danger); border: 1px solid rgba(139,58,58,0.2); }
-        .message.success { display: block; background: rgba(46,125,50,0.1); color: var(--success); border: 1px solid rgba(46,125,50,0.2); }
-        .message.warning { display: block; background: rgba(193,168,60,0.1); color: #A89232; border: 1px solid rgba(193,168,60,0.2); }
+        .message.error { display: block; background: rgba(139,58,58,0.1); color: var(--danger); }
+        .message.success { display: block; background: rgba(46,125,50,0.1); color: var(--success); }
+        .message.warning { display: block; background: rgba(193,168,60,0.1); color: #A89232; }
 
         .login-footer { text-align: center; margin-top: 1.2rem; font-size: 0.7rem; color: var(--text-secondary); }
         .login-footer a { color: var(--verde-oliva); cursor: pointer; text-decoration: none; font-weight: 600; }
-        .login-footer a:hover { text-decoration: underline; }
 
         .theme-toggle {
             position: fixed; top: 1rem; right: 1rem;
@@ -203,27 +180,24 @@
         }
         .theme-toggle:hover { border-color: var(--verde-claro); }
 
-        .versiculo-login {
-            text-align: center; margin-top: 1.2rem; padding: 0.6rem 0.8rem;
-            background: var(--bg-body); border-radius: 8px;
-            border-left: 3px solid var(--verde-claro);
-            font-size: 0.7rem; font-style: italic; color: var(--text-secondary);
-            cursor: pointer; transition: 0.3s;
+        .info-sistema {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-top: 1rem;
+            font-size: 0.55rem;
+            color: var(--text-secondary);
+            flex-wrap: wrap;
         }
-        .versiculo-login:hover { background: var(--border-color); border-left-color: var(--verde-oliva); }
-        .versiculo-login .ref { display: block; font-style: normal; font-weight: 600; color: var(--verde-oliva); margin-top: 0.2rem; font-size: 0.6rem; }
-
-        .info-sistema { display: flex; justify-content: center; gap: 1rem; margin-top: 1rem; font-size: 0.55rem; color: var(--text-secondary); flex-wrap: wrap; }
         .info-sistema span { display: flex; align-items: center; gap: 0.3rem; }
         .info-sistema i { color: var(--verde-claro); }
 
-        .versao-sistema { text-align: center; margin-top: 1rem; font-size: 0.5rem; color: var(--text-secondary); letter-spacing: 0.5px; }
-
-        @media (max-width: 480px) {
-            .login-card { padding: 1.5rem 1.2rem; }
-            .login-header h1 { font-size: 1.2rem; }
-            .login-header .logo-icon { width: 60px; height: 60px; font-size: 1.2rem; }
-            .theme-toggle { top: 0.5rem; right: 0.5rem; font-size: 0.55rem; padding: 0.2rem 0.6rem; }
+        .versao-sistema {
+            text-align: center;
+            margin-top: 1rem;
+            font-size: 0.5rem;
+            color: var(--text-secondary);
+            letter-spacing: 0.5px;
         }
     </style>
 </head>
@@ -261,12 +235,7 @@
             </div>
             <div class="form-group">
                 <label><i class="fas fa-lock"></i> Senha</label>
-                <div class="input-wrapper">
-                    <input type="password" id="loginPassword" placeholder="Digite sua senha" required />
-                    <button type="button" class="toggle-password" onclick="togglePassword('loginPassword')">
-                        <i class="fas fa-eye"></i>
-                    </button>
-                </div>
+                <input type="password" id="loginPassword" placeholder="Digite sua senha" required />
             </div>
             <button type="submit" class="btn-login"><i class="fas fa-arrow-right"></i> Entrar</button>
         </form>
@@ -283,38 +252,14 @@
             </div>
             <div class="form-group">
                 <label><i class="fas fa-lock"></i> Senha</label>
-                <div class="input-wrapper">
-                    <input type="password" id="regPassword" placeholder="Mínimo 6 caracteres" required minlength="6" />
-                    <button type="button" class="toggle-password" onclick="togglePassword('regPassword')">
-                        <i class="fas fa-eye"></i>
-                    </button>
-                </div>
+                <input type="password" id="regPassword" placeholder="Mínimo 6 caracteres" required minlength="6" />
             </div>
             <div class="form-group">
                 <label><i class="fas fa-lock"></i> Confirmar Senha</label>
-                <div class="input-wrapper">
-                    <input type="password" id="regConfirmPassword" placeholder="Confirme sua senha" required />
-                    <button type="button" class="toggle-password" onclick="togglePassword('regConfirmPassword')">
-                        <i class="fas fa-eye"></i>
-                    </button>
-                </div>
-            </div>
-            <div class="form-group">
-                <label><i class="fas fa-briefcase"></i> Cargo</label>
-                <select id="regCargo">
-                    <option value="Usuário">Usuário</option>
-                    <option value="Almoxarife">Almoxarife</option>
-                    <option value="Síndico">Síndico</option>
-                    <option value="Administrador">Administrador</option>
-                </select>
+                <input type="password" id="regConfirmPassword" placeholder="Confirme sua senha" required />
             </div>
             <button type="submit" class="btn-login"><i class="fas fa-user-plus"></i> Criar Conta</button>
         </form>
-
-        <div class="versiculo-login" id="versiculoLogin" title="Clique para abrir o site do versículo">
-            <span id="versiculoTexto">Carregando versículo...</span>
-            <span class="ref" id="versiculoRef"></span>
-        </div>
 
         <div class="info-sistema">
             <span><i class="fas fa-shield-alt"></i> Seguro</span>
@@ -322,7 +267,7 @@
             <span><i class="fas fa-clock"></i> <span id="horaSistema"></span></span>
         </div>
 
-        <div class="versao-sistema">TaguáLife Center v2.0 • Sistema de Gestão Condominial</div>
+        <div class="versao-sistema">TaguáLife Center v2.0</div>
 
         <div class="login-footer">
             <span id="footerText">Já tem uma conta? <a onclick="switchTab('login')">Faça login</a></span>
@@ -342,16 +287,11 @@
     const SUPABASE_URL = 'https://frlecudymdpnrsilavbj.supabase.co';
     const SUPABASE_ANON_KEY = 'sb_publishable_Uv-GZdW4peH3IZTIwiNYXg_IrYytpn4';
     
-    // Verificar se o Supabase foi carregado
-    if (typeof supabaseJs === 'undefined') {
-        console.error('❌ Supabase não foi carregado!');
-    }
-    
     const supabase = supabaseJs.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     console.log('🔌 Conectado ao Supabase!');
 
     // ============================================
-    // FUNÇÃO DE LOGIN
+    // FUNÇÃO DE LOGIN (CORRIGIDA)
     // ============================================
     async function handleLogin(event) {
         event.preventDefault();
@@ -361,9 +301,15 @@
         const senha = document.getElementById('loginPassword').value;
         const message = document.getElementById('message');
 
+        // Limpar mensagem anterior
+        message.textContent = '';
+        message.className = 'message';
+        message.style.display = 'none';
+
         if (!email || !senha) {
             message.textContent = '⚠️ Preencha todos os campos!';
             message.className = 'message warning';
+            message.style.display = 'block';
             return false;
         }
 
@@ -381,6 +327,7 @@
                 console.error('❌ Erro na consulta:', error);
                 message.textContent = '❌ Erro ao buscar usuário!';
                 message.className = 'message error';
+                message.style.display = 'block';
                 return false;
             }
 
@@ -388,6 +335,7 @@
                 console.log('❌ Usuário não encontrado');
                 message.textContent = '❌ E-mail ou senha incorretos!';
                 message.className = 'message error';
+                message.style.display = 'block';
                 return false;
             }
 
@@ -401,24 +349,28 @@
                 cargo: usuario.cargo
             }));
 
+            console.log('✅ Sessão salva!');
+
             message.textContent = '✅ Login realizado com sucesso!';
             message.className = 'message success';
+            message.style.display = 'block';
 
-            setTimeout(() => {
-                window.location.href = 'index.html';
-            }, 800);
+            // Redirecionar para o dashboard
+            console.log('🔄 Redirecionando para index.html...');
+            window.location.href = 'index.html';
 
         } catch (err) {
             console.error('❌ Erro no login:', err);
             message.textContent = '❌ Erro ao fazer login!';
             message.className = 'message error';
+            message.style.display = 'block';
         }
 
         return false;
     }
 
     // ============================================
-    // FUNÇÃO DE REGISTRO
+    // FUNÇÃO DE REGISTRO (CORRIGIDA)
     // ============================================
     async function handleRegister(event) {
         event.preventDefault();
@@ -428,25 +380,31 @@
         const email = document.getElementById('regEmail').value.trim();
         const senha = document.getElementById('regPassword').value;
         const confirmSenha = document.getElementById('regConfirmPassword').value;
-        const cargo = document.getElementById('regCargo').value;
         const message = document.getElementById('message');
 
-        // Validações
+        // Limpar mensagem anterior
+        message.textContent = '';
+        message.className = 'message';
+        message.style.display = 'none';
+
         if (!nome || !email || !senha || !confirmSenha) {
             message.textContent = '⚠️ Preencha todos os campos!';
             message.className = 'message warning';
+            message.style.display = 'block';
             return false;
         }
 
         if (senha.length < 6) {
             message.textContent = '⚠️ A senha deve ter pelo menos 6 caracteres!';
             message.className = 'message warning';
+            message.style.display = 'block';
             return false;
         }
 
         if (senha !== confirmSenha) {
             message.textContent = '⚠️ As senhas não coincidem!';
             message.className = 'message warning';
+            message.style.display = 'block';
             return false;
         }
 
@@ -461,6 +419,7 @@
             if (existingUser) {
                 message.textContent = '❌ Este e-mail já está cadastrado!';
                 message.className = 'message error';
+                message.style.display = 'block';
                 return false;
             }
 
@@ -471,7 +430,7 @@
                     nome: nome,
                     email: email,
                     senha_hash: senha,
-                    cargo: cargo || 'Usuário',
+                    cargo: 'Usuário',
                     ativo: true
                 })
                 .select();
@@ -480,21 +439,21 @@
                 console.error('❌ Erro no insert:', insertError);
                 message.textContent = '❌ Erro ao cadastrar: ' + insertError.message;
                 message.className = 'message error';
+                message.style.display = 'block';
                 return false;
             }
 
             console.log('✅ Usuário criado:', email);
 
-            // Sucesso!
             message.textContent = '✅ Conta criada com sucesso! Faça login.';
             message.className = 'message success';
+            message.style.display = 'block';
 
             // Limpar formulário
             document.getElementById('regNome').value = '';
             document.getElementById('regEmail').value = '';
             document.getElementById('regPassword').value = '';
             document.getElementById('regConfirmPassword').value = '';
-            document.getElementById('regCargo').value = 'Usuário';
 
             // Mudar para a aba de login
             setTimeout(() => {
@@ -507,50 +466,10 @@
             console.error('❌ Erro no registro:', err);
             message.textContent = '❌ Erro ao criar conta!';
             message.className = 'message error';
+            message.style.display = 'block';
         }
 
         return false;
-    }
-
-    // ============================================
-    // USUÁRIOS PADRÃO
-    // ============================================
-    async function criarUsuariosPadrao() {
-        try {
-            const { data: usuarios, error } = await supabase
-                .from('usuarios')
-                .select('id')
-                .limit(1);
-
-            if (error) {
-                console.error('❌ Erro ao verificar usuários:', error);
-                return;
-            }
-
-            if (usuarios.length === 0) {
-                console.log('📦 Criando usuários padrão...');
-                
-                const usuariosPadrao = [
-                    { nome: 'Administrador', email: 'admin@tagualife.com.br', senha_hash: 'admin123', cargo: 'Administrador' },
-                    { nome: 'Ednaldo de Souza', email: 'ednaldo@tagualife.com.br', senha_hash: '123456', cargo: 'Almoxarife' },
-                    { nome: 'Elisabeth Velásquez', email: 'sindica@tagualife.com.br', senha_hash: 'sindica123', cargo: 'Síndico' }
-                ];
-
-                for (const user of usuariosPadrao) {
-                    const { error: insertError } = await supabase
-                        .from('usuarios')
-                        .insert(user);
-
-                    if (insertError) {
-                        console.error('❌ Erro ao criar usuário:', user.email, insertError);
-                    } else {
-                        console.log('✅ Usuário criado:', user.email);
-                    }
-                }
-            }
-        } catch (err) {
-            console.error('❌ Erro ao criar usuários padrão:', err);
-        }
     }
 
     // ============================================
@@ -562,11 +481,6 @@
         const registerForm = document.getElementById('formRegister');
         const tabs = document.querySelectorAll('.tab-btn');
         const footer = document.getElementById('footerText');
-        const message = document.getElementById('message');
-
-        message.textContent = '';
-        message.className = 'message';
-        message.style.display = 'none';
 
         if (tab === 'login') {
             loginForm.style.display = 'block';
@@ -583,22 +497,10 @@
         }
     }
 
-    function togglePassword(id) {
-        const input = document.getElementById(id);
-        const icon = input.parentElement.querySelector('.toggle-password i');
-        if (input.type === 'password') {
-            input.type = 'text';
-            icon.className = 'fas fa-eye-slash';
-        } else {
-            input.type = 'password';
-            icon.className = 'fas fa-eye';
-        }
-    }
-
     function verificarSessao() {
         const sessao = JSON.parse(localStorage.getItem('tagualife_sessao') || 'null');
         if (sessao) {
-            console.log('👤 Sessão ativa, redirecionando...');
+            console.log('👤 Sessão ativa, redirecionando para index.html');
             window.location.href = 'index.html';
         }
     }
@@ -640,46 +542,14 @@
     }
 
     // ============================================
-    // VERSÍCULO
-    // ============================================
-    const versiculos = [
-        { texto: '"Porque Deus amou o mundo de tal maneira que deu o seu Filho unigênito, para que todo aquele que nele crê não pereça, mas tenha a vida eterna."', ref: 'João 3:16' },
-        { texto: '"O Senhor é o meu pastor; nada me faltará."', ref: 'Salmo 23:1' },
-        { texto: '"Tudo posso naquele que me fortalece."', ref: 'Filipenses 4:13' }
-    ];
-
-    function carregarVersiculo() {
-        const agora = new Date();
-        const inicioAno = new Date(agora.getFullYear(), 0, 0);
-        const diff = agora - inicioAno;
-        const diaDoAno = Math.floor(diff / (1000 * 60 * 60 * 24));
-        const indice = diaDoAno % versiculos.length;
-        const v = versiculos[indice] || versiculos[0];
-        
-        document.getElementById('versiculoTexto').textContent = v.texto;
-        document.getElementById('versiculoRef').textContent = '— ' + v.ref;
-    }
-
-    function abrirVersiculo() {
-        window.open('https://www.bibliaon.com/versiculo_do_dia/', '_blank');
-    }
-
-    // ============================================
     // INICIALIZAÇÃO
     // ============================================
     document.addEventListener('DOMContentLoaded', function() {
         console.log('🚀 Página de login carregada!');
         carregarTema();
-        carregarVersiculo();
         atualizarHora();
         setInterval(atualizarHora, 1000);
         verificarSessao();
-        
-        // Criar usuários padrão se não existirem
-        criarUsuariosPadrao();
-
-        // Evento para o versículo
-        document.getElementById('versiculoLogin').addEventListener('click', abrirVersiculo);
 
         console.log('🔐 Sistema TaguáLife Center v2.0');
         console.log('📧 Usuários padrão:');
