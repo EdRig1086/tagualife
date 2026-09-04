@@ -896,68 +896,90 @@
     }
 
     // ============================================
-    // FUNÇÕES DE REGISTRO
-    // ============================================
+// FUNÇÃO DE REGISTRO COM SUPABASE
+// ============================================
+async function handleRegister(event) {
+    event.preventDefault();
+    
+    const nome = document.getElementById('regNome').value.trim();
+    const email = document.getElementById('regEmail').value.trim();
+    const senha = document.getElementById('regPassword').value;
+    const confirmSenha = document.getElementById('regConfirmPassword').value;
+    const cargo = document.getElementById('regCargo').value;
 
-    function handleRegister(event) {
-        event.preventDefault();
-        
-        const nome = document.getElementById('regNome').value.trim();
-        const email = document.getElementById('regEmail').value.trim();
-        const senha = document.getElementById('regPassword').value;
-        const confirmSenha = document.getElementById('regConfirmPassword').value;
-        const cargo = document.getElementById('regCargo').value;
+    const message = document.getElementById('message');
 
-        mostrarMensagem('', '');
-
-        if (!nome || !email || !senha || !confirmSenha) {
-            mostrarMensagem('⚠️ Preencha todos os campos!', 'warning');
-            return false;
-        }
-
-        if (senha.length < 6) {
-            mostrarMensagem('⚠️ A senha deve ter pelo menos 6 caracteres!', 'warning');
-            return false;
-        }
-
-        if (senha !== confirmSenha) {
-            mostrarMensagem('⚠️ As senhas não coincidem!', 'warning');
-            return false;
-        }
-
-        const usuarios = getUsuarios();
-        
-        if (usuarios.find(u => u.email === email)) {
-            mostrarMensagem('❌ Este e-mail já está cadastrado!', 'error');
-            return false;
-        }
-
-        // Criar novo usuário
-        const novoUsuario = {
-            id: Date.now(),
-            nome: nome,
-            email: email,
-            senha: senha,
-            cargo: cargo || 'Usuário',
-            dataCadastro: new Date().toISOString()
-        };
-
-        usuarios.push(novoUsuario);
-        salvarUsuarios(usuarios);
-
-        // Limpar formulário
-        document.getElementById('regNome').value = '';
-        document.getElementById('regEmail').value = '';
-        document.getElementById('regPassword').value = '';
-        document.getElementById('regConfirmPassword').value = '';
-        document.getElementById('regCargo').value = 'Usuário';
-
-        // Abrir modal de sucesso
-        document.getElementById('successEmail').textContent = email;
-        document.getElementById('successModal').classList.add('active');
-
+    // Validações
+    if (!nome || !email || !senha || !confirmSenha) {
+        message.textContent = '⚠️ Preencha todos os campos!';
+        message.className = 'message warning';
         return false;
     }
+
+    if (senha.length < 6) {
+        message.textContent = '⚠️ A senha deve ter pelo menos 6 caracteres!';
+        message.className = 'message warning';
+        return false;
+    }
+
+    if (senha !== confirmSenha) {
+        message.textContent = '⚠️ As senhas não coincidem!';
+        message.className = 'message warning';
+        return false;
+    }
+
+    // Verificar se o e-mail já existe no Supabase
+    const { data: existingUser, error: checkError } = await supabase
+        .from('usuarios')
+        .select('email')
+        .eq('email', email)
+        .single();
+
+    if (existingUser) {
+        message.textContent = '❌ Este e-mail já está cadastrado!';
+        message.className = 'message error';
+        return false;
+    }
+
+    // Inserir novo usuário no Supabase
+    const { data: newUser, error: insertError } = await supabase
+        .from('usuarios')
+        .insert({
+            nome: nome,
+            email: email,
+            senha_hash: senha,
+            cargo: cargo || 'Usuário',
+            ativo: true
+        })
+        .select();
+
+    if (insertError) {
+        message.textContent = '❌ Erro ao cadastrar: ' + insertError.message;
+        message.className = 'message error';
+        console.error('Erro no cadastro:', insertError);
+        return false;
+    }
+
+    // Sucesso!
+    message.textContent = '✅ Conta criada com sucesso! Faça login.';
+    message.className = 'message success';
+
+    // Limpar formulário
+    document.getElementById('regNome').value = '';
+    document.getElementById('regEmail').value = '';
+    document.getElementById('regPassword').value = '';
+    document.getElementById('regConfirmPassword').value = '';
+    document.getElementById('regCargo').value = 'Usuário';
+
+    // Mudar para a aba de login
+    setTimeout(() => {
+        switchTab('login');
+        document.getElementById('loginEmail').value = email;
+        document.getElementById('loginPassword').focus();
+    }, 1500);
+
+    return false;
+}
 
     // ============================================
     // FUNÇÕES DE RECUPERAÇÃO DE SENHA
@@ -1249,15 +1271,13 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <script>
-    // ============================================
-    // CONEXÃO COM SUPABASE
-    // ============================================
-    // Usando as credenciais do config.js
-    const SUPABASE_URL = 'https://frlecudymdpnrsilavbj.supabase.co';
-    const SUPABASE_ANON_KEY = 'sb_publishable_Uv-GZdW4peH3IZTIwiNYXg_IrYytpn4';
-    
-    const supabase = supabaseJs.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+   // ============================================
+// CONEXÃO COM SUPABASE
+// ============================================
+const SUPABASE_URL = 'https://frlecudymdpnrsilavbj.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_Uv-GZdW4peH3IZTIwiNYXg_IrYytpn4';
 
+const supabase = supabaseJs.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     // ============================================
     // FUNÇÃO DE LOGIN COM SUPABASE
     // ============================================
