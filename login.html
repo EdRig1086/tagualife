@@ -1245,5 +1245,99 @@
 
     init();
 </script>
+    <!-- Adicionar a biblioteca do Supabase -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script>
+    // ============================================
+    // CONEXÃO COM SUPABASE
+    // ============================================
+    // Usando as credenciais do config.js
+    const SUPABASE_URL = 'https://frlecudymdpnrsilavbj.supabase.co';
+    const SUPABASE_ANON_KEY = 'sb_publishable_Uv-GZdW4peH3IZTIwiNYXg_IrYytpn4';
+    
+    const supabase = supabaseJs.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    // ============================================
+    // FUNÇÃO DE LOGIN COM SUPABASE
+    // ============================================
+    async function handleLogin(event) {
+        event.preventDefault();
+        
+        const email = document.getElementById('loginEmail').value.trim();
+        const senha = document.getElementById('loginPassword').value;
+        const message = document.getElementById('message');
+
+        // Buscar usuário no banco de dados
+        const { data: usuario, error } = await supabase
+            .from('usuarios')
+            .select('*')
+            .eq('email', email)
+            .eq('senha_hash', senha)
+            .single();
+
+        if (error || !usuario) {
+            message.textContent = '❌ E-mail ou senha incorretos!';
+            message.className = 'message error';
+            return false;
+        }
+
+        // Salvar sessão
+        localStorage.setItem('tagualife_sessao', JSON.stringify({
+            id: usuario.id,
+            email: usuario.email,
+            nome: usuario.nome,
+            cargo: usuario.cargo
+        }));
+
+        message.textContent = '✅ Login realizado com sucesso!';
+        message.className = 'message success';
+
+        setTimeout(() => {
+            window.location.href = 'index.html';
+        }, 800);
+
+        return false;
+    }
+
+    // ============================================
+    // CARREGAR USUÁRIOS PADRÃO (se não existirem)
+    // ============================================
+    async function carregarUsuariosPadrao() {
+        const { data: usuarios, error } = await supabase
+            .from('usuarios')
+            .select('*');
+
+        if (error || usuarios.length === 0) {
+            // Inserir usuários padrão se não existirem
+            const usuariosPadrao = [
+                { nome: 'Administrador', email: 'admin@tagualife.com.br', senha_hash: 'admin123', cargo: 'Administrador' },
+                { nome: 'Ednaldo de Souza', email: 'ednaldo@tagualife.com.br', senha_hash: '123456', cargo: 'Almoxarife' },
+                { nome: 'Elisabeth Velásquez', email: 'sindica@tagualife.com.br', senha_hash: 'sindica123', cargo: 'Síndico' }
+            ];
+
+            for (const user of usuariosPadrao) {
+                await supabase.from('usuarios').insert(user);
+            }
+            console.log('✅ Usuários padrão criados!');
+        }
+    }
+
+    // ============================================
+    // VERIFICAR SE JÁ ESTÁ LOGADO
+    // ============================================
+    function verificarSessao() {
+        const sessao = JSON.parse(localStorage.getItem('tagualife_sessao') || 'null');
+        if (sessao) {
+            window.location.href = 'index.html';
+        }
+    }
+
+    // ============================================
+    // INICIALIZAR
+    // ============================================
+    carregarUsuariosPadrao();
+    verificarSessao();
+</script>
 </body>
 </html>
