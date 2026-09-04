@@ -886,10 +886,10 @@
         mostrarMensagem('✅ Login realizado com sucesso!', 'success');
 
         // ============================================
-        // 🔥 REDIRECIONA PARA O PAINEL.HTML
+        // CORREÇÃO: Redirecionar para o painel.html
         // ============================================
         setTimeout(() => {
-            window.location.href = 'PAINEL.html';
+            window.location.href = 'painel.html';
         }, 1000);
 
         return false;
@@ -1152,7 +1152,7 @@
 
     function verificarSessao() {
         if (usuarioLogado()) {
-            window.location.href = 'PAINEL.html';
+            window.location.href = 'painel.html';
         }
     }
 
@@ -1239,7 +1239,7 @@
         console.log('   ednaldo@tagualife.com.br / 123456 (Almoxarife)');
         console.log('   sindica@tagualife.com.br / sindica123 (Síndico)');
         console.log('💡 Dica: Use "Lembrar-me" para não digitar o e-mail toda vez');
-        console.log('🚀 Após login, redireciona para PAINEL.html');
+        console.log('📌 Após login, você será redirecionado para o painel.html');
     }
 
     init();
