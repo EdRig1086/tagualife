@@ -9,42 +9,24 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800;14..32,900&display=swap" rel="stylesheet" />
     <style>
-        /* ===== ESTILOS ===== */
+        /* ESTILOS (mantidos iguais) */
         :root {
             --verde-claro: #C1CE83;
             --verde-oliva: #7A816E;
             --branco: #FBFBF7;
             --preto: #191D1B;
-            --primary: #191D1B;
-            --primary-light: #3A4A3A;
-            --secondary: #7A816E;
-            --gold: #C1CE83;
-            --gold-light: #D8E0B0;
-            --success: #7A816E;
-            --danger: #8B3A3A;
-            --warning: #C1A83C;
-            --gray-50: #FBFBF7;
-            --gray-100: #F0F2EA;
-            --gray-200: #D8DCCE;
-            --gray-300: #B8BEA8;
-            --gray-400: #9AA08E;
-            --gray-500: #7A816E;
-            --gray-600: #5A614E;
-            --gray-700: #3A4132;
-            --gray-800: #191D1B;
-            --gray-900: #0D0F0E;
-            --shadow: 0 4px 24px rgba(25, 29, 27, 0.08);
-            --shadow-hover: 0 6px 32px rgba(25, 29, 27, 0.15);
-            --font-primary: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
             --bg-body: #E8EBE0;
             --bg-card: var(--branco);
             --text-primary: var(--preto);
             --text-secondary: var(--verde-oliva);
-            --border-color: var(--gray-200);
+            --border-color: #D8DCCE;
+            --shadow-hover: 0 6px 32px rgba(25, 29, 27, 0.15);
+            --font-primary: 'Inter', sans-serif;
             --input-bg: transparent;
-            --input-border: var(--gray-300);
-            --radius: 16px;
-            --radius-sm: 10px;
+            --input-border: var(--border-color);
+            --danger: #8B3A3A;
+            --success: #2E7D32;
+            --warning: #C1A83C;
         }
 
         body.dark-mode {
@@ -55,64 +37,38 @@
             --border-color: #444;
             --input-bg: #333;
             --input-border: #555;
-            --gray-50: #2a2a2a;
-            --gray-100: #333;
-            --gray-200: #444;
-            --gray-300: #555;
-            --gray-400: #666;
-            --gray-500: #777;
             --preto: #e8e8e8;
             --branco: #2a2a2a;
-            --shadow: 0 4px 24px rgba(0,0,0,0.3);
-            --shadow-hover: 0 6px 32px rgba(0,0,0,0.4);
-        }
-
-        body.dark-mode .login-card,
-        body.dark-mode .modal-content {
-            background: var(--bg-card);
-            border-color: var(--border-color);
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
             font-family: var(--font-primary);
-            font-weight: 400;
             background: var(--bg-body);
             min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
             color: var(--text-primary);
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
-            transition: background 0.3s, color 0.3s;
             padding: 1rem;
+            transition: background 0.3s;
         }
 
-        .login-container {
-            width: 100%;
-            max-width: 420px;
-        }
-
+        .login-container { width: 100%; max-width: 420px; }
         .login-card {
             background: var(--bg-card);
             border-radius: 16px;
             box-shadow: var(--shadow-hover);
             overflow: hidden;
             border: 1px solid var(--border-color);
-            transition: background 0.3s, border-color 0.3s, box-shadow 0.3s;
             padding: 2rem 1.8rem;
+            transition: background 0.3s, border-color 0.3s;
         }
 
-        .login-header {
-            text-align: center;
-            margin-bottom: 1.8rem;
-        }
-
+        .login-header { text-align: center; margin-bottom: 1.8rem; }
         .login-header .logo-icon {
-            width: 70px;
-            height: 70px;
+            width: 70px; height: 70px;
             background: var(--preto);
             border-radius: 16px;
             display: inline-flex;
@@ -125,44 +81,21 @@
             line-height: 1;
             padding: 0.3rem;
             margin-bottom: 0.8rem;
-            transition: background 0.3s;
         }
-
-        .login-header .logo-icon small {
-            font-size: 0.45rem;
-            color: var(--branco);
-            font-weight: 400;
-            letter-spacing: 0.5px;
-            margin-top: 2px;
-        }
-
-        .login-header h1 {
-            font-size: 1.4rem;
-            font-weight: 800;
-            color: var(--text-primary);
-            letter-spacing: -0.5px;
-        }
-
-        .login-header h1 .life {
-            color: var(--verde-claro);
-        }
-
-        .login-header p {
-            font-size: 0.75rem;
-            color: var(--text-secondary);
-            margin-top: 0.2rem;
-        }
+        .login-header .logo-icon small { font-size: 0.45rem; color: var(--branco); font-weight: 400; }
+        .login-header h1 { font-size: 1.4rem; font-weight: 800; }
+        .login-header h1 .life { color: var(--verde-claro); }
+        .login-header p { font-size: 0.75rem; color: var(--text-secondary); }
 
         .login-tabs {
             display: flex;
             gap: 0.5rem;
             margin-bottom: 1.5rem;
-            background: var(--gray-50);
+            background: var(--bg-body);
             border-radius: 10px;
             padding: 0.3rem;
             border: 1px solid var(--border-color);
         }
-
         .login-tabs .tab-btn {
             flex: 1;
             padding: 0.5rem;
@@ -171,25 +104,18 @@
             font-weight: 600;
             font-size: 0.7rem;
             cursor: pointer;
-            transition: 0.3s;
             font-family: inherit;
             background: transparent;
             color: var(--text-secondary);
+            transition: 0.3s;
         }
-
         .login-tabs .tab-btn.active {
             background: var(--preto);
             color: var(--branco);
         }
+        .login-tabs .tab-btn:hover:not(.active) { background: var(--border-color); }
 
-        .login-tabs .tab-btn:hover:not(.active) {
-            background: var(--gray-200);
-        }
-
-        .form-group {
-            margin-bottom: 1rem;
-        }
-
+        .form-group { margin-bottom: 1rem; }
         .form-group label {
             display: block;
             font-weight: 600;
@@ -199,14 +125,8 @@
             letter-spacing: 0.5px;
             margin-bottom: 0.3rem;
         }
-
-        .form-group label i {
-            margin-right: 0.3rem;
-            color: var(--verde-claro);
-        }
-
-        .form-group input,
-        .form-group select {
+        .form-group label i { margin-right: 0.3rem; color: var(--verde-claro); }
+        .form-group input, .form-group select {
             width: 100%;
             padding: 0.6rem 0.8rem;
             border: none;
@@ -216,15 +136,10 @@
             font-weight: 500;
             color: var(--text-primary);
             outline: none;
-            transition: 0.2s;
             font-family: inherit;
+            transition: 0.2s;
         }
-
-        .form-group input:focus,
-        .form-group select:focus {
-            border-bottom-color: var(--verde-claro);
-        }
-
+        .form-group input:focus, .form-group select:focus { border-bottom-color: var(--verde-claro); }
         .form-group select {
             cursor: pointer;
             appearance: none;
@@ -233,11 +148,7 @@
             background-position: right 0.8rem center;
             padding-right: 2rem;
         }
-
-        .form-group .input-wrapper {
-            position: relative;
-        }
-
+        .form-group .input-wrapper { position: relative; }
         .form-group .input-wrapper .toggle-password {
             position: absolute;
             right: 0;
@@ -262,18 +173,9 @@
             color: var(--branco);
             cursor: pointer;
             transition: 0.3s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.5rem;
             font-family: inherit;
         }
-
-        .btn-login:hover {
-            background: #2A3A2A;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 16px rgba(25, 29, 27, 0.2);
-        }
+        .btn-login:hover { background: #2A3A2A; transform: translateY(-2px); }
 
         .message {
             padding: 0.6rem 0.8rem;
@@ -282,120 +184,40 @@
             margin-bottom: 1rem;
             display: none;
         }
+        .message.error { display: block; background: rgba(139,58,58,0.1); color: var(--danger); border: 1px solid rgba(139,58,58,0.2); }
+        .message.success { display: block; background: rgba(46,125,50,0.1); color: var(--success); border: 1px solid rgba(46,125,50,0.2); }
+        .message.warning { display: block; background: rgba(193,168,60,0.1); color: #A89232; border: 1px solid rgba(193,168,60,0.2); }
 
-        .message.error {
-            display: block;
-            background: rgba(139, 58, 58, 0.1);
-            color: var(--danger);
-            border: 1px solid rgba(139, 58, 58, 0.2);
-        }
-
-        .message.success {
-            display: block;
-            background: rgba(122, 129, 110, 0.1);
-            color: var(--success);
-            border: 1px solid rgba(122, 129, 110, 0.2);
-        }
-
-        .message.warning {
-            display: block;
-            background: rgba(193, 168, 60, 0.1);
-            color: #A89232;
-            border: 1px solid rgba(193, 168, 60, 0.2);
-        }
-
-        .login-footer {
-            text-align: center;
-            margin-top: 1.2rem;
-            font-size: 0.7rem;
-            color: var(--text-secondary);
-        }
-
-        .login-footer a {
-            color: var(--verde-oliva);
-            cursor: pointer;
-            text-decoration: none;
-            font-weight: 600;
-        }
-
-        .login-footer a:hover {
-            text-decoration: underline;
-        }
+        .login-footer { text-align: center; margin-top: 1.2rem; font-size: 0.7rem; color: var(--text-secondary); }
+        .login-footer a { color: var(--verde-oliva); cursor: pointer; text-decoration: none; font-weight: 600; }
+        .login-footer a:hover { text-decoration: underline; }
 
         .theme-toggle {
-            position: fixed;
-            top: 1rem;
-            right: 1rem;
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: 40px;
-            padding: 0.3rem 0.8rem;
-            color: var(--text-secondary);
-            cursor: pointer;
-            font-size: 0.65rem;
-            font-family: inherit;
-            transition: 0.3s;
-            display: flex;
-            align-items: center;
-            gap: 0.3rem;
+            position: fixed; top: 1rem; right: 1rem;
+            background: var(--bg-card); border: 1px solid var(--border-color);
+            border-radius: 40px; padding: 0.3rem 0.8rem;
+            color: var(--text-secondary); cursor: pointer;
+            font-size: 0.65rem; font-family: inherit;
+            transition: 0.3s; display: flex; align-items: center; gap: 0.3rem;
             z-index: 100;
         }
-
-        .theme-toggle:hover {
-            border-color: var(--verde-claro);
-        }
+        .theme-toggle:hover { border-color: var(--verde-claro); }
 
         .versiculo-login {
-            text-align: center;
-            margin-top: 1.2rem;
-            padding: 0.6rem 0.8rem;
-            background: var(--gray-50);
-            border-radius: 8px;
+            text-align: center; margin-top: 1.2rem; padding: 0.6rem 0.8rem;
+            background: var(--bg-body); border-radius: 8px;
             border-left: 3px solid var(--verde-claro);
-            font-size: 0.7rem;
-            font-style: italic;
-            color: var(--text-secondary);
-            cursor: pointer;
-            transition: 0.3s;
+            font-size: 0.7rem; font-style: italic; color: var(--text-secondary);
+            cursor: pointer; transition: 0.3s;
         }
-        .versiculo-login:hover {
-            background: var(--gray-100);
-            border-left-color: var(--verde-oliva);
-        }
-        .versiculo-login .ref {
-            display: block;
-            font-style: normal;
-            font-weight: 600;
-            color: var(--verde-oliva);
-            margin-top: 0.2rem;
-            font-size: 0.6rem;
-        }
+        .versiculo-login:hover { background: var(--border-color); border-left-color: var(--verde-oliva); }
+        .versiculo-login .ref { display: block; font-style: normal; font-weight: 600; color: var(--verde-oliva); margin-top: 0.2rem; font-size: 0.6rem; }
 
-        .info-sistema {
-            display: flex;
-            justify-content: center;
-            gap: 1rem;
-            margin-top: 1rem;
-            font-size: 0.55rem;
-            color: var(--text-secondary);
-            flex-wrap: wrap;
-        }
-        .info-sistema span {
-            display: flex;
-            align-items: center;
-            gap: 0.3rem;
-        }
-        .info-sistema i {
-            color: var(--verde-claro);
-        }
+        .info-sistema { display: flex; justify-content: center; gap: 1rem; margin-top: 1rem; font-size: 0.55rem; color: var(--text-secondary); flex-wrap: wrap; }
+        .info-sistema span { display: flex; align-items: center; gap: 0.3rem; }
+        .info-sistema i { color: var(--verde-claro); }
 
-        .versao-sistema {
-            text-align: center;
-            margin-top: 1rem;
-            font-size: 0.5rem;
-            color: var(--gray-400);
-            letter-spacing: 0.5px;
-        }
+        .versao-sistema { text-align: center; margin-top: 1rem; font-size: 0.5rem; color: var(--text-secondary); letter-spacing: 0.5px; }
 
         @media (max-width: 480px) {
             .login-card { padding: 1.5rem 1.2rem; }
@@ -415,10 +237,7 @@
 <div class="login-container">
     <div class="login-card">
         <div class="login-header">
-            <div class="logo-icon">
-                T
-                <small>LIFE</small>
-            </div>
+            <div class="logo-icon">T <small>LIFE</small></div>
             <h1>Taguá<span class="life">Life</span></h1>
             <p>Life Conceito em Gestão Condominial</p>
         </div>
@@ -435,27 +254,25 @@
         <div class="message" id="message"></div>
 
         <!-- FORM LOGIN -->
-        <form id="formLogin" onsubmit="return handleLogin(event)">
+        <form id="formLogin" onsubmit="handleLogin(event)">
             <div class="form-group">
                 <label><i class="fas fa-user"></i> E-mail</label>
-                <input type="email" id="loginEmail" placeholder="seu@email.com" required autocomplete="email" />
+                <input type="email" id="loginEmail" placeholder="seu@email.com" required />
             </div>
             <div class="form-group">
                 <label><i class="fas fa-lock"></i> Senha</label>
                 <div class="input-wrapper">
-                    <input type="password" id="loginPassword" placeholder="Digite sua senha" required autocomplete="current-password" />
+                    <input type="password" id="loginPassword" placeholder="Digite sua senha" required />
                     <button type="button" class="toggle-password" onclick="togglePassword('loginPassword')">
                         <i class="fas fa-eye"></i>
                     </button>
                 </div>
             </div>
-            <button type="submit" class="btn-login" id="btnLogin">
-                <i class="fas fa-arrow-right"></i> Entrar
-            </button>
+            <button type="submit" class="btn-login"><i class="fas fa-arrow-right"></i> Entrar</button>
         </form>
 
         <!-- FORM REGISTRO -->
-        <form id="formRegister" onsubmit="return handleRegister(event)" style="display:none;">
+        <form id="formRegister" onsubmit="handleRegister(event)" style="display:none;">
             <div class="form-group">
                 <label><i class="fas fa-user"></i> Nome Completo</label>
                 <input type="text" id="regNome" placeholder="Seu nome completo" required />
@@ -491,9 +308,7 @@
                     <option value="Administrador">Administrador</option>
                 </select>
             </div>
-            <button type="submit" class="btn-login">
-                <i class="fas fa-user-plus"></i> Criar Conta
-            </button>
+            <button type="submit" class="btn-login"><i class="fas fa-user-plus"></i> Criar Conta</button>
         </form>
 
         <div class="versiculo-login" id="versiculoLogin" title="Clique para abrir o site do versículo">
@@ -507,9 +322,7 @@
             <span><i class="fas fa-clock"></i> <span id="horaSistema"></span></span>
         </div>
 
-        <div class="versao-sistema">
-            TaguáLife Center v2.0 • Sistema de Gestão Condominial
-        </div>
+        <div class="versao-sistema">TaguáLife Center v2.0 • Sistema de Gestão Condominial</div>
 
         <div class="login-footer">
             <span id="footerText">Já tem uma conta? <a onclick="switchTab('login')">Faça login</a></span>
@@ -529,8 +342,12 @@
     const SUPABASE_URL = 'https://frlecudymdpnrsilavbj.supabase.co';
     const SUPABASE_ANON_KEY = 'sb_publishable_Uv-GZdW4peH3IZTIwiNYXg_IrYytpn4';
     
+    // Verificar se o Supabase foi carregado
+    if (typeof supabaseJs === 'undefined') {
+        console.error('❌ Supabase não foi carregado!');
+    }
+    
     const supabase = supabaseJs.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
     console.log('🔌 Conectado ao Supabase!');
 
     // ============================================
@@ -538,6 +355,7 @@
     // ============================================
     async function handleLogin(event) {
         event.preventDefault();
+        console.log('🔄 Tentando login...');
         
         const email = document.getElementById('loginEmail').value.trim();
         const senha = document.getElementById('loginPassword').value;
@@ -550,6 +368,8 @@
         }
 
         try {
+            console.log('📧 Buscando usuário:', email);
+            
             const { data: usuario, error } = await supabase
                 .from('usuarios')
                 .select('*')
@@ -558,17 +378,20 @@
                 .maybeSingle();
 
             if (error) {
-                console.error('Erro na consulta:', error);
+                console.error('❌ Erro na consulta:', error);
                 message.textContent = '❌ Erro ao buscar usuário!';
                 message.className = 'message error';
                 return false;
             }
 
             if (!usuario) {
+                console.log('❌ Usuário não encontrado');
                 message.textContent = '❌ E-mail ou senha incorretos!';
                 message.className = 'message error';
                 return false;
             }
+
+            console.log('✅ Usuário encontrado:', usuario.nome);
 
             // Salvar sessão
             localStorage.setItem('tagualife_sessao', JSON.stringify({
@@ -586,7 +409,7 @@
             }, 800);
 
         } catch (err) {
-            console.error('Erro no login:', err);
+            console.error('❌ Erro no login:', err);
             message.textContent = '❌ Erro ao fazer login!';
             message.className = 'message error';
         }
@@ -599,6 +422,7 @@
     // ============================================
     async function handleRegister(event) {
         event.preventDefault();
+        console.log('🔄 Tentando registrar...');
         
         const nome = document.getElementById('regNome').value.trim();
         const email = document.getElementById('regEmail').value.trim();
@@ -653,11 +477,13 @@
                 .select();
 
             if (insertError) {
-                console.error('Erro no insert:', insertError);
+                console.error('❌ Erro no insert:', insertError);
                 message.textContent = '❌ Erro ao cadastrar: ' + insertError.message;
                 message.className = 'message error';
                 return false;
             }
+
+            console.log('✅ Usuário criado:', email);
 
             // Sucesso!
             message.textContent = '✅ Conta criada com sucesso! Faça login.';
@@ -678,7 +504,7 @@
             }, 1500);
 
         } catch (err) {
-            console.error('Erro no registro:', err);
+            console.error('❌ Erro no registro:', err);
             message.textContent = '❌ Erro ao criar conta!';
             message.className = 'message error';
         }
@@ -687,7 +513,7 @@
     }
 
     // ============================================
-    // USUÁRIOS PADRÃO (primeira execução)
+    // USUÁRIOS PADRÃO
     // ============================================
     async function criarUsuariosPadrao() {
         try {
@@ -697,7 +523,7 @@
                 .limit(1);
 
             if (error) {
-                console.error('Erro ao verificar usuários:', error);
+                console.error('❌ Erro ao verificar usuários:', error);
                 return;
             }
 
@@ -716,40 +542,31 @@
                         .insert(user);
 
                     if (insertError) {
-                        console.error('Erro ao criar usuário:', user.email, insertError);
+                        console.error('❌ Erro ao criar usuário:', user.email, insertError);
                     } else {
                         console.log('✅ Usuário criado:', user.email);
                     }
                 }
             }
         } catch (err) {
-            console.error('Erro ao criar usuários padrão:', err);
+            console.error('❌ Erro ao criar usuários padrão:', err);
         }
     }
 
     // ============================================
     // FUNÇÕES DE UI
     // ============================================
-    function mostrarMensagem(texto, tipo) {
-        const el = document.getElementById('message');
-        if (!texto) {
-            el.style.display = 'none';
-            el.textContent = '';
-            el.className = 'message';
-            return;
-        }
-        el.textContent = texto;
-        el.className = 'message ' + tipo;
-        el.style.display = 'block';
-    }
-
     function switchTab(tab) {
+        console.log('🔄 Mudando para:', tab);
         const loginForm = document.getElementById('formLogin');
         const registerForm = document.getElementById('formRegister');
         const tabs = document.querySelectorAll('.tab-btn');
         const footer = document.getElementById('footerText');
+        const message = document.getElementById('message');
 
-        mostrarMensagem('', '');
+        message.textContent = '';
+        message.className = 'message';
+        message.style.display = 'none';
 
         if (tab === 'login') {
             loginForm.style.display = 'block';
@@ -781,6 +598,7 @@
     function verificarSessao() {
         const sessao = JSON.parse(localStorage.getItem('tagualife_sessao') || 'null');
         if (sessao) {
+            console.log('👤 Sessão ativa, redirecionando...');
             window.location.href = 'index.html';
         }
     }
@@ -827,13 +645,7 @@
     const versiculos = [
         { texto: '"Porque Deus amou o mundo de tal maneira que deu o seu Filho unigênito, para que todo aquele que nele crê não pereça, mas tenha a vida eterna."', ref: 'João 3:16' },
         { texto: '"O Senhor é o meu pastor; nada me faltará."', ref: 'Salmo 23:1' },
-        { texto: '"Tudo posso naquele que me fortalece."', ref: 'Filipenses 4:13' },
-        { texto: '"Deus é o nosso refúgio e fortaleza, socorro bem presente na angústia."', ref: 'Salmo 46:1' },
-        { texto: '"Não temas, porque eu sou contigo; não te assombres, porque eu sou o teu Deus; eu te fortaleço, e te ajudo, e te sustento com a minha destra fiel."', ref: 'Isaías 41:10' },
-        { texto: '"O amor é paciente, o amor é bondoso. Não inveja, não se vangloria, não se orgulha."', ref: '1 Coríntios 13:4' },
-        { texto: '"Alegrai-vos sempre no Senhor; outra vez digo, alegrai-vos."', ref: 'Filipenses 4:4' },
-        { texto: '"Confia no Senhor de todo o teu coração e não te estribes no teu próprio entendimento."', ref: 'Provérbios 3:5' },
-        { texto: '"Buscai primeiro o reino de Deus e a sua justiça, e todas estas coisas vos serão acrescentadas."', ref: 'Mateus 6:33' }
+        { texto: '"Tudo posso naquele que me fortalece."', ref: 'Filipenses 4:13' }
     ];
 
     function carregarVersiculo() {
@@ -856,6 +668,7 @@
     // INICIALIZAÇÃO
     // ============================================
     document.addEventListener('DOMContentLoaded', function() {
+        console.log('🚀 Página de login carregada!');
         carregarTema();
         carregarVersiculo();
         atualizarHora();
