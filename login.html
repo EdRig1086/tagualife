@@ -283,14 +283,14 @@
 
 <script>
     // ============================================
-    // SUPABASE - CORREÇÃO PRINCIPAL
+    // SUPABASE - NOME DIFERENTE PARA NÃO DAR CONFLITO
     // ============================================
     const SUPABASE_URL = 'https://frlecudymdpnrsilavbj.supabase.co';
     const SUPABASE_ANON_KEY = 'sb_publishable_Uv-GZdW4peH3IZTIwiNYXg_IrYytpn4';
 
-    // Forma correta de criar o cliente
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    console.log('✅ Supabase conectado');
+    // Aqui está a correção: usamos outro nome (sb)
+    const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    console.log('✅ Supabase conectado com sucesso');
 
     // ============================================
     // UI
@@ -349,7 +349,9 @@
         limparMensagem();
 
         try {
-            const { data: usuario, error } = await supabase
+            console.log('🔍 Buscando usuário:', email);
+
+            const { data: usuario, error } = await sb
                 .from('usuarios')
                 .select('*')
                 .eq('email', email)
@@ -357,7 +359,7 @@
                 .maybeSingle();
 
             if (error) {
-                console.error(error);
+                console.error('❌ Erro Supabase:', error);
                 mostrarMensagem('❌ Erro de conexão com o banco. Verifique o RLS.', 'error');
                 btn.disabled = false;
                 btn.innerHTML = '<i class="fas fa-arrow-right"></i> Entrar';
@@ -365,6 +367,7 @@
             }
 
             if (!usuario) {
+                console.log('❌ Usuário não encontrado ou senha errada');
                 mostrarMensagem('❌ E-mail ou senha incorretos!', 'error');
                 btn.disabled = false;
                 btn.innerHTML = '<i class="fas fa-arrow-right"></i> Entrar';
@@ -377,6 +380,8 @@
                 btn.innerHTML = '<i class="fas fa-arrow-right"></i> Entrar';
                 return;
             }
+
+            console.log('✅ Login OK:', usuario.nome);
 
             // Salva sessão
             localStorage.setItem('tagualife_sessao', JSON.stringify({
@@ -393,7 +398,7 @@
             }, 800);
 
         } catch (err) {
-            console.error(err);
+            console.error('❌ Erro inesperado:', err);
             mostrarMensagem('❌ Erro inesperado.', 'error');
             btn.disabled = false;
             btn.innerHTML = '<i class="fas fa-arrow-right"></i> Entrar';
@@ -431,7 +436,7 @@
 
         try {
             // Verifica se e-mail já existe
-            const { data: existe } = await supabase
+            const { data: existe } = await sb
                 .from('usuarios')
                 .select('id')
                 .eq('email', email)
@@ -444,7 +449,7 @@
                 return;
             }
 
-            const { error } = await supabase
+            const { error } = await sb
                 .from('usuarios')
                 .insert({
                     nome: nome,
@@ -522,7 +527,7 @@
             window.location.href = 'index.html';
         }
 
-        console.log('🚀 Login TaguáLife carregado e pronto');
+        console.log('🚀 Login TaguáLife pronto!');
     });
 </script>
 </body>
