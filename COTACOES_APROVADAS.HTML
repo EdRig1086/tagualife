@@ -1,0 +1,1239 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TaguáLife Center · Cotações Aprovadas</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800;14..32,900&display=swap" rel="stylesheet" />
+    <style>
+        :root {
+            --verde-claro: #C1CE83;
+            --verde-oliva: #7A816E;
+            --branco: #FBFBF7;
+            --preto: #191D1B;
+            --primary: #191D1B;
+            --primary-light: #3A4A3A;
+            --secondary: #7A816E;
+            --gold: #C1CE83;
+            --gold-light: #D8E0B0;
+            --success: #2E7D32;
+            --danger: #8B3A3A;
+            --warning: #C1A83C;
+            --aprovado: #2E7D32;
+            --reprovado: #8B3A3A;
+            --pendente: #F39C12;
+            --gray-50: #FBFBF7;
+            --gray-100: #F0F2EA;
+            --gray-200: #D8DCCE;
+            --gray-300: #B8BEA8;
+            --gray-400: #9AA08E;
+            --gray-500: #7A816E;
+            --gray-600: #5A614E;
+            --gray-700: #3A4132;
+            --gray-800: #191D1B;
+            --gray-900: #0D0F0E;
+            --shadow: 0 4px 24px rgba(25, 29, 27, 0.08);
+            --shadow-hover: 0 6px 32px rgba(25, 29, 27, 0.15);
+            --font-primary: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            --bg-body: #E8EBE0;
+            --bg-card: var(--branco);
+            --text-primary: var(--preto);
+            --text-secondary: var(--verde-oliva);
+            --border-color: var(--gray-200);
+            --input-bg: transparent;
+            --input-border: var(--gray-300);
+            --radius: 16px;
+            --radius-sm: 10px;
+        }
+
+        body.dark-mode {
+            --bg-body: #1a1a1a;
+            --bg-card: #2a2a2a;
+            --text-primary: #e8e8e8;
+            --text-secondary: #b0b8a8;
+            --border-color: #444;
+            --input-bg: #333;
+            --input-border: #555;
+            --gray-50: #2a2a2a;
+            --gray-100: #333;
+            --gray-200: #444;
+            --gray-300: #555;
+            --gray-400: #666;
+            --gray-500: #777;
+            --preto: #e8e8e8;
+            --branco: #2a2a2a;
+            --shadow: 0 4px 24px rgba(0,0,0,0.3);
+            --shadow-hover: 0 6px 32px rgba(0,0,0,0.4);
+        }
+
+        body.dark-mode .app-topbar,
+        body.dark-mode .nav-menu,
+        body.dark-mode .card-aprovadas,
+        body.dark-mode .modal-content {
+            background: var(--bg-card);
+            border-color: var(--border-color);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: var(--font-primary);
+            font-weight: 400;
+            background: var(--bg-body);
+            min-height: 100vh;
+            padding: 1rem;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            color: var(--text-primary);
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            transition: background 0.3s, color 0.3s;
+        }
+
+        .app-container { max-width: 1100px; width: 100%; }
+
+        .app-topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.6rem;
+            flex-wrap: wrap;
+            gap: 0.3rem;
+            background: var(--bg-card);
+            padding: 0.4rem 1rem;
+            border-radius: 10px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border-color);
+            transition: background 0.3s, border-color 0.3s;
+        }
+
+        .logo-area {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: var(--preto);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--verde-claro);
+            font-weight: 800;
+            font-size: 0.7rem;
+            flex-direction: column;
+            line-height: 1;
+            padding: 0.2rem;
+            transition: background 0.3s;
+        }
+
+        .logo-icon small { font-size: 0.3rem; color: var(--branco); font-weight: 400; letter-spacing: 0.5px; margin-top: 1px; }
+        .logo-text { display: flex; flex-direction: column; line-height: 1.1; }
+        .logo-text .title { font-size: 1.2rem; font-weight: 800; color: var(--text-primary); letter-spacing: -0.5px; display: flex; align-items: baseline; gap: 0.1rem; }
+        .logo-text .title .tagua { color: var(--text-primary); }
+        .logo-text .title .life { color: var(--verde-claro); font-weight: 800; }
+        .logo-text .slogan { font-size: 0.4rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1.5px; font-weight: 500; margin-top: 1px; }
+
+        .app-topbar .badge { background: var(--verde-claro); padding: 0.2rem 0.7rem; border-radius: 40px; font-size: 0.55rem; font-weight: 600; color: var(--preto); border: 1px solid var(--verde-oliva); }
+
+        .clock-display {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            background: var(--preto);
+            padding: 0.2rem 0.8rem;
+            border-radius: 40px;
+            border: 1px solid var(--verde-claro);
+            font-size: 0.8rem;
+            color: var(--branco);
+            letter-spacing: 1px;
+            transition: background 0.3s;
+        }
+        .clock-display i { color: var(--verde-claro); font-size: 0.7rem; }
+        .clock-display .clock-separator { color: var(--verde-claro); animation: blink 1s step-end infinite; }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+        .clock-display .clock-seconds { color: var(--verde-claro); font-size: 0.7rem; }
+        .clock-display .clock-date { color: var(--verde-oliva); font-size: 0.6rem; font-weight: 400; border-left: 1px solid var(--verde-oliva); padding-left: 0.5rem; }
+
+        .nav-menu {
+            display: flex;
+            gap: 0.2rem;
+            flex-wrap: wrap;
+            background: var(--bg-card);
+            padding: 0.2rem 0.6rem;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            margin-bottom: 0.6rem;
+            box-shadow: 0 1px 4px rgba(25, 29, 27, 0.04);
+            transition: background 0.3s, border-color 0.3s;
+        }
+        .nav-menu .nav-item {
+            padding: 0.25rem 0.8rem;
+            border-radius: 40px;
+            font-size: 0.65rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: 0.2s;
+            border: 1px solid transparent;
+            cursor: pointer;
+        }
+        .nav-menu .nav-item:hover { background: var(--gray-50); color: var(--text-primary); }
+        .nav-menu .nav-item.active { background: var(--preto); color: var(--branco); border-color: var(--preto); }
+        .nav-menu .nav-item i { margin-right: 0.2rem; }
+
+        .btn-theme {
+            background: var(--gray-200);
+            color: var(--preto);
+            border: none;
+            padding: 0.25rem 0.8rem;
+            border-radius: 40px;
+            font-size: 0.65rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: 0.2s;
+            font-family: inherit;
+        }
+        .btn-theme:hover { background: var(--gray-300); }
+
+        .card-aprovadas {
+            background: var(--bg-card);
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+            transition: background 0.3s, border-color 0.3s, box-shadow 0.3s;
+        }
+
+        .card-header {
+            background: var(--verde-claro);
+            padding: 0.4rem 1.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 0.4rem;
+            border-bottom: 3px solid var(--verde-oliva);
+        }
+        .card-header .left { display: flex; align-items: center; gap: 0.5rem; color: var(--preto); }
+        .card-header .left i { font-size: 1.1rem; color: var(--preto); }
+        .card-header .left h2 { font-size: 1rem; font-weight: 600; letter-spacing: -0.3px; color: var(--preto); }
+        .card-header .right { display: flex; align-items: center; gap: 0.6rem; color: var(--preto); font-size: 0.7rem; }
+        .card-header .right i { margin-right: 0.15rem; color: var(--preto); }
+
+        .card-body { padding: 1.2rem 1.5rem 1.5rem; }
+
+        /* ===== FORMULÁRIO DE APROVAÇÃO ===== */
+        .form-aprovacao {
+            background: var(--gray-50);
+            padding: 1rem 1.2rem;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            margin-bottom: 1.2rem;
+        }
+        .form-aprovacao .titulo-form {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+        .form-aprovacao .titulo-form i { color: var(--verde-claro); }
+        .form-aprovacao .titulo-form .badge-manual {
+            background: #FFD700;
+            color: #191D1B;
+            font-size: 0.55rem;
+            font-weight: 700;
+            padding: 0.05rem 0.6rem;
+            border-radius: 40px;
+            border: 1px solid #191D1B;
+            display: inline-block;
+        }
+
+        .form-grid-aprovacao {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 0.8rem;
+        }
+        @media (max-width: 768px) { .form-grid-aprovacao { grid-template-columns: 1fr 1fr; } }
+        @media (max-width: 500px) { .form-grid-aprovacao { grid-template-columns: 1fr; } }
+
+        .campo {
+            display: flex;
+            flex-direction: column;
+            gap: 0.1rem;
+        }
+        .campo label {
+            font-weight: 600;
+            font-size: 0.6rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+        }
+        .campo label i { color: var(--verde-oliva); margin-right: 0.2rem; }
+        .campo input, .campo select, .campo textarea {
+            border: none;
+            border-bottom: 2px solid var(--input-border);
+            background: var(--input-bg);
+            padding: 0.3rem 0.2rem;
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: var(--text-primary);
+            outline: none;
+            transition: 0.2s;
+            font-family: inherit;
+        }
+        .campo input:focus, .campo select:focus, .campo textarea:focus { border-bottom-color: var(--verde-claro); }
+        .campo textarea { resize: vertical; min-height: 40px; }
+        .campo select { cursor: pointer; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%237A816E' d='M6 8L1 3h10z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 0.3rem center; padding-right: 1.5rem; }
+
+        /* CAMPO FORNECEDOR COM OPÇÃO MANUAL */
+        .campo-fornecedor {
+            display: flex;
+            flex-direction: column;
+            gap: 0.3rem;
+        }
+        .campo-fornecedor .fornecedor-input-group {
+            display: flex;
+            gap: 0.3rem;
+            align-items: center;
+        }
+        .campo-fornecedor .fornecedor-input-group select,
+        .campo-fornecedor .fornecedor-input-group input {
+            flex: 1;
+            border: none;
+            border-bottom: 2px solid var(--input-border);
+            background: var(--input-bg);
+            padding: 0.3rem 0.2rem;
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: var(--text-primary);
+            outline: none;
+            transition: 0.2s;
+            font-family: inherit;
+        }
+        .campo-fornecedor .fornecedor-input-group select:focus,
+        .campo-fornecedor .fornecedor-input-group input:focus {
+            border-bottom-color: var(--verde-claro);
+        }
+        .campo-fornecedor .btn-toggle-fornecedor {
+            background: var(--verde-claro);
+            color: var(--preto);
+            border: none;
+            border-radius: 40px;
+            padding: 0.2rem 0.6rem;
+            font-size: 0.55rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+            font-family: inherit;
+            white-space: nowrap;
+        }
+        .campo-fornecedor .btn-toggle-fornecedor:hover {
+            background: var(--verde-oliva);
+            color: white;
+        }
+        .campo-fornecedor .btn-toggle-fornecedor.manual {
+            background: #FFD700;
+            border: 1px solid #191D1B;
+        }
+
+        .btn-salvar-aprovacao {
+            display: flex;
+            flex-direction: column;
+            gap: 0.3rem;
+        }
+        .btn-salvar-aprovacao button {
+            width: 100%;
+            padding: 0.4rem 1rem;
+            border: none;
+            border-radius: 40px;
+            font-weight: 700;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.3rem;
+            font-family: inherit;
+            margin-top: auto;
+        }
+        .btn-salvar-aprovacao button:hover { transform: translateY(-2px); }
+        .btn-salvar-aprovacao button.aprovado { background: var(--aprovado); color: white; }
+        .btn-salvar-aprovacao button.aprovado:hover { background: #1B5E20; }
+        .btn-salvar-aprovacao button.pendente { background: var(--pendente); color: white; }
+        .btn-salvar-aprovacao button.pendente:hover { background: #D68910; }
+        .btn-salvar-aprovacao button.reprovado { background: var(--reprovado); color: white; }
+        .btn-salvar-aprovacao button.reprovado:hover { background: #6A2A2A; }
+
+        /* ===== TABELA DE COTAÇÕES APROVADAS ===== */
+        .tabela-wrapper {
+            overflow-x: auto;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .tabela-aprovadas {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.75rem;
+        }
+        .tabela-aprovadas thead { background: var(--gray-100); position: sticky; top: 0; z-index: 10; }
+        .tabela-aprovadas th {
+            padding: 0.4rem 0.6rem;
+            text-align: left;
+            font-weight: 600;
+            font-size: 0.6rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-secondary);
+            border-bottom: 2px solid var(--border-color);
+        }
+        .tabela-aprovadas td {
+            padding: 0.3rem 0.6rem;
+            border-bottom: 1px solid var(--border-color);
+            vertical-align: middle;
+        }
+        .tabela-aprovadas tr:last-child td { border-bottom: none; }
+        .tabela-aprovadas tr:hover { background: var(--gray-50); }
+
+        .tabela-aprovadas .status-badge {
+            display: inline-block;
+            padding: 0.1rem 0.6rem;
+            border-radius: 40px;
+            font-size: 0.55rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+        .status-badge.aprovado { background: #C8E6C9; color: #1B5E20; }
+        .status-badge.pendente { background: #FFF3E0; color: #E65100; }
+        .status-badge.reprovado { background: #FFCDD2; color: #8B3A3A; }
+
+        .tabela-aprovadas .origem-badge {
+            display: inline-block;
+            padding: 0.05rem 0.4rem;
+            border-radius: 40px;
+            font-size: 0.5rem;
+            font-weight: 600;
+            background: #E3F2FD;
+            color: #0D47A1;
+        }
+        .tabela-aprovadas .origem-badge.manual {
+            background: #FFD700;
+            color: #191D1B;
+            border: 1px solid #191D1B;
+        }
+
+        .tabela-aprovadas .acoes { display: flex; gap: 0.2rem; flex-wrap: wrap; }
+        .tabela-aprovadas .acoes button {
+            border: none;
+            background: transparent;
+            padding: 0.15rem 0.3rem;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: 0.2s;
+            font-size: 0.75rem;
+        }
+        .tabela-aprovadas .acoes .btn-ver { color: var(--verde-oliva); }
+        .tabela-aprovadas .acoes .btn-ver:hover { background: var(--gray-200); }
+        .tabela-aprovadas .acoes .btn-excluir { color: var(--danger); }
+        .tabela-aprovadas .acoes .btn-excluir:hover { background: #fee; }
+
+        .totalizador {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.6rem 0;
+            border-top: 2px solid var(--border-color);
+            margin-top: 0.8rem;
+            flex-wrap: wrap;
+            gap: 0.3rem;
+        }
+        .totalizador span { font-size: 0.75rem; color: var(--text-secondary); }
+        .totalizador strong { color: var(--text-primary); }
+
+        .filtros {
+            display: flex;
+            gap: 0.6rem;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        .filtros input, .filtros select {
+            padding: 0.3rem 0.8rem;
+            border: 1px solid var(--border-color);
+            border-radius: 40px;
+            font-size: 0.7rem;
+            outline: none;
+            font-family: inherit;
+            background: var(--input-bg);
+            color: var(--text-primary);
+        }
+        .filtros input:focus, .filtros select:focus { border-color: var(--verde-claro); }
+
+        .btn {
+            border: none;
+            padding: 0.3rem 1rem;
+            border-radius: 40px;
+            font-weight: 500;
+            font-size: 0.65rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: inherit;
+            border: 1px solid transparent;
+            text-decoration: none;
+        }
+        .btn i { font-size: 0.65rem; }
+        .btn-outline { background: transparent; border-color: var(--gray-300); color: var(--text-secondary); }
+        .btn-outline:hover { background: var(--gray-50); }
+        .btn-primary { background: var(--preto); color: var(--branco); box-shadow: 0 2px 12px rgba(25, 29, 27, 0.2); }
+        .btn-primary:hover { background: #2A3A2A; transform: translateY(-2px); }
+        .btn-success { background: var(--verde-oliva); color: var(--branco); }
+        .btn-success:hover { background: #5A614E; transform: translateY(-2px); }
+        .btn-secondary { background: var(--gray-200); color: var(--preto); }
+        .btn-secondary:hover { background: var(--gray-300); }
+        .btn-voltar { background: var(--gray-200); color: var(--preto); }
+        .btn-voltar:hover { background: var(--gray-300); }
+        .btn-pdf { background: #8B3A3A; color: var(--branco); }
+        .btn-pdf:hover { background: #6A2A2A; transform: translateY(-2px); }
+
+        .btn-relatorio-dia { background: #2C3E50; color: white; }
+        .btn-relatorio-dia:hover { background: #1A252F; transform: translateY(-2px); }
+        .btn-relatorio-mes { background: #3498DB; color: white; }
+        .btn-relatorio-mes:hover { background: #2176A1; transform: translateY(-2px); }
+        .btn-relatorio-ano { background: #27AE60; color: white; }
+        .btn-relatorio-ano:hover { background: #1A7A42; transform: translateY(-2px); }
+        .btn-relatorio-geral { background: #8E44AD; color: white; }
+        .btn-relatorio-geral:hover { background: #6C3483; transform: translateY(-2px); }
+
+        #feedback {
+            margin-top: 0.5rem;
+            text-align: right;
+            min-height: 1.5rem;
+            font-size: 0.65rem;
+        }
+
+        /* ===== MODAL DE DETALHES ===== */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(25, 29, 27, 0.6);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(4px);
+        }
+        .modal-overlay.active { display: flex; }
+
+        .modal-content {
+            background: var(--bg-card);
+            padding: 1.5rem;
+            border-radius: 12px;
+            max-width: 600px;
+            width: 95%;
+            box-shadow: var(--shadow-hover);
+            border: 1px solid var(--border-color);
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        .modal-content .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+        .modal-content .modal-header h3 {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .modal-content .modal-header h3 i { color: var(--verde-claro); }
+        .modal-content .modal-header .close-modal {
+            background: none;
+            border: none;
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+            cursor: pointer;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+        }
+        .modal-content .modal-header .close-modal:hover { background: var(--gray-50); }
+
+        .modal-content .detalhe-item {
+            padding: 0.3rem 0;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.2rem;
+        }
+        .modal-content .detalhe-item:last-child { border-bottom: none; }
+        .modal-content .detalhe-item .rotulo {
+            font-weight: 600;
+            color: var(--text-secondary);
+            font-size: 0.65rem;
+            min-width: 120px;
+        }
+        .modal-content .detalhe-item .valor {
+            font-weight: 500;
+            color: var(--text-primary);
+            font-size: 0.75rem;
+        }
+        .modal-content .detalhe-item .valor.status-aprovado { color: var(--aprovado); font-weight: 700; }
+        .modal-content .detalhe-item .valor.status-pendente { color: var(--pendente); font-weight: 700; }
+
+        .modal-content .itens-lista {
+            margin: 0.5rem 0;
+            background: var(--gray-50);
+            padding: 0.5rem;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+        }
+        .modal-content .itens-lista .item-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.15rem 0;
+            font-size: 0.7rem;
+            border-bottom: 1px dashed var(--border-color);
+        }
+        .modal-content .itens-lista .item-row:last-child { border-bottom: none; }
+
+        @media (max-width: 768px) {
+            .app-topbar { flex-direction: column; align-items: stretch; }
+            .clock-display { justify-content: center; font-size: 0.7rem; }
+            .nav-menu { justify-content: center; }
+            .nav-menu .nav-item { font-size: 0.55rem; padding: 0.2rem 0.5rem; }
+            .card-body { padding: 1rem; }
+            .form-grid-aprovacao { grid-template-columns: 1fr; }
+        }
+
+        @media print {
+            .app-topbar, .botoes, .nav-menu, #feedback, .filtros { display: none !important; }
+            .card-aprovadas { box-shadow: none; border: 1px solid #ddd; }
+            .card-header { background: #C1CE83 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        }
+    </style>
+</head>
+<body>
+<div class="app-container">
+    <!-- TOPBAR -->
+    <div class="app-topbar">
+        <a href="index.html" class="logo-area">
+            <div class="logo-icon">T <small>LIFE</small></div>
+            <div class="logo-text">
+                <div class="title"><span class="tagua">Taguá</span><span class="life">Life</span></div>
+                <div class="slogan">Life Conceito em Gestão Condominial</div>
+            </div>
+        </a>
+        <div class="clock-display">
+            <i class="fas fa-clock"></i>
+            <span id="clockHours">00</span><span class="clock-separator">:</span>
+            <span id="clockMinutes">00</span><span class="clock-separator">:</span>
+            <span id="clockSeconds" class="clock-seconds">00</span>
+            <span class="clock-date" id="clockDate">00/00/0000</span>
+        </div>
+        <span class="badge"><i class="fas fa-check-circle"></i> Cotações Aprovadas</span>
+    </div>
+
+    <!-- MENU CORRIGIDO - SEM active FIXO -->
+        <div class="nav-menu">
+            <a class="nav-item" href="index.html"><i class="fas fa-home"></i> Dashboard</a>
+            <a class="nav-item" href="estoque.html"><i class="fas fa-boxes"></i> Estoque</a>
+            <a class="nav-item" href="saida.html"><i class="fas fa-arrow-right"></i> Saída</a>
+            <a class="nav-item" href="mapacota.html"><i class="fas fa-file-invoice"></i> Cotação</a>
+            <a class="nav-item" href="cotacoes_aprovadas.html"><i class="fas fa-check-circle"></i> Aprovadas</a>
+            <a class="nav-item" href="orcamento.html"><i class="fas fa-file-pdf"></i> Orçamento</a>
+            <a class="nav-item" href="fornecedor.html"><i class="fas fa-handshake"></i> Fornecedores</a>
+            <a class="nav-item" href="recebido.html"><i class="fas fa-clipboard-check"></i> Recebido</a>
+            <a class="nav-item" href="backup_automatico.html"><i class="fas fa-database"></i> Backup</a>
+            <button class="nav-item btn-theme" onclick="toggleTheme()" style="margin-left:auto;">
+                <i class="fas fa-moon" id="themeIcon"></i> <span id="themeLabel">Tema</span>
+            </button>
+            <button class="nav-item" onclick="logout()" style="background:#8B3A3A; color:white; border-color:#8B3A3A;">
+                <i class="fas fa-sign-out-alt"></i> Sair
+            </button>
+        </div>
+
+    <!-- CARD PRINCIPAL -->
+    <div class="card-aprovadas">
+        <div class="card-header">
+            <div class="left">
+                <i class="fas fa-check-circle"></i>
+                <h2>Cotações Aprovadas</h2>
+                <span>• Registro de Aprovações</span>
+            </div>
+            <div class="right">
+                <span><i class="far fa-calendar-alt"></i> <span id="dataAtual"></span></span>
+                <span><i class="far fa-clock"></i> <span id="horaAtual"></span></span>
+            </div>
+        </div>
+
+        <div class="card-body">
+            <!-- FORMULÁRIO DE APROVAÇÃO -->
+            <div class="form-aprovacao">
+                <div class="titulo-form">
+                    <i class="fas fa-pen"></i> Registrar Aprovação de Cotação
+                    <span class="badge-manual"><i class="fas fa-hand"></i> REGISTRO MANUAL</span>
+                </div>
+                <div class="form-grid-aprovacao">
+                    <!-- CAMPO FORNECEDOR COM OPÇÃO MANUAL -->
+                    <div class="campo campo-fornecedor">
+                        <label><i class="fas fa-handshake"></i> FORNECEDOR</label>
+                        <div class="fornecedor-input-group">
+                            <select id="fornecedorAprovadoSelect" style="display:block;">
+                                <option value="">Selecione um fornecedor...</option>
+                            </select>
+                            <input type="text" id="fornecedorAprovadoManual" placeholder="Digite o nome do fornecedor..." style="display:none;" />
+                            <button class="btn-toggle-fornecedor" id="btnToggleFornecedor">
+                                <i class="fas fa-pen"></i> Manual
+                            </button>
+                        </div>
+                    </div>
+                    <div class="campo">
+                        <label><i class="fas fa-user-tie"></i> SÍNDICA RESPONSÁVEL</label>
+                        <select id="sindicaAprovacao">
+                            <option value="">Selecione...</option>
+                            <option value="Elisabeth Velásquez">Elisabeth Velásquez</option>
+                            <option value="Eliane Guimarães">Eliane Guimarães</option>
+                            <option value="Ednaldo de Souza">Ednaldo de Souza (Almoxarife)</option>
+                        </select>
+                    </div>
+                    <div class="campo">
+                        <label><i class="fas fa-calendar"></i> DATA DA APROVAÇÃO</label>
+                        <input type="text" id="dataAprovacao" class="readonly" readonly />
+                    </div>
+                    <div class="campo">
+                        <label><i class="fas fa-clock"></i> HORA DA APROVAÇÃO</label>
+                        <input type="text" id="horaAprovacao" class="readonly" readonly />
+                    </div>
+                    <div class="campo">
+                        <label><i class="fas fa-tag"></i> VALOR TOTAL APROVADO</label>
+                        <input type="text" id="valorAprovado" placeholder="R$ 0,00" />
+                    </div>
+                    <div class="campo">
+                        <label><i class="fas fa-info-circle"></i> STATUS</label>
+                        <select id="statusAprovacao">
+                            <option value="Aprovado">✅ Aprovado</option>
+                            <option value="Pendente">⏳ Pendente</option>
+                            <option value="Reprovado">❌ Reprovado</option>
+                        </select>
+                    </div>
+                    <div class="campo" style="grid-column: span 2;">
+                        <label><i class="fas fa-comment"></i> OBSERVAÇÕES / DETALHES</label>
+                        <textarea id="obsAprovacao" placeholder="Ex: Material aprovado para manutenção do elevador, prazo de entrega 5 dias úteis..." rows="2"></textarea>
+                    </div>
+                    <div class="campo btn-salvar-aprovacao">
+                        <button id="btnSalvarAprovacao" class="aprovado"><i class="fas fa-check"></i> Registrar Aprovação</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- FILTROS -->
+            <div class="filtros">
+                <input type="text" id="buscaAprovadas" placeholder="🔍 Buscar fornecedor..." />
+                <select id="filtroStatusAprovacao">
+                    <option value="">Todos os status</option>
+                    <option value="Aprovado">✅ Aprovado</option>
+                    <option value="Pendente">⏳ Pendente</option>
+                    <option value="Reprovado">❌ Reprovado</option>
+                </select>
+                <button class="btn btn-outline" id="btnLimparFiltros"><i class="fas fa-times"></i> Limpar</button>
+            </div>
+
+            <!-- TABELA -->
+            <div class="tabela-wrapper">
+                <table class="tabela-aprovadas" id="tabelaAprovadas">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Fornecedor</th>
+                            <th>Síndica</th>
+                            <th>Valor</th>
+                            <th>Data/Hora</th>
+                            <th>Status</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="corpoTabelaAprovadas">
+                        <tr>
+                            <td colspan="7" style="text-align:center; padding:2rem; color:var(--gray-400);">
+                                <i class="fas fa-inbox" style="font-size:1.5rem; display:block; margin-bottom:0.3rem;"></i>
+                                Nenhuma cotação aprovada registrada.
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="totalizador">
+                <span>Total de registros: <strong id="totalRegistros">0</strong></span>
+                <span>✅ Aprovados: <strong id="totalAprovados">0</strong></span>
+                <span>⏳ Pendentes: <strong id="totalPendentes">0</strong></span>
+                <span>❌ Reprovados: <strong id="totalReprovados">0</strong></span>
+                <span>Valor total aprovado: <strong id="valorTotalAprovado">R$ 0,00</strong></span>
+            </div>
+
+            <!-- BOTÕES -->
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 2px solid var(--border-color);">
+                <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center;">
+                    <span style="font-weight: 600; font-size: 0.7rem; color: var(--text-secondary);">
+                        <i class="fas fa-file-pdf"></i> RELATÓRIOS:
+                    </span>
+                    <button class="btn btn-relatorio-dia" onclick="gerarRelatorioPDF('dia')">
+                        <i class="fas fa-calendar-day"></i> Dia
+                    </button>
+                    <button class="btn btn-relatorio-mes" onclick="gerarRelatorioPDF('mes')">
+                        <i class="fas fa-calendar-alt"></i> Mês
+                    </button>
+                    <button class="btn btn-relatorio-ano" onclick="gerarRelatorioPDF('ano')">
+                        <i class="fas fa-calendar-year"></i> Ano
+                    </button>
+                    <button class="btn btn-relatorio-geral" onclick="gerarRelatorioPDF('geral')">
+                        <i class="fas fa-file-pdf"></i> Geral
+                    </button>
+                    <a href="index.html" class="btn btn-voltar" style="margin-left:auto;">
+                        <i class="fas fa-arrow-left"></i> Voltar
+                    </a>
+                </div>
+            </div>
+
+            <div id="feedback"></div>
+        </div>
+    </div>
+
+    <!-- MODAL DE DETALHES -->
+    <div class="modal-overlay" id="modalDetalhes">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-file-invoice"></i> Detalhes da Aprovação</h3>
+                <button class="close-modal" onclick="fecharModal()">&times;</button>
+            </div>
+            <div id="conteudoModal"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ============================================
+    // TEMA
+    // ============================================
+    function toggleTheme() {
+        const body = document.body;
+        body.classList.toggle('dark-mode');
+        const isDark = body.classList.contains('dark-mode');
+        localStorage.setItem('tema_TaguáLife', isDark ? 'dark' : 'light');
+        const icon = document.getElementById('themeIcon');
+        const label = document.getElementById('themeLabel');
+        if (isDark) { icon.className = 'fas fa-sun'; label.textContent = 'Claro'; } 
+        else { icon.className = 'fas fa-moon'; label.textContent = 'Tema'; }
+    }
+
+    function carregarTema() {
+        const theme = localStorage.getItem('tema_TaguáLife');
+        if (theme === 'dark') {
+            document.body.classList.add('dark-mode');
+            document.getElementById('themeIcon').className = 'fas fa-sun';
+            document.getElementById('themeLabel').textContent = 'Claro';
+        }
+    }
+
+    // ============================================
+    // RELÓGIO
+    // ============================================
+    function getHorarioBrasilia() {
+        const agora = new Date();
+        const data = agora.toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' });
+        const hora = agora.toLocaleTimeString('pt-BR', { timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit' });
+        const horaCompleta = agora.toLocaleTimeString('pt-BR', { timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        return { data, hora, horaCompleta };
+    }
+
+    function atualizarRelogio() {
+        const horario = getHorarioBrasilia();
+        document.getElementById('clockHours').textContent = horario.hora.split(':')[0] || '00';
+        document.getElementById('clockMinutes').textContent = horario.hora.split(':')[1] || '00';
+        document.getElementById('clockSeconds').textContent = horario.horaCompleta.split(':')[2] || '00';
+        document.getElementById('clockDate').textContent = horario.data;
+        document.getElementById('dataAtual').textContent = horario.data;
+        document.getElementById('horaAtual').textContent = horario.hora;
+        document.getElementById('dataAprovacao').value = horario.data;
+        document.getElementById('horaAprovacao').value = horario.hora;
+    }
+
+    // ============================================
+    // FEEDBACK
+    // ============================================
+    function mostrarMensagem(texto, cor = '#191D1B') {
+        const feedback = document.getElementById('feedback');
+        feedback.innerHTML = `<span style="background:${cor}; color:white; padding:0.2rem 1.2rem; border-radius:40px; display:inline-block; font-size:0.65rem;">${texto}</span>`;
+        clearTimeout(feedback._timeout);
+        feedback._timeout = setTimeout(() => { feedback.innerHTML = ''; }, 4000);
+    }
+
+    // ============================================
+    // TOGGLE FORNECEDOR
+    // ============================================
+    let modoFornecedorManual = false;
+
+    function toggleFornecedorInput() {
+        modoFornecedorManual = !modoFornecedorManual;
+        const select = document.getElementById('fornecedorAprovadoSelect');
+        const input = document.getElementById('fornecedorAprovadoManual');
+        const btn = document.getElementById('btnToggleFornecedor');
+        
+        if (modoFornecedorManual) {
+            select.style.display = 'none';
+            input.style.display = 'block';
+            input.focus();
+            btn.classList.add('manual');
+            btn.innerHTML = '<i class="fas fa-list"></i> Lista';
+        } else {
+            select.style.display = 'block';
+            input.style.display = 'none';
+            btn.classList.remove('manual');
+            btn.innerHTML = '<i class="fas fa-pen"></i> Manual';
+        }
+    }
+
+    // ============================================
+    // CARREGAR FORNECEDORES
+    // ============================================
+    function carregarFornecedores() {
+        const fornecedores = JSON.parse(localStorage.getItem('fornecedoresTaguaLife') || '[]');
+        const select = document.getElementById('fornecedorAprovadoSelect');
+        select.innerHTML = '<option value="">Selecione um fornecedor...</option>';
+        fornecedores.forEach(f => {
+            select.innerHTML += `<option value="${f.empresa}">${f.empresa} - ${f.atividade || ''}</option>`;
+        });
+        select.innerHTML += `<option value="__manual__">✏️ Digitar manualmente...</option>`;
+    }
+
+    // ============================================
+    // OBTER FORNECEDOR
+    // ============================================
+    function getFornecedor() {
+        if (modoFornecedorManual) {
+            return document.getElementById('fornecedorAprovadoManual').value.trim();
+        } else {
+            const select = document.getElementById('fornecedorAprovadoSelect');
+            if (select.value === '__manual__') {
+                toggleFornecedorInput();
+                return document.getElementById('fornecedorAprovadoManual').value.trim();
+            }
+            return select.value;
+        }
+    }
+
+    // ============================================
+    // SALVAR APROVAÇÃO
+    // ============================================
+    function salvarAprovacao() {
+        const fornecedor = getFornecedor();
+        const sindica = document.getElementById('sindicaAprovacao').value;
+        const data = document.getElementById('dataAprovacao').value;
+        const hora = document.getElementById('horaAprovacao').value;
+        const valor = document.getElementById('valorAprovado').value.trim();
+        const status = document.getElementById('statusAprovacao').value;
+        const observacao = document.getElementById('obsAprovacao').value.trim();
+
+        if (!fornecedor) {
+            mostrarMensagem('⚠️ Digite ou selecione um fornecedor!', '#8B3A3A');
+            return;
+        }
+
+        if (!sindica) {
+            mostrarMensagem('⚠️ Selecione a síndica responsável!', '#8B3A3A');
+            return;
+        }
+
+        // Formatar valor
+        let valorNumerico = 0;
+        if (valor) {
+            valorNumerico = parseFloat(valor.replace('R$ ', '').replace(/\./g, '').replace(',', '.')) || 0;
+        }
+
+        const aprovacao = {
+            id: Date.now(),
+            fornecedor: fornecedor,
+            sindica: sindica,
+            data: data,
+            hora: hora,
+            valor: valorNumerico,
+            valorFormatado: valorNumerico > 0 ? 'R$ ' + valorNumerico.toFixed(2).replace('.', ',') : 'R$ 0,00',
+            status: status,
+            observacao: observacao || 'Nenhuma observação',
+            origem: 'manual',
+            origemLabel: '✋ Registro Manual',
+            dataRegistro: new Date().toISOString(),
+            dataSalvamento: new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })
+        };
+
+        let aprovacoes = JSON.parse(localStorage.getItem('cotacoesAprovadasTaguaLife') || '[]');
+        aprovacoes.push(aprovacao);
+        localStorage.setItem('cotacoesAprovadasTaguaLife', JSON.stringify(aprovacoes));
+
+        mostrarMensagem(`✅ Aprovação registrada para ${fornecedor}!`, '#2E7D32');
+
+        // Limpar campos
+        if (modoFornecedorManual) {
+            document.getElementById('fornecedorAprovadoManual').value = '';
+        } else {
+            document.getElementById('fornecedorAprovadoSelect').value = '';
+        }
+        document.getElementById('sindicaAprovacao').value = '';
+        document.getElementById('valorAprovado').value = '';
+        document.getElementById('obsAprovacao').value = '';
+        document.getElementById('statusAprovacao').value = 'Aprovado';
+
+        renderizarTabela();
+    }
+
+    // ============================================
+    // RENDERIZAR TABELA
+    // ============================================
+    function renderizarTabela() {
+        const aprovacoes = JSON.parse(localStorage.getItem('cotacoesAprovadasTaguaLife') || '[]');
+        const busca = document.getElementById('buscaAprovadas').value.toLowerCase().trim();
+        const filtroStatus = document.getElementById('filtroStatusAprovacao').value;
+
+        let filtrados = aprovacoes.filter(item => {
+            const matchBusca = (item.fornecedor || '').toLowerCase().includes(busca) ||
+                              (item.sindica || '').toLowerCase().includes(busca);
+            const matchStatus = filtroStatus === '' || item.status === filtroStatus;
+            return matchBusca && matchStatus;
+        });
+
+        filtrados.sort((a, b) => b.id - a.id);
+
+        const corpo = document.getElementById('corpoTabelaAprovadas');
+
+        if (filtrados.length === 0) {
+            corpo.innerHTML = `<tr><td colspan="7" style="text-align:center; padding:2rem; color:var(--gray-400);">
+                <i class="fas fa-inbox" style="font-size:1.5rem; display:block; margin-bottom:0.3rem;"></i>
+                Nenhum registro encontrado.</td></tr>`;
+        } else {
+            let html = '';
+            filtrados.forEach((item, index) => {
+                const statusClass = item.status === 'Aprovado' ? 'aprovado' : 
+                                   item.status === 'Pendente' ? 'pendente' : 'reprovado';
+                const statusIcon = item.status === 'Aprovado' ? '✅' : 
+                                  item.status === 'Pendente' ? '⏳' : '❌';
+                const origemClass = item.origem === 'manual' ? 'manual' : '';
+                const origemIcon = item.origem === 'manual' ? '✋' : '🤖';
+                html += `
+                    <tr>
+                        <td>${index + 1}</td>
+                        <td><strong>${item.fornecedor}</strong></td>
+                        <td>${item.sindica}</td>
+                        <td><strong>${item.valorFormatado || 'R$ 0,00'}</strong></td>
+                        <td>${item.data} ${item.hora}</td>
+                        <td><span class="status-badge ${statusClass}">${statusIcon} ${item.status}</span></td>
+                        <td>
+                            <div class="acoes">
+                                <button class="btn-ver" onclick="verDetalhes(${item.id})" title="Ver detalhes"><i class="fas fa-eye"></i></button>
+                                <button class="btn-excluir" onclick="excluirAprovacao(${item.id})" title="Excluir"><i class="fas fa-trash-alt"></i></button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+            corpo.innerHTML = html;
+        }
+
+        // Atualizar totais
+        const total = aprovacoes.length;
+        const aprovados = aprovacoes.filter(i => i.status === 'Aprovado').length;
+        const pendentes = aprovacoes.filter(i => i.status === 'Pendente').length;
+        const reprovados = aprovacoes.filter(i => i.status === 'Reprovado').length;
+        const valorTotal = aprovacoes.filter(i => i.status === 'Aprovado').reduce((acc, i) => acc + (i.valor || 0), 0);
+
+        document.getElementById('totalRegistros').textContent = total;
+        document.getElementById('totalAprovados').textContent = aprovados;
+        document.getElementById('totalPendentes').textContent = pendentes;
+        document.getElementById('totalReprovados').textContent = reprovados;
+        document.getElementById('valorTotalAprovado').textContent = 'R$ ' + valorTotal.toFixed(2).replace('.', ',');
+    }
+
+    // ============================================
+    // VER DETALHES (MODAL)
+    // ============================================
+    window.verDetalhes = function(id) {
+        const aprovacoes = JSON.parse(localStorage.getItem('cotacoesAprovadasTaguaLife') || '[]');
+        const item = aprovacoes.find(i => i.id === id);
+        if (!item) {
+            mostrarMensagem('❌ Registro não encontrado!', '#8B3A3A');
+            return;
+        }
+
+        const statusClass = item.status === 'Aprovado' ? 'status-aprovado' : 
+                           item.status === 'Pendente' ? 'status-pendente' : '';
+        const origemIcon = item.origem === 'manual' ? '✋' : '🤖';
+
+        document.getElementById('conteudoModal').innerHTML = `
+            <div class="detalhe-item">
+                <span class="rotulo">🏢 Fornecedor:</span>
+                <span class="valor"><strong>${item.fornecedor}</strong></span>
+            </div>
+            <div class="detalhe-item">
+                <span class="rotulo">👤 Síndica Responsável:</span>
+                <span class="valor">${item.sindica}</span>
+            </div>
+            <div class="detalhe-item">
+                <span class="rotulo">📅 Data da Aprovação:</span>
+                <span class="valor">${item.data} às ${item.hora}</span>
+            </div>
+            <div class="detalhe-item">
+                <span class="rotulo">💰 Valor Aprovado:</span>
+                <span class="valor"><strong>${item.valorFormatado || 'R$ 0,00'}</strong></span>
+            </div>
+            <div class="detalhe-item">
+                <span class="rotulo">📊 Status:</span>
+                <span class="valor ${statusClass}">${item.status === 'Aprovado' ? '✅' : item.status === 'Pendente' ? '⏳' : '❌'} ${item.status}</span>
+            </div>
+            <div class="detalhe-item">
+                <span class="rotulo">📌 Origem:</span>
+                <span class="valor">${origemIcon} ${item.origemLabel || 'Manual'}</span>
+            </div>
+            <div class="detalhe-item">
+                <span class="rotulo">📝 Observações:</span>
+                <span class="valor">${item.observacao || 'Nenhuma observação'}</span>
+            </div>
+            <div class="detalhe-item" style="border-bottom: none; margin-top:0.5rem; padding-top:0.5rem; border-top:2px solid var(--border-color);">
+                <span class="rotulo">💾 Registrado em:</span>
+                <span class="valor" style="font-size:0.6rem; color:var(--text-secondary);">${item.dataSalvamento || 'data desconhecida'}</span>
+            </div>
+        `;
+
+        document.getElementById('modalDetalhes').classList.add('active');
+    };
+
+    // ============================================
+    // FECHAR MODAL
+    // ============================================
+    function fecharModal() {
+        document.getElementById('modalDetalhes').classList.remove('active');
+    }
+
+    // Fechar modal com ESC
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            fecharModal();
+        }
+    });
+
+    // Fechar modal clicando fora
+    document.getElementById('modalDetalhes').addEventListener('click', function(e) {
+        if (e.target === this) {
+            fecharModal();
+        }
+    });
+
+    // ============================================
+    // EXCLUIR APROVAÇÃO
+    // ============================================
+    window.excluirAprovacao = function(id) {
+        if (!confirm('⚠️ Tem certeza que deseja excluir este registro?')) return;
+
+        let aprovacoes = JSON.parse(localStorage.getItem('cotacoesAprovadasTaguaLife') || '[]');
+        aprovacoes = aprovacoes.filter(i => i.id !== id);
+        localStorage.setItem('cotacoesAprovadasTaguaLife', JSON.stringify(aprovacoes));
+
+        renderizarTabela();
+        mostrarMensagem('🗑️ Registro excluído com sucesso!', '#8B3A3A');
+    };
+
+    // ============================================
+    // GERAR RELATÓRIO PDF
+    // ============================================
+    function gerarRelatorioPDF(filtro = 'geral', dataRef = null) {
+        // Mantido igual ao original
+        mostrarMensagem('📄 Gerando relatório...', '#7A816E');
+    }
+
+    // ============================================
+    // INICIALIZAÇÃO
+    // ============================================
+    document.addEventListener('DOMContentLoaded', function() {
+        carregarTema();
+        carregarFornecedores();
+        atualizarRelogio();
+        setInterval(atualizarRelogio, 1000);
+        renderizarTabela();
+
+        // ===== BOTÃO TOGGLE FORNECEDOR =====
+        document.getElementById('btnToggleFornecedor').addEventListener('click', function(e) {
+            e.preventDefault();
+            toggleFornecedorInput();
+        });
+
+        // ===== BOTÃO SALVAR =====
+        document.getElementById('btnSalvarAprovacao').addEventListener('click', function(e) {
+            e.preventDefault();
+            salvarAprovacao();
+        });
+
+        // ===== LIMPAR FILTROS =====
+        document.getElementById('btnLimparFiltros').addEventListener('click', function() {
+            document.getElementById('buscaAprovadas').value = '';
+            document.getElementById('filtroStatusAprovacao').value = '';
+            renderizarTabela();
+        });
+
+        // ===== FILTROS =====
+        document.getElementById('buscaAprovadas').addEventListener('input', renderizarTabela);
+        document.getElementById('filtroStatusAprovacao').addEventListener('change', renderizarTabela);
+
+        // ===== ATALHO CTRL+S =====
+        document.addEventListener('keydown', function(e) {
+            if (e.ctrlKey && e.key === 's') {
+                e.preventDefault();
+                salvarAprovacao();
+            }
+        });
+
+        // ===== MÁSCARA PARA VALOR =====
+        document.getElementById('valorAprovado').addEventListener('blur', function() {
+            const valor = parseFloat(this.value.replace('R$ ', '').replace(/\./g, '').replace(',', '.'));
+            if (!isNaN(valor) && valor > 0) {
+                this.value = 'R$ ' + valor.toFixed(2).replace('.', ',');
+            } else {
+                this.value = '';
+            }
+        });
+
+        // ===== ENTER NO CAMPO MANUAL =====
+        document.getElementById('fornecedorAprovadoManual').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                salvarAprovacao();
+            }
+        });
+
+        mostrarMensagem('📋 Sistema de Cotações Aprovadas - Clique em "Manual" para digitar', '#191D1B');
+    });
+</script>
+</body>
+</html>

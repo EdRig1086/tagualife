@@ -1,0 +1,1245 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TaguáLife Center · Login</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800;14..32,900&display=swap" rel="stylesheet" />
+    <style>
+        :root {
+            --verde-claro: #C1CE83;
+            --verde-oliva: #7A816E;
+            --branco: #FBFBF7;
+            --preto: #191D1B;
+            --primary: #191D1B;
+            --primary-light: #3A4A3A;
+            --secondary: #7A816E;
+            --gold: #C1CE83;
+            --gold-light: #D8E0B0;
+            --success: #7A816E;
+            --danger: #8B3A3A;
+            --warning: #C1A83C;
+            --gray-50: #FBFBF7;
+            --gray-100: #F0F2EA;
+            --gray-200: #D8DCCE;
+            --gray-300: #B8BEA8;
+            --gray-400: #9AA08E;
+            --gray-500: #7A816E;
+            --gray-600: #5A614E;
+            --gray-700: #3A4132;
+            --gray-800: #191D1B;
+            --gray-900: #0D0F0E;
+            --shadow: 0 4px 24px rgba(25, 29, 27, 0.08);
+            --shadow-hover: 0 6px 32px rgba(25, 29, 27, 0.15);
+            --font-primary: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            --bg-body: #E8EBE0;
+            --bg-card: var(--branco);
+            --text-primary: var(--preto);
+            --text-secondary: var(--verde-oliva);
+            --border-color: var(--gray-200);
+            --input-bg: transparent;
+            --input-border: var(--gray-300);
+            --radius: 16px;
+            --radius-sm: 10px;
+        }
+
+        body.dark-mode {
+            --bg-body: #1a1a1a;
+            --bg-card: #2a2a2a;
+            --text-primary: #e8e8e8;
+            --text-secondary: #b0b8a8;
+            --border-color: #444;
+            --input-bg: #333;
+            --input-border: #555;
+            --gray-50: #2a2a2a;
+            --gray-100: #333;
+            --gray-200: #444;
+            --gray-300: #555;
+            --gray-400: #666;
+            --gray-500: #777;
+            --preto: #e8e8e8;
+            --branco: #2a2a2a;
+            --shadow: 0 4px 24px rgba(0,0,0,0.3);
+            --shadow-hover: 0 6px 32px rgba(0,0,0,0.4);
+        }
+
+        body.dark-mode .login-card,
+        body.dark-mode .modal-content {
+            background: var(--bg-card);
+            border-color: var(--border-color);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: var(--font-primary);
+            font-weight: 400;
+            background: var(--bg-body);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: var(--text-primary);
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            transition: background 0.3s, color 0.3s;
+            padding: 1rem;
+        }
+
+        .login-container {
+            width: 100%;
+            max-width: 420px;
+        }
+
+        .login-card {
+            background: var(--bg-card);
+            border-radius: 16px;
+            box-shadow: var(--shadow-hover);
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+            transition: background 0.3s, border-color 0.3s, box-shadow 0.3s;
+            padding: 2rem 1.8rem;
+        }
+
+        .login-header {
+            text-align: center;
+            margin-bottom: 1.8rem;
+        }
+
+        .login-header .logo-icon {
+            width: 70px;
+            height: 70px;
+            background: var(--preto);
+            border-radius: 16px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--verde-claro);
+            font-weight: 800;
+            font-size: 1.4rem;
+            flex-direction: column;
+            line-height: 1;
+            padding: 0.3rem;
+            margin-bottom: 0.8rem;
+            transition: background 0.3s;
+        }
+
+        .login-header .logo-icon small {
+            font-size: 0.45rem;
+            color: var(--branco);
+            font-weight: 400;
+            letter-spacing: 0.5px;
+            margin-top: 2px;
+        }
+
+        .login-header h1 {
+            font-size: 1.4rem;
+            font-weight: 800;
+            color: var(--text-primary);
+            letter-spacing: -0.5px;
+        }
+
+        .login-header h1 .life {
+            color: var(--verde-claro);
+        }
+
+        .login-header p {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            margin-top: 0.2rem;
+        }
+
+        .login-tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+            background: var(--gray-50);
+            border-radius: 10px;
+            padding: 0.3rem;
+            border: 1px solid var(--border-color);
+        }
+
+        .login-tabs .tab-btn {
+            flex: 1;
+            padding: 0.5rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.7rem;
+            cursor: pointer;
+            transition: 0.3s;
+            font-family: inherit;
+            background: transparent;
+            color: var(--text-secondary);
+        }
+
+        .login-tabs .tab-btn.active {
+            background: var(--preto);
+            color: var(--branco);
+        }
+
+        .login-tabs .tab-btn:hover:not(.active) {
+            background: var(--gray-200);
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            font-size: 0.65rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 0.3rem;
+        }
+
+        .form-group label i {
+            margin-right: 0.3rem;
+            color: var(--verde-claro);
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 0.6rem 0.8rem;
+            border: none;
+            border-bottom: 2px solid var(--input-border);
+            background: var(--input-bg);
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--text-primary);
+            outline: none;
+            transition: 0.2s;
+            font-family: inherit;
+        }
+
+        .form-group input:focus {
+            border-bottom-color: var(--verde-claro);
+        }
+
+        .form-group input.error {
+            border-bottom-color: var(--danger) !important;
+        }
+
+        .form-group input.success {
+            border-bottom-color: var(--success) !important;
+        }
+
+        .form-group .input-wrapper {
+            position: relative;
+        }
+
+        .form-group .input-wrapper .toggle-password {
+            position: absolute;
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-size: 0.8rem;
+            padding: 0.3rem;
+        }
+
+        .form-group .input-wrapper .toggle-password:hover {
+            color: var(--text-primary);
+        }
+
+        .form-options {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.2rem;
+            flex-wrap: wrap;
+            gap: 0.3rem;
+        }
+
+        .form-options label {
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+            cursor: pointer;
+        }
+
+        .form-options label input[type="checkbox"] {
+            accent-color: var(--verde-claro);
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+        }
+
+        .form-options .forgot-link {
+            font-size: 0.7rem;
+            color: var(--verde-oliva);
+            text-decoration: none;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .form-options .forgot-link:hover {
+            text-decoration: underline;
+        }
+
+        .btn-login {
+            width: 100%;
+            padding: 0.7rem;
+            border: none;
+            border-radius: 40px;
+            font-weight: 700;
+            font-size: 0.85rem;
+            background: var(--preto);
+            color: var(--branco);
+            cursor: pointer;
+            transition: 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            font-family: inherit;
+        }
+
+        .btn-login:hover {
+            background: #2A3A2A;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 16px rgba(25, 29, 27, 0.2);
+        }
+
+        .btn-login:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-login .spinner {
+            display: none;
+            animation: spin 0.8s linear infinite;
+        }
+
+        .btn-login.loading .spinner {
+            display: inline-block;
+        }
+
+        .btn-login.loading .btn-text {
+            display: none;
+        }
+
+        @keyframes spin {
+            100% { transform: rotate(360deg); }
+        }
+
+        .login-footer {
+            text-align: center;
+            margin-top: 1.2rem;
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+        }
+
+        .login-footer a {
+            color: var(--verde-oliva);
+            text-decoration: none;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .login-footer a:hover {
+            text-decoration: underline;
+        }
+
+        .message {
+            padding: 0.6rem 0.8rem;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            margin-bottom: 1rem;
+            display: none;
+        }
+
+        .message.error {
+            display: block;
+            background: rgba(139, 58, 58, 0.1);
+            color: var(--danger);
+            border: 1px solid rgba(139, 58, 58, 0.2);
+        }
+
+        .message.success {
+            display: block;
+            background: rgba(122, 129, 110, 0.1);
+            color: var(--success);
+            border: 1px solid rgba(122, 129, 110, 0.2);
+        }
+
+        .message.warning {
+            display: block;
+            background: rgba(193, 168, 60, 0.1);
+            color: #A89232;
+            border: 1px solid rgba(193, 168, 60, 0.2);
+        }
+
+        .theme-toggle {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 40px;
+            padding: 0.3rem 0.8rem;
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-size: 0.65rem;
+            font-family: inherit;
+            transition: 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+            z-index: 100;
+        }
+
+        .theme-toggle:hover {
+            border-color: var(--verde-claro);
+        }
+
+        /* MODAL */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(25, 29, 27, 0.6);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(4px);
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--bg-card);
+            padding: 1.8rem;
+            border-radius: 16px;
+            max-width: 400px;
+            width: 90%;
+            box-shadow: var(--shadow-hover);
+            border: 1px solid var(--border-color);
+            transition: background 0.3s, border-color 0.3s;
+        }
+
+        .modal-content h3 {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .modal-content h3 i {
+            color: var(--verde-claro);
+        }
+
+        .modal-content p {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+        }
+
+        .modal-botoes {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 1rem;
+            justify-content: flex-end;
+        }
+
+        .modal-botoes .btn {
+            padding: 0.4rem 1.2rem;
+            border: none;
+            border-radius: 40px;
+            font-weight: 600;
+            font-size: 0.7rem;
+            cursor: pointer;
+            transition: 0.2s;
+            font-family: inherit;
+        }
+
+        .modal-botoes .btn-secondary {
+            background: var(--gray-200);
+            color: var(--text-primary);
+        }
+
+        .modal-botoes .btn-secondary:hover {
+            background: var(--gray-300);
+        }
+
+        .modal-botoes .btn-primary {
+            background: var(--preto);
+            color: var(--branco);
+        }
+
+        .modal-botoes .btn-primary:hover {
+            background: #2A3A2A;
+        }
+
+        .versiculo-login {
+            text-align: center;
+            margin-top: 1.2rem;
+            padding: 0.6rem 0.8rem;
+            background: var(--gray-50);
+            border-radius: 8px;
+            border-left: 3px solid var(--verde-claro);
+            font-size: 0.7rem;
+            font-style: italic;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .versiculo-login:hover {
+            background: var(--gray-100);
+            border-left-color: var(--verde-oliva);
+        }
+        .versiculo-login .ref {
+            display: block;
+            font-style: normal;
+            font-weight: 600;
+            color: var(--verde-oliva);
+            margin-top: 0.2rem;
+            font-size: 0.6rem;
+        }
+
+        .info-sistema {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-top: 1rem;
+            font-size: 0.55rem;
+            color: var(--text-secondary);
+            flex-wrap: wrap;
+        }
+        .info-sistema span {
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+        .info-sistema i {
+            color: var(--verde-claro);
+        }
+
+        .versao-sistema {
+            text-align: center;
+            margin-top: 1rem;
+            font-size: 0.5rem;
+            color: var(--gray-400);
+            letter-spacing: 0.5px;
+        }
+
+        @media (max-width: 480px) {
+            .login-card { padding: 1.5rem 1.2rem; }
+            .login-header h1 { font-size: 1.2rem; }
+            .login-header .logo-icon { width: 60px; height: 60px; font-size: 1.2rem; }
+            .theme-toggle { top: 0.5rem; right: 0.5rem; font-size: 0.55rem; padding: 0.2rem 0.6rem; }
+            .versiculo-login { font-size: 0.65rem; }
+            .info-sistema { gap: 0.5rem; font-size: 0.5rem; }
+        }
+    </style>
+</head>
+<body>
+
+<button class="theme-toggle" onclick="toggleTheme()" id="themeToggle">
+    <i class="fas fa-moon" id="themeIcon"></i>
+    <span id="themeLabel">Tema</span>
+</button>
+
+<div class="login-container">
+    <div class="login-card">
+        <!-- HEADER -->
+        <div class="login-header">
+            <div class="logo-icon">
+                T
+                <small>LIFE</small>
+            </div>
+            <h1>Taguá<span class="life">Life</span></h1>
+            <p>Life Conceito em Gestão Condominial</p>
+        </div>
+
+        <!-- TABS -->
+        <div class="login-tabs">
+            <button class="tab-btn active" data-tab="login" onclick="switchTab('login')">
+                <i class="fas fa-sign-in-alt"></i> Entrar
+            </button>
+            <button class="tab-btn" data-tab="register" onclick="switchTab('register')">
+                <i class="fas fa-user-plus"></i> Registrar
+            </button>
+        </div>
+
+        <!-- MENSAGEM -->
+        <div class="message" id="message"></div>
+
+        <!-- FORM LOGIN -->
+        <form id="formLogin" onsubmit="return handleLogin(event)">
+            <div class="form-group">
+                <label><i class="fas fa-user"></i> E-mail</label>
+                <input type="email" id="loginEmail" placeholder="seu@email.com" required autocomplete="email" />
+            </div>
+            <div class="form-group">
+                <label><i class="fas fa-lock"></i> Senha</label>
+                <div class="input-wrapper">
+                    <input type="password" id="loginPassword" placeholder="Digite sua senha" required autocomplete="current-password" />
+                    <button type="button" class="toggle-password" onclick="togglePassword('loginPassword')">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="form-options">
+                <label>
+                    <input type="checkbox" id="rememberMe" /> Lembrar-me
+                </label>
+                <span class="forgot-link" onclick="openForgotModal()">Esqueceu a senha?</span>
+            </div>
+            <button type="submit" class="btn-login" id="btnLogin">
+                <span class="btn-text"><i class="fas fa-arrow-right"></i> Entrar</span>
+                <span class="spinner"><i class="fas fa-spinner"></i></span>
+            </button>
+        </form>
+
+        <!-- FORM REGISTRO -->
+        <form id="formRegister" onsubmit="return handleRegister(event)" style="display:none;">
+            <div class="form-group">
+                <label><i class="fas fa-user"></i> Nome Completo</label>
+                <input type="text" id="regNome" placeholder="Seu nome completo" required />
+            </div>
+            <div class="form-group">
+                <label><i class="fas fa-envelope"></i> E-mail</label>
+                <input type="email" id="regEmail" placeholder="seu@email.com" required />
+            </div>
+            <div class="form-group">
+                <label><i class="fas fa-lock"></i> Senha</label>
+                <div class="input-wrapper">
+                    <input type="password" id="regPassword" placeholder="Mínimo 6 caracteres" required minlength="6" />
+                    <button type="button" class="toggle-password" onclick="togglePassword('regPassword')">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="form-group">
+                <label><i class="fas fa-lock"></i> Confirmar Senha</label>
+                <div class="input-wrapper">
+                    <input type="password" id="regConfirmPassword" placeholder="Confirme sua senha" required />
+                    <button type="button" class="toggle-password" onclick="togglePassword('regConfirmPassword')">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="form-group">
+                <label><i class="fas fa-briefcase"></i> Cargo</label>
+                <select id="regCargo" style="width:100%; padding:0.6rem 0.8rem; border:none; border-bottom:2px solid var(--input-border); background:var(--input-bg); font-size:0.9rem; font-weight:500; color:var(--text-primary); outline:none; font-family:inherit; cursor:pointer;">
+                    <option value="Usuário">Usuário</option>
+                    <option value="Almoxarife">Almoxarife</option>
+                    <option value="Síndico">Síndico</option>
+                    <option value="Administrador">Administrador</option>
+                </select>
+            </div>
+            <button type="submit" class="btn-login" id="btnRegister">
+                <span class="btn-text"><i class="fas fa-user-plus"></i> Criar Conta</span>
+                <span class="spinner"><i class="fas fa-spinner"></i></span>
+            </button>
+        </form>
+
+        <!-- VERSÍCULO DO DIA -->
+        <div class="versiculo-login" id="versiculoLogin" title="Clique para abrir o site do versículo">
+            <span id="versiculoTexto">Carregando versículo...</span>
+            <span class="ref" id="versiculoRef"></span>
+        </div>
+
+        <!-- INFO SISTEMA -->
+        <div class="info-sistema">
+            <span><i class="fas fa-shield-alt"></i> Seguro</span>
+            <span><i class="fas fa-database"></i> Local</span>
+            <span><i class="fas fa-clock"></i> <span id="horaSistema"></span></span>
+        </div>
+
+        <div class="versao-sistema">
+            TaguáLife Center v2.0 • Sistema de Gestão Condominial
+        </div>
+
+        <div class="login-footer">
+            <span id="footerText">Já tem uma conta? <a onclick="switchTab('login')">Faça login</a></span>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL ESQUECEU SENHA -->
+<div class="modal-overlay" id="forgotModal">
+    <div class="modal-content">
+        <h3><i class="fas fa-key"></i> Recuperar Senha</h3>
+        <p>Digite seu e-mail para receber um link de recuperação. (Simulação - Versão Local)</p>
+        <div class="form-group">
+            <label>E-mail</label>
+            <input type="email" id="forgotEmail" placeholder="seu@email.com" />
+        </div>
+        <div class="modal-botoes">
+            <button class="btn btn-secondary" onclick="closeForgotModal()">Cancelar</button>
+            <button class="btn btn-primary" onclick="handleForgotPassword()">
+                <i class="fas fa-paper-plane"></i> Enviar
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL SUCESSO REGISTRO -->
+<div class="modal-overlay" id="successModal">
+    <div class="modal-content" style="text-align:center;">
+        <h3 style="justify-content:center;"><i class="fas fa-check-circle" style="color:var(--success);"></i> Conta Criada!</h3>
+        <p>Sua conta foi criada com sucesso. Agora você pode fazer login.</p>
+        <div style="margin-top:0.5rem; font-size:0.8rem; color:var(--text-secondary);">
+            <strong>E-mail:</strong> <span id="successEmail"></span>
+        </div>
+        <div class="modal-botoes" style="justify-content:center;">
+            <button class="btn btn-primary" onclick="closeSuccessModal()">
+                <i class="fas fa-sign-in-alt"></i> Fazer Login
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL RECUPERAÇÃO ENVIADA -->
+<div class="modal-overlay" id="recoveryModal">
+    <div class="modal-content" style="text-align:center;">
+        <h3 style="justify-content:center;"><i class="fas fa-envelope" style="color:var(--verde-claro);"></i> E-mail Enviado!</h3>
+        <p>Um link de recuperação foi enviado para o e-mail informado.</p>
+        <p style="font-size:0.65rem; color:var(--text-secondary);">(Simulação - Versão Local)</p>
+        <div class="modal-botoes" style="justify-content:center;">
+            <button class="btn btn-primary" onclick="closeRecoveryModal()">
+                <i class="fas fa-check"></i> Entendi
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ============================================
+    // CHAVE DO LOCALSTORAGE
+    // ============================================
+    const USUARIOS_KEY = 'tagualife_usuarios';
+    const SESSAO_KEY = 'tagualife_sessao';
+    const TEMA_KEY = 'tema_TaguáLife';
+
+    // ============================================
+    // VERSÍCULOS DO DIA (365 dias)
+    // ============================================
+    const versiculos = [
+        { texto: '"Porque Deus amou o mundo de tal maneira que deu o seu Filho unigênito, para que todo aquele que nele crê não pereça, mas tenha a vida eterna."', ref: 'João 3:16' },
+        { texto: '"O Senhor é o meu pastor; nada me faltará."', ref: 'Salmo 23:1' },
+        { texto: '"Tudo posso naquele que me fortalece."', ref: 'Filipenses 4:13' },
+        { texto: '"Deus é o nosso refúgio e fortaleza, socorro bem presente na angústia."', ref: 'Salmo 46:1' },
+        { texto: '"Não temas, porque eu sou contigo; não te assombres, porque eu sou o teu Deus; eu te fortaleço, e te ajudo, e te sustento com a minha destra fiel."', ref: 'Isaías 41:10' },
+        { texto: '"O amor é paciente, o amor é bondoso. Não inveja, não se vangloria, não se orgulha."', ref: '1 Coríntios 13:4' },
+        { texto: '"Alegrai-vos sempre no Senhor; outra vez digo, alegrai-vos."', ref: 'Filipenses 4:4' },
+        { texto: '"Confia no Senhor de todo o teu coração e não te estribes no teu próprio entendimento."', ref: 'Provérbios 3:5' },
+        { texto: '"Buscai primeiro o reino de Deus e a sua justiça, e todas estas coisas vos serão acrescentadas."', ref: 'Mateus 6:33' },
+        { texto: '"O Senhor é bom, é fortaleza no dia da angústia, e conhece os que nele confiam."', ref: 'Naum 1:7' },
+        { texto: '"Vinde a mim, todos os que estais cansados e oprimidos, e eu vos aliviarei."', ref: 'Mateus 11:28' },
+        { texto: '"Eis que estou à porta e bato; se alguém ouvir a minha voz e abrir a porta, entrarei em sua casa."', ref: 'Apocalipse 3:20' },
+        { texto: '"O Senhor te abençoe e te guarde; o Senhor faça resplandecer o seu rosto sobre ti e te conceda graça."', ref: 'Números 6:24-25' },
+        { texto: '"Entrega o teu caminho ao Senhor; confia nele, e ele tudo fará."', ref: 'Salmo 37:5' },
+        { texto: '"E conhecereis a verdade, e a verdade vos libertará."', ref: 'João 8:32' },
+        { texto: '"O meu Deus suprirá todas as vossas necessidades, segundo as suas riquezas na glória, por Cristo Jesus."', ref: 'Filipenses 4:19' },
+        { texto: '"Porque o salário do pecado é a morte, mas o dom gratuito de Deus é a vida eterna, por Cristo Jesus nosso Senhor."', ref: 'Romanos 6:23' },
+        { texto: '"Eis que faço novas todas as coisas."', ref: 'Apocalipse 21:5' },
+        { texto: '"O coração do homem planeja o seu caminho, mas o Senhor lhe dirige os passos."', ref: 'Provérbios 16:9' },
+        { texto: '"Louvarei ao Senhor em todo o tempo; o seu louvor estará continuamente na minha boca."', ref: 'Salmo 34:1' },
+        { texto: '"O Senhor é a minha luz e a minha salvação; a quem temerei?"', ref: 'Salmo 27:1' },
+        { texto: '"Não se turbe o vosso coração; credes em Deus, crede também em mim."', ref: 'João 14:1' },
+        { texto: '"Em paz me deito e logo adormeço, porque só tu, Senhor, me fazes habitar em segurança."', ref: 'Salmo 4:8' },
+        { texto: '"O temor do Senhor é o princípio da sabedoria; todos os que cumprem os seus preceitos têm bom entendimento."', ref: 'Salmo 111:10' },
+        { texto: '"Não te deixes vencer pelo mal, mas vence o mal com o bem."', ref: 'Romanos 12:21' },
+        { texto: '"Ora, a fé é a certeza daquilo que esperamos e a prova das coisas que não vemos."', ref: 'Hebreus 11:1' },
+        { texto: '"Bem-aventurados os pacificadores, porque serão chamados filhos de Deus."', ref: 'Mateus 5:9' },
+        { texto: '"Alegrai-vos na esperança, sede pacientes na tribulação, perseverai na oração."', ref: 'Romanos 12:12' },
+        { texto: '"Porque tudo o que foi escrito no passado foi escrito para nossa instrução, para que, pela perseverança e pelo encorajamento das Escrituras, tenhamos esperança."', ref: 'Romanos 15:4' },
+        { texto: '"Ora, o Deus de esperança vos encha de todo o gozo e paz na vossa fé, para que abundeis na esperança pelo poder do Espírito Santo."', ref: 'Romanos 15:13' },
+        { texto: '"Graças a Deus pela sua dádiva inexprimível!"', ref: '2 Coríntios 9:15' },
+    ];
+
+    // ============================================
+    // USUÁRIO PADRÃO (primeiro acesso)
+    // ============================================
+    function inicializarUsuarios() {
+        let usuarios = JSON.parse(localStorage.getItem(USUARIOS_KEY) || '[]');
+        if (usuarios.length === 0) {
+            usuarios = [
+                {
+                    id: 1,
+                    nome: 'Administrador',
+                    email: 'admin@tagualife.com.br',
+                    senha: 'admin123',
+                    cargo: 'Administrador',
+                    dataCadastro: new Date().toISOString()
+                },
+                {
+                    id: 2,
+                    nome: 'Ednaldo de Souza',
+                    email: 'ednaldo@tagualife.com.br',
+                    senha: '123456',
+                    cargo: 'Almoxarife',
+                    dataCadastro: new Date().toISOString()
+                },
+                {
+                    id: 3,
+                    nome: 'Elisabeth Velásquez',
+                    email: 'sindica@tagualife.com.br',
+                    senha: 'sindica123',
+                    cargo: 'Síndico',
+                    dataCadastro: new Date().toISOString()
+                }
+            ];
+            localStorage.setItem(USUARIOS_KEY, JSON.stringify(usuarios));
+        }
+        return usuarios;
+    }
+
+    // ============================================
+    // FUNÇÕES DE AUTENTICAÇÃO
+    // ============================================
+
+    function getUsuarios() {
+        return JSON.parse(localStorage.getItem(USUARIOS_KEY) || '[]');
+    }
+
+    function salvarUsuarios(usuarios) {
+        localStorage.setItem(USUARIOS_KEY, JSON.stringify(usuarios));
+    }
+
+    function getSessao() {
+        return JSON.parse(localStorage.getItem(SESSAO_KEY) || 'null');
+    }
+
+    function salvarSessao(usuario) {
+        if (usuario) {
+            localStorage.setItem(SESSAO_KEY, JSON.stringify({
+                id: usuario.id,
+                nome: usuario.nome,
+                email: usuario.email,
+                cargo: usuario.cargo,
+                login: new Date().toISOString()
+            }));
+        } else {
+            localStorage.removeItem(SESSAO_KEY);
+        }
+    }
+
+    function usuarioLogado() {
+        return getSessao() !== null;
+    }
+
+    // ============================================
+    // FUNÇÕES DE LOGIN
+    // ============================================
+
+    function handleLogin(event) {
+        event.preventDefault();
+        const email = document.getElementById('loginEmail').value.trim();
+        const senha = document.getElementById('loginPassword').value;
+        const remember = document.getElementById('rememberMe').checked;
+
+        mostrarMensagem('', '');
+
+        if (!email || !senha) {
+            mostrarMensagem('⚠️ Preencha todos os campos!', 'warning');
+            return false;
+        }
+
+        const usuarios = getUsuarios();
+        const usuario = usuarios.find(u => u.email === email);
+
+        if (!usuario) {
+            mostrarMensagem('❌ E-mail não encontrado!', 'error');
+            document.getElementById('loginEmail').classList.add('error');
+            return false;
+        }
+
+        if (usuario.senha !== senha) {
+            mostrarMensagem('❌ Senha incorreta!', 'error');
+            document.getElementById('loginPassword').classList.add('error');
+            return false;
+        }
+
+        // Login bem-sucedido
+        salvarSessao(usuario);
+        
+        if (remember) {
+            localStorage.setItem('tagualife_remember', email);
+        } else {
+            localStorage.removeItem('tagualife_remember');
+        }
+
+        mostrarMensagem('✅ Login realizado com sucesso!', 'success');
+
+        // Redirecionar após 1 segundo
+        setTimeout(() => {
+            window.location.href = 'index.html';
+        }, 1000);
+
+        return false;
+    }
+
+    // ============================================
+    // FUNÇÕES DE REGISTRO
+    // ============================================
+
+    function handleRegister(event) {
+        event.preventDefault();
+        
+        const nome = document.getElementById('regNome').value.trim();
+        const email = document.getElementById('regEmail').value.trim();
+        const senha = document.getElementById('regPassword').value;
+        const confirmSenha = document.getElementById('regConfirmPassword').value;
+        const cargo = document.getElementById('regCargo').value;
+
+        mostrarMensagem('', '');
+
+        if (!nome || !email || !senha || !confirmSenha) {
+            mostrarMensagem('⚠️ Preencha todos os campos!', 'warning');
+            return false;
+        }
+
+        if (senha.length < 6) {
+            mostrarMensagem('⚠️ A senha deve ter pelo menos 6 caracteres!', 'warning');
+            return false;
+        }
+
+        if (senha !== confirmSenha) {
+            mostrarMensagem('⚠️ As senhas não coincidem!', 'warning');
+            return false;
+        }
+
+        const usuarios = getUsuarios();
+        
+        if (usuarios.find(u => u.email === email)) {
+            mostrarMensagem('❌ Este e-mail já está cadastrado!', 'error');
+            return false;
+        }
+
+        // Criar novo usuário
+        const novoUsuario = {
+            id: Date.now(),
+            nome: nome,
+            email: email,
+            senha: senha,
+            cargo: cargo || 'Usuário',
+            dataCadastro: new Date().toISOString()
+        };
+
+        usuarios.push(novoUsuario);
+        salvarUsuarios(usuarios);
+
+        // Limpar formulário
+        document.getElementById('regNome').value = '';
+        document.getElementById('regEmail').value = '';
+        document.getElementById('regPassword').value = '';
+        document.getElementById('regConfirmPassword').value = '';
+        document.getElementById('regCargo').value = 'Usuário';
+
+        // Abrir modal de sucesso
+        document.getElementById('successEmail').textContent = email;
+        document.getElementById('successModal').classList.add('active');
+
+        return false;
+    }
+
+    // ============================================
+    // FUNÇÕES DE RECUPERAÇÃO DE SENHA
+    // ============================================
+
+    function openForgotModal() {
+        document.getElementById('forgotModal').classList.add('active');
+        document.getElementById('forgotEmail').focus();
+    }
+
+    function closeForgotModal() {
+        document.getElementById('forgotModal').classList.remove('active');
+        document.getElementById('forgotEmail').value = '';
+    }
+
+    function closeRecoveryModal() {
+        document.getElementById('recoveryModal').classList.remove('active');
+    }
+
+    function handleForgotPassword() {
+        const email = document.getElementById('forgotEmail').value.trim();
+        
+        if (!email) {
+            alert('⚠️ Digite seu e-mail!');
+            return;
+        }
+
+        const usuarios = getUsuarios();
+        const usuario = usuarios.find(u => u.email === email);
+
+        if (!usuario) {
+            alert('❌ E-mail não encontrado!');
+            return;
+        }
+
+        // Simular envio de e-mail
+        closeForgotModal();
+        document.getElementById('recoveryModal').classList.add('active');
+        
+        // Salvar tentativa de recuperação
+        const recuperacoes = JSON.parse(localStorage.getItem('tagualife_recuperacoes') || '[]');
+        recuperacoes.push({
+            email: email,
+            data: new Date().toISOString(),
+            token: 'simulado_' + Date.now()
+        });
+        localStorage.setItem('tagualife_recuperacoes', JSON.stringify(recuperacoes));
+    }
+
+    // ============================================
+    // FUNÇÕES DE UI
+    // ============================================
+
+    function mostrarMensagem(texto, tipo) {
+        const el = document.getElementById('message');
+        if (!texto) {
+            el.style.display = 'none';
+            el.textContent = '';
+            el.className = 'message';
+            return;
+        }
+        el.textContent = texto;
+        el.className = 'message ' + tipo;
+        el.style.display = 'block';
+    }
+
+    function switchTab(tab) {
+        const loginForm = document.getElementById('formLogin');
+        const registerForm = document.getElementById('formRegister');
+        const tabs = document.querySelectorAll('.tab-btn');
+        const footer = document.getElementById('footerText');
+
+        mostrarMensagem('', '');
+
+        if (tab === 'login') {
+            loginForm.style.display = 'block';
+            registerForm.style.display = 'none';
+            tabs[0].classList.add('active');
+            tabs[1].classList.remove('active');
+            footer.innerHTML = 'Já tem uma conta? <a onclick="switchTab(\'login\')">Faça login</a>';
+        } else {
+            loginForm.style.display = 'none';
+            registerForm.style.display = 'block';
+            tabs[0].classList.remove('active');
+            tabs[1].classList.add('active');
+            footer.innerHTML = 'Já tem uma conta? <a onclick="switchTab(\'login\')">Faça login</a>';
+        }
+    }
+
+    function togglePassword(id) {
+        const input = document.getElementById(id);
+        const icon = input.parentElement.querySelector('.toggle-password i');
+        if (input.type === 'password') {
+            input.type = 'text';
+            icon.className = 'fas fa-eye-slash';
+        } else {
+            input.type = 'password';
+            icon.className = 'fas fa-eye';
+        }
+    }
+
+    function closeSuccessModal() {
+        document.getElementById('successModal').classList.remove('active');
+        switchTab('login');
+        const email = document.getElementById('regEmail').value;
+        if (email) {
+            document.getElementById('loginEmail').value = email;
+        }
+        document.getElementById('loginPassword').focus();
+    }
+
+    // ============================================
+    // VERSÍCULO DO DIA
+    // ============================================
+    function carregarVersiculo() {
+        const agora = new Date();
+        const inicioAno = new Date(agora.getFullYear(), 0, 0);
+        const diff = agora - inicioAno;
+        const diaDoAno = Math.floor(diff / (1000 * 60 * 60 * 24));
+        const indice = diaDoAno % versiculos.length;
+        const v = versiculos[indice] || versiculos[0];
+        
+        document.getElementById('versiculoTexto').textContent = v.texto;
+        document.getElementById('versiculoRef').textContent = '— ' + v.ref;
+    }
+
+    function abrirVersiculo() {
+        window.open('https://www.bibliaon.com/versiculo_do_dia/', '_blank');
+    }
+
+    // ============================================
+    // RELÓGIO
+    // ============================================
+    function atualizarHora() {
+        const agora = new Date();
+        const hora = agora.toLocaleTimeString('pt-BR', { 
+            timeZone: 'America/Sao_Paulo',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+        document.getElementById('horaSistema').textContent = hora;
+    }
+
+    // ============================================
+    // TEMA (CLARO/ESCURO)
+    // ============================================
+
+    function toggleTheme() {
+        const body = document.body;
+        body.classList.toggle('dark-mode');
+        const isDark = body.classList.contains('dark-mode');
+        localStorage.setItem(TEMA_KEY, isDark ? 'dark' : 'light');
+        updateThemeUI();
+    }
+
+    function carregarTema() {
+        const theme = localStorage.getItem(TEMA_KEY);
+        if (theme === 'dark') {
+            document.body.classList.add('dark-mode');
+        }
+        updateThemeUI();
+    }
+
+    function updateThemeUI() {
+        const isDark = document.body.classList.contains('dark-mode');
+        const icon = document.getElementById('themeIcon');
+        const label = document.getElementById('themeLabel');
+        if (isDark) {
+            icon.className = 'fas fa-sun';
+            label.textContent = 'Claro';
+        } else {
+            icon.className = 'fas fa-moon';
+            label.textContent = 'Tema';
+        }
+    }
+
+    // ============================================
+    // PREENCHER E-MAIL LEMBRADO
+    // ============================================
+
+    function preencherEmailLembrado() {
+        const email = localStorage.getItem('tagualife_remember');
+        if (email) {
+            document.getElementById('loginEmail').value = email;
+            document.getElementById('rememberMe').checked = true;
+        }
+    }
+
+    // ============================================
+    // VERIFICAR SE JÁ ESTÁ LOGADO
+    // ============================================
+
+    function verificarSessao() {
+        if (usuarioLogado()) {
+            window.location.href = 'index.html';
+        }
+    }
+
+    // ============================================
+    // VALIDAÇÃO EM TEMPO REAL
+    // ============================================
+
+    function validarCampo(input) {
+        if (input.value.trim() === '') {
+            input.classList.remove('success');
+            input.classList.add('error');
+            return false;
+        }
+        input.classList.remove('error');
+        input.classList.add('success');
+        return true;
+    }
+
+    // ============================================
+    // EVENTOS DE TECLADO
+    // ============================================
+
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            if (document.getElementById('forgotModal').classList.contains('active')) {
+                closeForgotModal();
+            }
+            if (document.getElementById('successModal').classList.contains('active')) {
+                closeSuccessModal();
+            }
+            if (document.getElementById('recoveryModal').classList.contains('active')) {
+                closeRecoveryModal();
+            }
+        }
+        
+        // Enter para submeter formulário
+        if (e.key === 'Enter') {
+            const activeElement = document.activeElement;
+            if (activeElement && activeElement.closest('#formLogin')) {
+                handleLogin(e);
+            }
+            if (activeElement && activeElement.closest('#formRegister')) {
+                handleRegister(e);
+            }
+        }
+    });
+
+    // ============================================
+    // INICIALIZAÇÃO
+    // ============================================
+
+    function init() {
+        inicializarUsuarios();
+        carregarTema();
+        preencherEmailLembrado();
+        verificarSessao();
+        carregarVersiculo();
+        atualizarHora();
+        setInterval(atualizarHora, 1000);
+
+        // Limpar erros ao digitar
+        document.querySelectorAll('#formLogin input, #formRegister input').forEach(input => {
+            input.addEventListener('input', function() {
+                if (this.value.trim() !== '') {
+                    this.classList.remove('error');
+                    this.classList.add('success');
+                } else {
+                    this.classList.remove('success');
+                }
+                mostrarMensagem('', '');
+            });
+            
+            input.addEventListener('blur', function() {
+                validarCampo(this);
+            });
+        });
+
+        // Evento para o versículo
+        document.getElementById('versiculoLogin').addEventListener('click', abrirVersiculo);
+
+        console.log('🔐 Sistema de Login TaguáLife Center v2.0');
+        console.log('📧 Usuários padrão:');
+        console.log('   admin@tagualife.com.br / admin123 (Administrador)');
+        console.log('   ednaldo@tagualife.com.br / 123456 (Almoxarife)');
+        console.log('   sindica@tagualife.com.br / sindica123 (Síndico)');
+        console.log('💡 Dica: Use "Lembrar-me" para não digitar o e-mail toda vez');
+    }
+
+    init();
+</script>
+</body>
+</html>

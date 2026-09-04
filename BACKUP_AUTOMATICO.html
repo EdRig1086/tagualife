@@ -1,0 +1,2219 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TaguáLife Center · Backup Automático Premium</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800;14..32,900&display=swap" rel="stylesheet" />
+    <style>
+        /* ===== ESTILOS ===== */
+        :root {
+            --verde-claro: #C1CE83;
+            --verde-oliva: #7A816E;
+            --verde-escuro: #2E7D32;
+            --branco: #FBFBF7;
+            --preto: #191D1B;
+            --bg-body: #E8EBE0;
+            --bg-card: var(--branco);
+            --text-primary: var(--preto);
+            --text-secondary: var(--verde-oliva);
+            --border-color: #D8DCCE;
+            --shadow: 0 4px 24px rgba(25, 29, 27, 0.08);
+            --shadow-hover: 0 8px 40px rgba(25, 29, 27, 0.15);
+            --font-primary: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            --radius: 16px;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --input-bg: transparent;
+            --input-border: var(--border-color);
+        }
+
+        body.dark-mode {
+            --bg-body: #0a0a0a;
+            --bg-card: #161616;
+            --text-primary: #e8e8e8;
+            --text-secondary: #a0a8a0;
+            --border-color: #2a2a2a;
+            --preto: #e8e8e8;
+            --branco: #161616;
+            --shadow: 0 4px 24px rgba(0,0,0,0.6);
+            --shadow-hover: 0 8px 40px rgba(0,0,0,0.8);
+            --input-bg: #222;
+            --input-border: #3a3a3a;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: var(--font-primary);
+            font-weight: 400;
+            background: var(--bg-body);
+            min-height: 100vh;
+            padding: 0.8rem;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            color: var(--text-primary);
+            transition: var(--transition);
+        }
+
+        .app-container { max-width: 1200px; width: 100%; }
+
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: var(--bg-body); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb { background: var(--verde-claro); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--verde-oliva); }
+
+        /* TOPBAR */
+        .app-topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.6rem;
+            flex-wrap: wrap;
+            gap: 0.3rem;
+            background: var(--bg-card);
+            padding: 0.4rem 1.2rem;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border-color);
+            transition: var(--transition);
+        }
+
+        .logo-area {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .logo-icon {
+            width: 42px;
+            height: 42px;
+            background: linear-gradient(135deg, var(--verde-escuro), var(--verde-oliva));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 800;
+            font-size: 0.7rem;
+            flex-direction: column;
+            line-height: 1;
+            padding: 0.2rem;
+            box-shadow: 0 2px 8px rgba(46, 125, 50, 0.3);
+        }
+        .logo-icon small { font-size: 0.3rem; opacity: 0.8; font-weight: 400; letter-spacing: 0.5px; }
+        .logo-text .title { font-size: 1.2rem; font-weight: 800; letter-spacing: -0.5px; }
+        .logo-text .title .tagua { color: var(--text-primary); }
+        .logo-text .title .life { color: var(--verde-claro); }
+        .logo-text .slogan { font-size: 0.4rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1.5px; font-weight: 500; }
+
+        .app-topbar .badge {
+            background: linear-gradient(135deg, var(--verde-claro), var(--verde-oliva));
+            padding: 0.2rem 0.8rem;
+            border-radius: 40px;
+            font-size: 0.55rem;
+            font-weight: 600;
+            color: var(--preto);
+            border: 1px solid var(--verde-oliva);
+            box-shadow: 0 2px 8px rgba(193, 206, 131, 0.3);
+        }
+
+        .clock-display {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            background: var(--preto);
+            padding: 0.2rem 0.8rem;
+            border-radius: 40px;
+            border: 1px solid var(--verde-claro);
+            font-size: 0.8rem;
+            color: var(--branco);
+            letter-spacing: 1px;
+            font-weight: 500;
+            box-shadow: 0 2px 12px rgba(193, 206, 131, 0.15);
+        }
+        .clock-display i { color: var(--verde-claro); font-size: 0.7rem; }
+        .clock-display .clock-separator { color: var(--verde-claro); animation: blink 1s step-end infinite; }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+        .clock-display .clock-seconds { color: var(--verde-claro); font-size: 0.7rem; }
+        .clock-display .clock-date { color: var(--verde-oliva); font-size: 0.6rem; font-weight: 400; border-left: 1px solid var(--verde-oliva); padding-left: 0.5rem; }
+
+        .nav-menu {
+            display: flex;
+            gap: 0.2rem;
+            flex-wrap: wrap;
+            background: var(--bg-card);
+            padding: 0.2rem 0.6rem;
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
+            margin-bottom: 0.6rem;
+            box-shadow: 0 1px 4px rgba(25, 29, 27, 0.04);
+            transition: var(--transition);
+        }
+        .nav-menu .nav-item {
+            padding: 0.25rem 0.8rem;
+            border-radius: 40px;
+            font-size: 0.65rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: var(--transition);
+            border: 1px solid transparent;
+            cursor: pointer;
+            background: transparent;
+        }
+        .nav-menu .nav-item:hover { background: var(--verde-claro); color: var(--preto); }
+        .nav-menu .nav-item.active { background: var(--preto); color: var(--branco); border-color: var(--preto); }
+        .nav-menu .nav-item i { margin-right: 0.2rem; }
+
+        .btn-theme {
+            background: var(--border-color);
+            color: var(--text-primary);
+            border: none;
+            padding: 0.25rem 0.8rem;
+            border-radius: 40px;
+            font-size: 0.65rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+            font-family: inherit;
+        }
+        .btn-theme:hover { background: var(--verde-claro); }
+
+        /* CARD */
+        .card-backup {
+            background: var(--bg-card);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+            transition: var(--transition);
+        }
+
+        .card-header {
+            background: linear-gradient(135deg, var(--verde-claro), var(--verde-oliva));
+            padding: 0.6rem 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 0.4rem;
+            border-bottom: 3px solid var(--verde-escuro);
+        }
+        .card-header .left { display: flex; align-items: center; gap: 0.5rem; color: var(--preto); }
+        .card-header .left i { font-size: 1.3rem; color: var(--preto); }
+        .card-header .left h2 { font-size: 1rem; font-weight: 700; letter-spacing: -0.3px; color: var(--preto); }
+        .card-header .right { display: flex; align-items: center; gap: 0.6rem; color: var(--preto); font-size: 0.7rem; font-weight: 500; }
+
+        .card-body { padding: 1.5rem; }
+
+        /* BANNERS */
+        .backup-auto-banner {
+            background: linear-gradient(135deg, #E8F5E9, #C8E6C9);
+            border-left: 5px solid var(--verde-escuro);
+            padding: 0.8rem 1.2rem;
+            border-radius: 10px;
+            margin-bottom: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            transition: var(--transition);
+        }
+        body.dark-mode .backup-auto-banner {
+            background: linear-gradient(135deg, #1B2A1B, #2A3A2A);
+            border-left-color: #4CAF50;
+        }
+        .backup-auto-banner .info .titulo { font-weight: 700; font-size: 0.85rem; display: flex; align-items: center; gap: 0.5rem; }
+        .backup-auto-banner .info .titulo i { color: var(--verde-escuro); }
+        .backup-auto-banner .info .detalhes { font-size: 0.7rem; color: var(--text-secondary); margin-top: 0.2rem; }
+        .backup-auto-banner .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.3rem 0.8rem;
+            border-radius: 40px;
+            background: rgba(255,255,255,0.5);
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+        .backup-auto-banner .status-indicator .dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            display: inline-block;
+            animation: pulse-dot 2s infinite;
+        }
+        .backup-auto-banner .status-indicator .dot.active { background: var(--verde-escuro); }
+        .backup-auto-banner .status-indicator .dot.inactive { background: #999; animation: none; }
+        @keyframes pulse-dot {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.3); opacity: 0.7; }
+        }
+
+        .download-banner {
+            background: linear-gradient(135deg, #E3F2FD, #BBDEFB);
+            border-left: 5px solid #1976D2;
+            padding: 0.8rem 1.2rem;
+            border-radius: 10px;
+            margin-bottom: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            transition: var(--transition);
+        }
+        body.dark-mode .download-banner {
+            background: linear-gradient(135deg, #0D1B2A, #1A2A3A);
+            border-left-color: #42A5F5;
+        }
+        .download-banner .info .titulo { font-weight: 700; font-size: 0.85rem; display: flex; align-items: center; gap: 0.5rem; }
+        .download-banner .info .titulo i { color: #1976D2; }
+        .download-banner .info .detalhes { font-size: 0.7rem; color: var(--text-secondary); margin-top: 0.2rem; }
+        .download-banner .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.3rem 0.8rem;
+            border-radius: 40px;
+            background: rgba(255,255,255,0.5);
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+        .download-banner .status-indicator .dot-download {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+        .download-banner .status-indicator .dot-download.active { background: #1976D2; animation: pulse-dot 2s infinite; }
+        .download-banner .status-indicator .dot-download.inactive { background: #999; }
+
+        /* STATUS */
+        .backup-status {
+            background: var(--bg-body);
+            padding: 0.8rem 1.2rem;
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
+            margin: 1rem 0;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 0.5rem;
+            transition: var(--transition);
+        }
+        .backup-status .item { display: flex; flex-direction: column; }
+        .backup-status .label { font-size: 0.6rem; color: var(--text-secondary); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+        .backup-status .value { font-size: 0.85rem; font-weight: 700; color: var(--text-primary); }
+        .backup-status .value .status-ok { color: var(--verde-escuro); }
+        .backup-status .value .status-warning { color: #C1A83C; }
+
+        /* GRID */
+        .backup-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin: 1.5rem 0;
+        }
+
+        .backup-card {
+            background: var(--bg-body);
+            padding: 1.2rem;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            text-align: center;
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+        }
+        .backup-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, transparent 50%, rgba(193, 206, 131, 0.05));
+            pointer-events: none;
+        }
+        .backup-card:hover {
+            box-shadow: var(--shadow-hover);
+            transform: translateY(-4px);
+            border-color: var(--verde-claro);
+        }
+        .backup-card .icon { font-size: 2.5rem; color: var(--verde-claro); margin-bottom: 0.5rem; position: relative; z-index: 1; }
+        .backup-card h3 { font-size: 0.85rem; color: var(--text-primary); margin-bottom: 0.2rem; position: relative; z-index: 1; }
+        .backup-card p { font-size: 0.65rem; color: var(--text-secondary); margin-bottom: 0.8rem; position: relative; z-index: 1; }
+
+        .btn {
+            border: none;
+            padding: 0.4rem 1.2rem;
+            border-radius: 40px;
+            font-weight: 600;
+            font-size: 0.7rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            cursor: pointer;
+            transition: var(--transition);
+            font-family: inherit;
+            border: 1px solid transparent;
+            text-decoration: none;
+            position: relative;
+            z-index: 1;
+        }
+        .btn i { font-size: 0.7rem; }
+        .btn-outline { background: transparent; border-color: var(--border-color); color: var(--text-secondary); }
+        .btn-outline:hover { background: var(--bg-body); border-color: var(--verde-claro); }
+        .btn-primary { background: var(--preto); color: var(--branco); box-shadow: 0 2px 12px rgba(25, 29, 27, 0.2); }
+        .btn-primary:hover { background: var(--verde-escuro); transform: translateY(-2px); }
+        .btn-success { background: var(--verde-oliva); color: var(--branco); }
+        .btn-success:hover { background: var(--verde-escuro); transform: translateY(-2px); }
+        .btn-danger { background: #8B3A3A; color: var(--branco); }
+        .btn-danger:hover { background: #6A2A2A; transform: translateY(-2px); }
+        .btn-warning { background: #C1A83C; color: var(--branco); }
+        .btn-warning:hover { background: #A88A2A; transform: translateY(-2px); }
+        .btn-voltar { background: var(--border-color); color: var(--text-primary); }
+        .btn-voltar:hover { background: var(--verde-claro); transform: translateY(-2px); }
+        .btn-info { background: #1976D2; color: white; }
+        .btn-info:hover { background: #0D47A1; transform: translateY(-2px); }
+        .btn-backup-auto { background: var(--verde-escuro); color: white; }
+        .btn-backup-auto:hover { background: #1B5E20; transform: translateY(-2px); }
+        .btn-backup-auto.ativo { background: #FFD700; color: var(--preto); }
+        .btn-backup-auto.ativo:hover { background: #FFC107; transform: translateY(-2px); }
+        .btn-download-auto { background: #1976D2; color: white; }
+        .btn-download-auto:hover { background: #0D47A1; transform: translateY(-2px); }
+        .btn-download-auto.ativo { background: #FFD700; color: var(--preto); }
+        .btn-download-auto.ativo:hover { background: #FFC107; }
+
+        .proximo-backup-box {
+            background: var(--bg-body);
+            padding: 0.8rem 1.2rem;
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
+            margin-bottom: 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+        .proximo-backup-box .info { display: flex; align-items: center; gap: 0.5rem; font-size: 0.7rem; color: var(--text-secondary); }
+        .proximo-backup-box .info i { color: var(--verde-claro); font-size: 1rem; }
+        .proximo-backup-box .info strong { color: var(--text-primary); }
+        .proximo-backup-box .contagem { font-size: 0.8rem; font-weight: 700; color: var(--verde-escuro); }
+        .proximo-backup-box .contagem .destaque { background: var(--verde-claro); padding: 0.1rem 0.6rem; border-radius: 40px; color: var(--preto); }
+
+        .proximo-download-box {
+            background: var(--bg-body);
+            padding: 0.8rem 1.2rem;
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
+            margin-bottom: 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+        .proximo-download-box .info { display: flex; align-items: center; gap: 0.5rem; font-size: 0.7rem; color: var(--text-secondary); }
+        .proximo-download-box .info i { color: #1976D2; font-size: 1rem; }
+        .proximo-download-box .info strong { color: var(--text-primary); }
+        .proximo-download-box .contagem-download { font-size: 0.8rem; font-weight: 700; color: #1976D2; }
+        .proximo-download-box .contagem-download .destaque { background: #BBDEFB; padding: 0.1rem 0.6rem; border-radius: 40px; color: #0D47A1; }
+        body.dark-mode .proximo-download-box .contagem-download .destaque { background: #1A2A3A; color: #42A5F5; }
+
+        /* CONFIG */
+        .config-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            background: var(--bg-body);
+            padding: 1rem 1.2rem;
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
+            margin: 1rem 0;
+        }
+        .config-grid .campo {
+            display: flex;
+            flex-direction: column;
+            gap: 0.2rem;
+        }
+        .config-grid .campo label {
+            font-weight: 600;
+            font-size: 0.6rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+        }
+        .config-grid .campo input, .config-grid .campo select {
+            border: none;
+            border-bottom: 2px solid var(--input-border);
+            background: var(--input-bg);
+            padding: 0.3rem 0.2rem;
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: var(--text-primary);
+            outline: none;
+            transition: var(--transition);
+            font-family: inherit;
+        }
+        .config-grid .campo input:focus, .config-grid .campo select:focus { border-bottom-color: var(--verde-claro); }
+        .config-grid .campo select { cursor: pointer; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%237A816E' d='M6 8L1 3h10z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 0.3rem center; padding-right: 1.5rem; }
+
+        .lista-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+        .lista-header h3 {
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .lista-header h3 i { color: var(--verde-claro); }
+        .lista-header .contador {
+            font-size: 0.6rem;
+            color: var(--text-secondary);
+            background: var(--bg-body);
+            padding: 0.1rem 0.6rem;
+            border-radius: 40px;
+            font-weight: 500;
+        }
+        .lista-header .botoes-rapidos {
+            display: flex;
+            gap: 0.3rem;
+            flex-wrap: wrap;
+        }
+
+        .backup-lista {
+            max-height: 350px;
+            overflow-y: auto;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            background: var(--bg-body);
+        }
+
+        .backup-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem 0.8rem;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 0.7rem;
+            transition: var(--transition);
+            background: var(--bg-card);
+        }
+        .backup-item:last-child { border-bottom: none; }
+        .backup-item:hover { background: var(--bg-body); }
+        .backup-item .info { display: flex; flex-direction: column; gap: 0.1rem; flex: 1; }
+        .backup-item .info .nome { font-weight: 600; color: var(--text-primary); display: flex; align-items: center; gap: 0.3rem; flex-wrap: wrap; }
+        .backup-item .info .detalhes { font-size: 0.6rem; color: var(--text-secondary); }
+        .backup-item .acoes { display: flex; gap: 0.2rem; flex-shrink: 0; }
+
+        .badge-auto { background: var(--verde-escuro); color: white; font-size: 0.5rem; padding: 0.05rem 0.4rem; border-radius: 40px; font-weight: 600; }
+        .badge-1min { background: #FF9800; color: white; font-size: 0.5rem; padding: 0.05rem 0.4rem; border-radius: 40px; font-weight: 600; }
+        .badge-teste { background: #9C27B0; color: white; font-size: 0.5rem; padding: 0.05rem 0.4rem; border-radius: 40px; font-weight: 600; }
+        .badge-download { background: #1976D2; color: white; font-size: 0.5rem; padding: 0.05rem 0.4rem; border-radius: 40px; font-weight: 600; }
+        .badge-diario { background: #FFD700; color: #191D1B; font-size: 0.5rem; padding: 0.05rem 0.4rem; border-radius: 40px; font-weight: 700; }
+
+        .empty-state {
+            text-align: center;
+            padding: 2.5rem 1rem;
+            color: var(--text-secondary);
+        }
+        .empty-state i { font-size: 3rem; display: block; margin-bottom: 0.5rem; color: var(--border-color); }
+        .empty-state p { font-size: 0.75rem; }
+        .empty-state .sub { font-size: 0.65rem; opacity: 0.7; }
+
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(25, 29, 27, 0.7);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(6px);
+            animation: fadeIn 0.3s ease;
+        }
+        .modal-overlay.active { display: flex; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal-content {
+            background: var(--bg-card);
+            padding: 1.5rem;
+            border-radius: var(--radius);
+            max-width: 500px;
+            width: 95%;
+            box-shadow: var(--shadow-hover);
+            border: 1px solid var(--border-color);
+            max-height: 90vh;
+            overflow-y: auto;
+            animation: slideUp 0.3s ease;
+        }
+        @keyframes slideUp {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .modal-content .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+        .modal-content .modal-header h3 {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .modal-content .modal-header h3 i { color: var(--verde-claro); }
+        .modal-content .modal-header .close-modal {
+            background: none;
+            border: none;
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+            cursor: pointer;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            transition: var(--transition);
+        }
+        .modal-content .modal-header .close-modal:hover { background: var(--bg-body); }
+
+        .modal-botoes { display: flex; gap: 0.5rem; margin-top: 1rem; justify-content: flex-end; }
+
+        #toastGlobal {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 12px 24px;
+            border-radius: 10px;
+            font-weight: 500;
+            font-size: 13px;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 9999;
+            max-width: 400px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            cursor: default;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        #toastGlobal.show { transform: translateY(0); opacity: 1; }
+
+        #feedback {
+            margin-top: 1rem;
+            text-align: center;
+            min-height: 2rem;
+            font-size: 0.65rem;
+        }
+        #feedback .msg {
+            display: inline-block;
+            padding: 0.2rem 1.2rem;
+            border-radius: 40px;
+            font-weight: 500;
+        }
+
+        /* BOTÃO DE DIAGNÓSTICO */
+        .btn-diagnostico {
+            background: #6A1B9A;
+            color: white;
+        }
+        .btn-diagnostico:hover {
+            background: #4A148C;
+            transform: translateY(-2px);
+        }
+
+        @media (max-width: 768px) {
+            .app-topbar { flex-direction: column; align-items: stretch; }
+            .clock-display { justify-content: center; font-size: 0.7rem; }
+            .nav-menu { justify-content: center; }
+            .nav-menu .nav-item { font-size: 0.55rem; padding: 0.2rem 0.5rem; }
+            .card-body { padding: 1rem; }
+            .backup-status { grid-template-columns: 1fr 1fr; }
+            .backup-auto-banner { flex-direction: column; align-items: stretch; }
+            .download-banner { flex-direction: column; align-items: stretch; }
+            .proximo-backup-box { flex-direction: column; align-items: center; }
+            .proximo-download-box { flex-direction: column; align-items: center; }
+            .backup-item { flex-wrap: wrap; gap: 0.3rem; }
+            .backup-item .acoes { width: 100%; justify-content: flex-end; }
+            .config-grid { grid-template-columns: 1fr; }
+        }
+        @media (max-width: 480px) {
+            .backup-status { grid-template-columns: 1fr; }
+            .backup-grid { grid-template-columns: 1fr; }
+            .clock-display .clock-date { display: none; }
+        }
+    </style>
+</head>
+<body>
+<div class="app-container">
+    <!-- TOPBAR -->
+    <div class="app-topbar">
+        <a href="index.html" class="logo-area">
+            <div class="logo-icon">T <small>LIFE</small></div>
+            <div class="logo-text">
+                <div class="title"><span class="tagua">Taguá</span><span class="life">Life</span></div>
+                <div class="slogan">Life Conceito em Gestão Condominial</div>
+            </div>
+        </a>
+        <div class="clock-display">
+            <i class="fas fa-clock"></i>
+            <span id="clockHours">00</span><span class="clock-separator">:</span>
+            <span id="clockMinutes">00</span><span class="clock-separator">:</span>
+            <span id="clockSeconds" class="clock-seconds">00</span>
+            <span class="clock-date" id="clockDate">00/00/0000</span>
+        </div>
+        <span class="badge"><i class="fas fa-database"></i> Backup Premium</span>
+    </div>
+
+    <!-- MENU -->
+    <div class="nav-menu">
+        <a class="nav-item" href="index.html"><i class="fas fa-home"></i> Dashboard</a>
+        <a class="nav-item" href="estoque.html"><i class="fas fa-boxes"></i> Estoque</a>
+        <a class="nav-item" href="saida.html"><i class="fas fa-arrow-right"></i> Saída</a>
+        <a class="nav-item" href="mapacota.html"><i class="fas fa-file-invoice"></i> Cotação</a>
+        <a class="nav-item" href="cotacoes_aprovadas.html"><i class="fas fa-check-circle"></i> Aprovadas</a>
+        <a class="nav-item" href="orcamento.html"><i class="fas fa-file-pdf"></i> Orçamento</a>
+        <a class="nav-item" href="fornecedor.html"><i class="fas fa-handshake"></i> Fornecedores</a>
+        <a class="nav-item" href="recebido.html"><i class="fas fa-clipboard-check"></i> Recebido</a>
+        <a class="nav-item active" href="backup_automatico.html"><i class="fas fa-database"></i> Backup</a>
+        <button class="nav-item btn-theme" onclick="toggleTheme()" style="margin-left:auto;">
+            <i class="fas fa-moon" id="themeIcon"></i> <span id="themeLabel">Tema</span>
+        </button>
+        <button class="nav-item" onclick="logout()" style="background:#8B3A3A; color:white; border-color:#8B3A3A;">
+            <i class="fas fa-sign-out-alt"></i> Sair
+        </button>
+    </div>
+
+    <div class="card-backup">
+        <div class="card-header">
+            <div class="left">
+                <i class="fas fa-database"></i>
+                <h2>Backup Automático 1 em 1 minuto</h2>
+                <span>• Proteção total dos dados</span>
+            </div>
+            <div class="right">
+                <span><i class="far fa-calendar-alt"></i> <span id="dataAtual"></span></span>
+                <span><i class="far fa-clock"></i> <span id="horaAtual"></span></span>
+            </div>
+        </div>
+
+        <div class="card-body">
+            <!-- BANNER BACKUP 1MIN -->
+            <div class="backup-auto-banner">
+                <div class="info">
+                    <div class="titulo">
+                        <i class="fas fa-clock"></i>
+                        Backup automático a cada 1 minuto
+                    </div>
+                    <div class="detalhes">
+                        O sistema salva automaticamente todos os dados a cada 1 minuto.
+                        Próximo backup: <strong id="proximoBackup1min">--</strong>
+                    </div>
+                </div>
+                <div class="status-indicator">
+                    <span class="dot" id="statusDot"></span>
+                    <span id="statusTextoAuto">Inativo</span>
+                </div>
+            </div>
+
+            <!-- BANNER DOWNLOAD PERSONALIZADO -->
+            <div class="download-banner">
+                <div class="info">
+                    <div class="titulo">
+                        <i class="fas fa-download"></i>
+                        Download automático personalizado
+                    </div>
+                    <div class="detalhes">
+                        Agendamento diário: <strong id="proximoDownloadPersonalizado">--</strong>
+                    </div>
+                </div>
+                <div class="status-indicator">
+                    <span class="dot-download" id="statusDotDownload"></span>
+                    <span id="statusTextoDownload">Agendado</span>
+                </div>
+            </div>
+
+            <!-- STATUS -->
+            <div class="backup-status" id="backupStatus">
+                <div class="item">
+                    <span class="label"><i class="fas fa-info-circle"></i> Status</span>
+                    <span class="value" id="statusTexto">Carregando...</span>
+                </div>
+                <div class="item">
+                    <span class="label"><i class="fas fa-calendar"></i> Último Backup</span>
+                    <span class="value" id="ultimoBackup">Nunca</span>
+                </div>
+                <div class="item">
+                    <span class="label"><i class="fas fa-file"></i> Tamanho</span>
+                    <span class="value" id="tamanhoBackup">--</span>
+                </div>
+                <div class="item">
+                    <span class="label"><i class="fas fa-boxes"></i> Total de Backups</span>
+                    <span class="value" id="totalBackups">0</span>
+                </div>
+            </div>
+
+            <!-- AÇÕES -->
+            <div class="backup-grid">
+                <div class="backup-card">
+                    <div class="icon"><i class="fas fa-save"></i></div>
+                    <h3>Salvar Backup Agora</h3>
+                    <p>Salva todos os dados do sistema em um arquivo .json</p>
+                    <button class="btn btn-success" onclick="gerarBackupManual()">
+                        <i class="fas fa-download"></i> Baixar Backup
+                    </button>
+                </div>
+                <div class="backup-card">
+                    <div class="icon"><i class="fas fa-upload"></i></div>
+                    <h3>Restaurar Backup</h3>
+                    <p>Carrega um arquivo .json e restaura todos os dados</p>
+                    <button class="btn btn-warning" onclick="document.getElementById('restoreInput').click()">
+                        <i class="fas fa-upload"></i> Selecionar Arquivo
+                    </button>
+                    <input type="file" accept=".json" id="restoreInput" style="display:none;" onchange="restaurarBackup(event)" />
+                </div>
+                <div class="backup-card">
+                    <div class="icon"><i class="fas fa-history"></i></div>
+                    <h3>Histórico de Backups</h3>
+                    <p>Visualize todos os backups salvos no navegador</p>
+                    <button class="btn btn-info" onclick="exibirHistoricoBackups()">
+                        <i class="fas fa-list"></i> Ver Histórico
+                    </button>
+                </div>
+                <div class="backup-card">
+                    <div class="icon"><i class="fas fa-trash"></i></div>
+                    <h3>Limpar Histórico</h3>
+                    <p>Remove todos os backups do histórico local</p>
+                    <button class="btn btn-danger" onclick="limparBackups()">
+                        <i class="fas fa-trash"></i> Limpar
+                    </button>
+                </div>
+                <div class="backup-card">
+                    <div class="icon"><i class="fas fa-stethoscope"></i></div>
+                    <h3>Diagnóstico</h3>
+                    <p>Verificar status do localStorage</p>
+                    <button class="btn btn-diagnostico" onclick="diagnosticarLocalStorage()">
+                        <i class="fas fa-search"></i> Diagnosticar
+                    </button>
+                </div>
+            </div>
+
+            <!-- PRÓXIMOS EVENTOS -->
+            <div class="proximo-backup-box">
+                <div class="info">
+                    <i class="fas fa-hourglass-half"></i>
+                    Próximo backup automático:
+                    <strong id="proximoBackup">--</strong>
+                </div>
+                <div class="contagem">
+                    <span id="contagemRegressiva">--</span>
+                </div>
+            </div>
+
+            <div class="proximo-download-box">
+                <div class="info">
+                    <i class="fas fa-clock"></i>
+                    Próximo download automático:
+                    <strong id="proximoDownloadTexto">--</strong>
+                </div>
+                <div class="contagem-download">
+                    <span id="contagemDownload">--</span>
+                </div>
+            </div>
+
+            <!-- CONFIGURAÇÕES -->
+            <div class="config-grid">
+                <div class="campo">
+                    <label><i class="fas fa-clock"></i> Intervalo do backup (minutos)</label>
+                    <input type="number" id="intervaloBackup" value="1" min="1" max="60" />
+                    <button class="btn btn-primary" onclick="atualizarIntervaloBackup()" style="margin-top:0.3rem; padding:0.2rem 0.8rem; font-size:0.6rem;">
+                        <i class="fas fa-check"></i> Aplicar
+                    </button>
+                </div>
+                <div class="campo">
+                    <label><i class="fas fa-clock"></i> Horário do download automático</label>
+                    <input type="time" id="horaDownloadPersonalizado" value="16:55" step="1" />
+                    <button class="btn btn-primary" onclick="atualizarHoraDownload()" style="margin-top:0.3rem; padding:0.2rem 0.8rem; font-size:0.6rem;">
+                        <i class="fas fa-check"></i> Agendar
+                    </button>
+                </div>
+            </div>
+
+            <!-- LISTA DE BACKUPS -->
+            <div class="lista-header">
+                <h3>
+                    <i class="fas fa-list"></i> Backups Disponíveis
+                    <span class="contador" id="contadorBackups">(0)</span>
+                </h3>
+                <div class="botoes-rapidos">
+                    <button class="btn btn-primary" onclick="testarBackupAuto()" style="font-size:0.6rem; padding:0.2rem 0.8rem;">
+                        <i class="fas fa-play"></i> Testar
+                    </button>
+                    <button class="btn btn-backup-auto" id="btnBackupAuto" onclick="toggleBackup1min()" style="font-size:0.6rem; padding:0.2rem 0.8rem;">
+                        <i class="fas fa-clock"></i> <span id="btnBackupAutoText">Ativar 1min</span>
+                    </button>
+                    <button class="btn btn-download-auto" id="btnDownloadAuto" onclick="toggleDownloadPersonalizado()" style="font-size:0.6rem; padding:0.2rem 0.8rem;">
+                        <i class="fas fa-download"></i> <span id="btnDownloadAutoText">Ativar Download</span>
+                    </button>
+                    <button class="btn btn-success" onclick="gerarSnapshotDiario()" style="font-size:0.6rem; padding:0.2rem 0.8rem;">
+                        <i class="fas fa-calendar-day"></i> Snapshot Diário
+                    </button>
+                    <button class="btn btn-diagnostico" onclick="diagnosticarLocalStorage()" style="font-size:0.6rem; padding:0.2rem 0.8rem;">
+                        <i class="fas fa-stethoscope"></i> Diagnóstico
+                    </button>
+                </div>
+            </div>
+            <div class="backup-lista" id="listaBackups">
+                <div class="empty-state">
+                    <i class="fas fa-inbox"></i>
+                    <p>Nenhum backup encontrado.</p>
+                    <p class="sub">Clique em "Baixar Backup" para criar o primeiro.</p>
+                </div>
+            </div>
+
+            <!-- RODAPÉ -->
+            <div style="margin-top:1.2rem; border-top:2px solid var(--border-color); padding-top:1rem; display:flex; justify-content:space-between; flex-wrap:wrap; gap:0.5rem;">
+                <a href="index.html" class="btn btn-voltar"><i class="fas fa-arrow-left"></i> Voltar ao Dashboard</a>
+                <span style="font-size:0.55rem; color:var(--text-secondary); display:flex; align-items:center; gap:0.3rem;">
+                    <i class="fas fa-shield-alt" style="color:var(--verde-claro);"></i>
+                    Dados protegidos com backup automático
+                </span>
+            </div>
+
+            <div id="feedback"></div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modalConfirmacao">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3><i class="fas fa-question-circle"></i> Confirmar</h3>
+            <button class="close-modal" onclick="fecharModal()">&times;</button>
+        </div>
+        <div id="conteudoModal" style="font-size:0.8rem;"></div>
+        <div class="modal-botoes">
+            <button class="btn btn-outline" onclick="fecharModal()">Cancelar</button>
+            <button class="btn btn-primary" id="modalConfirmBtn" onclick="fecharModal()">Confirmar</button>
+        </div>
+    </div>
+</div>
+
+<!-- TOAST -->
+<div id="toastGlobal"></div>
+
+<script>
+    // ============================================
+    // CONFIGURAÇÕES GLOBAIS
+    // ============================================
+    const CHAVES_SISTEMA = [
+        'estoqueTaguaLife',
+        'saidaMaterialTaguaLife',
+        'cotacoesTaguáLife',
+        'cotacoesAprovadasTaguaLife',
+        'pedidosOrcamentoTaguaLife',
+        'fornecedoresTaguaLife',
+        'modelosOrcamentoTaguaLife',
+        'notificacoesTaguaLife',
+        'tagualife_sessao',
+        'tagualife_usuarios',
+        'tema_TaguáLife',
+        'backupsTaguaLife',
+        'configBackupTaguaLife',
+        'ultimoBackup1min',
+        'configDownloadPersonalizado',
+        'configSnapshotDiario'
+    ];
+
+    const CHAVE_BACKUPS = 'backupsTaguaLife';
+    const CHAVE_CONFIG_BACKUP = 'configBackupTaguaLife';
+    const CHAVE_ULTIMO_BACKUP_1MIN = 'ultimoBackup1min';
+    const CHAVE_CONFIG_DOWNLOAD = 'configDownloadPersonalizado';
+
+    let INTERVALO_BACKUP = 60000; // 1 minuto
+    let HORA_DOWNLOAD = 16;
+    let MINUTO_DOWNLOAD = 55;
+
+    let temporizadorBackup = null;
+    let backupAtivo = false;
+    let contadorBackupsRealizados = 0;
+    let downloadAtivo = false;
+    let temporizadorDownload = null;
+    let timeoutDownload = null;
+
+    // ============================================
+    // TOAST
+    // ============================================
+    function mostrarToast(mensagem, tipo = 'success') {
+        const toast = document.getElementById('toastGlobal');
+        const cores = {
+            info: '#3498DB',
+            success: '#2E7D32',
+            warning: '#C1A83C',
+            danger: '#8B3A3A',
+            premium: '#6A1B9A',
+            diagnostic: '#6A1B9A'
+        };
+        toast.textContent = mensagem;
+        toast.style.background = cores[tipo] || '#191D1B';
+        toast.style.color = 'white';
+        toast.classList.add('show');
+        clearTimeout(toast._timeout);
+        toast._timeout = setTimeout(() => toast.classList.remove('show'), 4000);
+    }
+
+    // ============================================
+    // DIAGNÓSTICO
+    // ============================================
+    function diagnosticarLocalStorage() {
+        try {
+            const info = [];
+            info.push('🔍 DIAGNÓSTICO DO LOCALSTORAGE');
+            info.push('━'.repeat(40));
+            
+            // Verificar espaço disponível
+            try {
+                const testKey = '__test_size__';
+                let size = 0;
+                for (let i = 0; i < 1024; i++) {
+                    try {
+                        localStorage.setItem(testKey, 'a'.repeat(1024 * (i + 1)));
+                        size = i + 1;
+                    } catch (e) {
+                        break;
+                    }
+                }
+                localStorage.removeItem(testKey);
+                info.push(`📊 Espaço estimado disponível: ~${size} KB`);
+            } catch (e) {
+                info.push('⚠️ Não foi possível estimar o espaço disponível');
+            }
+
+            // Listar todas as chaves
+            info.push('\n📋 CHAVES NO LOCALSTORAGE:');
+            let totalSize = 0;
+            let chavesValidas = 0;
+            let chavesInvalidas = 0;
+            
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                try {
+                    const value = localStorage.getItem(key);
+                    const size = (key.length + (value || '').length);
+                    totalSize += size;
+                    
+                    // Verificar se é JSON válido
+                    try {
+                        JSON.parse(value);
+                        chavesValidas++;
+                    } catch (e) {
+                        chavesInvalidas++;
+                    }
+                    
+                    const tamanhoFormatado = size > 1024 ? (size/1024).toFixed(1) + ' KB' : size + ' B';
+                    const status = key === CHAVE_BACKUPS ? ' ⭐' : '';
+                    info.push(`  • ${key} (${tamanhoFormatado})${status}`);
+                } catch (e) {
+                    info.push(`  • ${key} (ERR: ${e.message})`);
+                    chavesInvalidas++;
+                }
+            }
+            
+            info.push(`\n📊 Total de chaves: ${localStorage.length}`);
+            info.push(`📊 Chaves válidas (JSON): ${chavesValidas}`);
+            info.push(`📊 Chaves inválidas: ${chavesInvalidas}`);
+            info.push(`📊 Tamanho total aproximado: ${totalSize > 1024 ? (totalSize/1024).toFixed(1) + ' KB' : totalSize + ' B'}`);
+            
+            // Verificar chave de backup especificamente
+            const backupData = localStorage.getItem(CHAVE_BACKUPS);
+            if (backupData === null) {
+                info.push('\n⚠️ Chave de backup NÃO encontrada!');
+            } else {
+                info.push(`\n✅ Chave de backup encontrada: ${backupData.length} caracteres`);
+                try {
+                    const parsed = JSON.parse(backupData);
+                    if (Array.isArray(parsed)) {
+                        info.push(`✅ É um array válido com ${parsed.length} itens`);
+                    } else {
+                        info.push(`⚠️ NÃO é um array (tipo: ${typeof parsed})`);
+                    }
+                } catch (e) {
+                    info.push(`❌ JSON inválido: ${e.message}`);
+                }
+            }
+            
+            // Tentar criar um backup de teste
+            info.push('\n🧪 TESTE DE ESCRITA:');
+            try {
+                const testKey = '__test_write__';
+                const testValue = JSON.stringify({ test: 'data', timestamp: Date.now() });
+                localStorage.setItem(testKey, testValue);
+                const readBack = localStorage.getItem(testKey);
+                if (readBack === testValue) {
+                    info.push('✅ Teste de escrita/leitura: OK');
+                } else {
+                    info.push('❌ Teste de escrita/leitura: FALHOU');
+                }
+                localStorage.removeItem(testKey);
+            } catch (e) {
+                info.push(`❌ Erro no teste de escrita: ${e.message}`);
+                if (e.name === 'QuotaExceededError') {
+                    info.push('⚠️ QuotaExceededError - localStorage está CHEIO!');
+                }
+            }
+            
+            // Verificar a função salvarBackupHistorico
+            info.push('\n📦 FUNÇÃO salvarBackupHistorico:');
+            if (typeof salvarBackupHistorico === 'function') {
+                info.push('✅ Função disponível');
+            } else {
+                info.push('❌ Função NÃO disponível');
+            }
+            
+            // Tentar salvar um backup de teste
+            info.push('\n🧪 TESTE DE BACKUP:');
+            const testBackup = {
+                metadata: {
+                    versao: '2.0',
+                    data: new Date().toISOString(),
+                    dataFormatada: new Date().toLocaleString('pt-BR'),
+                    nome: 'teste_diagnostico',
+                    totalChaves: 1,
+                    automatico: false,
+                    teste: true,
+                    tamanho: 100
+                },
+                dados: { test: 'diagnostico' }
+            };
+            
+            try {
+                const result = salvarBackupHistorico(testBackup);
+                if (result) {
+                    info.push('✅ Backup de teste SALVO com sucesso!');
+                } else {
+                    info.push('❌ Backup de teste FALHOU ao salvar!');
+                }
+            } catch (e) {
+                info.push(`❌ Erro ao salvar backup de teste: ${e.message}`);
+            }
+            
+            // Mostrar o diagnóstico
+            const resultado = info.join('\n');
+            console.log(resultado);
+            mostrarToast('🔍 Diagnóstico completo! Veja no console.', 'diagnostic');
+            
+            // Abrir modal com o diagnóstico
+            abrirModal(
+                `<pre style="font-size:0.6rem; white-space:pre-wrap; word-break:break-all; max-height:400px; overflow-y:auto; background:var(--bg-body); padding:0.5rem; border-radius:8px;">${resultado}</pre>`,
+                null,
+                'Fechar'
+            );
+            
+        } catch (error) {
+            console.error('Erro no diagnóstico:', error);
+            mostrarToast('❌ Erro ao executar diagnóstico', 'danger');
+        }
+    }
+
+    // ============================================
+    // LOGOUT / TEMA / RELÓGIO
+    // ============================================
+    function logout() {
+        if (confirm('Deseja realmente sair do sistema?')) {
+            localStorage.removeItem('tagualife_sessao');
+            window.location.href = 'login.html';
+        }
+    }
+
+    function toggleTheme() {
+        const body = document.body;
+        body.classList.toggle('dark-mode');
+        const isDark = body.classList.contains('dark-mode');
+        localStorage.setItem('tema_TaguáLife', isDark ? 'dark' : 'light');
+        const icon = document.getElementById('themeIcon');
+        const label = document.getElementById('themeLabel');
+        if (isDark) { icon.className = 'fas fa-sun'; label.textContent = 'Claro'; } 
+        else { icon.className = 'fas fa-moon'; label.textContent = 'Tema'; }
+        mostrarToast(isDark ? '🌙 Modo escuro ativado' : '☀️ Modo claro ativado', 'info');
+    }
+
+    function carregarTema() {
+        const theme = localStorage.getItem('tema_TaguáLife');
+        if (theme === 'dark') {
+            document.body.classList.add('dark-mode');
+            document.getElementById('themeIcon').className = 'fas fa-sun';
+            document.getElementById('themeLabel').textContent = 'Claro';
+        }
+    }
+
+    function getHorarioBrasilia() {
+        const agora = new Date();
+        const data = agora.toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' });
+        const hora = agora.toLocaleTimeString('pt-BR', { timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit' });
+        const horaCompleta = agora.toLocaleTimeString('pt-BR', { timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        return { data, hora, horaCompleta };
+    }
+
+    function atualizarRelogio() {
+        const horario = getHorarioBrasilia();
+        document.getElementById('clockHours').textContent = horario.hora.split(':')[0] || '00';
+        document.getElementById('clockMinutes').textContent = horario.hora.split(':')[1] || '00';
+        document.getElementById('clockSeconds').textContent = horario.horaCompleta.split(':')[2] || '00';
+        document.getElementById('clockDate').textContent = horario.data;
+        document.getElementById('dataAtual').textContent = horario.data;
+        document.getElementById('horaAtual').textContent = horario.hora;
+        atualizarProximoBackup();
+        atualizarContagemRegressiva();
+        atualizarProximoDownloadPersonalizado();
+        atualizarContagemDownload();
+    }
+
+    // ============================================
+    // BACKUP 1MIN
+    // ============================================
+    function calcularProximoBackup() {
+        const agora = new Date();
+        const prox = new Date(agora.getTime() + INTERVALO_BACKUP);
+        return prox;
+    }
+
+    function atualizarProximoBackup() {
+        const prox = calcularProximoBackup();
+        const elProx = document.getElementById('proximoBackup1min');
+        const elProxGeral = document.getElementById('proximoBackup');
+        const horaFormatada = prox.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        if (elProx) elProx.textContent = horaFormatada;
+        if (elProxGeral) elProxGeral.textContent = horaFormatada;
+        return prox;
+    }
+
+    function atualizarContagemRegressiva() {
+        const prox = calcularProximoBackup();
+        const agora = new Date();
+        const diff = prox - agora;
+        const el = document.getElementById('contagemRegressiva');
+        if (el) {
+            if (diff > 0) {
+                const segundos = Math.floor(diff / 1000);
+                const minutos = Math.floor(segundos / 60);
+                const segs = segundos % 60;
+                if (minutos > 0) {
+                    el.innerHTML = `⏱️ <span class="destaque">${minutos}m ${String(segs).padStart(2,'0')}s</span>`;
+                } else {
+                    el.innerHTML = `⏱️ <span class="destaque">${segs}s</span>`;
+                }
+            } else {
+                el.innerHTML = '🔄 <span class="destaque">AGORA!</span>';
+            }
+        }
+    }
+
+    function realizarBackup1min() {
+        try {
+            const dados = coletarDadosSistema();
+            
+            // Verifica se os dados foram coletados
+            if (!dados || Object.keys(dados).length === 0) {
+                console.warn('⚠️ Nenhum dado encontrado para backup automático');
+                return;
+            }
+            
+            const agora = new Date();
+            const hoje = agora.toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' });
+            const hora = agora.toLocaleTimeString('pt-BR', { timeZone: 'America/Sao_Paulo' });
+
+            const ultimoBackupData = localStorage.getItem(CHAVE_ULTIMO_BACKUP_1MIN);
+            let hashAnterior = '';
+            if (ultimoBackupData) {
+                const historico = JSON.parse(localStorage.getItem(CHAVE_BACKUPS) || '[]');
+                if (historico.length > 0 && historico[0].dados) {
+                    hashAnterior = JSON.stringify(historico[0].dados);
+                }
+            }
+            const hashAtual = JSON.stringify(dados);
+            if (hashAnterior === hashAtual && ultimoBackupData) {
+                console.log('📊 Nenhuma mudança, backup pulado.');
+                return;
+            }
+
+            const backup = {
+                metadata: {
+                    versao: '2.0',
+                    data: agora.toISOString(),
+                    dataFormatada: `${hoje} ${hora}`,
+                    nome: `backup_1min_${agora.getFullYear()}-${String(agora.getMonth()+1).padStart(2,'0')}-${String(agora.getDate()).padStart(2,'0')}_${String(agora.getHours()).padStart(2,'0')}${String(agora.getMinutes()).padStart(2,'0')}`,
+                    totalChaves: Object.keys(dados).length,
+                    automatico: true,
+                    intervalo: '1min',
+                    tamanho: JSON.stringify(dados).length
+                },
+                dados: dados
+            };
+
+            const resultado = salvarBackupHistorico(backup);
+            if (resultado) {
+                localStorage.setItem(CHAVE_ULTIMO_BACKUP_1MIN, agora.toISOString());
+                contadorBackupsRealizados++;
+                console.log(`✅ Backup 1min realizado em ${agora.toLocaleString('pt-BR')}`);
+                atualizarStatus();
+                carregarListaBackups();
+
+                if (contadorBackupsRealizados % 10 === 0) {
+                    mostrarToast(`🔄 ${contadorBackupsRealizados} backups automáticos realizados!`, 'premium');
+                }
+
+                const feedback = document.getElementById('feedback');
+                if (feedback) {
+                    feedback.innerHTML = `<span class="msg" style="background:var(--verde-escuro); color:white;">
+                        ✅ Backup 1min: ${new Date().toLocaleTimeString('pt-BR')}
+                    </span>`;
+                    clearTimeout(feedback._timeout);
+                    feedback._timeout = setTimeout(() => { feedback.innerHTML = ''; }, 3000);
+                }
+            } else {
+                console.error('❌ Falha ao salvar backup 1min');
+                mostrarToast('❌ Falha ao salvar backup automático!', 'danger');
+            }
+        } catch (error) {
+            console.error('Erro no backup 1min:', error);
+            mostrarToast('❌ Erro no backup automático!', 'danger');
+        }
+    }
+
+    function iniciarBackup() {
+        if (temporizadorBackup) {
+            clearInterval(temporizadorBackup);
+            temporizadorBackup = null;
+        }
+        setTimeout(() => { realizarBackup1min(); }, 1000);
+        temporizadorBackup = setInterval(() => { realizarBackup1min(); }, INTERVALO_BACKUP);
+        backupAtivo = true;
+        atualizarBotaoBackup();
+        atualizarStatusAuto();
+        mostrarToast('🔄 Backup automático a cada 1 minuto ativado!', 'success');
+    }
+
+    function pararBackup() {
+        if (temporizadorBackup) {
+            clearInterval(temporizadorBackup);
+            temporizadorBackup = null;
+        }
+        backupAtivo = false;
+        atualizarBotaoBackup();
+        atualizarStatusAuto();
+        console.log('⛔ Backup 1min parado');
+        mostrarToast('⛔ Backup automático desativado', 'warning');
+    }
+
+    function toggleBackup1min() {
+        const config = carregarConfigBackup();
+        const novoEstado = !config.ativo;
+        salvarConfigBackup(novoEstado);
+        if (novoEstado) iniciarBackup();
+        else pararBackup();
+    }
+
+    function atualizarBotaoBackup() {
+        const btn = document.getElementById('btnBackupAuto');
+        const txt = document.getElementById('btnBackupAutoText');
+        if (btn && txt) {
+            if (backupAtivo) {
+                btn.className = 'btn btn-backup-auto ativo';
+                txt.textContent = '⏹️ Desativar 1min';
+            } else {
+                btn.className = 'btn btn-backup-auto';
+                txt.textContent = '▶️ Ativar 1min';
+            }
+        }
+    }
+
+    function atualizarStatusAuto() {
+        const dot = document.getElementById('statusDot');
+        const texto = document.getElementById('statusTextoAuto');
+        if (dot && texto) {
+            if (backupAtivo) {
+                dot.className = 'dot active';
+                texto.textContent = 'Ativo';
+                texto.style.color = 'var(--verde-escuro)';
+            } else {
+                dot.className = 'dot inactive';
+                texto.textContent = 'Inativo';
+                texto.style.color = '#999';
+            }
+        }
+    }
+
+    // ============================================
+    // DOWNLOAD PERSONALIZADO
+    // ============================================
+    function carregarConfigDownload() {
+        try {
+            const config = JSON.parse(localStorage.getItem(CHAVE_CONFIG_DOWNLOAD) || '{"ativo":false, "hora":16, "minuto":55}');
+            return config;
+        } catch (e) {
+            return { ativo: false, hora: 16, minuto: 55 };
+        }
+    }
+
+    function salvarConfigDownload(ativo, hora, minuto) {
+        const config = { ativo: ativo, hora: hora || HORA_DOWNLOAD, minuto: minuto || MINUTO_DOWNLOAD };
+        localStorage.setItem(CHAVE_CONFIG_DOWNLOAD, JSON.stringify(config));
+    }
+
+    function calcularProximoDownloadPersonalizado() {
+        const config = carregarConfigDownload();
+        const hora = config.hora || HORA_DOWNLOAD;
+        const minuto = config.minuto || MINUTO_DOWNLOAD;
+        const agora = new Date();
+        const alvo = new Date();
+        alvo.setHours(hora, minuto, 0, 0);
+        if (alvo <= agora) alvo.setDate(alvo.getDate() + 1);
+        return alvo;
+    }
+
+    function atualizarProximoDownloadPersonalizado() {
+        const prox = calcularProximoDownloadPersonalizado();
+        const el = document.getElementById('proximoDownloadPersonalizado');
+        const elTexto = document.getElementById('proximoDownloadTexto');
+        const horaFormatada = prox.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        const dataFormatada = prox.toLocaleDateString('pt-BR');
+        if (el) el.textContent = `${dataFormatada} ${horaFormatada}`;
+        if (elTexto) elTexto.textContent = `${dataFormatada} ${horaFormatada}`;
+        return prox;
+    }
+
+    function atualizarContagemDownload() {
+        const prox = calcularProximoDownloadPersonalizado();
+        const agora = new Date();
+        const diff = prox - agora;
+        const el = document.getElementById('contagemDownload');
+        if (el) {
+            if (diff > 0) {
+                const segundos = Math.floor(diff / 1000);
+                const horas = Math.floor(segundos / 3600);
+                const minutos = Math.floor((segundos % 3600) / 60);
+                const segs = segundos % 60;
+                if (horas > 0) {
+                    el.innerHTML = `⏱️ <span class="destaque">${horas}h ${minutos}m ${String(segs).padStart(2,'0')}s</span>`;
+                } else {
+                    el.innerHTML = `⏱️ <span class="destaque">${minutos}m ${String(segs).padStart(2,'0')}s</span>`;
+                }
+            } else {
+                el.innerHTML = '📥 <span class="destaque">BAIXANDO...</span>';
+            }
+        }
+    }
+
+    function realizarDownloadAutomatico() {
+        try {
+            const dados = coletarDadosSistema();
+            const agora = new Date();
+            const dataStr = agora.toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' }).replace(/\//g, '-');
+            const horaStr = agora.toLocaleTimeString('pt-BR', { timeZone: 'America/Sao_Paulo' }).replace(/:/g, '-');
+            const backup = {
+                metadata: {
+                    versao: '2.0',
+                    data: agora.toISOString(),
+                    dataFormatada: agora.toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' }),
+                    nome: `backup_automatico_${dataStr}_${horaStr}`,
+                    totalChaves: Object.keys(dados).length,
+                    automatico: true,
+                    downloadAutomatico: true,
+                    tamanho: JSON.stringify(dados).length
+                },
+                dados: dados
+            };
+            salvarBackupHistorico(backup);
+            const json = JSON.stringify(backup, null, 2);
+            const blob = new Blob([json], { type: 'application/json' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `backup_${dataStr}_${horaStr}.json`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            mostrarToast(`📥 Download automático realizado: ${dataStr} ${horaStr}`, 'success');
+            atualizarStatus();
+            carregarListaBackups();
+        } catch (error) {
+            console.error('Erro no download automático:', error);
+            mostrarToast('❌ Erro no download automático!', 'danger');
+        }
+    }
+
+    function iniciarDownloadPersonalizado() {
+        if (temporizadorDownload) {
+            clearInterval(temporizadorDownload);
+            temporizadorDownload = null;
+        }
+        if (timeoutDownload) {
+            clearTimeout(timeoutDownload);
+            timeoutDownload = null;
+        }
+        const prox = calcularProximoDownloadPersonalizado();
+        const agora = new Date();
+        let diff = prox - agora;
+        if (diff < 0) {
+            prox.setDate(prox.getDate() + 1);
+            diff = prox - new Date();
+        }
+        console.log(`📅 Download agendado para ${prox.toLocaleString('pt-BR')}`);
+        timeoutDownload = setTimeout(() => {
+            realizarDownloadAutomatico();
+            temporizadorDownload = setInterval(() => {
+                realizarDownloadAutomatico();
+            }, 86400000);
+            downloadAtivo = true;
+            atualizarBotaoDownload();
+            atualizarStatusDownload();
+        }, diff);
+        downloadAtivo = true;
+        atualizarBotaoDownload();
+        atualizarStatusDownload();
+    }
+
+    function pararDownloadPersonalizado() {
+        if (temporizadorDownload) {
+            clearInterval(temporizadorDownload);
+            temporizadorDownload = null;
+        }
+        if (timeoutDownload) {
+            clearTimeout(timeoutDownload);
+            timeoutDownload = null;
+        }
+        downloadAtivo = false;
+        atualizarBotaoDownload();
+        atualizarStatusDownload();
+        console.log('⛔ Download personalizado desativado');
+        mostrarToast('⛔ Download automático desativado', 'warning');
+    }
+
+    function toggleDownloadPersonalizado() {
+        const config = carregarConfigDownload();
+        const novoEstado = !config.ativo;
+        salvarConfigDownload(novoEstado, config.hora, config.minuto);
+        if (novoEstado) {
+            iniciarDownloadPersonalizado();
+            mostrarToast('✅ Download automático agendado!', 'success');
+        } else {
+            pararDownloadPersonalizado();
+        }
+    }
+
+    function atualizarBotaoDownload() {
+        const btn = document.getElementById('btnDownloadAuto');
+        const txt = document.getElementById('btnDownloadAutoText');
+        if (btn && txt) {
+            if (downloadAtivo) {
+                btn.className = 'btn btn-download-auto ativo';
+                txt.textContent = '⏹️ Desativar Download';
+            } else {
+                btn.className = 'btn btn-download-auto';
+                txt.textContent = '▶️ Ativar Download';
+            }
+        }
+    }
+
+    function atualizarStatusDownload() {
+        const dot = document.getElementById('statusDotDownload');
+        const texto = document.getElementById('statusTextoDownload');
+        if (dot && texto) {
+            if (downloadAtivo) {
+                dot.className = 'dot-download active';
+                texto.textContent = 'Ativo';
+                texto.style.color = '#1976D2';
+            } else {
+                dot.className = 'dot-download inactive';
+                texto.textContent = 'Inativo';
+                texto.style.color = '#999';
+            }
+        }
+    }
+
+    function atualizarHoraDownload() {
+        const input = document.getElementById('horaDownloadPersonalizado');
+        const val = input.value;
+        if (!val) return;
+        const partes = val.split(':');
+        const hora = parseInt(partes[0]);
+        const minuto = parseInt(partes[1]);
+        if (isNaN(hora) || isNaN(minuto) || hora < 0 || hora > 23 || minuto < 0 || minuto > 59) {
+            mostrarToast('⚠️ Horário inválido!', 'danger');
+            return;
+        }
+        const config = carregarConfigDownload();
+        salvarConfigDownload(config.ativo, hora, minuto);
+        HORA_DOWNLOAD = hora;
+        MINUTO_DOWNLOAD = minuto;
+        if (downloadAtivo) {
+            pararDownloadPersonalizado();
+            iniciarDownloadPersonalizado();
+        }
+        mostrarToast(`✅ Horário alterado para ${String(hora).padStart(2,'0')}:${String(minuto).padStart(2,'0')}`, 'success');
+        atualizarProximoDownloadPersonalizado();
+        atualizarContagemDownload();
+    }
+
+    // ============================================
+    // SNAPSHOT DIÁRIO
+    // ============================================
+    function gerarSnapshotDiario() {
+        try {
+            const dados = coletarDadosSistema();
+            const agora = new Date();
+            const hoje = agora.toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' }).replace(/\//g, '-');
+            const hora = agora.toLocaleTimeString('pt-BR', { timeZone: 'America/Sao_Paulo' }).replace(/:/g, '-');
+            const backup = {
+                metadata: {
+                    versao: '2.0',
+                    data: agora.toISOString(),
+                    dataFormatada: agora.toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' }),
+                    nome: `snapshot_diario_${hoje}_${hora}`,
+                    totalChaves: Object.keys(dados).length,
+                    automatico: false,
+                    snapshotDiario: true,
+                    tamanho: JSON.stringify(dados).length
+                },
+                dados: dados
+            };
+            salvarBackupHistorico(backup);
+            mostrarToast(`📸 Snapshot diário salvo! (${hoje})`, 'premium');
+            atualizarStatus();
+            carregarListaBackups();
+        } catch (error) {
+            console.error('Erro no snapshot:', error);
+            mostrarToast('❌ Erro ao gerar snapshot!', 'danger');
+        }
+    }
+
+    // ============================================
+    // FUNÇÕES DE BACKUP (MANUAL, RESTAURAÇÃO, HISTÓRICO)
+    // ============================================
+    function coletarDadosSistema() {
+        const dados = {};
+        CHAVES_SISTEMA.forEach(chave => {
+            try {
+                const valor = localStorage.getItem(chave);
+                if (valor !== null) dados[chave] = JSON.parse(valor);
+            } catch (e) { 
+                console.warn('Erro ao ler ' + chave, e); 
+            }
+        });
+        return dados;
+    }
+
+    function restaurarDadosSistema(dados) {
+        let count = 0;
+        CHAVES_SISTEMA.forEach(chave => {
+            if (dados.hasOwnProperty(chave)) {
+                try {
+                    localStorage.setItem(chave, JSON.stringify(dados[chave]));
+                    count++;
+                } catch (e) { 
+                    console.warn('Erro ao restaurar ' + chave, e); 
+                }
+            }
+        });
+        return count;
+    }
+
+    function gerarBackupManual() {
+        try {
+            const dados = coletarDadosSistema();
+            const data = new Date();
+            const nome = `backup_${data.getFullYear()}-${String(data.getMonth()+1).padStart(2,'0')}-${String(data.getDate()).padStart(2,'0')}_${String(data.getHours()).padStart(2,'0')}${String(data.getMinutes()).padStart(2,'0')}`;
+            const backup = {
+                metadata: {
+                    versao: '2.0',
+                    data: data.toISOString(),
+                    dataFormatada: data.toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' }),
+                    nome: nome,
+                    totalChaves: Object.keys(dados).length,
+                    automatico: false,
+                    tamanho: JSON.stringify(dados).length
+                },
+                dados: dados
+            };
+            const json = JSON.stringify(backup, null, 2);
+            const blob = new Blob([json], { type: 'application/json' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `${nome}.json`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            salvarBackupHistorico(backup);
+            mostrarToast('✅ Backup manual baixado com sucesso!', 'success');
+            atualizarStatus();
+            carregarListaBackups();
+        } catch (error) {
+            console.error('Erro ao gerar backup:', error);
+            mostrarToast('❌ Erro ao gerar backup!', 'danger');
+        }
+    }
+
+    function salvarBackupHistorico(backup) {
+        // Validação do backup
+        if (!backup || typeof backup !== 'object') {
+            console.error('❌ Backup inválido:', backup);
+            return false;
+        }
+        
+        if (!backup.dados || typeof backup.dados !== 'object') {
+            console.error('❌ Dados do backup inválidos:', backup.dados);
+            return false;
+        }
+        
+        if (!backup.metadata || typeof backup.metadata !== 'object') {
+            console.error('❌ Metadados do backup inválidos:', backup.metadata);
+            return false;
+        }
+        
+        try {
+            let historico = [];
+            
+            // Tentar carregar histórico existente
+            try {
+                const stored = localStorage.getItem(CHAVE_BACKUPS);
+                if (stored !== null) {
+                    const parsed = JSON.parse(stored);
+                    if (Array.isArray(parsed)) {
+                        historico = parsed;
+                    } else {
+                        console.warn('⚠️ Histórico não é um array, recriando...');
+                    }
+                }
+            } catch (e) {
+                console.warn('⚠️ Erro ao ler histórico, recriando:', e);
+            }
+            
+            // Garantir que histórico é um array
+            if (!Array.isArray(historico)) {
+                historico = [];
+            }
+            
+            // Limitar tamanho do histórico
+            if (historico.length >= 150) {
+                historico = historico.slice(0, 149);
+            }
+            
+            // Adicionar novo backup no início
+            historico.unshift(backup);
+            
+            // Salvar no localStorage
+            try {
+                localStorage.setItem(CHAVE_BACKUPS, JSON.stringify(historico));
+                console.log(`✅ Backup salvo com sucesso! Total: ${historico.length}`);
+                return true;
+            } catch (e) {
+                if (e.name === 'QuotaExceededError') {
+                    console.error('❌ localStorage CHEIO! Tentando compactar...');
+                    // Tentar remover backups antigos
+                    while (historico.length > 10) {
+                        historico.pop();
+                    }
+                    try {
+                        localStorage.setItem(CHAVE_BACKUPS, JSON.stringify(historico));
+                        console.log(`✅ Backup salvo após compactação! Total: ${historico.length}`);
+                        return true;
+                    } catch (e2) {
+                        console.error('❌ Falha ao salvar mesmo após compactação:', e2);
+                        return false;
+                    }
+                }
+                console.error('❌ Erro ao salvar backup:', e);
+                return false;
+            }
+        } catch (error) {
+            console.error('❌ Erro ao salvar backup:', error);
+            return false;
+        }
+    }
+
+    function carregarListaBackups() {
+        let historico = [];
+        try {
+            const stored = localStorage.getItem(CHAVE_BACKUPS);
+            if (stored !== null) {
+                const parsed = JSON.parse(stored);
+                if (Array.isArray(parsed)) {
+                    historico = parsed;
+                }
+            }
+        } catch (e) {
+            console.warn('⚠️ Erro ao carregar histórico:', e);
+        }
+        
+        const container = document.getElementById('listaBackups');
+        const contador = document.getElementById('contadorBackups');
+
+        contador.textContent = `(${historico.length})`;
+
+        if (historico.length === 0) {
+            container.innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-inbox"></i>
+                    <p>Nenhum backup encontrado.</p>
+                    <p class="sub">Clique em "Baixar Backup" para criar o primeiro.</p>
+                </div>
+            `;
+            return;
+        }
+
+        let html = '';
+        historico.forEach((b, index) => {
+            const data = b.metadata?.dataFormatada || 'Data desconhecida';
+            const totalChaves = b.metadata?.totalChaves || 0;
+            const nome = b.metadata?.nome || 'backup_' + (index + 1);
+            const tamanho = b.metadata?.tamanho || JSON.stringify(b).length;
+            const tamanhoFormatado = tamanho > 1024 * 1024 ? (tamanho / 1024 / 1024).toFixed(1) + ' MB' :
+                                     tamanho > 1024 ? (tamanho / 1024).toFixed(1) + ' KB' :
+                                     tamanho + ' B';
+            const isAutomatico = b.metadata?.automatico || false;
+            const is1min = b.metadata?.intervalo === '1min';
+            const isTeste = b.metadata?.teste || false;
+            const isDownload = b.metadata?.downloadAutomatico || false;
+            const isSnapshot = b.metadata?.snapshotDiario || false;
+
+            let badges = '';
+            if (isAutomatico && is1min) badges += '<span class="badge-1min">1min</span> ';
+            else if (isAutomatico) badges += '<span class="badge-auto">AUTO</span> ';
+            if (isDownload) badges += '<span class="badge-download">DL</span> ';
+            if (isSnapshot) badges += '<span class="badge-diario">📸</span> ';
+            if (isTeste) badges += '<span class="badge-teste">TESTE</span> ';
+
+            html += `
+                <div class="backup-item">
+                    <div class="info">
+                        <span class="nome">
+                            <i class="fas fa-file-archive"></i> ${nome}
+                            ${badges}
+                        </span>
+                        <span class="detalhes">📅 ${data} • 📦 ${totalChaves} chaves • 💾 ${tamanhoFormatado}</span>
+                    </div>
+                    <div class="acoes">
+                        <button class="btn btn-outline" onclick="baixarBackupHistorico(${index})" title="Baixar" style="padding:0.15rem 0.5rem; font-size:0.55rem;">
+                            <i class="fas fa-download"></i>
+                        </button>
+                        <button class="btn btn-outline" onclick="restaurarBackupHistorico(${index})" title="Restaurar" style="padding:0.15rem 0.5rem; font-size:0.55rem; border-color:#C1A83C; color:#C1A83C;">
+                            <i class="fas fa-undo"></i>
+                        </button>
+                        <button class="btn btn-outline" onclick="excluirBackupHistorico(${index})" title="Excluir" style="padding:0.15rem 0.5rem; font-size:0.55rem; border-color:#8B3A3A; color:#8B3A3A;">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+        });
+        container.innerHTML = html;
+    }
+
+    function baixarBackupHistorico(index) {
+        const historico = JSON.parse(localStorage.getItem(CHAVE_BACKUPS) || '[]');
+        const backup = historico[index];
+        if (!backup) return;
+        const json = JSON.stringify(backup, null, 2);
+        const blob = new Blob([json], { type: 'application/json' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = `${backup.metadata?.nome || 'backup'}.json`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        mostrarToast('📥 Backup baixado!', 'success');
+    }
+
+    function restaurarBackupHistorico(index) {
+        const historico = JSON.parse(localStorage.getItem(CHAVE_BACKUPS) || '[]');
+        const backup = historico[index];
+        if (!backup) return;
+        abrirModal(
+            `⚠️ <strong>Tem certeza que deseja restaurar este backup?</strong><br><br>
+             📅 Data: ${backup.metadata?.dataFormatada || 'Desconhecida'}<br>
+             📦 Chaves: ${backup.metadata?.totalChaves || 0}<br>
+             💾 Tamanho: ${backup.metadata?.tamanho ? (backup.metadata.tamanho > 1024 ? (backup.metadata.tamanho/1024).toFixed(1)+' KB' : backup.metadata.tamanho+' B') : '--'}<br><br>
+             <span style="color:var(--verde-escuro);">✅ Isso substituirá TODOS os dados atuais.</span>`,
+            () => {
+                try {
+                    const count = restaurarDadosSistema(backup.dados);
+                    mostrarToast(`✅ Backup restaurado! ${count} chaves`, 'success');
+                    atualizarStatus();
+                    carregarListaBackups();
+                } catch (error) {
+                    console.error('Erro ao restaurar:', error);
+                    mostrarToast('❌ Erro ao restaurar backup!', 'danger');
+                }
+            }
+        );
+    }
+
+    function excluirBackupHistorico(index) {
+        abrirModal(
+            `🗑️ <strong>Tem certeza que deseja excluir este backup?</strong><br><br>
+             Esta ação é irreversível.`,
+            () => {
+                let historico = JSON.parse(localStorage.getItem(CHAVE_BACKUPS) || '[]');
+                historico.splice(index, 1);
+                localStorage.setItem(CHAVE_BACKUPS, JSON.stringify(historico));
+                carregarListaBackups();
+                mostrarToast('🗑️ Backup removido!', 'info');
+            }
+        );
+    }
+
+    function restaurarBackup(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        abrirModal(
+            `⚠️ <strong>Isso substituirá TODOS os dados atuais.</strong><br><br>
+             Arquivo: ${file.name}<br>
+             Tamanho: ${(file.size / 1024).toFixed(1)} KB<br><br>
+             <span style="color:var(--verde-escuro);">✅ Continuar com a restauração?</span>`,
+            () => {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        const backup = JSON.parse(e.target.result);
+                        if (!backup.dados || typeof backup.dados !== 'object') {
+                            mostrarToast('❌ Arquivo de backup inválido!', 'danger');
+                            return;
+                        }
+                        const count = restaurarDadosSistema(backup.dados);
+                        if (!backup.metadata) {
+                            const data = new Date();
+                            backup.metadata = {
+                                versao: '2.0',
+                                data: data.toISOString(),
+                                dataFormatada: data.toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' }),
+                                nome: `restaurado_${data.getFullYear()}-${String(data.getMonth()+1).padStart(2,'0')}-${String(data.getDate()).padStart(2,'0')}`,
+                                totalChaves: Object.keys(backup.dados).length,
+                                automatico: false
+                            };
+                        }
+                        salvarBackupHistorico(backup);
+                        mostrarToast(`✅ Backup restaurado! ${count} chaves`, 'success');
+                        atualizarStatus();
+                        carregarListaBackups();
+                    } catch (error) {
+                        console.error('Erro ao restaurar:', error);
+                        mostrarToast('❌ Erro ao restaurar backup!', 'danger');
+                    }
+                };
+                reader.readAsText(file);
+            }
+        );
+        event.target.value = '';
+    }
+
+    function exibirHistoricoBackups() {
+        const historico = JSON.parse(localStorage.getItem(CHAVE_BACKUPS) || '[]');
+        if (historico.length === 0) {
+            mostrarToast('📭 Nenhum backup salvo no histórico.', 'warning');
+            return;
+        }
+        carregarListaBackups();
+        document.getElementById('listaBackups').scrollIntoView({ behavior: 'smooth' });
+        mostrarToast(`📋 ${historico.length} backups encontrados`, 'info');
+    }
+
+    function limparBackups() {
+        abrirModal(
+            `🗑️ <strong>Limpar todo o histórico de backups?</strong><br><br>
+             Esta ação é irreversível e removerá todos os ${JSON.parse(localStorage.getItem(CHAVE_BACKUPS) || '[]').length} backups salvos.`,
+            () => {
+                localStorage.removeItem(CHAVE_BACKUPS);
+                carregarListaBackups();
+                atualizarStatus();
+                mostrarToast('🗑️ Histórico limpo!', 'danger');
+            }
+        );
+    }
+
+    // ============================================
+    // STATUS
+    // ============================================
+    function atualizarStatus() {
+        let historico = [];
+        try {
+            const stored = localStorage.getItem(CHAVE_BACKUPS);
+            if (stored !== null) {
+                const parsed = JSON.parse(stored);
+                if (Array.isArray(parsed)) {
+                    historico = parsed;
+                }
+            }
+        } catch (e) {
+            console.warn('⚠️ Erro ao carregar status:', e);
+        }
+        
+        const statusTexto = document.getElementById('statusTexto');
+        const ultimoBackup = document.getElementById('ultimoBackup');
+        const tamanhoBackup = document.getElementById('tamanhoBackup');
+        const totalBackups = document.getElementById('totalBackups');
+
+        totalBackups.textContent = historico.length;
+
+        if (historico.length === 0) {
+            statusTexto.textContent = 'Nenhum backup';
+            statusTexto.className = 'value status-warning';
+            ultimoBackup.textContent = 'Nunca';
+            tamanhoBackup.textContent = '--';
+            return;
+        }
+
+        const ultimo = historico[0];
+        const data = ultimo.metadata?.dataFormatada || 'Data desconhecida';
+        const tamanho = ultimo.metadata?.tamanho || JSON.stringify(ultimo).length;
+        const tamanhoFormatado = tamanho > 1024 * 1024 ? (tamanho / 1024 / 1024).toFixed(1) + ' MB' :
+                                 tamanho > 1024 ? (tamanho / 1024).toFixed(1) + ' KB' :
+                                 tamanho + ' B';
+        const isAutomatico = ultimo.metadata?.automatico ? ' (Auto)' : '';
+
+        statusTexto.textContent = `${historico.length} backup(s) disponível(is)`;
+        statusTexto.className = 'value status-ok';
+        ultimoBackup.textContent = data + isAutomatico;
+        tamanhoBackup.textContent = tamanhoFormatado;
+    }
+
+    // ============================================
+    // CONFIGURAÇÃO BACKUP
+    // ============================================
+    function carregarConfigBackup() {
+        try {
+            const config = JSON.parse(localStorage.getItem(CHAVE_CONFIG_BACKUP) || '{"ativo":false}');
+            return config;
+        } catch (e) {
+            return { ativo: false };
+        }
+    }
+
+    function salvarConfigBackup(ativo) {
+        const config = { ativo: ativo, ultimaAtivacao: new Date().toISOString() };
+        localStorage.setItem(CHAVE_CONFIG_BACKUP, JSON.stringify(config));
+    }
+
+    function atualizarIntervaloBackup() {
+        const input = document.getElementById('intervaloBackup');
+        let val = parseInt(input.value);
+        if (isNaN(val) || val < 1) val = 1;
+        if (val > 60) val = 60;
+        input.value = val;
+        INTERVALO_BACKUP = val * 60000;
+        if (backupAtivo) {
+            pararBackup();
+            iniciarBackup();
+        }
+        mostrarToast(`⏱️ Intervalo alterado para ${val} minuto(s)`, 'success');
+    }
+
+    // ============================================
+    // TESTE
+    // ============================================
+    function testarBackupAuto() {
+        mostrarToast('🔄 Executando backup de teste...', 'warning');
+        setTimeout(() => {
+            try {
+                const dados = coletarDadosSistema();
+                
+                // Verifica se os dados foram coletados
+                if (!dados || Object.keys(dados).length === 0) {
+                    mostrarToast('⚠️ Nenhum dado encontrado para backup!', 'warning');
+                    return;
+                }
+                
+                const agora = new Date();
+                const backup = {
+                    metadata: {
+                        versao: '2.0',
+                        data: agora.toISOString(),
+                        dataFormatada: agora.toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' }),
+                        nome: `backup_teste_${agora.getFullYear()}-${String(agora.getMonth()+1).padStart(2,'0')}-${String(agora.getDate()).padStart(2,'0')}`,
+                        totalChaves: Object.keys(dados).length,
+                        automatico: true,
+                        teste: true,
+                        tamanho: JSON.stringify(dados).length
+                    },
+                    dados: dados
+                };
+                
+                // Verifica se a função salvarBackupHistorico existe e funciona
+                if (typeof salvarBackupHistorico === 'function') {
+                    const resultado = salvarBackupHistorico(backup);
+                    if (resultado) {
+                        mostrarToast('✅ Backup de teste concluído!', 'success');
+                        atualizarStatus();
+                        carregarListaBackups();
+                    } else {
+                        mostrarToast('❌ Falha ao salvar backup de teste!', 'danger');
+                        // Tentar diagnóstico rápido
+                        diagnosticarLocalStorage();
+                    }
+                } else {
+                    mostrarToast('❌ Função de salvamento não disponível!', 'danger');
+                }
+            } catch (error) {
+                console.error('Erro no teste:', error);
+                mostrarToast(`❌ Erro no teste de backup: ${error.message || 'Erro desconhecido'}`, 'danger');
+            }
+        }, 500);
+    }
+
+    // ============================================
+    // MODAL
+    // ============================================
+    function abrirModal(mensagem, onConfirm, botaoTexto = 'Confirmar') {
+        document.getElementById('conteudoModal').innerHTML = mensagem;
+        const btnConfirm = document.getElementById('modalConfirmBtn');
+        btnConfirm.textContent = botaoTexto;
+        btnConfirm.onclick = function() {
+            fecharModal();
+            if (onConfirm) onConfirm();
+        };
+        document.getElementById('modalConfirmacao').classList.add('active');
+    }
+
+    function fecharModal() {
+        document.getElementById('modalConfirmacao').classList.remove('active');
+    }
+
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') fecharModal();
+    });
+    document.getElementById('modalConfirmacao').addEventListener('click', function(e) {
+        if (e.target === this) fecharModal();
+    });
+
+    // ============================================
+    // AUTO-SAVE GLOBAL
+    // ============================================
+    function injetarAutoSaveGlobal() {
+        window.addEventListener('beforeunload', function() {
+            if (backupAtivo) {
+                realizarBackup1min();
+            }
+        });
+        console.log('🔄 Auto-salvamento global injetado!');
+    }
+
+    // ============================================
+    // INICIALIZAÇÃO
+    // ============================================
+    document.addEventListener('DOMContentLoaded', function() {
+        carregarTema();
+        atualizarRelogio();
+        setInterval(atualizarRelogio, 1000);
+        setInterval(atualizarContagemRegressiva, 1000);
+        setInterval(atualizarContagemDownload, 1000);
+        setInterval(atualizarStatus, 10000);
+
+        // Verificar e corrigir o histórico se necessário
+        try {
+            const stored = localStorage.getItem(CHAVE_BACKUPS);
+            if (stored !== null) {
+                const parsed = JSON.parse(stored);
+                if (!Array.isArray(parsed)) {
+                    localStorage.setItem(CHAVE_BACKUPS, JSON.stringify([]));
+                    console.log('🔄 Histórico corrigido para array vazio');
+                }
+            } else {
+                localStorage.setItem(CHAVE_BACKUPS, JSON.stringify([]));
+                console.log('🔄 Histórico criado vazio');
+            }
+        } catch (e) {
+            localStorage.setItem(CHAVE_BACKUPS, JSON.stringify([]));
+            console.log('🔄 Histórico recriado devido a erro:', e);
+        }
+
+        const configBackup = carregarConfigBackup();
+        if (configBackup.ativo) {
+            iniciarBackup();
+            mostrarToast('🔄 Backup automático a cada 1 minuto ativo!', 'info');
+        } else {
+            backupAtivo = false;
+            atualizarBotaoBackup();
+            atualizarStatusAuto();
+        }
+
+        const configDownload = carregarConfigDownload();
+        HORA_DOWNLOAD = configDownload.hora || 16;
+        MINUTO_DOWNLOAD = configDownload.minuto || 55;
+        document.getElementById('horaDownloadPersonalizado').value = `${String(HORA_DOWNLOAD).padStart(2,'0')}:${String(MINUTO_DOWNLOAD).padStart(2,'0')}`;
+        if (configDownload.ativo) {
+            iniciarDownloadPersonalizado();
+            mostrarToast('📥 Download automático agendado!', 'info');
+        } else {
+            downloadAtivo = false;
+            atualizarBotaoDownload();
+            atualizarStatusDownload();
+        }
+
+        atualizarStatus();
+        carregarListaBackups();
+        injetarAutoSaveGlobal();
+
+        console.log('🕐 Backup automático a cada 1 minuto - Sistema Premium');
+        console.log(`📥 Download automático agendado para ${String(HORA_DOWNLOAD).padStart(2,'0')}:${String(MINUTO_DOWNLOAD).padStart(2,'0')}`);
+        console.log(`📦 ${CHAVES_SISTEMA.length} chaves monitoradas`);
+        
+        // Mostrar diagnóstico inicial
+        setTimeout(() => {
+            diagnosticarLocalStorage();
+        }, 1000);
+    });
+
+    // ============================================
+    // EXPORTA FUNÇÕES GLOBAIS
+    // ============================================
+    window.toggleTheme = toggleTheme;
+    window.logout = logout;
+    window.gerarBackupManual = gerarBackupManual;
+    window.restaurarBackup = restaurarBackup;
+    window.exibirHistoricoBackups = exibirHistoricoBackups;
+    window.limparBackups = limparBackups;
+    window.testarBackupAuto = testarBackupAuto;
+    window.baixarBackupHistorico = baixarBackupHistorico;
+    window.restaurarBackupHistorico = restaurarBackupHistorico;
+    window.excluirBackupHistorico = excluirBackupHistorico;
+    window.fecharModal = fecharModal;
+    window.abrirModal = abrirModal;
+    window.carregarListaBackups = carregarListaBackups;
+    window.atualizarStatus = atualizarStatus;
+    window.toggleBackup1min = toggleBackup1min;
+    window.iniciarBackup = iniciarBackup;
+    window.pararBackup = pararBackup;
+    window.realizarBackup1min = realizarBackup1min;
+    window.toggleDownloadPersonalizado = toggleDownloadPersonalizado;
+    window.iniciarDownloadPersonalizado = iniciarDownloadPersonalizado;
+    window.pararDownloadPersonalizado = pararDownloadPersonalizado;
+    window.realizarDownloadAutomatico = realizarDownloadAutomatico;
+    window.atualizarHoraDownload = atualizarHoraDownload;
+    window.atualizarIntervaloBackup = atualizarIntervaloBackup;
+    window.gerarSnapshotDiario = gerarSnapshotDiario;
+    window.mostrarToast = mostrarToast;
+    window.diagnosticarLocalStorage = diagnosticarLocalStorage;
+</script>
+</body>
+</html>

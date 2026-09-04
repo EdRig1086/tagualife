@@ -1,0 +1,2263 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TaguáLife Center · Pedido de Orçamento</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js">
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800;14..32,900&display=swap" rel="stylesheet" />
+    <style>
+        :root {
+            --verde-claro: #C1CE83;
+            --verde-oliva: #7A816E;
+            --branco: #FBFBF7;
+            --preto: #191D1B;
+            --primary: #191D1B;
+            --primary-light: #3A4A3A;
+            --secondary: #7A816E;
+            --gold: #C1CE83;
+            --gold-light: #D8E0B0;
+            --success: #7A816E;
+            --danger: #8B3A3A;
+            --warning: #C1A83C;
+            --gray-50: #FBFBF7;
+            --gray-100: #F0F2EA;
+            --gray-200: #D8DCCE;
+            --gray-300: #B8BEA8;
+            --gray-400: #9AA08E;
+            --gray-500: #7A816E;
+            --gray-600: #5A614E;
+            --gray-700: #3A4132;
+            --gray-800: #191D1B;
+            --gray-900: #0D0F0E;
+            --shadow: 0 4px 24px rgba(25, 29, 27, 0.08);
+            --shadow-hover: 0 6px 32px rgba(25, 29, 27, 0.15);
+            --font-primary: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            --bg-body: #E8EBE0;
+            --bg-card: var(--branco);
+            --text-primary: var(--preto);
+            --text-secondary: var(--verde-oliva);
+            --border-color: var(--gray-200);
+            --input-bg: transparent;
+            --input-border: var(--gray-300);
+            --radius: 16px;
+            --radius-sm: 10px;
+        }
+
+        body.dark-mode {
+            --bg-body: #1a1a1a;
+            --bg-card: #2a2a2a;
+            --text-primary: #e8e8e8;
+            --text-secondary: #b0b8a8;
+            --border-color: #444;
+            --input-bg: #333;
+            --input-border: #555;
+            --gray-50: #2a2a2a;
+            --gray-100: #333;
+            --gray-200: #444;
+            --gray-300: #555;
+            --gray-400: #666;
+            --gray-500: #777;
+            --preto: #e8e8e8;
+            --branco: #2a2a2a;
+            --shadow: 0 4px 24px rgba(0,0,0,0.3);
+            --shadow-hover: 0 6px 32px rgba(0,0,0,0.4);
+        }
+
+        body.dark-mode .app-topbar,
+        body.dark-mode .nav-menu,
+        body.dark-mode .card-principal,
+        body.dark-mode .modal-content,
+        body.dark-mode #conteudoPDF {
+            background: var(--bg-card);
+            border-color: var(--border-color);
+        }
+
+        body.dark-mode #conteudoPDF .header-pdf { border-bottom-color: var(--border-color); }
+        body.dark-mode #conteudoPDF .footer-pdf { border-top-color: var(--border-color); }
+        body.dark-mode #conteudoPDF .dados-pedido { background: var(--gray-50); }
+        body.dark-mode #conteudoPDF .obs-pdf { background: var(--gray-50); }
+        body.dark-mode #conteudoPDF .footer-pdf .dados-empresa,
+        body.dark-mode #conteudoPDF .footer-pdf .contatos { background: var(--gray-50); }
+        body.dark-mode #conteudoPDF table tr:nth-child(even) td { background: var(--gray-50); }
+        body.dark-mode #conteudoPDF table th {
+            background: var(--gray-700);
+            color: var(--branco);
+            border-color: var(--gray-700);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: var(--font-primary);
+            font-weight: 400;
+            background: var(--bg-body);
+            min-height: 100vh;
+            padding: 1rem;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            color: var(--text-primary);
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            transition: background 0.3s, color 0.3s;
+        }
+
+        .app-container { max-width: 1100px; width: 100%; }
+
+        .app-topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.6rem;
+            flex-wrap: wrap;
+            gap: 0.3rem;
+            background: var(--bg-card);
+            padding: 0.4rem 1rem;
+            border-radius: 10px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border-color);
+            transition: background 0.3s, border-color 0.3s;
+        }
+
+        .logo-area {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            text-decoration: none;
+            color: inherit;
+        }
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: var(--preto);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--verde-claro);
+            font-weight: 800;
+            font-size: 0.7rem;
+            flex-direction: column;
+            line-height: 1;
+            padding: 0.2rem;
+            transition: background 0.3s;
+        }
+        .logo-icon small { font-size: 0.3rem; color: var(--branco); font-weight: 400; letter-spacing: 0.5px; margin-top: 1px; }
+        .logo-text { display: flex; flex-direction: column; line-height: 1.1; }
+        .logo-text .title { font-size: 1.2rem; font-weight: 800; color: var(--text-primary); letter-spacing: -0.5px; display: flex; align-items: baseline; gap: 0.1rem; }
+        .logo-text .title .tagua { color: var(--text-primary); }
+        .logo-text .title .life { color: var(--verde-claro); font-weight: 800; }
+        .logo-text .slogan { font-size: 0.4rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1.5px; font-weight: 500; margin-top: 1px; }
+
+        .app-topbar .badge { background: var(--verde-claro); padding: 0.2rem 0.7rem; border-radius: 40px; font-size: 0.55rem; font-weight: 600; color: var(--preto); border: 1px solid var(--verde-oliva); }
+
+        .clock-display {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            background: var(--preto);
+            padding: 0.2rem 0.8rem;
+            border-radius: 40px;
+            border: 1px solid var(--verde-claro);
+            font-size: 0.8rem;
+            color: var(--branco);
+            letter-spacing: 1px;
+            transition: background 0.3s;
+        }
+        .clock-display i { color: var(--verde-claro); font-size: 0.7rem; }
+        .clock-display .clock-separator { color: var(--verde-claro); animation: blink 1s step-end infinite; }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+        .clock-display .clock-seconds { color: var(--verde-claro); font-size: 0.7rem; }
+        .clock-display .clock-date { color: var(--verde-oliva); font-size: 0.6rem; font-weight: 400; border-left: 1px solid var(--verde-oliva); padding-left: 0.5rem; }
+
+        .nav-menu {
+            display: flex;
+            gap: 0.2rem;
+            flex-wrap: wrap;
+            background: var(--bg-card);
+            padding: 0.2rem 0.6rem;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            margin-bottom: 0.6rem;
+            box-shadow: 0 1px 4px rgba(25, 29, 27, 0.04);
+            transition: background 0.3s, border-color 0.3s;
+        }
+        .nav-menu .nav-item {
+            padding: 0.25rem 0.8rem;
+            border-radius: 40px;
+            font-size: 0.65rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: 0.2s;
+            border: 1px solid transparent;
+            cursor: pointer;
+        }
+        .nav-menu .nav-item:hover { background: var(--gray-50); color: var(--text-primary); }
+        .nav-menu .nav-item.active { background: var(--preto); color: var(--branco); border-color: var(--preto); }
+        .nav-menu .nav-item i { margin-right: 0.2rem; }
+
+        .btn-theme {
+            background: var(--gray-200);
+            color: var(--preto);
+            border: none;
+            padding: 0.25rem 0.8rem;
+            border-radius: 40px;
+            font-size: 0.65rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: 0.2s;
+            font-family: inherit;
+        }
+        .btn-theme:hover { background: var(--gray-300); }
+
+        .card-principal {
+            background: var(--bg-card);
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+            transition: background 0.3s, border-color 0.3s, box-shadow 0.3s;
+        }
+
+        .card-header {
+            background: var(--verde-claro);
+            padding: 0.4rem 1.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 0.4rem;
+            border-bottom: 3px solid var(--verde-oliva);
+        }
+        .card-header .left { display: flex; align-items: center; gap: 0.5rem; color: var(--preto); }
+        .card-header .left i { font-size: 1.1rem; color: var(--preto); }
+        .card-header .left h2 { font-size: 1rem; font-weight: 600; letter-spacing: -0.3px; color: var(--preto); }
+        .card-header .right { display: flex; align-items: center; gap: 0.6rem; color: var(--preto); font-size: 0.7rem; }
+        .card-header .right i { margin-right: 0.15rem; color: var(--preto); }
+
+        .card-body { padding: 1.2rem 1.5rem 1.5rem; }
+
+        #conteudoPDF {
+            background: var(--bg-card);
+            padding: 20px 25px;
+            font-family: var(--font-primary);
+            width: 100%;
+            max-width: 210mm;
+            margin: 0 auto;
+            min-height: 277mm;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            transition: background 0.3s, border-color 0.3s;
+        }
+
+        #conteudoPDF .header-pdf {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 3px solid var(--verde-oliva);
+            padding-bottom: 10px;
+            margin-bottom: 12px;
+        }
+        #conteudoPDF .header-pdf .esquerda .logo-tagua {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--text-primary);
+            letter-spacing: 1px;
+        }
+        #conteudoPDF .header-pdf .esquerda .logo-tagua span { color: var(--verde-claro); }
+        #conteudoPDF .header-pdf .esquerda .slogan-pdf {
+            color: var(--text-secondary);
+            font-size: 11px;
+            font-weight: 500;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-top: 2px;
+        }
+        #conteudoPDF .header-pdf .direita .badge-pdf {
+            background: var(--verde-claro);
+            color: var(--preto);
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 12px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            letter-spacing: 1px;
+        }
+
+        #conteudoPDF .dados-pedido {
+            margin-bottom: 10px;
+            padding: 6px 10px;
+            background: var(--gray-50);
+            border-radius: 6px;
+            border-left: 4px solid var(--verde-claro);
+            font-size: 11px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+        }
+        #conteudoPDF .dados-pedido p { margin: 2px 0; }
+        #conteudoPDF .dados-pedido strong { color: var(--text-primary); }
+
+        #conteudoPDF .mensagem { font-size: 11px; line-height: 1.6; margin-bottom: 8px; }
+        #conteudoPDF .mensagem p { margin: 3px 0; }
+
+        #conteudoPDF table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 8px 0 10px 0;
+            font-size: 10px;
+        }
+        #conteudoPDF table th {
+            background: var(--verde-oliva);
+            color: var(--branco);
+            padding: 5px 6px;
+            text-align: left;
+            border: 1px solid var(--verde-oliva);
+            font-weight: 600;
+            font-size: 9px;
+        }
+        #conteudoPDF table td {
+            padding: 4px 6px;
+            border: 1px solid var(--border-color);
+        }
+        #conteudoPDF table tr:nth-child(even) td { background: var(--gray-50); }
+
+        #conteudoPDF .solicitacoes-titulo {
+            font-size: 10px;
+            font-weight: 600;
+            margin: 6px 0 3px 0;
+            color: var(--text-primary);
+        }
+        #conteudoPDF .lista-solicitacao {
+            margin: 3px 0 8px 18px;
+            font-size: 10px;
+            line-height: 1.6;
+            columns: 2;
+            list-style: none;
+        }
+        #conteudoPDF .lista-solicitacao li::before { content: "✓ "; color: var(--verde-claro); font-weight: 700; }
+
+        #conteudoPDF .obs-pdf {
+            margin-top: 6px;
+            padding: 6px 10px;
+            background: var(--gray-50);
+            border-left: 4px solid var(--verde-claro);
+            font-size: 10px;
+            border-radius: 4px;
+        }
+        #conteudoPDF .obs-pdf strong { color: var(--text-primary); }
+        #conteudoPDF .obs-pdf p { margin-top: 2px; color: var(--text-secondary); }
+
+        #conteudoPDF .footer-pdf {
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 2px solid var(--border-color);
+            font-size: 10px;
+        }
+        #conteudoPDF .footer-pdf .dados-empresa {
+            background: var(--gray-50);
+            padding: 6px 10px;
+            border-radius: 6px;
+            margin-bottom: 6px;
+            font-size: 10px;
+        }
+        #conteudoPDF .footer-pdf .dados-empresa p { margin: 2px 0; }
+        #conteudoPDF .footer-pdf .contatos {
+            margin: 5px 0;
+            padding: 5px 10px;
+            background: var(--gray-50);
+            border-radius: 6px;
+            font-size: 10px;
+        }
+        #conteudoPDF .footer-pdf .contatos p { margin: 2px 0; }
+        #conteudoPDF .footer-pdf .aguardo-retorno {
+            margin: 8px 0 4px 0;
+            font-size: 11px;
+            font-weight: 500;
+        }
+        #conteudoPDF .footer-pdf .assinaturas {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 14px;
+            text-align: center;
+            flex-wrap: wrap;
+            gap: 4px;
+        }
+        #conteudoPDF .footer-pdf .assinaturas .linha {
+            border-top: 2px solid var(--text-primary);
+            width: 150px;
+            margin-top: 20px;
+            padding-top: 4px;
+        }
+        #conteudoPDF .footer-pdf .assinaturas p { font-size: 9px; margin-top: 2px; }
+        #conteudoPDF .footer-pdf .assinaturas p strong { font-size: 10px; }
+        #conteudoPDF .footer-pdf .rodape {
+            text-align: center;
+            margin-top: 14px;
+            font-size: 8px;
+            color: var(--text-secondary);
+            letter-spacing: 1px;
+            font-weight: 500;
+        }
+
+        .info-fornecedor {
+            background: var(--gray-50);
+            padding: 10px 12px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            border-left: 4px solid var(--verde-claro);
+        }
+        .info-fornecedor h3 {
+            color: var(--text-primary);
+            margin-bottom: 6px;
+            font-size: 13px;
+        }
+        .info-fornecedor .row {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+        }
+        .info-fornecedor .campo label {
+            font-size: 9px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: block;
+            margin-bottom: 2px;
+        }
+        .info-fornecedor .campo input {
+            border: none;
+            border-bottom: 2px solid var(--input-border);
+            padding: 3px 0;
+            font-size: 12px;
+            background: transparent;
+            outline: none;
+            width: 100%;
+            font-family: inherit;
+            color: var(--text-primary);
+            transition: 0.2s;
+        }
+        .info-fornecedor .campo input:focus { border-bottom-color: var(--verde-claro); }
+        @media (max-width: 768px) { .info-fornecedor .row { grid-template-columns: 1fr; } }
+
+        .selecionar-fornecedor {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.8rem;
+            padding: 0.3rem 0.6rem;
+            background: var(--gray-50);
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+        }
+        .selecionar-fornecedor label {
+            font-weight: 600;
+            font-size: 0.6rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+        }
+        .selecionar-fornecedor select {
+            padding: 0.2rem 0.6rem;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            font-size: 0.7rem;
+            background: var(--input-bg);
+            color: var(--text-primary);
+            outline: none;
+            font-family: inherit;
+            min-width: 150px;
+            cursor: pointer;
+        }
+        .selecionar-fornecedor select:focus { border-color: var(--verde-claro); }
+        .selecionar-fornecedor .btn-carregar {
+            padding: 0.15rem 0.8rem;
+            border: none;
+            border-radius: 40px;
+            font-size: 0.6rem;
+            font-weight: 600;
+            background: var(--verde-oliva);
+            color: var(--branco);
+            cursor: pointer;
+            transition: 0.2s;
+            font-family: inherit;
+        }
+        .selecionar-fornecedor .btn-carregar:hover { background: #5A614E; }
+
+        .tabela-itens {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 8px;
+        }
+        .tabela-itens th {
+            background: var(--verde-oliva);
+            color: var(--branco);
+            padding: 5px 6px;
+            text-align: left;
+            font-size: 10px;
+        }
+        .tabela-itens td {
+            padding: 3px 4px;
+            border-bottom: 1px solid var(--border-color);
+            vertical-align: middle;
+        }
+        .tabela-itens td input, .tabela-itens td select {
+            width: 100%;
+            border: none;
+            padding: 3px 0;
+            font-size: 11px;
+            font-family: inherit;
+            background: transparent;
+            outline: none;
+            color: var(--text-primary);
+        }
+        .tabela-itens td input:focus, .tabela-itens td select:focus {
+            background: var(--gray-50);
+            border-radius: 4px;
+        }
+        .tabela-itens td input[list]::-webkit-calendar-picker-indicator { display: none; }
+
+        .remove-item { color: var(--danger); cursor: pointer; font-size: 16px; text-align: center; display: inline-block; transition: 0.2s; }
+        .remove-item:hover { transform: scale(1.2); }
+
+        .btn-add {
+            background: transparent;
+            border: 2px dashed var(--verde-oliva);
+            padding: 4px 14px;
+            border-radius: 6px;
+            cursor: pointer;
+            color: var(--text-secondary);
+            font-weight: 600;
+            font-size: 11px;
+            transition: 0.3s;
+            margin-bottom: 10px;
+            font-family: inherit;
+        }
+        .btn-add:hover { background: var(--verde-claro); color: var(--preto); }
+
+        .btn-modelo {
+            background: transparent;
+            border: 1px solid var(--gray-300);
+            padding: 2px 10px;
+            border-radius: 40px;
+            cursor: pointer;
+            color: var(--text-secondary);
+            font-weight: 500;
+            font-size: 0.55rem;
+            transition: 0.2s;
+            font-family: inherit;
+        }
+        .btn-modelo:hover { background: var(--verde-claro); color: var(--preto); border-color: var(--verde-claro); }
+
+        .obs-pedido { margin: 8px 0; }
+        .obs-pedido label {
+            font-weight: 600;
+            font-size: 11px;
+            color: var(--text-primary);
+            display: block;
+            margin-bottom: 3px;
+        }
+        .obs-pedido textarea {
+            width: 100%;
+            border: 2px solid var(--border-color);
+            border-radius: 6px;
+            padding: 6px 8px;
+            font-size: 11px;
+            font-family: inherit;
+            resize: vertical;
+            min-height: 40px;
+            outline: none;
+            transition: 0.2s;
+            background: var(--input-bg);
+            color: var(--text-primary);
+        }
+        .obs-pedido textarea:focus { border-color: var(--verde-claro); }
+
+        .modelos-rapidos {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.3rem;
+            margin: 6px 0 10px 0;
+            align-items: center;
+        }
+        .modelos-rapidos span {
+            font-size: 0.55rem;
+            color: var(--text-secondary);
+            font-weight: 600;
+            margin-right: 0.3rem;
+        }
+        #modelosPersonalizados {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.3rem;
+        }
+
+        .botoes {
+            display: flex;
+            gap: 0.4rem;
+            flex-wrap: wrap;
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 2px solid var(--border-color);
+        }
+
+        .btn {
+            border: none;
+            padding: 0.3rem 1rem;
+            border-radius: 40px;
+            font-weight: 500;
+            font-size: 0.65rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: inherit;
+            border: 1px solid transparent;
+            text-decoration: none;
+        }
+        .btn i { font-size: 0.65rem; }
+        .btn-outline { background: transparent; border-color: var(--gray-300); color: var(--text-secondary); }
+        .btn-outline:hover { background: var(--gray-50); }
+        .btn-primary { background: var(--preto); color: var(--branco); box-shadow: 0 2px 12px rgba(25, 29, 27, 0.2); }
+        .btn-primary:hover { background: #2A3A2A; transform: translateY(-2px); }
+        .btn-success { background: var(--verde-oliva); color: var(--branco); }
+        .btn-success:hover { background: #5A614E; transform: translateY(-2px); }
+        .btn-secondary { background: var(--gray-200); color: var(--preto); }
+        .btn-secondary:hover { background: var(--gray-300); }
+        .btn-pdf { background: #8B3A3A; color: var(--branco); }
+        .btn-pdf:hover { background: #6A2A2A; transform: translateY(-2px); }
+        .btn-voltar { background: var(--gray-200); color: var(--preto); }
+        .btn-voltar:hover { background: var(--gray-300); }
+        .btn-copiar { background: var(--verde-oliva); color: var(--branco); }
+        .btn-copiar:hover { background: #5A614E; transform: translateY(-2px); }
+        .btn-limpar { background: var(--gray-200); color: var(--preto); }
+        .btn-limpar:hover { background: var(--gray-300); }
+        .btn-email { background: #3498DB; color: white; }
+        .btn-email:hover { background: #2176A1; transform: translateY(-2px); }
+        .btn-salvar-modelo { background: #8E44AD; color: white; }
+        .btn-salvar-modelo:hover { background: #6C3483; transform: translateY(-2px); }
+
+        .btn-relatorio-dia { background: #2C3E50; color: white; }
+        .btn-relatorio-dia:hover { background: #1A252F; transform: translateY(-2px); }
+        .btn-relatorio-mes { background: #3498DB; color: white; }
+        .btn-relatorio-mes:hover { background: #2176A1; transform: translateY(-2px); }
+        .btn-relatorio-ano { background: #27AE60; color: white; }
+        .btn-relatorio-ano:hover { background: #1A7A42; transform: translateY(-2px); }
+        .btn-relatorio-geral { background: #8E44AD; color: white; }
+        .btn-relatorio-geral:hover { background: #6C3483; transform: translateY(-2px); }
+
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 8px 16px;
+            border-radius: 8px;
+            color: white;
+            font-weight: 500;
+            font-size: 11px;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: 0.4s;
+            z-index: 999;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+        }
+        .toast.show { transform: translateY(0); opacity: 1; }
+        .toast.success { background: var(--verde-oliva); }
+        .toast.error { background: #8B3A3A; }
+        .toast.warning { background: #C1A83C; color: var(--preto); }
+
+        .protocolos-salvos {
+            margin-top: 1.5rem;
+            border-top: 2px solid var(--border-color);
+            padding-top: 1.2rem;
+        }
+        .protocolos-salvos .titulo {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .protocolos-salvos .titulo i { color: var(--verde-claro); }
+
+        .protocolo-item {
+            background: var(--gray-50);
+            padding: 0.6rem 1rem;
+            border-radius: 8px;
+            margin-bottom: 0.6rem;
+            border: 1px solid var(--border-color);
+            transition: 0.15s;
+        }
+        .protocolo-item:hover { border-color: var(--verde-oliva); box-shadow: var(--shadow); }
+        .protocolo-item .head {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 0.3rem 0.8rem;
+            margin-bottom: 0.15rem;
+        }
+        .protocolo-item .head strong { color: var(--text-primary); font-size: 0.8rem; }
+        .protocolo-item .head small { color: var(--text-secondary); font-size: 0.65rem; }
+        .protocolo-item .detalhes { 
+            color: var(--text-secondary); 
+            font-size: 0.7rem; 
+            margin-bottom: 0.2rem;
+            padding: 4px 0;
+        }
+        .protocolo-item .detalhes .item-lista {
+            display: inline-block;
+            background: var(--gray-200);
+            padding: 1px 8px;
+            border-radius: 12px;
+            margin: 2px 4px 2px 0;
+            font-size: 0.65rem;
+            color: var(--text-primary);
+        }
+        .protocolo-item .acoes { display: flex; gap: 0.3rem; margin-top: 0.2rem; }
+        .protocolo-item .acoes .btn { padding: 0.1rem 0.6rem; font-size: 0.6rem; }
+        .protocolo-item .meta { color: var(--gray-400); font-size: 0.6rem; margin-top: 0.1rem; }
+
+        .lista-vazia { text-align: center; color: var(--text-secondary); padding: 1.5rem 1rem; }
+        .lista-vazia i { font-size: 1.5rem; display: block; margin-bottom: 0.3rem; color: var(--gray-300); }
+
+        #feedback {
+            margin-top: 0.5rem;
+            text-align: right;
+            min-height: 1.5rem;
+            font-size: 0.65rem;
+        }
+
+        #toastGlobal {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 500;
+            font-size: 13px;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: 0.4s;
+            z-index: 9999;
+            max-width: 400px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            cursor: default;
+        }
+        #toastGlobal.show { transform: translateY(0); opacity: 1; }
+
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(25, 29, 27, 0.6);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(4px);
+        }
+        .modal-overlay.active { display: flex; }
+
+        .modal-content {
+            background: var(--bg-card);
+            padding: 1.5rem;
+            border-radius: 12px;
+            max-width: 500px;
+            width: 95%;
+            box-shadow: var(--shadow-hover);
+            border: 1px solid var(--border-color);
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        .modal-content .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+        .modal-content .modal-header h3 {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .modal-content .modal-header h3 i { color: var(--verde-claro); }
+        .modal-content .modal-header .close-modal {
+            background: none;
+            border: none;
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+            cursor: pointer;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+        }
+        .modal-content .modal-header .close-modal:hover { background: var(--gray-50); }
+        .modal-content .form-group { margin-bottom: 0.8rem; }
+        .modal-content .form-group label {
+            font-weight: 600;
+            font-size: 0.65rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+            display: block;
+            margin-bottom: 0.2rem;
+        }
+        .modal-content .form-group input, .modal-content .form-group textarea {
+            width: 100%;
+            border: none;
+            border-bottom: 2px solid var(--input-border);
+            background: var(--input-bg);
+            padding: 0.3rem 0.2rem;
+            font-size: 0.8rem;
+            color: var(--text-primary);
+            outline: none;
+            font-family: inherit;
+            transition: 0.2s;
+        }
+        .modal-content .form-group input:focus, .modal-content .form-group textarea:focus { border-bottom-color: var(--verde-claro); }
+        .modal-content .form-group textarea { resize: vertical; min-height: 60px; }
+        .modal-botoes { display: flex; gap: 0.5rem; margin-top: 1rem; justify-content: flex-end; }
+
+        @media (max-width: 768px) {
+            body { padding: 0.8rem; }
+            .card-body { padding: 1rem; }
+            .app-topbar { flex-direction: column; align-items: stretch; }
+            .clock-display { justify-content: center; font-size: 0.7rem; }
+            .nav-menu { justify-content: center; }
+            .nav-menu .nav-item { font-size: 0.55rem; padding: 0.2rem 0.5rem; }
+            #conteudoPDF { padding: 15px; min-height: auto; }
+            #conteudoPDF .header-pdf { flex-direction: column; text-align: center; }
+            #conteudoPDF .header-pdf .esquerda { text-align: center; }
+            #conteudoPDF .header-pdf .direita { text-align: center; margin-top: 6px; }
+            #conteudoPDF .footer-pdf .assinaturas .linha { width: 100px; }
+            #conteudoPDF .lista-solicitacao { columns: 1; }
+            .botoes .btn { flex: 1; justify-content: center; font-size: 0.6rem; padding: 0.25rem 0.6rem; }
+            .selecionar-fornecedor { flex-direction: column; align-items: stretch; }
+            .selecionar-fornecedor select { width: 100%; }
+        }
+        @media (max-width: 480px) {
+            .tabela-itens th, .tabela-itens td { padding: 2px 3px; font-size: 10px; }
+            .tabela-itens td input, .tabela-itens td select { font-size: 10px; }
+            .info-fornecedor { padding: 8px; }
+        }
+
+        @media print {
+            body { background: white; padding: 0; }
+            .app-container { max-width: 100%; }
+            .app-topbar, .nav-menu, .botoes, .toast, .no-print { display: none !important; }
+            .card-principal { box-shadow: none; border: none; border-radius: 0; }
+            .card-header { display: none !important; }
+            .card-body { padding: 0; }
+            #conteudoPDF { border: none; border-radius: 0; padding: 15px 20px; min-height: auto; }
+            #conteudoPDF .header-pdf { margin-bottom: 8px; padding-bottom: 6px; }
+            #conteudoPDF .footer-pdf { margin-top: 8px; padding-top: 8px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <div class="app-topbar">
+        <a href="index.html" class="logo-area">
+            <div class="logo-icon">T <small>LIFE</small></div>
+            <div class="logo-text">
+                <div class="title"><span class="tagua">Taguá</span><span class="life">Life</span></div>
+                <div class="slogan">Life Conceito em Gestão Condominial</div>
+            </div>
+        </a>
+        <div class="clock-display">
+            <i class="fas fa-clock"></i>
+            <span id="clockHours">00</span><span class="clock-separator">:</span>
+            <span id="clockMinutes">00</span><span class="clock-separator">:</span>
+            <span id="clockSeconds" class="clock-seconds">00</span>
+            <span class="clock-date" id="clockDate">00/00/0000</span>
+        </div>
+        <span class="badge"><i class="fas fa-file-pdf"></i> Pedido de Orçamento</span>
+    </div>
+
+    <!-- MENU CORRIGIDO - SEM active FIXO -->
+        <div class="nav-menu">
+            <a class="nav-item" href="index.html"><i class="fas fa-home"></i> Dashboard</a>
+            <a class="nav-item" href="estoque.html"><i class="fas fa-boxes"></i> Estoque</a>
+            <a class="nav-item" href="saida.html"><i class="fas fa-arrow-right"></i> Saída</a>
+            <a class="nav-item" href="mapacota.html"><i class="fas fa-file-invoice"></i> Cotação</a>
+            <a class="nav-item" href="cotacoes_aprovadas.html"><i class="fas fa-check-circle"></i> Aprovadas</a>
+            <a class="nav-item" href="orcamento.html"><i class="fas fa-file-pdf"></i> Orçamento</a>
+            <a class="nav-item" href="fornecedor.html"><i class="fas fa-handshake"></i> Fornecedores</a>
+            <a class="nav-item" href="recebido.html"><i class="fas fa-clipboard-check"></i> Recebido</a>
+            <a class="nav-item" href="backup_automatico.html"><i class="fas fa-database"></i> Backup</a>
+            <button class="nav-item btn-theme" onclick="toggleTheme()" style="margin-left:auto;">
+                <i class="fas fa-moon" id="themeIcon"></i> <span id="themeLabel">Tema</span>
+            </button>
+            <button class="nav-item" onclick="logout()" style="background:#8B3A3A; color:white; border-color:#8B3A3A;">
+                <i class="fas fa-sign-out-alt"></i> Sair
+            </button>
+        </div>
+
+    <div class="card-principal">
+        <div class="card-header">
+            <div class="left">
+                <i class="fas fa-file-pdf"></i>
+                <h2>Pedido de Orçamento</h2>
+                <span>• Solicitação de Cotações</span>
+            </div>
+            <div class="right">
+                <span><i class="far fa-calendar-alt"></i> <span id="dataAtual"></span></span>
+                <span><i class="far fa-clock"></i> <span id="horaAtual"></span></span>
+            </div>
+        </div>
+
+        <div class="card-body">
+            <div id="conteudoPDF">
+                <div class="header-pdf">
+                    <div class="esquerda">
+                        <div class="logo-tagua">Taguá<span>Life</span></div>
+                        <div class="slogan-pdf">Life Conceito em Gestão Condominial</div>
+                    </div>
+                    <div class="direita">
+                        <div class="badge-pdf">Pedido de Orçamento <i class="fas fa-file-pdf"></i></div>
+                    </div>
+                </div>
+
+                <div class="dados-pedido">
+                    <p><strong>📅 Data:</strong> <span id="pdfData"></span> &nbsp;|&nbsp; <strong>🕐 Hora:</strong> <span id="pdfHora"></span></p>
+                    <p><strong>👤 Fornecedor:</strong> <span id="pdfFornecedor">-</span></p>
+                </div>
+
+                <div class="mensagem">
+                    <p><strong id="saudacaoTexto">Prezados, boa tarde! Tudo bem?</strong></p>
+                    <p>Solicitamos orçamento para os seguintes materiais:</p>
+                </div>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width:25px; text-align:center;">#</th>
+                            <th style="text-align:left;">Descrição do Material / Serviço</th>
+                            <th style="width:50px; text-align:center;">Qtd.</th>
+                            <th style="width:50px; text-align:center;">Unid.</th>
+                            <th style="text-align:left;">Observação</th>
+                        </tr>
+                    </thead>
+                    <tbody id="pdfCorpoTabela">
+                        <tr><td colspan="5" style="text-align:center; color:var(--gray-400); padding:10px;">Nenhum item adicionado ainda.</td></tr>
+                    </tbody>
+                </table>
+
+                <p class="solicitacoes-titulo">Solicitamos que conste no orçamento:</p>
+                <ul class="lista-solicitacao">
+                    <li>Itens e valor unitário</li>
+                    <li>Valor do frete</li>
+                    <li>Valor total</li>
+                    <li>Prazo de entrega</li>
+                    <li>Forma de pagamento: à vista, parcelado, boleto, cartão de crédito, Pix, etc.</li>
+                    <li>Dados para pagamento (PIX, banco, agência, conta)</li>
+                </ul>
+
+                <div class="obs-pdf">
+                    <strong>📝 Observações / Condições Gerais:</strong>
+                    <p id="pdfObsTexto">Nenhuma observação adicional.</p>
+                </div>
+
+                <div class="footer-pdf">
+                    <div class="dados-empresa">
+                        <p><strong>Dados para emissão da proposta:</strong></p>
+                        <p><strong>Empresa:</strong> Condomínio TaguaLife Center – Subcondomínio Apart-Hotel</p>
+                        <p><strong>CNPJ:</strong> 34.330.943/0003-66</p>
+                        <p><strong>Inscrição Estadual:</strong> 081936050350</p>
+                        <p><strong>Endereço:</strong> CSG 03, Lote 07, Blocos A ao F – Taguatinga Sul – Brasília/DF</p>
+                        <p><strong>CEP:</strong> 72.035-503</p>
+                    </div>
+                    <div class="contatos">
+                        <p><strong>📧 E-mails:</strong> almoxarifadotagualife@gmail.com | admtagualife@gmail.com</p>
+                        <p><strong>📱 WhatsApp:</strong> (61) 9 9256-4762</p>
+                    </div>
+                    <p class="aguardo-retorno">Ficamos no aguardo do retorno.</p>
+                    <div class="assinaturas">
+                        <div><div class="linha">_________________________</div><p><strong>Ednaldo de Souza</strong><br>Almoxarifado</p></div>
+                        <div><div class="linha">_________________________</div><p><strong>Elisabeth Velásquez</strong><br>Síndica</p></div>
+                        <div><div class="linha">_________________________</div><p><strong>Eliane Guimarães</strong><br>Síndica</p></div>
+                    </div>
+                    <div class="rodape">TaguaLife Center – Life Conceito em Gestão Condominial</div>
+                </div>
+            </div>
+
+            <div class="no-print" style="margin-top:16px;">
+                <h3 style="color:var(--text-primary); margin-bottom:10px; font-size:14px;">
+                    <i class="fas fa-edit"></i> Dados do Pedido
+                </h3>
+
+                <div class="selecionar-fornecedor">
+                    <label><i class="fas fa-handshake"></i> CARREGAR FORNECEDOR:</label>
+                    <select id="selectFornecedorPedido">
+                        <option value="">Selecione um fornecedor...</option>
+                    </select>
+                    <button class="btn-carregar" onclick="carregarFornecedorPedido()">
+                        <i class="fas fa-upload"></i> Carregar
+                    </button>
+                    <span style="font-size:0.55rem; color:var(--text-secondary); margin-left:0.3rem;">
+                        <i class="fas fa-info-circle"></i> Carrega dados do fornecedor
+                    </span>
+                </div>
+
+                <div class="info-fornecedor">
+                    <h3><i class="fas fa-user-tie"></i> Dados do Fornecedor</h3>
+                    <div class="row">
+                        <div class="campo">
+                            <label>Nome do Fornecedor</label>
+                            <input type="text" id="fornecedorNome" placeholder="Ex: Martins Atacado" />
+                        </div>
+                        <div class="campo">
+                            <label>Telefone/WhatsApp</label>
+                            <input type="text" id="fornecedorTelefone" placeholder="(61) 99999-9999" />
+                        </div>
+                        <div class="campo">
+                            <label>Data do Pedido</label>
+                            <input type="date" id="dataPedido" />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modelos-rapidos">
+                    <span><i class="fas fa-bolt"></i> MODELOS:</span>
+                    <button class="btn-modelo" onclick="inserirModelo('padrao')">📝 Padrão</button>
+                    <button class="btn-modelo" onclick="inserirModelo('urgencia')">⚠️ Urgente</button>
+                    <button class="btn-modelo" onclick="inserirModelo('manutencao')">🔧 Manutenção</button>
+                    <button class="btn-modelo" onclick="inserirModelo('limpeza')">🧹 Limpeza</button>
+                    <button class="btn-modelo" onclick="inserirModelo('elevador')">🛗 Elevador</button>
+                    <button class="btn-modelo" onclick="inserirModelo('piscina')">🏊 Piscina</button>
+                    <button class="btn-modelo" onclick="carregarItensEstoquePedido()" style="border-color:var(--verde-claro);">
+                        <i class="fas fa-boxes"></i> Itens do Estoque
+                    </button>
+                    <button class="btn-modelo btn-salvar-modelo" onclick="abrirModalModelo()" style="border-color:#8E44AD; color:#8E44AD;">
+                        <i class="fas fa-save"></i> Salvar Modelo
+                    </button>
+                    <span id="modelosPersonalizados"></span>
+                </div>
+
+                <div style="overflow-x:auto;">
+                    <table class="tabela-itens" id="tabelaItens">
+                        <thead>
+                            <tr>
+                                <th style="width:25px;">#</th>
+                                <th style="text-align:left;">Descrição do Material</th>
+                                <th style="width:60px;">Qtd.</th>
+                                <th style="width:60px;">Unid.</th>
+                                <th style="width:100px;">Obs.</th>
+                                <th style="width:25px;"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="corpoTabelaItens">
+                            <tr>
+                                <td style="text-align:center; font-weight:600;">1</td>
+                                <td><input type="text" class="item-desc" placeholder="Ex: Pacote de gesso" list="itensSugestoesPedido" style="width:100%;" /></td>
+                                <td><input type="text" class="item-qtd" value="1" style="width:100%; text-align:center;" /></td>
+                                <td>
+                                    <select class="item-unidade" style="width:100%;">
+                                        <option value="UN">UN</option>
+                                        <option value="CX">CX</option>
+                                        <option value="PCT">PCT</option>
+                                        <option value="KG">KG</option>
+                                        <option value="L">L</option>
+                                        <option value="M">M</option>
+                                        <option value="M²">M²</option>
+                                        <option value="HR">HR</option>
+                                        <option value="SERV">SERV</option>
+                                    </select>
+                                </td>
+                                <td><input type="text" class="item-obs" placeholder="Obs." style="width:100%;" /></td>
+                                <td style="text-align:center;"></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <datalist id="itensSugestoesPedido"></datalist>
+
+                <button class="btn-add" onclick="adicionarItemPedido()">
+                    <i class="fas fa-plus-circle"></i> Adicionar Item
+                </button>
+
+                <div class="obs-pedido">
+                    <label><i class="fas fa-comment"></i> Observações / Condições Gerais</label>
+                    <textarea id="obsPedido" placeholder="Digite aqui observações adicionais, condições especiais, etc."></textarea>
+                </div>
+
+                <div class="botoes">
+                    <button class="btn btn-pdf" onclick="gerarPDF()"><i class="fas fa-file-pdf"></i> Gerar PDF</button>
+                    <button class="btn btn-success" onclick="window.print()"><i class="fas fa-print"></i> Imprimir</button>
+                    <button class="btn btn-email" onclick="enviarPorEmail()"><i class="fas fa-envelope"></i> E-mail</button>
+                    <button class="btn btn-copiar" onclick="copiarTexto()"><i class="fas fa-copy"></i> Copiar</button>
+                    <button class="btn btn-limpar" onclick="limparPedido()"><i class="fas fa-broom"></i> Novo</button>
+                    <button class="btn btn-primary" onclick="salvarPedido()"><i class="fas fa-save"></i> Salvar</button>
+                    <button class="btn btn-secondary" id="btnVerSalvosPedidos"><i class="fas fa-folder-open"></i> Ver salvos</button>
+                    <a href="index.html" class="btn btn-voltar"><i class="fas fa-arrow-left"></i> Voltar</a>
+                </div>
+
+                <div style="margin-top: 1rem; padding-top: 1rem; border-top: 2px solid var(--border-color);" class="no-print">
+                    <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center;">
+                        <span style="font-weight: 600; font-size: 0.7rem; color: var(--text-secondary);">
+                            <i class="fas fa-file-pdf"></i> RELATÓRIOS DE PEDIDOS:
+                        </span>
+                        <button class="btn btn-relatorio-dia" onclick="gerarRelatorioPDF('dia')">
+                            <i class="fas fa-calendar-day"></i> Dia
+                        </button>
+                        <button class="btn btn-relatorio-mes" onclick="gerarRelatorioPDF('mes')">
+                            <i class="fas fa-calendar-alt"></i> Mês
+                        </button>
+                        <button class="btn btn-relatorio-ano" onclick="gerarRelatorioPDF('ano')">
+                            <i class="fas fa-calendar-year"></i> Ano
+                        </button>
+                        <button class="btn btn-relatorio-geral" onclick="gerarRelatorioPDF('geral')">
+                            <i class="fas fa-file-pdf"></i> Geral
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="feedback"></div>
+        </div>
+    </div>
+
+    <div id="listaPedidos" class="protocolos-salvos" style="display: none;">
+        <div class="titulo"><i class="fas fa-archive"></i> Pedidos Salvos</div>
+        <div id="conteudoListaPedidos"></div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="modalModelo">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3><i class="fas fa-save"></i> Salvar Modelo Personalizado</h3>
+            <button class="close-modal" onclick="fecharModalModelo()">&times;</button>
+        </div>
+        <div class="form-group">
+            <label>Nome do Modelo</label>
+            <input type="text" id="modeloNome" placeholder="Ex: Orçamento Elétrico" />
+        </div>
+        <div class="form-group">
+            <label>Observação do Modelo</label>
+            <textarea id="modeloObs" placeholder="Texto que será inserido nas observações..."></textarea>
+        </div>
+        <div class="modal-botoes">
+            <button class="btn btn-secondary" onclick="fecharModalModelo()">Cancelar</button>
+            <button class="btn btn-primary" onclick="salvarModeloPersonalizado()"><i class="fas fa-save"></i> Salvar</button>
+        </div>
+    </div>
+</div>
+
+<div id="toastGlobal"></div>
+
+<script>
+    // ============================================
+    // TOAST
+    // ============================================
+    function mostrarToast(mensagem, tipo = 'success') {
+        const toast = document.getElementById('toastGlobal');
+        const cores = { info: '#3498DB', success: '#7A816E', warning: '#C1A83C', danger: '#8B3A3A' };
+        toast.textContent = mensagem;
+        toast.style.background = cores[tipo] || '#191D1B';
+        toast.style.color = 'white';
+        toast.classList.add('show');
+        clearTimeout(toast._timeout);
+        toast._timeout = setTimeout(() => toast.classList.remove('show'), 4000);
+    }
+
+    // ============================================
+    // LOGOUT
+    // ============================================
+    function logout() {
+        if (confirm('Deseja realmente sair do sistema?')) {
+            localStorage.removeItem('tagualife_sessao');
+            window.location.href = 'login.html';
+        }
+    }
+
+    // ============================================
+    // TEMA
+    // ============================================
+    function toggleTheme() {
+        const body = document.body;
+        body.classList.toggle('dark-mode');
+        const isDark = body.classList.contains('dark-mode');
+        localStorage.setItem('tema_TaguáLife', isDark ? 'dark' : 'light');
+        const icon = document.getElementById('themeIcon');
+        const label = document.getElementById('themeLabel');
+        if (isDark) { icon.className = 'fas fa-sun'; label.textContent = 'Claro'; } 
+        else { icon.className = 'fas fa-moon'; label.textContent = 'Tema'; }
+    }
+
+    function carregarTema() {
+        const theme = localStorage.getItem('tema_TaguáLife');
+        if (theme === 'dark') {
+            document.body.classList.add('dark-mode');
+            document.getElementById('themeIcon').className = 'fas fa-sun';
+            document.getElementById('themeLabel').textContent = 'Claro';
+        }
+    }
+
+    // ============================================
+    // RELÓGIO
+    // ============================================
+    function getSaudacao() {
+        const hora = new Date().getHours();
+        if (hora >= 6 && hora < 12) return "Prezados, bom dia! Tudo bem?";
+        else if (hora >= 12 && hora < 18) return "Prezados, boa tarde! Tudo bem?";
+        else return "Prezados, boa noite! Tudo bem?";
+    }
+
+    function getHorarioBrasilia() {
+        const agora = new Date();
+        const data = agora.toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' });
+        const hora = agora.toLocaleTimeString('pt-BR', { timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit' });
+        const horaCompleta = agora.toLocaleTimeString('pt-BR', { timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        return { data, hora, horaCompleta };
+    }
+
+    function atualizarRelogio() {
+        const horario = getHorarioBrasilia();
+        document.getElementById('clockHours').textContent = horario.hora.split(':')[0] || '00';
+        document.getElementById('clockMinutes').textContent = horario.hora.split(':')[1] || '00';
+        document.getElementById('clockSeconds').textContent = horario.horaCompleta.split(':')[2] || '00';
+        document.getElementById('clockDate').textContent = horario.data;
+        document.getElementById('dataAtual').textContent = horario.data;
+        document.getElementById('horaAtual').textContent = horario.hora;
+    }
+
+    // ============================================
+    // FEEDBACK
+    // ============================================
+    function mostrarMensagem(texto, cor = '#191D1B') {
+        const feedback = document.getElementById('feedback');
+        if (!feedback) return;
+        feedback.innerHTML = `<span style="background:${cor}; color:white; padding:0.2rem 1.2rem; border-radius:40px; display:inline-block; font-size:0.65rem;">${texto}</span>`;
+        setTimeout(() => { feedback.innerHTML = ''; }, 4000);
+    }
+
+    // ============================================
+    // CARREGAR FORNECEDORES DO ESTOQUE
+    // ============================================
+    function carregarFornecedoresPedido() {
+        const fornecedores = JSON.parse(localStorage.getItem('fornecedoresTaguaLife') || '[]');
+        const select = document.getElementById('selectFornecedorPedido');
+        select.innerHTML = '<option value="">Selecione um fornecedor...</option>';
+        fornecedores.forEach(f => {
+            select.innerHTML += `<option value="${f.id}">${f.empresa} - ${f.atividade || ''}</option>`;
+        });
+    }
+
+    function carregarFornecedorPedido() {
+        const select = document.getElementById('selectFornecedorPedido');
+        const id = parseInt(select.value);
+        if (!id) {
+            mostrarMensagem('⚠️ Selecione um fornecedor!', '#8B3A3A');
+            return;
+        }
+        
+        const fornecedores = JSON.parse(localStorage.getItem('fornecedoresTaguaLife') || '[]');
+        const f = fornecedores.find(item => item.id === id);
+        if (!f) {
+            mostrarMensagem('⚠️ Fornecedor não encontrado!', '#8B3A3A');
+            return;
+        }
+        
+        document.getElementById('fornecedorNome').value = f.empresa || '';
+        document.getElementById('fornecedorTelefone').value = f.telefone || '';
+        
+        mostrarMensagem(`✅ Fornecedor "${f.empresa}" carregado!`, '#7A816E');
+        mostrarToast(`✅ Fornecedor "${f.empresa}" carregado!`, 'success');
+        atualizarPDF();
+    }
+
+    // ============================================
+    // CARREGAR ITENS DO ESTOQUE
+    // ============================================
+    function carregarSugestoesItens() {
+        const itens = JSON.parse(localStorage.getItem('estoqueTaguaLife') || '[]');
+        const datalist = document.getElementById('itensSugestoesPedido');
+        datalist.innerHTML = itens.map(item => 
+            `<option value="${item.nome}">${item.nome} (${item.quantidade} unid.)</option>`
+        ).join('');
+    }
+
+    function carregarItensEstoquePedido() {
+        const itensEstoque = JSON.parse(localStorage.getItem('estoqueTaguaLife') || '[]');
+        if (itensEstoque.length === 0) {
+            mostrarMensagem('⚠️ Nenhum item no estoque!', '#8B3A3A');
+            return;
+        }
+        
+        const rows = document.querySelectorAll('#corpoTabelaItens tr');
+        if (rows.length > 0 && rows[0].querySelector('.item-desc').value.trim() !== '') {
+            if (!confirm('Isso substituirá os itens atuais. Continuar?')) return;
+        }
+        
+        const tbody = document.getElementById('corpoTabelaItens');
+        const itemRows = tbody.querySelectorAll('tr');
+        itemRows.forEach(row => row.remove());
+        
+        itensEstoque.forEach((item, index) => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td style="text-align:center; font-weight:600;">${index + 1}</td>
+                <td><input type="text" class="item-desc" value="${item.nome || ''}" placeholder="Ex: Pacote de gesso" list="itensSugestoesPedido" style="width:100%;" /></td>
+                <td><input type="text" class="item-qtd" value="1" style="width:100%; text-align:center;" /></td>
+                <td>
+                    <select class="item-unidade" style="width:100%;">
+                        <option value="UN" ${item.unidade === 'UN' ? 'selected' : ''}>UN</option>
+                        <option value="CX" ${item.unidade === 'CX' ? 'selected' : ''}>CX</option>
+                        <option value="PCT" ${item.unidade === 'PCT' ? 'selected' : ''}>PCT</option>
+                        <option value="KG" ${item.unidade === 'KG' ? 'selected' : ''}>KG</option>
+                        <option value="L" ${item.unidade === 'L' ? 'selected' : ''}>L</option>
+                        <option value="M" ${item.unidade === 'M' ? 'selected' : ''}>M</option>
+                        <option value="M²" ${item.unidade === 'M²' ? 'selected' : ''}>M²</option>
+                        <option value="HR" ${item.unidade === 'HR' ? 'selected' : ''}>HR</option>
+                        <option value="SERV" ${item.unidade === 'SERV' ? 'selected' : ''}>SERV</option>
+                    </select>
+                </td>
+                <td><input type="text" class="item-obs" placeholder="Obs." style="width:100%;" /></td>
+                <td style="text-align:center;">${itensEstoque.length > 1 ? `<span class="remove-item" onclick="removerItemPedido(this)"><i class="fas fa-times-circle"></i></span>` : ''}</td>
+            `;
+            tbody.appendChild(tr);
+        });
+        
+        atualizarNumeros();
+        atualizarPDF();
+        mostrarMensagem(`✅ ${itensEstoque.length} itens carregados do estoque!`, '#7A816E');
+        mostrarToast(`✅ ${itensEstoque.length} itens carregados!`, 'success');
+    }
+
+    // ============================================
+    // MODELOS RÁPIDOS
+    // ============================================
+    function inserirModelo(modelo) {
+        const textarea = document.getElementById('obsPedido');
+        const modelos = {
+            padrao: 'Solicitamos orçamento para os materiais acima. Favor enviar proposta com valores unitários, frete, prazo de entrega e condições de pagamento.',
+            urgencia: '⚠️ SOLICITAÇÃO URGENTE! Necessário orçamento para os materiais listados. Pedimos retorno ainda hoje, preferencialmente via WhatsApp.',
+            manutencao: '🔧 Orçamento para manutenção preventiva/corretiva dos equipamentos/sistemas listados. Incluir mão de obra e materiais necessários.',
+            limpeza: '🧹 Orçamento para produtos e materiais de limpeza listados. Incluir valor unitário, frete e prazo de entrega.',
+            elevador: '🛗 Orçamento para manutenção dos elevadores. Incluir peças, mão de obra e prazo de execução. Necessário ART e certificações.',
+            piscina: '🏊 Orçamento para produtos químicos e manutenção da piscina. Incluir cloro, clarificante, algicida e produtos de limpeza.'
+        };
+        
+        if (modelo && modelos[modelo]) {
+            const atual = textarea.value.trim();
+            if (atual && !confirm('Substituir o texto atual?')) return;
+            textarea.value = modelos[modelo];
+            atualizarPDF();
+            mostrarToast('📝 Modelo inserido!', 'success');
+        }
+    }
+
+    // ============================================
+    // MODELOS PERSONALIZADOS
+    // ============================================
+    function abrirModalModelo() {
+        document.getElementById('modalModelo').classList.add('active');
+        document.getElementById('modeloNome').focus();
+    }
+
+    function fecharModalModelo() {
+        document.getElementById('modalModelo').classList.remove('active');
+        document.getElementById('modeloNome').value = '';
+        document.getElementById('modeloObs').value = '';
+    }
+
+    function salvarModeloPersonalizado() {
+        const nome = document.getElementById('modeloNome').value.trim();
+        const obs = document.getElementById('modeloObs').value.trim();
+        
+        if (!nome) {
+            mostrarToast('⚠️ Informe um nome para o modelo!', 'warning');
+            return;
+        }
+        
+        const modelos = JSON.parse(localStorage.getItem('modelosOrcamentoTaguaLife') || '[]');
+        if (modelos.find(m => m.nome.toLowerCase() === nome.toLowerCase())) {
+            mostrarToast('⚠️ Já existe um modelo com este nome!', 'warning');
+            return;
+        }
+        
+        modelos.push({
+            id: Date.now(),
+            nome: nome,
+            observacao: obs || '',
+            dataCriacao: new Date().toISOString()
+        });
+        localStorage.setItem('modelosOrcamentoTaguaLife', JSON.stringify(modelos));
+        
+        carregarModelosPersonalizados();
+        fecharModalModelo();
+        mostrarToast('✅ Modelo "' + nome + '" salvo!', 'success');
+    }
+
+    function carregarModelosPersonalizados() {
+        const modelos = JSON.parse(localStorage.getItem('modelosOrcamentoTaguaLife') || '[]');
+        const container = document.getElementById('modelosPersonalizados');
+        if (!container) return;
+        
+        container.innerHTML = modelos.map(m => `
+            <button class="btn-modelo" onclick="aplicarModeloPersonalizado(${m.id})" style="border-color:#8E44AD; color:#8E44AD;">
+                📋 ${m.nome}
+            </button>
+        `).join('');
+    }
+
+    function aplicarModeloPersonalizado(id) {
+        const modelos = JSON.parse(localStorage.getItem('modelosOrcamentoTaguaLife') || '[]');
+        const modelo = modelos.find(m => m.id === id);
+        if (!modelo) return;
+        
+        const atual = document.getElementById('obsPedido').value.trim();
+        if (atual && !confirm('Substituir o texto atual?')) return;
+        document.getElementById('obsPedido').value = modelo.observacao || '';
+        atualizarPDF();
+        mostrarToast('📝 Modelo "' + modelo.nome + '" aplicado!', 'success');
+    }
+
+    // ============================================
+    // ENVIAR POR E-MAIL
+    // ============================================
+    function enviarPorEmail() {
+        const fornecedor = document.getElementById('fornecedorNome').value || 'Fornecedor';
+        const itens = [];
+        document.querySelectorAll('.item-desc').forEach(input => {
+            if (input.value.trim()) itens.push(input.value.trim());
+        });
+        
+        if (itens.length === 0) {
+            mostrarToast('⚠️ Adicione pelo menos um item!', 'warning');
+            return;
+        }
+        
+        const subject = `Pedido de Orçamento - ${fornecedor}`;
+        let body = getSaudacao() + '\n\n';
+        body += 'Solicitamos orçamento para os seguintes materiais:\n\n';
+        itens.forEach((item, i) => {
+            body += `${i+1}. ${item}\n`;
+        });
+        body += '\n\nSolicitamos que conste no orçamento:';
+        body += '\n- Itens e valor unitário';
+        body += '\n- Valor do frete';
+        body += '\n- Valor total';
+        body += '\n- Prazo de entrega';
+        body += '\n- Forma de pagamento: à vista, parcelado, boleto, cartão de crédito, Pix, etc.';
+        body += '\n- Dados para pagamento (PIX, banco, agência, conta)';
+        body += '\n\nDados para emissão da proposta:';
+        body += '\nEmpresa: Condomínio TaguaLife Center – Subcondomínio Apart-Hotel';
+        body += '\nCNPJ: 34.330.943/0003-66';
+        body += '\nEndereço: CSG 03, Lote 07, Blocos A ao F – Taguatinga Sul – Brasília/DF';
+        body += '\nCEP: 72.035-503';
+        body += '\n\n📧 E-mails: almoxarifadotagualife@gmail.com | admtagualife@gmail.com';
+        body += '\n📱 WhatsApp: (61) 9 9256-4762';
+        
+        const obs = document.getElementById('obsPedido').value.trim();
+        if (obs) {
+            body += '\n\nObservações:\n' + obs;
+        }
+        
+        body += '\n\nFicamos no aguardo do retorno.';
+        body += '\n\nAtenciosamente,';
+        body += '\nEdnaldo de Souza - Almoxarifado';
+        
+        const mailtoLink = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+        window.open(mailtoLink, '_blank');
+        mostrarToast('📧 Abrindo cliente de e-mail...', 'info');
+    }
+
+    // ============================================
+    // VARIÁVEIS
+    // ============================================
+    let itens = [{ id: 1, descricao: '', quantidade: '1', unidade: 'UN', obs: '' }];
+    let proximoId = 2;
+    let editandoId = null;
+
+    // ============================================
+    // INICIALIZAR
+    // ============================================
+    function init() {
+        const agora = new Date();
+        document.getElementById('dataPedido').value = agora.toISOString().split('T')[0];
+        document.getElementById('saudacaoTexto').textContent = getSaudacao();
+        carregarFornecedoresPedido();
+        carregarSugestoesItens();
+        carregarDados();
+        carregarModelosPersonalizados();
+        renderizarTabelaPedido();
+        atualizarPDF();
+    }
+
+    // ============================================
+    // SALVAR DADOS LOCAL
+    // ============================================
+    function salvarDados() {
+        try {
+            const dados = {
+                itens: itens,
+                fornecedor: {
+                    nome: document.getElementById('fornecedorNome').value,
+                    telefone: document.getElementById('fornecedorTelefone').value
+                },
+                data: document.getElementById('dataPedido').value,
+                obs: document.getElementById('obsPedido').value
+            };
+            localStorage.setItem('pedidoOrcamento', JSON.stringify(dados));
+        } catch(e) { console.warn('Erro ao salvar:', e); }
+    }
+
+    function carregarDados() {
+        try {
+            const dados = localStorage.getItem('pedidoOrcamento');
+            if (dados) {
+                const parsed = JSON.parse(dados);
+                if (parsed.itens && parsed.itens.length > 0) {
+                    itens = parsed.itens;
+                    proximoId = Math.max(...itens.map(i => i.id || 0)) + 1;
+                }
+                if (parsed.fornecedor) {
+                    document.getElementById('fornecedorNome').value = parsed.fornecedor.nome || '';
+                    document.getElementById('fornecedorTelefone').value = parsed.fornecedor.telefone || '';
+                }
+                if (parsed.data) document.getElementById('dataPedido').value = parsed.data;
+                if (parsed.obs) document.getElementById('obsPedido').value = parsed.obs;
+            }
+        } catch(e) { console.warn('Erro ao carregar:', e); }
+    }
+
+    // ============================================
+    // RENDERIZAR TABELA DE ITENS
+    // ============================================
+    function renderizarTabelaPedido() {
+        const tbody = document.getElementById('corpoTabelaItens');
+        tbody.innerHTML = '';
+        itens.forEach((item, index) => {
+            const tr = document.createElement('tr');
+            tr.dataset.itemId = item.id || index + 1;
+            tr.innerHTML = `
+                <td style="text-align:center; font-weight:600;">${index + 1}</td>
+                <td><input type="text" class="item-desc" value="${item.descricao || ''}" placeholder="Ex: Pacote de gesso" list="itensSugestoesPedido" style="width:100%;" /></td>
+                <td><input type="text" class="item-qtd" value="${item.quantidade || '1'}" style="width:100%; text-align:center;" /></td>
+                <td>
+                    <select class="item-unidade" style="width:100%;">
+                        <option value="UN" ${item.unidade === 'UN' ? 'selected' : ''}>UN</option>
+                        <option value="CX" ${item.unidade === 'CX' ? 'selected' : ''}>CX</option>
+                        <option value="PCT" ${item.unidade === 'PCT' ? 'selected' : ''}>PCT</option>
+                        <option value="KG" ${item.unidade === 'KG' ? 'selected' : ''}>KG</option>
+                        <option value="L" ${item.unidade === 'L' ? 'selected' : ''}>L</option>
+                        <option value="M" ${item.unidade === 'M' ? 'selected' : ''}>M</option>
+                        <option value="M²" ${item.unidade === 'M²' ? 'selected' : ''}>M²</option>
+                        <option value="HR" ${item.unidade === 'HR' ? 'selected' : ''}>HR</option>
+                        <option value="SERV" ${item.unidade === 'SERV' ? 'selected' : ''}>SERV</option>
+                    </select>
+                </td>
+                <td><input type="text" class="item-obs" value="${item.obs || ''}" placeholder="Obs." style="width:100%;" /></td>
+                <td style="text-align:center;">${itens.length > 1 ? `<span class="remove-item" onclick="removerItemPedido(this)"><i class="fas fa-times-circle"></i></span>` : ''}</td>
+            `;
+            tbody.appendChild(tr);
+        });
+
+        document.querySelectorAll('.item-desc, .item-qtd, .item-obs, .item-unidade').forEach(el => {
+            el.addEventListener('input', function() { salvarItensDoDOM(); atualizarPDF(); salvarDados(); });
+            el.addEventListener('change', function() { salvarItensDoDOM(); atualizarPDF(); salvarDados(); });
+        });
+
+        ['fornecedorNome', 'fornecedorTelefone', 'dataPedido', 'obsPedido'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) {
+                el.addEventListener('input', function() { salvarDados(); atualizarPDF(); });
+                el.addEventListener('change', function() { salvarDados(); atualizarPDF(); });
+            }
+        });
+        salvarDados();
+    }
+
+    function salvarItensDoDOM() {
+        const rows = document.querySelectorAll('#corpoTabelaItens tr');
+        const novosItens = [];
+        rows.forEach(row => {
+            const desc = row.querySelector('.item-desc')?.value || '';
+            const qtd = row.querySelector('.item-qtd')?.value || '1';
+            const unidade = row.querySelector('.item-unidade')?.value || 'UN';
+            const obs = row.querySelector('.item-obs')?.value || '';
+            const id = parseInt(row.dataset.itemId) || proximoId++;
+            novosItens.push({ id, descricao: desc, quantidade: qtd, unidade, obs });
+        });
+        itens = novosItens;
+        salvarDados();
+    }
+
+    function atualizarNumeros() {
+        const rows = document.querySelectorAll('#corpoTabelaItens tr');
+        rows.forEach((row, index) => {
+            row.querySelector('td:first-child').textContent = index + 1;
+        });
+    }
+
+    // ============================================
+    // ADICIONAR / REMOVER ITEM
+    // ============================================
+    function adicionarItemPedido() {
+        itens.push({ id: proximoId++, descricao: '', quantidade: '1', unidade: 'UN', obs: '' });
+        renderizarTabelaPedido();
+        atualizarPDF();
+        mostrarToast('📋 Item adicionado!', 'success');
+    }
+
+    function removerItemPedido(element) {
+        if (itens.length <= 1) { mostrarToast('⚠️ Mantenha pelo menos um item!', 'warning'); return; }
+        const row = element.closest('tr');
+        const id = parseInt(row.dataset.itemId);
+        itens = itens.filter(item => item.id !== id);
+        renderizarTabelaPedido();
+        atualizarPDF();
+        mostrarToast('🗑️ Item removido!', 'success');
+    }
+
+    // ============================================
+    // LIMPAR PEDIDO
+    // ============================================
+    function limparPedido() {
+        if (!confirm('Deseja limpar todos os campos para um novo pedido?')) return;
+        itens = [{ id: 1, descricao: '', quantidade: '1', unidade: 'UN', obs: '' }];
+        proximoId = 2;
+        editandoId = null;
+        document.getElementById('fornecedorNome').value = '';
+        document.getElementById('fornecedorTelefone').value = '';
+        document.getElementById('obsPedido').value = '';
+        document.getElementById('dataPedido').value = new Date().toISOString().split('T')[0];
+        localStorage.removeItem('pedidoOrcamento');
+        renderizarTabelaPedido();
+        atualizarPDF();
+        mostrarToast('🧹 Pedido limpo!', 'success');
+    }
+
+    // ============================================
+    // ATUALIZAR PDF
+    // ============================================
+    function atualizarPDF() {
+        const dataInput = document.getElementById('dataPedido').value;
+        const agora = new Date();
+        const horaAtual = agora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+        const dataFormatada = dataInput ? new Date(dataInput + 'T00:00:00').toLocaleDateString('pt-BR') : '___/___/______';
+
+        document.getElementById('pdfData').textContent = dataFormatada;
+        document.getElementById('pdfHora').textContent = horaAtual;
+        document.getElementById('pdfFornecedor').textContent = document.getElementById('fornecedorNome').value || '-';
+        document.getElementById('pdfObsTexto').textContent = document.getElementById('obsPedido').value || 'Nenhuma observação adicional.';
+        document.getElementById('saudacaoTexto').textContent = getSaudacao();
+
+        const pdfTbody = document.getElementById('pdfCorpoTabela');
+        pdfTbody.innerHTML = '';
+        const itensAtuais = itens.filter(item => item.descricao.trim() !== '');
+
+        if (itensAtuais.length === 0) {
+            pdfTbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:var(--gray-400); padding:10px;">Nenhum item adicionado ainda.</td></tr>`;
+        } else {
+            itensAtuais.forEach((item, index) => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td style="text-align:center;">${index + 1}</td>
+                    <td>${item.descricao}</td>
+                    <td style="text-align:center;">${item.quantidade || '1'}</td>
+                    <td style="text-align:center;">${item.unidade || 'UN'}</td>
+                    <td>${item.obs || ''}</td>
+                `;
+                pdfTbody.appendChild(tr);
+            });
+        }
+    }
+
+    // ============================================
+    // GERAR PDF
+    // ============================================
+    function gerarPDF() {
+        const temItens = itens.some(item => item.descricao.trim() !== '');
+        if (!temItens) { mostrarToast('⚠️ Adicione pelo menos um item com descrição!', 'warning'); return; }
+
+        document.getElementById('pdfHora').textContent = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+        document.getElementById('saudacaoTexto').textContent = getSaudacao();
+
+        mostrarToast('📄 Gerando PDF...', 'warning');
+        const element = document.getElementById('conteudoPDF');
+        const opt = {
+            margin: [8, 8, 8, 8],
+            filename: `Pedido_Orcamento_${new Date().toISOString().slice(0,10)}.pdf`,
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2, letterRendering: true, useCORS: true },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        };
+        html2pdf().set(opt).from(element).save().then(function() {
+            mostrarToast('✅ PDF gerado com sucesso!', 'success');
+        }).catch(function() {
+            mostrarToast('❌ Erro ao gerar PDF. Tente novamente.', 'error');
+        });
+    }
+
+    // ============================================
+    // COPIAR TEXTO
+    // ============================================
+    function copiarTexto() {
+        const data = document.getElementById('dataPedido').value;
+        const dataFormatada = data ? new Date(data + 'T00:00:00').toLocaleDateString('pt-BR') : '___/___/______';
+        const horaAtual = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+        const obs = document.getElementById('obsPedido').value || 'Nenhuma observação adicional.';
+        const saudacao = getSaudacao();
+        const fornecedor = document.getElementById('fornecedorNome').value || '-';
+
+        let itensTexto = '';
+        const itensAtuais = itens.filter(item => item.descricao.trim() !== '');
+        if (itensAtuais.length === 0) { itensTexto = '  (Nenhum item adicionado)'; } 
+        else {
+            itensAtuais.forEach((item, index) => {
+                itensTexto += '  ' + (index + 1) + '. ' + item.descricao + ' - ' + (item.quantidade || '1') +
+                    ' ' + (item.unidade || 'UN') + (item.obs ? ' (' + item.obs + ')' : '') + '\n';
+            });
+        }
+
+        const text = `
+============================================================
+                  PEDIDO DE ORÇAMENTO
+============================================================
+
+Data: ${dataFormatada} - Hora: ${horaAtual}
+Fornecedor: ${fornecedor}
+
+${saudacao}
+
+Solicitamos orçamento para os seguintes materiais:
+
+LISTA DE MATERIAIS:
+------------------------------------------------------------
+${itensTexto}
+------------------------------------------------------------
+
+SOLICITAMOS QUE CONSTE NO ORÇAMENTO:
+------------------------------------------------------------
+☐ Itens e valor unitário
+☐ Valor do frete
+☐ Valor total
+☐ Prazo de entrega
+☐ Forma de pagamento: à vista, parcelado, boleto, cartão de crédito, Pix, etc.
+☐ Dados para pagamento (PIX, banco, agência, conta)
+
+DADOS PARA EMISSÃO DA PROPOSTA:
+------------------------------------------------------------
+Empresa: Condomínio TaguaLife Center – Subcondomínio Apart-Hotel
+CNPJ: 34.330.943/0003-66
+Inscrição Estadual: 081936050350
+Endereço: CSG 03, Lote 07, Blocos A ao F – Taguatinga Sul – Brasília/DF
+CEP: 72.035-503
+
+CONTATOS:
+------------------------------------------------------------
+📧 almoxarifadotagualife@gmail.com
+📧 admtagualife@gmail.com
+📱 (61) 9 9256-4762
+
+OBSERVAÇÕES:
+------------------------------------------------------------
+${obs}
+
+Ficamos no aguardo do retorno.
+
+Atenciosamente,
+
+_________________________________
+Ednaldo de Souza - Almoxarifado
+
+_________________________________
+Elisabeth Velásquez - Síndica
+
+_________________________________
+Eliane Guimarães - Síndica
+
+TaguaLife Center – Life Conceito em Gestão Condominial
+============================================================`;
+
+        navigator.clipboard.writeText(text).then(function() {
+            mostrarToast('📋 Texto copiado!', 'success');
+        }).catch(function() {
+            const textarea = document.createElement('textarea');
+            textarea.value = text;
+            document.body.appendChild(textarea);
+            textarea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textarea);
+            mostrarToast('📋 Texto copiado!', 'success');
+        });
+    }
+
+    // ============================================
+    // SALVAR PEDIDO (CORRIGIDO)
+    // ============================================
+    function salvarPedido() {
+        const fornecedor = document.getElementById('fornecedorNome').value.trim();
+        const telefone = document.getElementById('fornecedorTelefone').value.trim();
+        const data = document.getElementById('dataPedido').value;
+        const obs = document.getElementById('obsPedido').value;
+
+        const rows = document.querySelectorAll('#corpoTabelaItens tr');
+        const itensSalvos = [];
+        rows.forEach(row => {
+            const desc = row.querySelector('.item-desc')?.value?.trim() || '';
+            const qtd = row.querySelector('.item-qtd')?.value?.trim() || '1';
+            const unidade = row.querySelector('.item-unidade')?.value || 'UN';
+            const obsItem = row.querySelector('.item-obs')?.value?.trim() || '';
+            if (desc) {
+                itensSalvos.push({ descricao: desc, quantidade: qtd, unidade, obs: obsItem });
+            }
+        });
+
+        if (itensSalvos.length === 0) {
+            mostrarToast('⚠️ Adicione pelo menos um item com descrição!', 'warning');
+            return;
+        }
+
+        let pedidos = JSON.parse(localStorage.getItem('pedidosOrcamentoTaguaLife') || '[]');
+
+        if (editandoId) {
+            const index = pedidos.findIndex(p => p.id === editandoId);
+            if (index !== -1) {
+                pedidos[index] = {
+                    ...pedidos[index],
+                    fornecedor: fornecedor || 'Não informado',
+                    telefone: telefone,
+                    data: data,
+                    itens: itensSalvos,
+                    observacao: obs || 'Nenhuma observação',
+                    dataEdicao: new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })
+                };
+                mostrarToast('✅ Pedido atualizado com sucesso!', 'success');
+            }
+            editandoId = null;
+            document.getElementById('btnSalvar').innerHTML = '<i class="fas fa-save"></i> Salvar';
+        } else {
+            const novoPedido = {
+                id: Date.now(),
+                fornecedor: fornecedor || 'Não informado',
+                telefone: telefone,
+                data: data,
+                itens: itensSalvos,
+                observacao: obs || 'Nenhuma observação',
+                dataSalvamento: new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })
+            };
+            pedidos.push(novoPedido);
+            mostrarToast('✅ Pedido salvo com sucesso!', 'success');
+        }
+
+        localStorage.setItem('pedidosOrcamentoTaguaLife', JSON.stringify(pedidos));
+        salvarDados();
+
+        const listaEl = document.getElementById('listaPedidos');
+        if (listaEl && listaEl.style.display !== 'none') {
+            exibirListaPedidos();
+        }
+
+        limparPedidoSilencioso();
+    }
+
+    function limparPedidoSilencioso() {
+        itens = [{ id: 1, descricao: '', quantidade: '1', unidade: 'UN', obs: '' }];
+        proximoId = 2;
+        editandoId = null;
+        document.getElementById('fornecedorNome').value = '';
+        document.getElementById('fornecedorTelefone').value = '';
+        document.getElementById('obsPedido').value = '';
+        document.getElementById('dataPedido').value = new Date().toISOString().split('T')[0];
+        renderizarTabelaPedido();
+        atualizarPDF();
+    }
+
+    // ============================================
+    // EXIBIR LISTA DE PEDIDOS
+    // ============================================
+    function exibirListaPedidos() {
+        const pedidos = JSON.parse(localStorage.getItem('pedidosOrcamentoTaguaLife') || '[]');
+        const container = document.getElementById('conteudoListaPedidos');
+
+        if (!container) return;
+
+        if (pedidos.length === 0) {
+            container.innerHTML = `
+                <div class="lista-vazia">
+                    <i class="fas fa-inbox"></i> 
+                    Nenhum pedido salvo ainda.
+                </div>
+            `;
+        } else {
+            let html = '';
+            const ordenados = [...pedidos].reverse();
+            ordenados.forEach(p => {
+                const qtdItens = p.itens ? p.itens.length : 0;
+                const dataSalv = p.dataSalvamento || p.dataEdicao || 'data desconhecida';
+                
+                let itensHtml = '';
+                if (p.itens && p.itens.length > 0) {
+                    p.itens.forEach(item => {
+                        itensHtml += `<span class="item-lista">${item.descricao} (${item.quantidade || 1} ${item.unidade || 'UN'})</span> `;
+                    });
+                } else {
+                    itensHtml = '<span style="color:var(--gray-400);">Sem itens</span>';
+                }
+
+                html += `
+                    <div class="protocolo-item">
+                        <div class="head">
+                            <strong>📄 Pedido #${p.id}</strong>
+                            <small>🏢 ${p.fornecedor || 'Sem fornecedor'}</small>
+                            <span style="background:var(--gray-200); padding:0.1rem 0.6rem; border-radius:40px; font-size:0.6rem; font-weight:500; color:var(--text-secondary);">
+                                ${qtdItens} item(ns)
+                            </span>
+                            <span style="font-size:0.55rem; color:var(--gray-400);">
+                                📅 ${p.data || 'Sem data'}
+                            </span>
+                        </div>
+                        <div class="detalhes">
+                            ${itensHtml}
+                        </div>
+                        <div class="acoes">
+                            <button class="btn btn-outline" onclick="carregarPedido(${p.id})">
+                                <i class="fas fa-edit"></i> Editar
+                            </button>
+                            <button class="btn btn-outline" onclick="excluirPedido(${p.id})" style="color:var(--danger);">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </div>
+                        <div class="meta">💾 Salvo em: ${dataSalv}</div>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        const listaEl = document.getElementById('listaPedidos');
+        if (listaEl) {
+            listaEl.style.display = 'block';
+        }
+    }
+
+    // ============================================
+    // CARREGAR PEDIDO PARA EDIÇÃO (CORRIGIDO)
+    // ============================================
+    window.carregarPedido = function(id) {
+        const pedidos = JSON.parse(localStorage.getItem('pedidosOrcamentoTaguaLife') || '[]');
+        const p = pedidos.find(item => item.id === id);
+
+        if (!p) {
+            mostrarToast('❌ Pedido não encontrado!', 'error');
+            return;
+        }
+
+        // CORREÇÃO: Definir editandoId ANTES de preencher os campos
+        editandoId = id;
+        document.getElementById('btnSalvar').innerHTML = '<i class="fas fa-pen"></i> Atualizar';
+
+        document.getElementById('fornecedorNome').value = p.fornecedor || '';
+        document.getElementById('fornecedorTelefone').value = p.telefone || '';
+        document.getElementById('dataPedido').value = p.data || '';
+        document.getElementById('obsPedido').value = p.observacao || '';
+
+        const tbody = document.getElementById('corpoTabelaItens');
+        tbody.innerHTML = '';
+        p.itens.forEach((item, index) => {
+            const tr = document.createElement('tr');
+            tr.dataset.itemId = Date.now() + index;
+            tr.innerHTML = `
+                <td style="text-align:center; font-weight:600;">${index + 1}</td>
+                <td><input type="text" class="item-desc" value="${item.descricao || ''}" placeholder="Ex: Pacote de gesso" list="itensSugestoesPedido" style="width:100%;" /></td>
+                <td><input type="text" class="item-qtd" value="${item.quantidade || '1'}" style="width:100%; text-align:center;" /></td>
+                <td>
+                    <select class="item-unidade" style="width:100%;">
+                        <option value="UN" ${item.unidade === 'UN' ? 'selected' : ''}>UN</option>
+                        <option value="CX" ${item.unidade === 'CX' ? 'selected' : ''}>CX</option>
+                        <option value="PCT" ${item.unidade === 'PCT' ? 'selected' : ''}>PCT</option>
+                        <option value="KG" ${item.unidade === 'KG' ? 'selected' : ''}>KG</option>
+                        <option value="L" ${item.unidade === 'L' ? 'selected' : ''}>L</option>
+                        <option value="M" ${item.unidade === 'M' ? 'selected' : ''}>M</option>
+                        <option value="M²" ${item.unidade === 'M²' ? 'selected' : ''}>M²</option>
+                        <option value="HR" ${item.unidade === 'HR' ? 'selected' : ''}>HR</option>
+                        <option value="SERV" ${item.unidade === 'SERV' ? 'selected' : ''}>SERV</option>
+                    </select>
+                </td>
+                <td><input type="text" class="item-obs" value="${item.obs || ''}" placeholder="Obs." style="width:100%;" /></td>
+                <td style="text-align:center;">${p.itens.length > 1 ? `<span class="remove-item" onclick="removerItemPedido(this)"><i class="fas fa-times-circle"></i></span>` : ''}</td>
+            `;
+            tbody.appendChild(tr);
+        });
+
+        document.getElementById('listaPedidos').style.display = 'none';
+        atualizarPDF();
+        salvarDados();
+        mostrarToast('📝 Pedido carregado para edição', 'success');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    // ============================================
+    // EXCLUIR PEDIDO
+    // ============================================
+    window.excluirPedido = function(id) {
+        if (!confirm('⚠️ Tem certeza que deseja excluir este pedido?')) return;
+
+        let pedidos = JSON.parse(localStorage.getItem('pedidosOrcamentoTaguaLife') || '[]');
+        pedidos = pedidos.filter(p => p.id !== id);
+        localStorage.setItem('pedidosOrcamentoTaguaLife', JSON.stringify(pedidos));
+
+        exibirListaPedidos();
+        mostrarToast('🗑️ Pedido excluído com sucesso!', 'success');
+    };
+
+    // ============================================
+    // FUNÇÃO PARA GERAR RELATÓRIO PDF DOS PEDIDOS
+    // ============================================
+    function gerarRelatorioPDF(filtro = 'geral', dataRef = null) {
+        try {
+            const pedidos = JSON.parse(localStorage.getItem('pedidosOrcamentoTaguaLife') || '[]');
+            
+            if (pedidos.length === 0) {
+                mostrarMensagem('⚠️ Nenhum pedido registrado para gerar relatório!', '#8B3A3A');
+                return;
+            }
+
+            let dataReferencia = dataRef ? new Date(dataRef) : new Date();
+            let dadosFiltrados = [];
+            let tituloRelatorio = '';
+            let periodoDescricao = '';
+
+            const ano = dataReferencia.getFullYear();
+            const mes = dataReferencia.getMonth();
+            const dia = dataReferencia.getDate();
+
+            switch(filtro) {
+                case 'dia':
+                    dadosFiltrados = pedidos.filter(p => {
+                        if (!p.dataSalvamento) return false;
+                        const data = new Date(p.dataSalvamento.split('/').reverse().join('/'));
+                        return data.getDate() === dia && data.getMonth() === mes && data.getFullYear() === ano;
+                    });
+                    tituloRelatorio = `RELATÓRIO DIÁRIO - ${dataReferencia.toLocaleDateString('pt-BR')}`;
+                    periodoDescricao = `Dia: ${dataReferencia.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}`;
+                    break;
+                case 'mes':
+                    dadosFiltrados = pedidos.filter(p => {
+                        if (!p.dataSalvamento) return false;
+                        const data = new Date(p.dataSalvamento.split('/').reverse().join('/'));
+                        return data.getMonth() === mes && data.getFullYear() === ano;
+                    });
+                    tituloRelatorio = `RELATÓRIO MENSAL - ${dataReferencia.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}`;
+                    periodoDescricao = `Mês: ${dataReferencia.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}`;
+                    break;
+                case 'ano':
+                    dadosFiltrados = pedidos.filter(p => {
+                        if (!p.dataSalvamento) return false;
+                        const data = new Date(p.dataSalvamento.split('/').reverse().join('/'));
+                        return data.getFullYear() === ano;
+                    });
+                    tituloRelatorio = `RELATÓRIO ANUAL - ${ano}`;
+                    periodoDescricao = `Ano: ${ano}`;
+                    break;
+                case 'geral':
+                default:
+                    dadosFiltrados = pedidos;
+                    tituloRelatorio = 'RELATÓRIO GERAL DE PEDIDOS';
+                    periodoDescricao = 'Todos os registros';
+                    break;
+            }
+
+            if (dadosFiltrados.length === 0) {
+                mostrarMensagem(`⚠️ Nenhum pedido encontrado para ${filtro} selecionado!`, '#8B3A3A');
+                return;
+            }
+
+            const relatorioHTML = gerarHTMLRelatorioPedidos(dadosFiltrados, tituloRelatorio, periodoDescricao, filtro);
+            const janelaPDF = window.open('', '_blank', 'width=900,height=700');
+            if (!janelaPDF) {
+                mostrarMensagem('⚠️ Por favor, permita pop-ups para gerar o PDF!', '#8B3A3A');
+                return;
+            }
+            janelaPDF.document.write(relatorioHTML);
+            janelaPDF.document.close();
+            setTimeout(() => janelaPDF.print(), 500);
+            mostrarMensagem(`📄 Relatório ${filtro} gerado com sucesso! (${dadosFiltrados.length} registros)`, '#7A816E');
+
+        } catch (error) {
+            console.error('Erro ao gerar relatório:', error);
+            mostrarMensagem('❌ Erro ao gerar relatório!', '#8B3A3A');
+        }
+    }
+
+    function gerarHTMLRelatorioPedidos(dados, titulo, periodo, filtro) {
+        let totalPedidos = dados.length;
+        let totalItens = 0;
+        let fornecedores = new Set();
+
+        dados.forEach(p => {
+            if (p.itens) totalItens += p.itens.length;
+            if (p.fornecedor) fornecedores.add(p.fornecedor);
+        });
+
+        let itensHTML = '';
+        const ordenados = [...dados].reverse();
+        ordenados.forEach((p, index) => {
+            const qtdItens = p.itens ? p.itens.length : 0;
+            
+            let listaItens = '';
+            if (p.itens && p.itens.length > 0) {
+                p.itens.forEach(item => {
+                    listaItens += `<span style="display:inline-block; background:#f0f0f0; padding:1px 8px; border-radius:12px; margin:2px 4px 2px 0; font-size:11px;">${item.descricao} (${item.quantidade || 1} ${item.unidade || 'UN'})${item.obs ? ' - ' + item.obs : ''}</span>`;
+                });
+            }
+
+            itensHTML += `
+                <div style="page-break-inside: avoid; margin-bottom: 20px; border-bottom: 1px solid #ddd; padding-bottom: 15px;">
+                    <div style="font-weight: bold; color: #2c3e50; font-size: 14px; margin-bottom: 5px;">
+                        #${index + 1} - Pedido
+                        <span style="font-weight: normal; color: #7f8c8d; font-size: 12px; margin-left: 10px;">
+                            ${p.data || 'Sem data'}
+                        </span>
+                    </div>
+                    <div style="margin: 5px 0; font-size: 12px;">
+                        <strong>🏢 Fornecedor:</strong> ${p.fornecedor || 'Não informado'}
+                        ${p.telefone ? ` • 📱 ${p.telefone}` : ''}
+                    </div>
+                    <div style="margin: 5px 0; font-size: 12px;">
+                        <strong>📦 Itens (${qtdItens}):</strong><br>
+                        ${listaItens || '<span style="color:#999;">Nenhum item</span>'}
+                    </div>
+                    ${p.observacao ? `<div style="margin: 5px 0; font-size: 11px; color: #7f8c8d;"><strong>📝 Obs.:</strong> ${p.observacao}</div>` : ''}
+                    <div style="font-size: 10px; color: #95a5a6; margin-top: 5px;">
+                        💾 Salvo em: ${p.dataSalvamento || p.dataEdicao || 'Data desconhecida'}
+                    </div>
+                </div>
+            `;
+        });
+
+        return `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="UTF-8">
+                <title>${titulo} - TaguáLife</title>
+                <style>
+                    body { font-family: Arial, sans-serif; margin: 40px; color: #2c3e50; }
+                    .header { text-align: center; margin-bottom: 30px; border-bottom: 3px solid #C1CE83; padding-bottom: 20px; }
+                    .header h1 { color: #191D1B; font-size: 24px; margin: 0; }
+                    .header h2 { color: #7A816E; font-size: 18px; font-weight: normal; margin: 5px 0; }
+                    .header .periodo { color: #7f8c8d; font-size: 14px; margin-top: 5px; }
+                    .resumo { background: #f8f9fa; padding: 15px; border-radius: 5px; margin: 20px 0; border-left: 4px solid #C1CE83; }
+                    .resumo table { width: 100%; font-size: 13px; }
+                    .resumo td { padding: 5px 10px; }
+                    .resumo .label { font-weight: bold; color: #7A816E; width: 150px; }
+                    .itens { margin-top: 30px; }
+                    .itens .titulo { font-size: 18px; font-weight: bold; color: #191D1B; margin-bottom: 15px; border-bottom: 2px solid #C1CE83; padding-bottom: 10px; }
+                    .footer { margin-top: 40px; text-align: center; color: #95a5a6; font-size: 11px; border-top: 2px solid #ecf0f1; padding-top: 20px; }
+                    @media print { body { margin: 20px; } }
+                </style>
+            </head>
+            <body>
+                <div class="header">
+                    <h1>🏢 TaguáLife Center</h1>
+                    <h2>${titulo}</h2>
+                    <div class="periodo">${periodo}</div>
+                    <div style="font-size: 12px; color: #7f8c8d; margin-top: 5px;">
+                        Gerado em: ${new Date().toLocaleString('pt-BR')}
+                    </div>
+                </div>
+
+                <div class="resumo">
+                    <table>
+                        <tr>
+                            <td class="label">📊 Total de Pedidos:</td>
+                            <td><strong>${totalPedidos}</strong></td>
+                            <td class="label">📦 Total de Itens:</td>
+                            <td><strong>${totalItens}</strong></td>
+                        </tr>
+                        <tr>
+                            <td class="label">🏢 Fornecedores:</td>
+                            <td><strong>${fornecedores.size}</strong></td>
+                            <td class="label">📅 Período:</td>
+                            <td><strong>${filtro.toUpperCase()}</strong></td>
+                        </tr>
+                    </table>
+                </div>
+
+                <div class="itens">
+                    <div class="titulo">📋 Detalhamento dos Pedidos</div>
+                    ${itensHTML}
+                </div>
+
+                <div class="footer">
+                    <p>Documento gerado automaticamente pelo Sistema TaguáLife</p>
+                    <p>${new Date().toLocaleString('pt-BR')}</p>
+                </div>
+            </body>
+            </html>
+        `;
+    }
+
+    // ============================================
+    // EVENTOS
+    // ============================================
+    document.addEventListener('DOMContentLoaded', function() {
+        document.getElementById('btnVerSalvosPedidos').addEventListener('click', function(e) {
+            e.preventDefault();
+            const el = document.getElementById('listaPedidos');
+            if (el.style.display === 'none') {
+                exibirListaPedidos();
+            } else {
+                el.style.display = 'none';
+            }
+        });
+
+        // Atalho Ctrl+S
+        document.addEventListener('keydown', function(e) {
+            if (e.ctrlKey && e.key === 's') {
+                e.preventDefault();
+                salvarPedido();
+            }
+        });
+
+        // Fechar modal com ESC
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                fecharModalModelo();
+            }
+        });
+
+        // Fechar modal clicando fora
+        document.getElementById('modalModelo').addEventListener('click', function(e) {
+            if (e.target === this) fecharModalModelo();
+        });
+
+        carregarTema();
+        atualizarRelogio();
+        setInterval(atualizarRelogio, 1000);
+        setInterval(() => {
+            document.getElementById('pdfHora').textContent = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+            document.getElementById('saudacaoTexto').textContent = getSaudacao();
+        }, 60000);
+        init();
+        mostrarToast('📋 Sistema de Pedido de Orçamento', 'success');
+    });
+</script>
+</body>
+</html>

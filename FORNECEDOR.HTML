@@ -1,0 +1,1309 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TaguáLife Center · Fornecedores</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800;14..32,900&display=swap" rel="stylesheet" />
+    <style>
+        :root {
+            --verde-claro: #C1CE83;
+            --verde-oliva: #7A816E;
+            --branco: #FBFBF7;
+            --preto: #191D1B;
+            --primary: #191D1B;
+            --primary-light: #3A4A3A;
+            --secondary: #7A816E;
+            --gold: #C1CE83;
+            --gold-light: #D8E0B0;
+            --success: #7A816E;
+            --danger: #8B3A3A;
+            --warning: #C1A83C;
+            --gray-50: #FBFBF7;
+            --gray-100: #F0F2EA;
+            --gray-200: #D8DCCE;
+            --gray-300: #B8BEA8;
+            --gray-400: #9AA08E;
+            --gray-500: #7A816E;
+            --gray-600: #5A614E;
+            --gray-700: #3A4132;
+            --gray-800: #191D1B;
+            --gray-900: #0D0F0E;
+            --shadow: 0 4px 24px rgba(25, 29, 27, 0.08);
+            --shadow-hover: 0 6px 32px rgba(25, 29, 27, 0.15);
+            --font-primary: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            --bg-body: #E8EBE0;
+            --bg-card: var(--branco);
+            --text-primary: var(--preto);
+            --text-secondary: var(--verde-oliva);
+            --border-color: var(--gray-200);
+            --input-bg: transparent;
+            --input-border: var(--gray-300);
+            --radius: 16px;
+            --radius-sm: 10px;
+        }
+
+        body.dark-mode {
+            --bg-body: #1a1a1a;
+            --bg-card: #2a2a2a;
+            --text-primary: #e8e8e8;
+            --text-secondary: #b0b8a8;
+            --border-color: #444;
+            --input-bg: #333;
+            --input-border: #555;
+            --gray-50: #2a2a2a;
+            --gray-100: #333;
+            --gray-200: #444;
+            --gray-300: #555;
+            --gray-400: #666;
+            --gray-500: #777;
+            --preto: #e8e8e8;
+            --branco: #2a2a2a;
+            --shadow: 0 4px 24px rgba(0,0,0,0.3);
+            --shadow-hover: 0 6px 32px rgba(0,0,0,0.4);
+        }
+
+        body.dark-mode .app-topbar,
+        body.dark-mode .nav-menu,
+        body.dark-mode .card-fornecedores,
+        body.dark-mode .modal-content {
+            background: var(--bg-card);
+            border-color: var(--border-color);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: var(--font-primary);
+            font-weight: 400;
+            background: var(--bg-body);
+            min-height: 100vh;
+            padding: 1rem;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            color: var(--text-primary);
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            transition: background 0.3s, color 0.3s;
+        }
+
+        .app-container { max-width: 1100px; width: 100%; }
+
+        .app-topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.6rem;
+            flex-wrap: wrap;
+            gap: 0.3rem;
+            background: var(--bg-card);
+            padding: 0.4rem 1rem;
+            border-radius: 10px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border-color);
+            transition: background 0.3s, border-color 0.3s;
+        }
+
+        .logo-area {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: var(--preto);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--verde-claro);
+            font-weight: 800;
+            font-size: 0.7rem;
+            flex-direction: column;
+            line-height: 1;
+            padding: 0.2rem;
+            transition: background 0.3s;
+        }
+
+        .logo-icon small { font-size: 0.3rem; color: var(--branco); font-weight: 400; letter-spacing: 0.5px; margin-top: 1px; }
+        .logo-text { display: flex; flex-direction: column; line-height: 1.1; }
+        .logo-text .title { font-size: 1.2rem; font-weight: 800; color: var(--text-primary); letter-spacing: -0.5px; display: flex; align-items: baseline; gap: 0.1rem; }
+        .logo-text .title .tagua { color: var(--text-primary); }
+        .logo-text .title .life { color: var(--verde-claro); font-weight: 800; }
+        .logo-text .slogan { font-size: 0.4rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1.5px; font-weight: 500; margin-top: 1px; }
+
+        .app-topbar .badge { background: var(--verde-claro); padding: 0.2rem 0.7rem; border-radius: 40px; font-size: 0.55rem; font-weight: 600; color: var(--preto); border: 1px solid var(--verde-oliva); }
+
+        .clock-display {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            background: var(--preto);
+            padding: 0.2rem 0.8rem;
+            border-radius: 40px;
+            border: 1px solid var(--verde-claro);
+            font-size: 0.8rem;
+            color: var(--branco);
+            letter-spacing: 1px;
+            transition: background 0.3s;
+        }
+        .clock-display i { color: var(--verde-claro); font-size: 0.7rem; }
+        .clock-display .clock-separator { color: var(--verde-claro); animation: blink 1s step-end infinite; }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+        .clock-display .clock-seconds { color: var(--verde-claro); font-size: 0.7rem; }
+        .clock-display .clock-date { color: var(--verde-oliva); font-size: 0.6rem; font-weight: 400; border-left: 1px solid var(--verde-oliva); padding-left: 0.5rem; }
+
+        .nav-menu {
+            display: flex;
+            gap: 0.2rem;
+            flex-wrap: wrap;
+            background: var(--bg-card);
+            padding: 0.2rem 0.6rem;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            margin-bottom: 0.6rem;
+            box-shadow: 0 1px 4px rgba(25, 29, 27, 0.04);
+            transition: background 0.3s, border-color 0.3s;
+        }
+        .nav-menu .nav-item {
+            padding: 0.25rem 0.8rem;
+            border-radius: 40px;
+            font-size: 0.65rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: 0.2s;
+            border: 1px solid transparent;
+            cursor: pointer;
+        }
+        .nav-menu .nav-item:hover { background: var(--gray-50); color: var(--text-primary); }
+        .nav-menu .nav-item.active { background: var(--preto); color: var(--branco); border-color: var(--preto); }
+        .nav-menu .nav-item i { margin-right: 0.2rem; }
+
+        .btn-theme {
+            background: var(--gray-200);
+            color: var(--preto);
+            border: none;
+            padding: 0.25rem 0.8rem;
+            border-radius: 40px;
+            font-size: 0.65rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: 0.2s;
+            font-family: inherit;
+        }
+        .btn-theme:hover { background: var(--gray-300); }
+
+        .card-fornecedores {
+            background: var(--bg-card);
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+            transition: background 0.3s, border-color 0.3s, box-shadow 0.3s;
+        }
+
+        .card-header {
+            background: var(--verde-claro);
+            padding: 0.4rem 1.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 0.4rem;
+            border-bottom: 3px solid var(--verde-oliva);
+        }
+        .card-header .left { display: flex; align-items: center; gap: 0.5rem; color: var(--preto); }
+        .card-header .left i { font-size: 1.1rem; color: var(--preto); }
+        .card-header .left h2 { font-size: 1rem; font-weight: 600; letter-spacing: -0.3px; color: var(--preto); }
+        .card-header .right { display: flex; align-items: center; gap: 0.6rem; color: var(--preto); font-size: 0.7rem; }
+        .card-header .right i { margin-right: 0.15rem; color: var(--preto); }
+
+        .card-body { padding: 1.2rem 1.5rem 1.5rem; }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr 1fr;
+            gap: 0.8rem;
+            background: var(--gray-50);
+            padding: 1rem 1.2rem;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            margin-bottom: 1.2rem;
+        }
+        @media (max-width: 900px) { .form-grid { grid-template-columns: 1fr 1fr; } }
+        @media (max-width: 500px) { .form-grid { grid-template-columns: 1fr; } }
+
+        .campo {
+            display: flex;
+            flex-direction: column;
+            gap: 0.1rem;
+        }
+        .campo label {
+            font-weight: 600;
+            font-size: 0.6rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+        }
+        .campo label i { color: var(--verde-oliva); margin-right: 0.2rem; }
+        .campo input, .campo select {
+            border: none;
+            border-bottom: 2px solid var(--input-border);
+            background: var(--input-bg);
+            padding: 0.3rem 0.2rem;
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: var(--text-primary);
+            outline: none;
+            transition: 0.2s;
+            font-family: inherit;
+        }
+        .campo input:focus, .campo select:focus { border-bottom-color: var(--verde-claro); }
+        .campo select { cursor: pointer; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%237A816E' d='M6 8L1 3h10z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 0.3rem center; padding-right: 1.5rem; }
+
+        .btn-salvar-item button {
+            width: 100%;
+            padding: 0.3rem 1rem;
+            border: none;
+            border-radius: 40px;
+            font-weight: 600;
+            font-size: 0.75rem;
+            background: var(--preto);
+            color: var(--branco);
+            cursor: pointer;
+            transition: 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.3rem;
+            margin-top: 0.1rem;
+            font-family: inherit;
+        }
+        .btn-salvar-item button:hover { background: #2A3A2A; transform: translateY(-1px); }
+
+        .busca-bar {
+            display: flex;
+            gap: 0.6rem;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        .busca-bar input {
+            flex: 1;
+            min-width: 150px;
+            padding: 0.4rem 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: 40px;
+            font-size: 0.75rem;
+            outline: none;
+            transition: 0.2s;
+            font-family: inherit;
+            background: var(--input-bg);
+            color: var(--text-primary);
+        }
+        .busca-bar input:focus { border-color: var(--verde-claro); }
+        .busca-bar select {
+            padding: 0.4rem 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: 40px;
+            font-size: 0.75rem;
+            outline: none;
+            font-family: inherit;
+            background: var(--input-bg);
+            color: var(--text-primary);
+            cursor: pointer;
+        }
+        .busca-bar select:focus { border-color: var(--verde-claro); }
+
+        .btn-limpar-filtro {
+            padding: 0.4rem 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: 40px;
+            background: transparent;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: 0.2s;
+            font-size: 0.7rem;
+            font-family: inherit;
+        }
+        .btn-limpar-filtro:hover { background: var(--gray-50); }
+
+        .btn-voltar {
+            padding: 0.4rem 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: 40px;
+            background: var(--preto);
+            color: var(--branco);
+            cursor: pointer;
+            transition: 0.2s;
+            font-size: 0.7rem;
+            font-family: inherit;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+        .btn-voltar:hover { background: #2A3A2A; }
+
+        .tabela-wrapper {
+            overflow-x: auto;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .tabela-items {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.75rem;
+        }
+        .tabela-items thead { background: var(--gray-100); position: sticky; top: 0; z-index: 10; }
+        .tabela-items th {
+            padding: 0.4rem 0.6rem;
+            text-align: left;
+            font-weight: 600;
+            font-size: 0.6rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-secondary);
+            border-bottom: 2px solid var(--border-color);
+        }
+        .tabela-items td {
+            padding: 0.3rem 0.6rem;
+            border-bottom: 1px solid var(--border-color);
+            vertical-align: middle;
+        }
+        .tabela-items tr:last-child td { border-bottom: none; }
+        .tabela-items tr:hover { background: var(--gray-50); }
+
+        .tabela-items .atividade-badge {
+            display: inline-block;
+            padding: 0.1rem 0.5rem;
+            border-radius: 40px;
+            font-size: 0.55rem;
+            font-weight: 600;
+            background: var(--verde-claro);
+            color: var(--preto);
+        }
+
+        .tabela-items .avaliacao-stars {
+            color: #FFB300;
+            font-size: 0.7rem;
+            letter-spacing: 1px;
+        }
+
+        .tabela-items .acoes { display: flex; gap: 0.2rem; }
+        .tabela-items .acoes button {
+            border: none;
+            background: transparent;
+            padding: 0.15rem 0.3rem;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: 0.2s;
+            font-size: 0.75rem;
+        }
+        .tabela-items .acoes .btn-editar { color: var(--verde-oliva); }
+        .tabela-items .acoes .btn-editar:hover { background: var(--gray-200); }
+        .tabela-items .acoes .btn-excluir { color: var(--danger); }
+        .tabela-items .acoes .btn-excluir:hover { background: #fee; }
+        .tabela-items .acoes .btn-historico { color: #3498DB; }
+        .tabela-items .acoes .btn-historico:hover { background: var(--gray-200); }
+
+        .totalizador {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.6rem 0;
+            border-top: 2px solid var(--border-color);
+            margin-top: 0.8rem;
+            flex-wrap: wrap;
+            gap: 0.3rem;
+        }
+        .totalizador span { font-size: 0.75rem; color: var(--text-secondary); }
+        .totalizador strong { color: var(--text-primary); }
+
+        .protocolos-salvos {
+            margin-top: 1.5rem;
+            border-top: 2px solid var(--border-color);
+            padding-top: 1.2rem;
+        }
+        .protocolos-salvos .titulo {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .protocolos-salvos .titulo i { color: var(--verde-claro); }
+
+        .protocolo-item {
+            background: var(--gray-50);
+            padding: 0.6rem 1rem;
+            border-radius: 8px;
+            margin-bottom: 0.6rem;
+            border: 1px solid var(--border-color);
+            transition: 0.15s;
+        }
+        .protocolo-item:hover { border-color: var(--verde-oliva); box-shadow: var(--shadow); }
+        .protocolo-item .head {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 0.3rem 0.8rem;
+            margin-bottom: 0.15rem;
+        }
+        .protocolo-item .head strong { color: var(--text-primary); font-size: 0.8rem; }
+        .protocolo-item .head small { color: var(--text-secondary); font-size: 0.65rem; }
+        .protocolo-item .detalhes { color: var(--text-secondary); font-size: 0.7rem; margin-bottom: 0.2rem; }
+        .protocolo-item .acoes { display: flex; gap: 0.3rem; margin-top: 0.2rem; }
+        .protocolo-item .acoes .btn { padding: 0.1rem 0.6rem; font-size: 0.6rem; }
+        .protocolo-item .meta { color: var(--gray-400); font-size: 0.6rem; margin-top: 0.1rem; }
+
+        .lista-vazia { text-align: center; color: var(--text-secondary); padding: 1.5rem 1rem; }
+        .lista-vazia i { font-size: 1.5rem; display: block; margin-bottom: 0.3rem; color: var(--gray-300); }
+
+        .btn-exportar { background: #2C3E50; color: white; }
+        .btn-exportar:hover { background: #1A252F; transform: translateY(-2px); }
+        .btn {
+            border: none;
+            padding: 0.3rem 1rem;
+            border-radius: 40px;
+            font-weight: 500;
+            font-size: 0.65rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: inherit;
+            border: 1px solid transparent;
+            text-decoration: none;
+        }
+        .btn i { font-size: 0.65rem; }
+        .btn-outline { background: transparent; border-color: var(--gray-300); color: var(--text-secondary); }
+        .btn-outline:hover { background: var(--gray-50); }
+        .btn-secondary { background: var(--gray-200); color: var(--preto); }
+        .btn-secondary:hover { background: var(--gray-300); }
+
+        #feedback {
+            margin-top: 0.5rem;
+            text-align: right;
+            min-height: 1.5rem;
+            font-size: 0.65rem;
+        }
+
+        #toastGlobal {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 500;
+            font-size: 13px;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: 0.4s;
+            z-index: 9999;
+            max-width: 400px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            cursor: default;
+        }
+        #toastGlobal.show { transform: translateY(0); opacity: 1; }
+
+        /* MODAL HISTÓRICO */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(25, 29, 27, 0.6);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(4px);
+        }
+        .modal-overlay.active { display: flex; }
+
+        .modal-content {
+            background: var(--bg-card);
+            padding: 1.5rem;
+            border-radius: 12px;
+            max-width: 600px;
+            width: 95%;
+            box-shadow: var(--shadow-hover);
+            border: 1px solid var(--border-color);
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        .modal-content .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+        .modal-content .modal-header h3 {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .modal-content .modal-header h3 i { color: var(--verde-claro); }
+        .modal-content .modal-header .close-modal {
+            background: none;
+            border: none;
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+            cursor: pointer;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+        }
+        .modal-content .modal-header .close-modal:hover { background: var(--gray-50); }
+
+        .historico-item {
+            padding: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 0.75rem;
+        }
+        .historico-item:last-child { border-bottom: none; }
+        .historico-item .h-data { color: var(--text-secondary); font-size: 0.65rem; }
+        .historico-item .h-valor { font-weight: 700; color: var(--verde-oliva); }
+
+        @media (max-width: 768px) {
+            .app-topbar { flex-direction: column; align-items: stretch; }
+            .clock-display { justify-content: center; font-size: 0.7rem; }
+            .nav-menu { justify-content: center; }
+            .nav-menu .nav-item { font-size: 0.55rem; padding: 0.2rem 0.5rem; }
+            .card-body { padding: 1rem; }
+            .form-grid { padding: 0.8rem; }
+            .busca-bar { flex-direction: column; }
+            .busca-bar input { width: 100%; }
+        }
+        @media (max-width: 480px) { .form-grid { grid-template-columns: 1fr; } }
+
+        @media print {
+            .app-topbar, .botoes, .nav-menu, #feedback, .protocolos-salvos { display: none !important; }
+            .card-fornecedores { box-shadow: none; border: 1px solid #ddd; }
+            .card-header { background: #C1CE83 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        }
+    </style>
+</head>
+<body>
+<div class="app-container">
+    <div class="app-topbar">
+        <a href="index.html" class="logo-area">
+            <div class="logo-icon">T <small>LIFE</small></div>
+            <div class="logo-text">
+                <div class="title"><span class="tagua">Taguá</span><span class="life">Life</span></div>
+                <div class="slogan">Life Conceito em Gestão Condominial</div>
+            </div>
+        </a>
+        <div class="clock-display">
+            <i class="fas fa-clock"></i>
+            <span id="clockHours">00</span><span class="clock-separator">:</span>
+            <span id="clockMinutes">00</span><span class="clock-separator">:</span>
+            <span id="clockSeconds" class="clock-seconds">00</span>
+            <span class="clock-date" id="clockDate">00/00/0000</span>
+        </div>
+        <span class="badge"><i class="fas fa-handshake"></i> Fornecedores</span>
+    </div>
+
+    <!-- MENU CORRIGIDO - SEM active FIXO -->
+        <div class="nav-menu">
+            <a class="nav-item" href="index.html"><i class="fas fa-home"></i> Dashboard</a>
+            <a class="nav-item" href="estoque.html"><i class="fas fa-boxes"></i> Estoque</a>
+            <a class="nav-item" href="saida.html"><i class="fas fa-arrow-right"></i> Saída</a>
+            <a class="nav-item" href="mapacota.html"><i class="fas fa-file-invoice"></i> Cotação</a>
+            <a class="nav-item" href="cotacoes_aprovadas.html"><i class="fas fa-check-circle"></i> Aprovadas</a>
+            <a class="nav-item" href="orcamento.html"><i class="fas fa-file-pdf"></i> Orçamento</a>
+            <a class="nav-item" href="fornecedor.html"><i class="fas fa-handshake"></i> Fornecedores</a>
+            <a class="nav-item" href="recebido.html"><i class="fas fa-clipboard-check"></i> Recebido</a>
+            <a class="nav-item" href="backup_automatico.html"><i class="fas fa-database"></i> Backup</a>
+            <button class="nav-item btn-theme" onclick="toggleTheme()" style="margin-left:auto;">
+                <i class="fas fa-moon" id="themeIcon"></i> <span id="themeLabel">Tema</span>
+            </button>
+            <button class="nav-item" onclick="logout()" style="background:#8B3A3A; color:white; border-color:#8B3A3A;">
+                <i class="fas fa-sign-out-alt"></i> Sair
+            </button>
+        </div>
+
+    <div class="card-fornecedores">
+        <div class="card-header">
+            <div class="left">
+                <i class="fas fa-handshake"></i>
+                <h2>Cadastro de Fornecedores</h2>
+                <span>• Gestão de Parceiros</span>
+            </div>
+            <div class="right">
+                <span><i class="far fa-calendar-alt"></i> <span id="dataAtual"></span></span>
+                <span><i class="far fa-clock"></i> <span id="horaAtual"></span></span>
+            </div>
+        </div>
+
+        <div class="card-body">
+            <div class="form-grid">
+                <div class="campo">
+                    <label><i class="fas fa-building"></i> EMPRESA</label>
+                    <input type="text" id="fornecedorEmpresa" placeholder="Nome da empresa" data-validar="empresa" />
+                </div>
+                <div class="campo">
+                    <label><i class="fas fa-tag"></i> ATIVIDADE</label>
+                    <select id="fornecedorAtividade">
+                        <option value="Material de Construção">Material de Construção</option>
+                        <option value="Material Elétrico">Material Elétrico</option>
+                        <option value="Material Hidráulico">Material Hidráulico</option>
+                        <option value="Ferragens">Ferragens</option>
+                        <option value="Manutenção">Manutenção</option>
+                        <option value="Higiene e Limpeza">Higiene e Limpeza</option>
+                        <option value="Papelaria">Papelaria</option>
+                        <option value="Informática">Informática</option>
+                        <option value="Serviços Gerais">Serviços Gerais</option>
+                        <option value="Outros">Outros</option>
+                    </select>
+                </div>
+                <div class="campo">
+                    <label><i class="fas fa-user"></i> NOME DO CONTATO</label>
+                    <input type="text" id="fornecedorContato" placeholder="Nome do contato" />
+                </div>
+                <div class="campo">
+                    <label><i class="fas fa-phone"></i> TELEFONE</label>
+                    <input type="text" id="fornecedorTelefone" placeholder="(XX) XXXXX-XXXX" />
+                </div>
+                <div class="campo" style="grid-column: span 2;">
+                    <label><i class="fas fa-map-marker-alt"></i> ENDEREÇO</label>
+                    <input type="text" id="fornecedorEndereco" placeholder="Endereço completo" />
+                </div>
+                <div class="campo">
+                    <label><i class="fas fa-envelope"></i> E-MAIL</label>
+                    <input type="email" id="fornecedorEmail" placeholder="contato@empresa.com" />
+                </div>
+                <div class="campo">
+                    <label><i class="fas fa-star"></i> AVALIAÇÃO</label>
+                    <div class="avaliacao" id="avaliacaoFornecedor" style="display:flex; align-items:center; gap:4px; padding-top:4px;">
+                        <span class="star" data-value="1" style="cursor:pointer; font-size:1.2rem; color:#ddd;">☆</span>
+                        <span class="star" data-value="2" style="cursor:pointer; font-size:1.2rem; color:#ddd;">☆</span>
+                        <span class="star" data-value="3" style="cursor:pointer; font-size:1.2rem; color:#ddd;">☆</span>
+                        <span class="star" data-value="4" style="cursor:pointer; font-size:1.2rem; color:#ddd;">☆</span>
+                        <span class="star" data-value="5" style="cursor:pointer; font-size:1.2rem; color:#ddd;">☆</span>
+                        <span class="nota" style="margin-left:8px; font-weight:600; font-size:0.8rem;">0</span>
+                    </div>
+                </div>
+                <div class="campo btn-salvar-item">
+                    <button id="btnSalvarFornecedor"><i class="fas fa-save"></i> Salvar</button>
+                </div>
+            </div>
+
+            <div class="busca-bar">
+                <input type="text" id="buscaInput" placeholder="🔍 Buscar por empresa, contato ou atividade..." />
+                <select id="filtroAtividade">
+                    <option value="">Todas as atividades</option>
+                    <option value="Material de Construção">Material de Construção</option>
+                    <option value="Material Elétrico">Material Elétrico</option>
+                    <option value="Material Hidráulico">Material Hidráulico</option>
+                    <option value="Ferragens">Ferragens</option>
+                    <option value="Manutenção">Manutenção</option>
+                    <option value="Higiene e Limpeza">Higiene e Limpeza</option>
+                    <option value="Papelaria">Papelaria</option>
+                    <option value="Informática">Informática</option>
+                    <option value="Serviços Gerais">Serviços Gerais</option>
+                    <option value="Outros">Outros</option>
+                </select>
+                <select id="filtroAvaliacao">
+                    <option value="">Todas as avaliações</option>
+                    <option value="5">⭐⭐⭐⭐⭐ (5)</option>
+                    <option value="4">⭐⭐⭐⭐ (4+)</option>
+                    <option value="3">⭐⭐⭐ (3+)</option>
+                    <option value="0">Sem avaliação</option>
+                </select>
+                <button class="btn-limpar-filtro" id="btnLimparFiltro"><i class="fas fa-times"></i> Limpar</button>
+                <button class="btn btn-secondary" id="btnVerSalvosFornecedores"><i class="fas fa-folder-open"></i> Ver salvos</button>
+                <button class="btn btn-exportar" onclick="exportarContatosCSV()"><i class="fas fa-file-excel"></i> Exportar</button>
+                <a href="index.html" class="btn-voltar"><i class="fas fa-arrow-left"></i> Voltar</a>
+            </div>
+
+            <div class="tabela-wrapper">
+                <table class="tabela-items" id="tabelaFornecedores">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Empresa</th>
+                            <th>Atividade</th>
+                            <th>Contato</th>
+                            <th>Telefone</th>
+                            <th>⭐</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="corpoTabela">
+                        <tr>
+                            <td colspan="7" style="text-align:center; padding:2rem; color:var(--gray-400);">
+                                <i class="fas fa-inbox" style="font-size:1.5rem; display:block; margin-bottom:0.3rem;"></i>
+                                Nenhum fornecedor cadastrado.
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="totalizador">
+                <span>Total de fornecedores: <strong id="totalFornecedores">0</strong></span>
+                <span>Atividades: <strong id="totalAtividades">0</strong></span>
+                <span>⭐ Avaliação média: <strong id="mediaAvaliacao">0</strong></span>
+            </div>
+
+            <div id="feedback"></div>
+        </div>
+    </div>
+
+    <!-- LISTA DE FORNECEDORES SALVOS -->
+    <div id="listaFornecedores" class="protocolos-salvos" style="display: none;">
+        <div class="titulo"><i class="fas fa-archive"></i> Fornecedores Cadastrados</div>
+        <div id="conteudoListaFornecedores"></div>
+    </div>
+
+    <!-- MODAL HISTÓRICO -->
+    <div class="modal-overlay" id="modalHistorico">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-history"></i> Histórico de Cotações</h3>
+                <button class="close-modal" onclick="fecharModalHistorico()">&times;</button>
+            </div>
+            <div id="conteudoHistorico"></div>
+        </div>
+    </div>
+</div>
+
+<!-- TOAST -->
+<div id="toastGlobal"></div>
+
+<script>
+    // ============================================
+    // TOAST
+    // ============================================
+    function mostrarToast(mensagem, tipo = 'success') {
+        const toast = document.getElementById('toastGlobal');
+        const cores = { info: '#3498DB', success: '#7A816E', warning: '#C1A83C', danger: '#8B3A3A' };
+        toast.textContent = mensagem;
+        toast.style.background = cores[tipo] || '#191D1B';
+        toast.style.color = 'white';
+        toast.classList.add('show');
+        clearTimeout(toast._timeout);
+        toast._timeout = setTimeout(() => toast.classList.remove('show'), 4000);
+    }
+
+    // ============================================
+    // LOGOUT
+    // ============================================
+    function logout() {
+        if (confirm('Deseja realmente sair do sistema?')) {
+            localStorage.removeItem('tagualife_sessao');
+            window.location.href = 'login.html';
+        }
+    }
+
+    // ============================================
+    // TEMA
+    // ============================================
+    function toggleTheme() {
+        const body = document.body;
+        body.classList.toggle('dark-mode');
+        const isDark = body.classList.contains('dark-mode');
+        localStorage.setItem('tema_TaguáLife', isDark ? 'dark' : 'light');
+        const icon = document.getElementById('themeIcon');
+        const label = document.getElementById('themeLabel');
+        if (isDark) { icon.className = 'fas fa-sun'; label.textContent = 'Claro'; } 
+        else { icon.className = 'fas fa-moon'; label.textContent = 'Tema'; }
+    }
+
+    function carregarTema() {
+        const theme = localStorage.getItem('tema_TaguáLife');
+        if (theme === 'dark') {
+            document.body.classList.add('dark-mode');
+            document.getElementById('themeIcon').className = 'fas fa-sun';
+            document.getElementById('themeLabel').textContent = 'Claro';
+        }
+    }
+
+    // ============================================
+    // RELÓGIO
+    // ============================================
+    function getHorarioBrasilia() {
+        const agora = new Date();
+        const data = agora.toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' });
+        const hora = agora.toLocaleTimeString('pt-BR', { timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit' });
+        const horaCompleta = agora.toLocaleTimeString('pt-BR', { timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        return { data, hora, horaCompleta };
+    }
+
+    function atualizarRelogio() {
+        const horario = getHorarioBrasilia();
+        document.getElementById('clockHours').textContent = horario.hora.split(':')[0] || '00';
+        document.getElementById('clockMinutes').textContent = horario.hora.split(':')[1] || '00';
+        document.getElementById('clockSeconds').textContent = horario.horaCompleta.split(':')[2] || '00';
+        document.getElementById('clockDate').textContent = horario.data;
+        document.getElementById('dataAtual').textContent = horario.data;
+        document.getElementById('horaAtual').textContent = horario.hora;
+    }
+
+    // ============================================
+    // FEEDBACK
+    // ============================================
+    function mostrarMensagem(texto, cor = '#191D1B') {
+        const feedback = document.getElementById('feedback');
+        feedback.innerHTML = `<span style="background:${cor}; color:white; padding:0.2rem 1.2rem; border-radius:40px; display:inline-block; font-size:0.65rem;">${texto}</span>`;
+        setTimeout(() => { feedback.innerHTML = ''; }, 4000);
+    }
+
+    // ============================================
+    // AVALIAÇÃO
+    // ============================================
+    let avaliacaoAtual = 0;
+
+    document.addEventListener('click', function(e) {
+        if (e.target.classList.contains('star')) {
+            const valor = parseInt(e.target.dataset.value);
+            const container = e.target.closest('.avaliacao');
+            const nota = container.querySelector('.nota');
+            
+            container.querySelectorAll('.star').forEach((s, i) => {
+                if (i < valor) {
+                    s.textContent = '★';
+                    s.style.color = '#FFB300';
+                } else {
+                    s.textContent = '☆';
+                    s.style.color = '#ddd';
+                }
+            });
+            nota.textContent = valor;
+            avaliacaoAtual = valor;
+        }
+    });
+
+    function setAvaliacao(valor) {
+        const container = document.getElementById('avaliacaoFornecedor');
+        const nota = container.querySelector('.nota');
+        container.querySelectorAll('.star').forEach((s, i) => {
+            if (i < valor) {
+                s.textContent = '★';
+                s.style.color = '#FFB300';
+            } else {
+                s.textContent = '☆';
+                s.style.color = '#ddd';
+            }
+        });
+        nota.textContent = valor;
+        avaliacaoAtual = valor;
+    }
+
+    function getAvaliacaoHTML(valor) {
+        if (!valor || valor === 0) return '☆';
+        let html = '';
+        for (let i = 0; i < 5; i++) {
+            html += i < valor ? '★' : '☆';
+        }
+        return html;
+    }
+
+    // ============================================
+    // VARIÁVEIS
+    // ============================================
+    let editandoId = null;
+
+    // ============================================
+    // RENDERIZAR TABELA
+    // ============================================
+    function renderizarTabela() {
+        const fornecedores = JSON.parse(localStorage.getItem('fornecedoresTaguaLife') || '[]');
+        const busca = document.getElementById('buscaInput').value.toLowerCase().trim();
+        const atividade = document.getElementById('filtroAtividade').value;
+        const filtroAvaliacao = document.getElementById('filtroAvaliacao').value;
+        
+        let filtrados = fornecedores.filter(item => {
+            const matchBusca = (item.empresa || '').toLowerCase().includes(busca) ||
+                              (item.contato || '').toLowerCase().includes(busca) ||
+                              (item.atividade || '').toLowerCase().includes(busca);
+            const matchAtividade = atividade === '' || item.atividade === atividade;
+            const matchAvaliacao = filtroAvaliacao === '' || 
+                (filtroAvaliacao === '0' && (!item.avaliacao || item.avaliacao === 0)) ||
+                (filtroAvaliacao === '5' && item.avaliacao === 5) ||
+                (filtroAvaliacao === '4' && item.avaliacao >= 4) ||
+                (filtroAvaliacao === '3' && item.avaliacao >= 3);
+            return matchBusca && matchAtividade && matchAvaliacao;
+        });
+        
+        filtrados.sort((a, b) => (a.empresa || '').localeCompare(b.empresa || ''));
+        const corpo = document.getElementById('corpoTabela');
+
+        if (filtrados.length === 0) {
+            corpo.innerHTML = `<tr><td colspan="7" style="text-align:center; padding:2rem; color:var(--gray-400);">
+                <i class="fas fa-inbox" style="font-size:1.5rem; display:block; margin-bottom:0.3rem;"></i>Nenhum fornecedor encontrado.</td></tr>`;
+        } else {
+            let html = '';
+            filtrados.forEach((item, index) => {
+                const avaliacao = item.avaliacao || 0;
+                html += `<tr>
+                    <td>${index + 1}</td>
+                    <td><strong>${item.empresa || 'Sem nome'}</strong></td>
+                    <td><span class="atividade-badge">${item.atividade || 'Outros'}</span></td>
+                    <td>${item.contato || '-'}</td>
+                    <td>${item.telefone || '-'}</td>
+                    <td class="avaliacao-stars">${getAvaliacaoHTML(avaliacao)}</td>
+                    <td>
+                        <div class="acoes">
+                            <button class="btn-editar" onclick="editarFornecedor(${item.id})" title="Editar"><i class="fas fa-edit"></i></button>
+                            <button class="btn-historico" onclick="mostrarHistorico('${item.empresa}')" title="Histórico"><i class="fas fa-history"></i></button>
+                            <button class="btn-excluir" onclick="excluirFornecedorLista(${item.id})" title="Excluir"><i class="fas fa-trash-alt"></i></button>
+                        </div>
+                    </td>
+                </tr>`;
+            });
+            corpo.innerHTML = html;
+        }
+
+        document.getElementById('totalFornecedores').textContent = fornecedores.length;
+        const atividades = new Set();
+        let somaAvaliacoes = 0;
+        let countAvaliacoes = 0;
+        fornecedores.forEach(item => {
+            if (item.atividade) atividades.add(item.atividade);
+            if (item.avaliacao && item.avaliacao > 0) {
+                somaAvaliacoes += item.avaliacao;
+                countAvaliacoes++;
+            }
+        });
+        document.getElementById('totalAtividades').textContent = atividades.size;
+        document.getElementById('mediaAvaliacao').textContent = countAvaliacoes > 0 ? (somaAvaliacoes / countAvaliacoes).toFixed(1) : '0';
+    }
+
+    // ============================================
+    // LIMPAR FORMULÁRIO
+    // ============================================
+    function limparFormulario() {
+        document.getElementById('fornecedorEmpresa').value = '';
+        document.getElementById('fornecedorAtividade').value = 'Material de Construção';
+        document.getElementById('fornecedorContato').value = '';
+        document.getElementById('fornecedorTelefone').value = '';
+        document.getElementById('fornecedorEndereco').value = '';
+        document.getElementById('fornecedorEmail').value = '';
+        setAvaliacao(0);
+        editandoId = null;
+        document.getElementById('btnSalvarFornecedor').innerHTML = '<i class="fas fa-save"></i> Salvar';
+    }
+
+    // ============================================
+    // SALVAR FORNECEDOR
+    // ============================================
+    function salvarFornecedor() {
+        const empresa = document.getElementById('fornecedorEmpresa').value.trim();
+        const atividade = document.getElementById('fornecedorAtividade').value;
+        const contato = document.getElementById('fornecedorContato').value.trim();
+        const telefone = document.getElementById('fornecedorTelefone').value.trim();
+        const endereco = document.getElementById('fornecedorEndereco').value.trim();
+        const email = document.getElementById('fornecedorEmail').value.trim();
+        const avaliacao = avaliacaoAtual;
+
+        if (!empresa) {
+            mostrarMensagem('⚠️ Informe o nome da empresa!', '#8B3A3A');
+            document.getElementById('fornecedorEmpresa').focus();
+            return;
+        }
+
+        let fornecedores = JSON.parse(localStorage.getItem('fornecedoresTaguaLife') || '[]');
+
+        const duplicado = fornecedores.find(f => 
+            f.empresa.toLowerCase() === empresa.toLowerCase() && f.id !== editandoId
+        );
+        if (duplicado) {
+            mostrarMensagem('⚠️ Esta empresa já está cadastrada!', '#8B3A3A');
+            return;
+        }
+
+        if (editandoId) {
+            const index = fornecedores.findIndex(item => item.id === editandoId);
+            if (index !== -1) {
+                fornecedores[index] = { ...fornecedores[index], empresa, atividade, contato, telefone, endereco, email, avaliacao };
+                mostrarMensagem('✅ Fornecedor atualizado!', '#7A816E');
+                mostrarToast('✅ Fornecedor "' + empresa + '" atualizado!', 'success');
+            }
+            editandoId = null;
+            document.getElementById('btnSalvarFornecedor').innerHTML = '<i class="fas fa-save"></i> Salvar';
+        } else {
+            const novoFornecedor = {
+                id: Date.now(),
+                empresa: empresa,
+                atividade: atividade,
+                contato: contato,
+                telefone: telefone,
+                endereco: endereco,
+                email: email,
+                avaliacao: avaliacao,
+                dataCadastro: new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })
+            };
+            fornecedores.push(novoFornecedor);
+            mostrarMensagem('✅ Fornecedor cadastrado!', '#7A816E');
+            mostrarToast('✅ Fornecedor "' + empresa + '" cadastrado!', 'success');
+        }
+
+        localStorage.setItem('fornecedoresTaguaLife', JSON.stringify(fornecedores));
+        renderizarTabela();
+        limparFormulario();
+
+        if (document.getElementById('listaFornecedores') && document.getElementById('listaFornecedores').style.display !== 'none') {
+            exibirListaFornecedores();
+        }
+    }
+
+    // ============================================
+    // EXIBIR LISTA DE FORNECEDORES
+    // ============================================
+    function exibirListaFornecedores() {
+        const fornecedores = JSON.parse(localStorage.getItem('fornecedoresTaguaLife') || '[]');
+        const container = document.getElementById('conteudoListaFornecedores');
+
+        if (!container) return;
+
+        if (fornecedores.length === 0) {
+            container.innerHTML = `
+                <div class="lista-vazia">
+                    <i class="fas fa-inbox"></i> 
+                    Nenhum fornecedor cadastrado ainda.
+                </div>
+            `;
+        } else {
+            let html = '';
+            fornecedores.slice().reverse().forEach(f => {
+                const avaliacao = f.avaliacao || 0;
+                html += `
+                    <div class="protocolo-item">
+                        <div class="head">
+                            <strong>🏢 ${f.empresa || 'Sem nome'}</strong>
+                            <small>📋 ${f.atividade || 'Sem atividade'}</small>
+                            <span style="background:var(--gray-200); padding:0.1rem 0.6rem; border-radius:40px; font-size:0.6rem; font-weight:500; color:var(--text-secondary);">
+                                ${f.contato || 'Sem contato'}
+                            </span>
+                            <span style="color:#FFB300; font-size:0.7rem;">${getAvaliacaoHTML(avaliacao)}</span>
+                        </div>
+                        <div class="detalhes">
+                            📞 ${f.telefone || 'Sem telefone'} ${f.email ? '• ✉️ ' + f.email : ''}
+                            ${f.endereco ? '• 📍 ' + f.endereco : ''}
+                        </div>
+                        <div class="acoes">
+                            <button class="btn btn-outline" onclick="editarFornecedor(${f.id})">
+                                <i class="fas fa-edit"></i> Editar
+                            </button>
+                            <button class="btn btn-outline" onclick="mostrarHistorico('${f.empresa}')">
+                                <i class="fas fa-history"></i> Histórico
+                            </button>
+                            <button class="btn btn-outline" onclick="excluirFornecedorLista(${f.id})" style="color:var(--danger);">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </div>
+                        <div class="meta">💾 Cadastrado em: ${f.dataCadastro || 'data desconhecida'}</div>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        const listaEl = document.getElementById('listaFornecedores');
+        if (listaEl) {
+            listaEl.style.display = 'block';
+        }
+    }
+
+    // ============================================
+    // EXCLUIR FORNECEDOR
+    // ============================================
+    window.excluirFornecedorLista = function(id) {
+        if (!confirm('⚠️ Tem certeza que deseja excluir este fornecedor?')) return;
+
+        let fornecedores = JSON.parse(localStorage.getItem('fornecedoresTaguaLife') || '[]');
+        const f = fornecedores.find(item => item.id === id);
+        fornecedores = fornecedores.filter(f => f.id !== id);
+        localStorage.setItem('fornecedoresTaguaLife', JSON.stringify(fornecedores));
+
+        exibirListaFornecedores();
+        renderizarTabela();
+        mostrarMensagem('🗑️ Fornecedor excluído com sucesso!', '#8B3A3A');
+        if (f) mostrarToast('🗑️ Fornecedor "' + f.empresa + '" excluído!', 'danger');
+    };
+
+    // ============================================
+    // EDITAR FORNECEDOR
+    // ============================================
+    window.editarFornecedor = function(id) {
+        const fornecedores = JSON.parse(localStorage.getItem('fornecedoresTaguaLife') || '[]');
+        const item = fornecedores.find(i => i.id === id);
+        if (!item) return;
+        
+        document.getElementById('fornecedorEmpresa').value = item.empresa || '';
+        document.getElementById('fornecedorAtividade').value = item.atividade || 'Outros';
+        document.getElementById('fornecedorContato').value = item.contato || '';
+        document.getElementById('fornecedorTelefone').value = item.telefone || '';
+        document.getElementById('fornecedorEndereco').value = item.endereco || '';
+        document.getElementById('fornecedorEmail').value = item.email || '';
+        setAvaliacao(item.avaliacao || 0);
+        editandoId = id;
+        document.getElementById('btnSalvarFornecedor').innerHTML = '<i class="fas fa-pen"></i> Atualizar';
+        document.getElementById('fornecedorEmpresa').focus();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        document.getElementById('listaFornecedores').style.display = 'none';
+        mostrarToast('✏️ Editando: ' + item.empresa, 'info');
+    };
+
+    // ============================================
+    // MOSTRAR HISTÓRICO
+    // ============================================
+    window.mostrarHistorico = function(empresa) {
+        const cotoes = JSON.parse(localStorage.getItem('cotacoesTaguáLife') || '[]');
+        const historico = cotoes.filter(c => 
+            c.fornecedores && c.fornecedores.some(f => f.nome === empresa)
+        );
+        
+        const container = document.getElementById('conteudoHistorico');
+        
+        if (historico.length === 0) {
+            container.innerHTML = `
+                <div style="text-align:center; padding:1rem; color:var(--text-secondary);">
+                    <i class="fas fa-inbox" style="font-size:1.5rem; display:block; margin-bottom:0.5rem;"></i>
+                    Nenhuma cotação encontrada com este fornecedor.
+                </div>
+            `;
+        } else {
+            let html = '';
+            historico.slice().reverse().forEach(c => {
+                const melhorValor = c.melhor?.valor || 'N/A';
+                html += `
+                    <div class="historico-item">
+                        <div><strong>📄 Cotação #${c.id}</strong> - ${c.nome || 'Sem nome'}</div>
+                        <div class="h-data">📅 ${c.data || 'Sem data'} ${c.hora || ''}</div>
+                        <div>📋 ${c.uso || 'Sem uso'}</div>
+                        <div class="h-valor">🏆 Melhor proposta: ${melhorValor}</div>
+                        <div style="font-size:0.65rem; color:var(--text-secondary);">
+                            ${c.itens ? c.itens.length : 0} itens • 
+                            ${c.fornecedores ? c.fornecedores.filter(f => f.nome).length : 0} fornecedores
+                        </div>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+        
+        document.getElementById('modalHistorico').classList.add('active');
+    };
+
+    function fecharModalHistorico() {
+        document.getElementById('modalHistorico').classList.remove('active');
+    }
+
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') fecharModalHistorico();
+    });
+    document.getElementById('modalHistorico').addEventListener('click', function(e) {
+        if (e.target === this) fecharModalHistorico();
+    });
+
+    // ============================================
+    // EXPORTAR CONTATOS CSV
+    // ============================================
+    function exportarContatosCSV() {
+        const fornecedores = JSON.parse(localStorage.getItem('fornecedoresTaguaLife') || '[]');
+        if (fornecedores.length === 0) {
+            mostrarMensagem('⚠️ Nenhum fornecedor para exportar!', '#8B3A3A');
+            return;
+        }
+        
+        const cabecalho = 'Empresa,Atividade,Contato,Telefone,Email,Endereco,Avaliacao,DataCadastro\n';
+        const linhas = fornecedores.map(f => 
+            `"${f.empresa || ''}","${f.atividade || ''}","${f.contato || ''}","${f.telefone || ''}","${f.email || ''}","${f.endereco || ''}",${f.avaliacao || 0},"${f.dataCadastro || ''}"`
+        ).join('\n');
+        
+        const csv = cabecalho + linhas;
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = `fornecedores_${new Date().toISOString().slice(0,10)}.csv`;
+        link.click();
+        mostrarMensagem('📊 Contatos exportados!', '#7A816E');
+        mostrarToast('📊 Fornecedores exportados!', 'success');
+    }
+
+    // ============================================
+    // EVENTOS
+    // ============================================
+    document.addEventListener('DOMContentLoaded', function() {
+        document.getElementById('btnSalvarFornecedor').addEventListener('click', function(e) {
+            e.preventDefault();
+            salvarFornecedor();
+        });
+
+        document.getElementById('btnLimparFiltro').addEventListener('click', function() {
+            document.getElementById('buscaInput').value = '';
+            document.getElementById('filtroAtividade').value = '';
+            document.getElementById('filtroAvaliacao').value = '';
+            renderizarTabela();
+        });
+
+        document.getElementById('buscaInput').addEventListener('input', renderizarTabela);
+        document.getElementById('filtroAtividade').addEventListener('change', renderizarTabela);
+        document.getElementById('filtroAvaliacao').addEventListener('change', renderizarTabela);
+
+        document.getElementById('btnVerSalvosFornecedores').addEventListener('click', function(e) {
+            e.preventDefault();
+            const el = document.getElementById('listaFornecedores');
+            if (el.style.display === 'none') {
+                exibirListaFornecedores();
+            } else {
+                el.style.display = 'none';
+            }
+        });
+
+        // Enter para navegar
+        document.getElementById('fornecedorEmpresa').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') { e.preventDefault(); document.getElementById('fornecedorContato').focus(); }
+        });
+        document.getElementById('fornecedorContato').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') { e.preventDefault(); document.getElementById('fornecedorTelefone').focus(); }
+        });
+        document.getElementById('fornecedorTelefone').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') { e.preventDefault(); document.getElementById('fornecedorEndereco').focus(); }
+        });
+        document.getElementById('fornecedorEndereco').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') { e.preventDefault(); document.getElementById('fornecedorEmail').focus(); }
+        });
+        document.getElementById('fornecedorEmail').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') { e.preventDefault(); salvarFornecedor(); }
+        });
+
+        // Atalho Ctrl+S
+        document.addEventListener('keydown', function(e) {
+            if (e.ctrlKey && e.key === 's') {
+                e.preventDefault();
+                salvarFornecedor();
+            }
+        });
+
+        carregarTema();
+        atualizarRelogio();
+        setInterval(atualizarRelogio, 1000);
+        renderizarTabela();
+        mostrarMensagem('📋 Sistema de cadastro de fornecedores', '#191D1B');
+        mostrarToast('📋 Fornecedores carregados!', 'info');
+    });
+</script>
+</body>
+</html>

@@ -1,0 +1,1912 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TaguáLife Center · Saída de Material</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800;14..32,900&display=swap" rel="stylesheet" />
+    <style>
+        :root {
+            --verde-claro: #C1CE83;
+            --verde-oliva: #7A816E;
+            --branco: #FBFBF7;
+            --preto: #191D1B;
+            --primary: #191D1B;
+            --primary-light: #3A4A3A;
+            --secondary: #7A816E;
+            --gold: #C1CE83;
+            --gold-light: #D8E0B0;
+            --success: #7A816E;
+            --danger: #8B3A3A;
+            --warning: #C1A83C;
+            --gray-50: #FBFBF7;
+            --gray-100: #F0F2EA;
+            --gray-200: #D8DCCE;
+            --gray-300: #B8BEA8;
+            --gray-400: #9AA08E;
+            --gray-500: #7A816E;
+            --gray-600: #5A614E;
+            --gray-700: #3A4132;
+            --gray-800: #191D1B;
+            --gray-900: #0D0F0E;
+            --shadow: 0 4px 24px rgba(25, 29, 27, 0.08);
+            --shadow-hover: 0 6px 32px rgba(25, 29, 27, 0.15);
+            --font-primary: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            --bg-body: #E8EBE0;
+            --bg-card: var(--branco);
+            --text-primary: var(--preto);
+            --text-secondary: var(--verde-oliva);
+            --border-color: var(--gray-200);
+            --input-bg: transparent;
+            --input-border: var(--gray-300);
+            --radius: 16px;
+            --radius-sm: 10px;
+        }
+
+        body.dark-mode {
+            --bg-body: #1a1a1a;
+            --bg-card: #2a2a2a;
+            --text-primary: #e8e8e8;
+            --text-secondary: #b0b8a8;
+            --border-color: #444;
+            --input-bg: #333;
+            --input-border: #555;
+            --gray-50: #2a2a2a;
+            --gray-100: #333;
+            --gray-200: #444;
+            --gray-300: #555;
+            --gray-400: #666;
+            --gray-500: #777;
+            --preto: #e8e8e8;
+            --branco: #2a2a2a;
+            --shadow: 0 4px 24px rgba(0,0,0,0.3);
+            --shadow-hover: 0 6px 32px rgba(0,0,0,0.4);
+        }
+
+        body.dark-mode .app-topbar,
+        body.dark-mode .nav-menu,
+        body.dark-mode .protocolo-card,
+        body.dark-mode .modal-content {
+            background: var(--bg-card);
+            border-color: var(--border-color);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: var(--font-primary);
+            font-weight: 400;
+            background: var(--bg-body);
+            min-height: 100vh;
+            padding: 1rem;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            color: var(--text-primary);
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            transition: background 0.3s, color 0.3s;
+        }
+
+        .app-container { max-width: 900px; width: 100%; }
+
+        .app-topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.6rem;
+            flex-wrap: wrap;
+            gap: 0.3rem;
+            background: var(--bg-card);
+            padding: 0.4rem 1rem;
+            border-radius: 10px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border-color);
+            transition: background 0.3s, border-color 0.3s;
+        }
+
+        .logo-area {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            text-decoration: none;
+            color: inherit;
+        }
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: var(--preto);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--verde-claro);
+            font-weight: 800;
+            font-size: 0.7rem;
+            flex-direction: column;
+            line-height: 1;
+            padding: 0.2rem;
+            transition: background 0.3s;
+        }
+        .logo-icon small { font-size: 0.3rem; color: var(--branco); font-weight: 400; letter-spacing: 0.5px; margin-top: 1px; }
+        .logo-text { display: flex; flex-direction: column; line-height: 1.1; }
+        .logo-text .title { font-size: 1.2rem; font-weight: 800; color: var(--text-primary); letter-spacing: -0.5px; display: flex; align-items: baseline; gap: 0.1rem; }
+        .logo-text .title .tagua { color: var(--text-primary); }
+        .logo-text .title .life { color: var(--verde-claro); font-weight: 800; }
+        .logo-text .slogan { font-size: 0.4rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1.5px; font-weight: 500; margin-top: 1px; }
+
+        .app-topbar .badge { background: var(--verde-claro); padding: 0.2rem 0.7rem; border-radius: 40px; font-size: 0.55rem; font-weight: 600; color: var(--preto); border: 1px solid var(--verde-oliva); }
+
+        .clock-display {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            background: var(--preto);
+            padding: 0.2rem 0.8rem;
+            border-radius: 40px;
+            border: 1px solid var(--verde-claro);
+            font-size: 0.8rem;
+            color: var(--branco);
+            letter-spacing: 1px;
+            transition: background 0.3s;
+        }
+        .clock-display i { color: var(--verde-claro); font-size: 0.7rem; }
+        .clock-display .clock-separator { color: var(--verde-claro); animation: blink 1s step-end infinite; }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+        .clock-display .clock-seconds { color: var(--verde-claro); font-size: 0.7rem; }
+        .clock-display .clock-date { color: var(--verde-oliva); font-size: 0.6rem; font-weight: 400; border-left: 1px solid var(--verde-oliva); padding-left: 0.5rem; }
+
+        .nav-menu {
+            display: flex;
+            gap: 0.2rem;
+            flex-wrap: wrap;
+            background: var(--bg-card);
+            padding: 0.2rem 0.6rem;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            margin-bottom: 0.6rem;
+            box-shadow: 0 1px 4px rgba(25, 29, 27, 0.04);
+            transition: background 0.3s, border-color 0.3s;
+        }
+        .nav-menu .nav-item {
+            padding: 0.25rem 0.8rem;
+            border-radius: 40px;
+            font-size: 0.65rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: 0.2s;
+            border: 1px solid transparent;
+            cursor: pointer;
+        }
+        .nav-menu .nav-item:hover { background: var(--gray-50); color: var(--text-primary); }
+        .nav-menu .nav-item.active { background: var(--preto); color: var(--branco); border-color: var(--preto); }
+        .nav-menu .nav-item i { margin-right: 0.2rem; }
+
+        .btn-theme {
+            background: var(--gray-200);
+            color: var(--preto);
+            border: none;
+            padding: 0.25rem 0.8rem;
+            border-radius: 40px;
+            font-size: 0.65rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: 0.2s;
+            font-family: inherit;
+        }
+        .btn-theme:hover { background: var(--gray-300); }
+
+        .protocolo-card {
+            background: var(--bg-card);
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+            transition: background 0.3s, border-color 0.3s, box-shadow 0.3s;
+        }
+
+        .protocolo-header {
+            background: var(--verde-claro);
+            padding: 0.4rem 1.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 0.4rem;
+            border-bottom: 3px solid var(--verde-oliva);
+        }
+        .protocolo-header .left { display: flex; align-items: center; gap: 0.5rem; color: var(--preto); }
+        .protocolo-header .left i { font-size: 1.1rem; color: var(--preto); }
+        .protocolo-header .left h2 { font-size: 1rem; font-weight: 600; letter-spacing: -0.3px; color: var(--preto); }
+        .protocolo-header .right { display: flex; align-items: center; gap: 0.6rem; color: var(--preto); font-size: 0.7rem; }
+        .protocolo-header .right i { margin-right: 0.15rem; color: var(--preto); }
+
+        .protocolo-body { padding: 1.2rem 1.5rem 1.5rem; }
+
+        .clock-bar {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 2rem;
+            background: var(--gray-50);
+            padding: 0.5rem 1.2rem;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            margin-bottom: 1.2rem;
+            flex-wrap: wrap;
+        }
+        .clock-bar .clock-item { display: flex; align-items: center; gap: 0.5rem; font-size: 0.8rem; color: var(--text-secondary); }
+        .clock-bar .clock-item i { color: var(--verde-claro); }
+        .clock-bar .clock-item .time { font-weight: 600; color: var(--text-primary); }
+        .clock-bar .clock-item .date { font-weight: 500; color: var(--text-secondary); }
+        .clock-bar .timezone { font-size: 0.6rem; color: var(--text-secondary); background: var(--gray-200); padding: 0.15rem 0.8rem; border-radius: 40px; }
+
+        .campos-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.8rem;
+            background: var(--gray-50);
+            padding: 1rem 1.2rem;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            margin-bottom: 1.2rem;
+        }
+        @media (max-width: 600px) { .campos-grid { grid-template-columns: 1fr; } }
+
+        .campo {
+            display: flex;
+            flex-direction: column;
+            gap: 0.1rem;
+        }
+        .campo label {
+            font-weight: 600;
+            font-size: 0.6rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+        }
+        .campo label i { color: var(--verde-oliva); margin-right: 0.2rem; }
+        .campo input {
+            border: none;
+            border-bottom: 2px solid var(--input-border);
+            background: var(--input-bg);
+            padding: 0.3rem 0.2rem;
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: var(--text-primary);
+            outline: none;
+            transition: 0.2s;
+            font-family: inherit;
+        }
+        .campo input:focus { border-bottom-color: var(--verde-claro); }
+        .campo input.small { max-width: 120px; }
+
+        .tabela-wrapper {
+            overflow-x: auto;
+            margin: 0.5rem 0 1rem;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+        .tabela-items {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.8rem;
+        }
+        .tabela-items thead { background: var(--gray-100); }
+        .tabela-items th {
+            padding: 0.4rem 0.6rem;
+            text-align: left;
+            font-weight: 600;
+            font-size: 0.6rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-secondary);
+            border-bottom: 2px solid var(--border-color);
+        }
+        .tabela-items td { padding: 0.15rem 0.3rem; border-bottom: 1px solid var(--border-color); }
+        .tabela-items tr:last-child td { border-bottom: none; }
+        .tabela-items input {
+            width: 100%;
+            border: none;
+            background: var(--input-bg);
+            padding: 0.4rem 0.4rem;
+            font-size: 0.8rem;
+            color: var(--text-primary);
+            outline: none;
+            border-radius: 4px;
+            transition: 0.15s;
+            font-family: inherit;
+        }
+        .tabela-items input:focus { background: var(--gray-50); box-shadow: 0 0 0 2px rgba(193, 206, 131, 0.3); }
+        .tabela-items input::placeholder { color: var(--gray-400); font-weight: 300; font-size: 0.7rem; }
+
+        .tabela-items .linha-nao-cadastrado {
+            background: #FFF8E1 !important;
+            border-left: 3px solid #FFB300 !important;
+        }
+        .tabela-items .linha-nao-cadastrado input {
+            color: #E65100 !important;
+            font-weight: 600 !important;
+        }
+        .tabela-items .status-nao-cadastrado {
+            color: #E65100 !important;
+            font-weight: 700 !important;
+            font-size: 11px !important;
+        }
+        .tabela-items .status-cadastrado {
+            color: #4CAF50 !important;
+            font-weight: 700 !important;
+            font-size: 11px !important;
+        }
+        .tabela-items .status-erro {
+            color: #8B3A3A !important;
+            font-weight: 700 !important;
+            font-size: 11px !important;
+        }
+
+        .col-qtd { width: 60px; text-align: center; }
+        .col-qtd input { text-align: center; }
+        .col-item { min-width: 150px; }
+        .col-destino { min-width: 150px; }
+
+        .assinaturas-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.8rem;
+            background: var(--gray-50);
+            padding: 1rem 1.2rem;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            margin: 1rem 0;
+        }
+        @media (max-width: 600px) { .assinaturas-grid { grid-template-columns: 1fr; } }
+
+        .assinatura-item {
+            display: flex;
+            flex-direction: column;
+            gap: 0.1rem;
+        }
+        .assinatura-item label {
+            font-weight: 600;
+            font-size: 0.6rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+        }
+        .assinatura-item label i { color: var(--verde-oliva); margin-right: 0.2rem; }
+        .assinatura-item input {
+            border: none;
+            border-bottom: 2px solid var(--input-border);
+            background: var(--input-bg);
+            padding: 0.3rem 0.2rem;
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: var(--text-primary);
+            outline: none;
+            transition: 0.2s;
+            font-family: inherit;
+        }
+        .assinatura-item input:focus { border-bottom-color: var(--verde-claro); }
+
+        .almoxarife-area {
+            background: var(--gray-50);
+            padding: 0.8rem 1.2rem;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            flex-wrap: wrap;
+        }
+        .almoxarife-area label {
+            font-weight: 600;
+            font-size: 0.6rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+            min-width: 100px;
+        }
+        .almoxarife-area label i { color: var(--verde-oliva); margin-right: 0.2rem; }
+        .almoxarife-area input {
+            border: none;
+            border-bottom: 2px solid var(--input-border);
+            background: var(--input-bg);
+            padding: 0.3rem 0.2rem;
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: var(--text-primary);
+            outline: none;
+            transition: 0.2s;
+            flex: 1;
+            min-width: 120px;
+            font-family: inherit;
+        }
+        .almoxarife-area input:focus { border-bottom-color: var(--verde-claro); }
+
+        .protocolo-footer {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            border-top: 2px solid var(--border-color);
+            padding-top: 1rem;
+            margin-top: 0.5rem;
+            gap: 0.5rem;
+            transition: border-color 0.3s;
+        }
+        .protocolo-footer .info { color: var(--text-secondary); font-size: 0.65rem; display: flex; align-items: center; gap: 0.3rem; }
+        .protocolo-footer .info i { color: var(--verde-claro); }
+
+        .botoes {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.3rem;
+        }
+
+        .btn {
+            border: none;
+            padding: 0.3rem 1rem;
+            border-radius: 40px;
+            font-weight: 500;
+            font-size: 0.65rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: inherit;
+            border: 1px solid transparent;
+            text-decoration: none;
+        }
+        .btn i { font-size: 0.65rem; }
+        .btn-outline { background: transparent; border-color: var(--gray-300); color: var(--text-secondary); }
+        .btn-outline:hover { background: var(--gray-50); }
+        .btn-primary { background: var(--preto); color: var(--branco); box-shadow: 0 2px 12px rgba(25, 29, 27, 0.2); }
+        .btn-primary:hover { background: #2A3A2A; transform: translateY(-2px); }
+        .btn-success { background: var(--verde-oliva); color: var(--branco); }
+        .btn-success:hover { background: #5A614E; transform: translateY(-2px); }
+        .btn-secondary { background: var(--gray-200); color: var(--preto); }
+        .btn-secondary:hover { background: var(--gray-300); }
+        .btn-pdf { background: #8B3A3A; color: var(--branco); }
+        .btn-pdf:hover { background: #6A2A2A; transform: translateY(-2px); }
+        .btn-voltar { background: var(--gray-200); color: var(--preto); }
+        .btn-voltar:hover { background: var(--gray-300); }
+        .btn-danger { background: var(--danger); color: var(--branco); }
+        .btn-danger:hover { background: #6A2A2A; transform: translateY(-2px); }
+
+        .btn-relatorio-dia { background: #2C3E50; color: white; }
+        .btn-relatorio-dia:hover { background: #1A252F; transform: translateY(-2px); }
+        .btn-relatorio-mes { background: #3498DB; color: white; }
+        .btn-relatorio-mes:hover { background: #2176A1; transform: translateY(-2px); }
+        .btn-relatorio-ano { background: #27AE60; color: white; }
+        .btn-relatorio-ano:hover { background: #1A7A42; transform: translateY(-2px); }
+        .btn-relatorio-geral { background: #8E44AD; color: white; }
+        .btn-relatorio-geral:hover { background: #6C3483; transform: translateY(-2px); }
+
+        /* Estilos para os seletores de data do relatório */
+        .relatorio-filtros {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.8rem;
+            align-items: center;
+            background: var(--gray-50);
+            padding: 0.8rem 1.2rem;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            margin-top: 0.8rem;
+        }
+        .relatorio-filtros .grupo {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+        .relatorio-filtros label {
+            font-size: 0.6rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+        .relatorio-filtros select,
+        .relatorio-filtros input[type="number"] {
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            border: 1px solid var(--border-color);
+            background: var(--input-bg);
+            color: var(--text-primary);
+            font-size: 0.75rem;
+            font-family: inherit;
+            outline: none;
+        }
+        .relatorio-filtros select:focus,
+        .relatorio-filtros input[type="number"]:focus {
+            border-color: var(--verde-claro);
+        }
+        .relatorio-filtros input[type="number"] {
+            width: 70px;
+        }
+        .relatorio-filtros .btn {
+            padding: 0.25rem 0.8rem;
+            font-size: 0.6rem;
+        }
+
+        .protocolos-salvos {
+            margin-top: 1.5rem;
+            border-top: 2px solid var(--border-color);
+            padding-top: 1.2rem;
+        }
+        .protocolos-salvos .titulo {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .protocolos-salvos .titulo i { color: var(--verde-claro); }
+
+        .protocolo-item {
+            background: var(--gray-50);
+            padding: 0.6rem 1rem;
+            border-radius: 8px;
+            margin-bottom: 0.6rem;
+            border: 1px solid var(--border-color);
+            transition: 0.15s;
+        }
+        .protocolo-item:hover { border-color: var(--verde-oliva); box-shadow: var(--shadow); }
+        .protocolo-item .head {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 0.3rem 0.8rem;
+            margin-bottom: 0.15rem;
+        }
+        .protocolo-item .head strong { color: var(--text-primary); font-size: 0.8rem; }
+        .protocolo-item .head small { color: var(--text-secondary); font-size: 0.65rem; }
+        .protocolo-item .detalhes { color: var(--text-secondary); font-size: 0.7rem; margin-bottom: 0.2rem; }
+        .protocolo-item .acoes { display: flex; gap: 0.3rem; margin-top: 0.2rem; }
+        .protocolo-item .acoes .btn { padding: 0.1rem 0.6rem; font-size: 0.6rem; }
+        .protocolo-item .meta { color: var(--gray-400); font-size: 0.6rem; margin-top: 0.1rem; }
+
+        .lista-vazia { text-align: center; color: var(--text-secondary); padding: 1.5rem 1rem; }
+        .lista-vazia i { font-size: 1.5rem; display: block; margin-bottom: 0.3rem; color: var(--gray-300); }
+
+        #feedback {
+            margin-top: 0.5rem;
+            text-align: right;
+            min-height: 1.5rem;
+            font-size: 0.65rem;
+        }
+
+        #toastGlobal {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 500;
+            font-size: 13px;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: 0.4s;
+            z-index: 9999;
+            max-width: 400px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            cursor: default;
+        }
+        #toastGlobal.show { transform: translateY(0); opacity: 1; }
+
+        .badge-nao-cadastrado {
+            background: #FFB300 !important;
+            color: #E65100 !important;
+            font-size: 0.55rem !important;
+            padding: 0.05rem 0.5rem !important;
+            border-radius: 40px !important;
+            font-weight: 700 !important;
+        }
+
+        @media (max-width: 768px) {
+            .app-topbar { flex-direction: column; align-items: stretch; }
+            .clock-display { justify-content: center; font-size: 0.7rem; }
+            .nav-menu { justify-content: center; }
+            .nav-menu .nav-item { font-size: 0.55rem; padding: 0.2rem 0.5rem; }
+            .protocolo-body { padding: 1rem; }
+            .campos-grid { padding: 0.8rem; }
+            .assinaturas-grid { padding: 0.8rem; }
+            .almoxarife-area { padding: 0.6rem 0.8rem; }
+            .col-qtd { width: 50px; }
+            .col-item { min-width: 100px; }
+            .col-destino { min-width: 100px; }
+            .relatorio-filtros { flex-direction: column; align-items: stretch; }
+            .relatorio-filtros .grupo { flex-wrap: wrap; }
+        }
+        @media (max-width: 480px) {
+            .campos-grid { grid-template-columns: 1fr; }
+            .assinaturas-grid { grid-template-columns: 1fr; }
+        }
+
+        @media print {
+            .app-topbar, .botoes, .protocolos-salvos, #feedback, .clock-bar, .relatorio-filtros { display: none !important; }
+            .protocolo-card { box-shadow: none; border: 1px solid #ddd; }
+            .protocolo-header { background: #C1CE83 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .protocolo-body { padding: 1rem; }
+            .campos-grid, .assinaturas-grid, .almoxarife-area { background: #FBFBF7 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .tabela-items thead { background: #F0F2EA !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        }
+    </style>
+</head>
+<body>
+<div class="app-container">
+    <!-- TOPBAR -->
+    <div class="app-topbar">
+        <a href="index.html" class="logo-area">
+            <div class="logo-icon">T <small>LIFE</small></div>
+            <div class="logo-text">
+                <div class="title"><span class="tagua">Taguá</span><span class="life">Life</span></div>
+                <div class="slogan">Life Conceito em Gestão Condominial</div>
+            </div>
+        </a>
+        <div class="clock-display">
+            <i class="fas fa-clock"></i>
+            <span id="clockHours">00</span><span class="clock-separator">:</span>
+            <span id="clockMinutes">00</span><span class="clock-separator">:</span>
+            <span id="clockSeconds" class="clock-seconds">00</span>
+            <span class="clock-date" id="clockDate">00/00/0000</span>
+        </div>
+        <span class="badge"><i class="fas fa-box-open"></i> Saída de Material</span>
+    </div>
+
+    <!-- MENU -->
+    <div class="nav-menu">
+        <a class="nav-item" href="index.html"><i class="fas fa-home"></i> Dashboard</a>
+        <a class="nav-item" href="estoque.html"><i class="fas fa-boxes"></i> Estoque</a>
+        <a class="nav-item" href="saida.html"><i class="fas fa-arrow-right"></i> Saída</a>
+        <a class="nav-item" href="mapacota.html"><i class="fas fa-file-invoice"></i> Cotação</a>
+        <a class="nav-item" href="cotacoes_aprovadas.html"><i class="fas fa-check-circle"></i> Aprovadas</a>
+        <a class="nav-item" href="orcamento.html"><i class="fas fa-file-pdf"></i> Orçamento</a>
+        <a class="nav-item" href="fornecedor.html"><i class="fas fa-handshake"></i> Fornecedores</a>
+        <a class="nav-item" href="recebido.html"><i class="fas fa-clipboard-check"></i> Recebido</a>
+        <a class="nav-item" href="backup_automatico.html"><i class="fas fa-database"></i> Backup</a>
+        <button class="nav-item btn-theme" onclick="toggleTheme()" style="margin-left:auto;">
+            <i class="fas fa-moon" id="themeIcon"></i> <span id="themeLabel">Tema</span>
+        </button>
+        <button class="nav-item" onclick="logout()" style="background:#8B3A3A; color:white; border-color:#8B3A3A;">
+            <i class="fas fa-sign-out-alt"></i> Sair
+        </button>
+    </div>
+
+    <!-- CARD PRINCIPAL -->
+    <div class="protocolo-card" id="protocoloParaImprimir">
+        <div class="protocolo-header">
+            <div class="left">
+                <i class="fas fa-box-open"></i>
+                <h2>Saída de Material</h2>
+                <span>• Controle de Retirada</span>
+            </div>
+            <div class="right">
+                <span><i class="far fa-calendar-alt"></i> <span id="dataAtual"></span></span>
+                <span><i class="far fa-clock"></i> <span id="horaAtual"></span></span>
+            </div>
+        </div>
+
+        <div class="protocolo-body">
+            <!-- RELÓGIO -->
+            <div class="clock-bar">
+                <div class="clock-item">
+                    <i class="fas fa-calendar-alt"></i>
+                    <span class="date" id="dataCompleta"></span>
+                </div>
+                <div class="clock-item">
+                    <i class="fas fa-clock"></i>
+                    <span class="time" id="horaCompleta">--:--:--</span>
+                </div>
+                <div class="clock-item">
+                    <i class="fas fa-map-pin"></i>
+                    <span>Brasília - DF</span>
+                </div>
+                <span class="timezone">BRT</span>
+            </div>
+
+            <!-- CAMPOS -->
+            <div class="campos-grid">
+                <div class="campo">
+                    <label><i class="fas fa-user"></i> COLABORADOR</label>
+                    <input type="text" id="colaborador" placeholder="Nome do colaborador" list="colaboradoresSugestoes" />
+                    <datalist id="colaboradoresSugestoes">
+                        <option value="Ednaldo de Souza">
+                        <option value="Elisabeth Velásquez">
+                        <option value="Eliane Guimarães">
+                        <option value="José da Silva">
+                        <option value="Maria Oliveira">
+                    </datalist>
+                </div>
+                <div class="campo">
+                    <label><i class="fas fa-calendar"></i> DATA</label>
+                    <input type="text" class="small" id="dataSaida" placeholder="__/__/____" />
+                </div>
+            </div>
+
+            <!-- TABELA ITENS -->
+            <div class="tabela-wrapper">
+                <table class="tabela-items" id="tabelaSaida">
+                    <thead>
+                        <tr>
+                            <th class="col-qtd">QTD</th>
+                            <th class="col-item">ITEM</th>
+                            <th class="col-destino">USO / DESTINO</th>
+                            <th style="width:30px; text-align:center;">⚠️</th>
+                            <th style="width:25px;"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabelaItensBody">
+                        <tr>
+                            <td class="col-qtd"><input type="number" class="qtd-input" value="1" min="1" /></td>
+                            <td class="col-item">
+                                <select class="item-select" style="width:100%; padding:0.3rem; border-radius:4px; border:1px solid var(--border-color); background:var(--input-bg); color:var(--text-primary);">
+                                    <option value="">Selecione um item...</option>
+                                </select>
+                            </td>
+                            <td class="col-destino"><input type="text" class="destino-input" placeholder="Uso / destino" /></td>
+                            <td style="text-align:center; font-size:14px;" class="status-cell">✅</td>
+                            <td style="text-align:center;"><span class="remove-item" onclick="removerLinha(this)" style="color:var(--danger); cursor:pointer;"><i class="fas fa-times-circle"></i></span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <datalist id="itensSugestoes"></datalist>
+
+            <div style="text-align:center; margin:0.3rem 0 0.8rem;">
+                <button class="btn btn-outline" onclick="adicionarLinha()"><i class="fas fa-plus"></i> Adicionar Item</button>
+                <span style="margin-left:0.5rem; font-size:0.6rem; color:var(--text-secondary);">
+                    <i class="fas fa-info-circle"></i> Itens em <span style="color:#E65100; font-weight:600;">laranja</span> não estão cadastrados
+                </span>
+            </div>
+
+            <!-- ASSINATURAS -->
+            <div class="assinaturas-grid">
+                <div class="assinatura-item">
+                    <label><i class="fas fa-signature"></i> ASSINATURA</label>
+                    <input type="text" id="assinatura" placeholder="Nome completo" list="colaboradoresSugestoes" />
+                </div>
+                <div class="assinatura-item">
+                    <label><i class="fas fa-clock"></i> HORAS</label>
+                    <input type="text" class="small" id="horasSaida" placeholder="__:__" />
+                </div>
+            </div>
+
+            <!-- ALMOXARIFE -->
+            <div class="almoxarife-area">
+                <label><i class="fas fa-warehouse"></i> ALMOXARIFADO</label>
+                <input type="text" id="almoxarife" placeholder="Nome do responsável" value="Ednaldo de Souza" />
+            </div>
+
+            <!-- FOOTER -->
+            <div class="protocolo-footer">
+                <div class="info">
+                    <i class="fas fa-print"></i>
+                    <span>Documento gerado em <span id="dataGeracao"></span></span>
+                </div>
+                <div class="botoes">
+                    <button class="btn btn-outline" id="btnLimpar"><i class="fas fa-undo-alt"></i> Limpar</button>
+                    <button class="btn btn-secondary" id="btnVerSalvos"><i class="fas fa-folder-open"></i> Ver salvos</button>
+                    <button class="btn btn-success" id="btnImprimir"><i class="fas fa-print"></i> Imprimir</button>
+                    <button class="btn btn-primary" id="btnSalvar"><i class="fas fa-save"></i> Salvar</button>
+                    <a href="index.html" class="btn btn-voltar"><i class="fas fa-arrow-left"></i> Voltar</a>
+                </div>
+            </div>
+            
+            <!-- BOTÕES DE RELATÓRIO COM FILTROS DE DATA -->
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 2px solid var(--border-color);">
+                <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; margin-bottom: 0.5rem;">
+                    <span style="font-weight: 600; font-size: 0.7rem; color: var(--text-secondary);">
+                        <i class="fas fa-file-pdf"></i> RELATÓRIOS RÁPIDOS:
+                    </span>
+                    <button class="btn btn-relatorio-dia" onclick="gerarRelatorioPDF('dia')">
+                        <i class="fas fa-calendar-day"></i> Dia (hoje)
+                    </button>
+                    <button class="btn btn-relatorio-mes" onclick="gerarRelatorioPDF('mes')">
+                        <i class="fas fa-calendar-alt"></i> Mês (atual)
+                    </button>
+                    <button class="btn btn-relatorio-ano" onclick="gerarRelatorioPDF('ano')">
+                        <i class="fas fa-calendar-year"></i> Ano (atual)
+                    </button>
+                    <button class="btn btn-relatorio-geral" onclick="gerarRelatorioPDF('geral')">
+                        <i class="fas fa-file-pdf"></i> Geral
+                    </button>
+                </div>
+                
+                <!-- FILTROS PERSONALIZADOS -->
+                <div class="relatorio-filtros">
+                    <span style="font-weight: 600; font-size: 0.65rem; color: var(--text-secondary);">
+                        <i class="fas fa-sliders-h"></i> FILTRO PERSONALIZADO:
+                    </span>
+                    
+                    <div class="grupo">
+                        <label><i class="fas fa-calendar-day"></i> Dia</label>
+                        <input type="number" id="filtroDia" min="1" max="31" placeholder="DD" style="width:50px;" />
+                    </div>
+                    
+                    <div class="grupo">
+                        <label><i class="fas fa-calendar-alt"></i> Mês</label>
+                        <select id="filtroMes">
+                            <option value="">--</option>
+                            <option value="0">Janeiro</option>
+                            <option value="1">Fevereiro</option>
+                            <option value="2">Março</option>
+                            <option value="3">Abril</option>
+                            <option value="4">Maio</option>
+                            <option value="5">Junho</option>
+                            <option value="6">Julho</option>
+                            <option value="7">Agosto</option>
+                            <option value="8">Setembro</option>
+                            <option value="9">Outubro</option>
+                            <option value="10">Novembro</option>
+                            <option value="11">Dezembro</option>
+                        </select>
+                    </div>
+                    
+                    <div class="grupo">
+                        <label><i class="fas fa-calendar-year"></i> Ano</label>
+                        <input type="number" id="filtroAno" min="2020" max="2100" placeholder="AAAA" style="width:70px;" />
+                    </div>
+                    
+                    <button class="btn btn-primary" onclick="gerarRelatorioPersonalizado()" style="background:#2C3E50; color:white;">
+                        <i class="fas fa-search"></i> Filtrar
+                    </button>
+                    
+                    <button class="btn btn-outline" onclick="limparFiltros()" style="font-size:0.6rem;">
+                        <i class="fas fa-times"></i> Limpar
+                    </button>
+                </div>
+            </div>
+            
+            <div id="feedback"></div>
+        </div>
+    </div>
+
+    <!-- LISTA DE PROTOCOLOS SALVOS -->
+    <div id="listaProtocolos" class="protocolos-salvos" style="display: none;">
+        <div class="titulo"><i class="fas fa-archive"></i> Saídas Registradas</div>
+        <div id="conteudoLista"></div>
+    </div>
+</div>
+
+<!-- TOAST -->
+<div id="toastGlobal"></div>
+
+<script>
+    // ============================================
+    // TOAST
+    // ============================================
+    function mostrarToast(mensagem, tipo = 'success') {
+        const toast = document.getElementById('toastGlobal');
+        const cores = { info: '#3498DB', success: '#7A816E', warning: '#C1A83C', danger: '#8B3A3A' };
+        toast.textContent = mensagem;
+        toast.style.background = cores[tipo] || '#191D1B';
+        toast.style.color = 'white';
+        toast.classList.add('show');
+        clearTimeout(toast._timeout);
+        toast._timeout = setTimeout(() => toast.classList.remove('show'), 4000);
+    }
+
+    // ============================================
+    // LOGOUT
+    // ============================================
+    function logout() {
+        if (confirm('Deseja realmente sair do sistema?')) {
+            localStorage.removeItem('tagualife_sessao');
+            window.location.href = 'login.html';
+        }
+    }
+
+    // ============================================
+    // TEMA
+    // ============================================
+    function toggleTheme() {
+        const body = document.body;
+        body.classList.toggle('dark-mode');
+        const isDark = body.classList.contains('dark-mode');
+        localStorage.setItem('tema_TaguáLife', isDark ? 'dark' : 'light');
+        const icon = document.getElementById('themeIcon');
+        const label = document.getElementById('themeLabel');
+        if (isDark) { icon.className = 'fas fa-sun'; label.textContent = 'Claro'; } 
+        else { icon.className = 'fas fa-moon'; label.textContent = 'Tema'; }
+    }
+
+    function carregarTema() {
+        const theme = localStorage.getItem('tema_TaguáLife');
+        if (theme === 'dark') {
+            document.body.classList.add('dark-mode');
+            document.getElementById('themeIcon').className = 'fas fa-sun';
+            document.getElementById('themeLabel').textContent = 'Claro';
+        }
+    }
+
+    // ============================================
+    // RELÓGIO
+    // ============================================
+    function getHorarioBrasilia() {
+        const agora = new Date();
+        const data = agora.toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' });
+        const dataCompleta = agora.toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo', weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+        const hora = agora.toLocaleTimeString('pt-BR', { timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit' });
+        const horaCompleta = agora.toLocaleTimeString('pt-BR', { timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        return { data, dataCompleta, hora, horaCompleta };
+    }
+
+    function atualizarRelogio() {
+        const horario = getHorarioBrasilia();
+        document.getElementById('clockHours').textContent = horario.hora.split(':')[0] || '00';
+        document.getElementById('clockMinutes').textContent = horario.hora.split(':')[1] || '00';
+        document.getElementById('clockSeconds').textContent = horario.horaCompleta.split(':')[2] || '00';
+        document.getElementById('clockDate').textContent = horario.data;
+        document.getElementById('dataAtual').textContent = horario.data;
+        document.getElementById('horaAtual').textContent = horario.hora;
+        document.getElementById('dataCompleta').textContent = horario.dataCompleta;
+        document.getElementById('horaCompleta').textContent = horario.horaCompleta;
+        document.getElementById('dataGeracao').textContent = horario.data + ' ' + horario.hora;
+
+        const dataSaidaInput = document.getElementById('dataSaida');
+        if (dataSaidaInput && !dataSaidaInput.value) { dataSaidaInput.value = horario.data; }
+        const horasInput = document.getElementById('horasSaida');
+        if (horasInput && !horasInput.value) { horasInput.value = horario.hora; }
+        
+        // Preencher filtros com valores atuais
+        const agora = new Date();
+        const filtroDia = document.getElementById('filtroDia');
+        const filtroMes = document.getElementById('filtroMes');
+        const filtroAno = document.getElementById('filtroAno');
+        if (filtroDia && !filtroDia.value) filtroDia.value = agora.getDate();
+        if (filtroMes && !filtroMes.value) filtroMes.value = agora.getMonth();
+        if (filtroAno && !filtroAno.value) filtroAno.value = agora.getFullYear();
+    }
+
+    // ============================================
+    // FEEDBACK
+    // ============================================
+    function mostrarMensagem(texto, cor = '#191D1B') {
+        const feedback = document.getElementById('feedback');
+        feedback.innerHTML = `<span style="background:${cor}; color:white; padding:0.2rem 1.2rem; border-radius:40px; display:inline-block; font-size:0.65rem;">${texto}</span>`;
+        clearTimeout(feedback._timeout);
+        feedback._timeout = setTimeout(() => { feedback.innerHTML = ''; }, 4000);
+    }
+
+    // ============================================
+    // CARREGAR SELECT DE ITENS
+    // ============================================
+    function carregarSelectItens() {
+        const estoque = JSON.parse(localStorage.getItem('estoqueTaguaLife') || '[]');
+        document.querySelectorAll('.item-select').forEach(select => {
+            const currentValue = select.value;
+            select.innerHTML = '<option value="">Selecione um item...</option>';
+            estoque.forEach(item => {
+                const option = document.createElement('option');
+                option.value = item.nome;
+                option.textContent = `${item.nome} (${item.quantidade} unid.)`;
+                if (item.nome === currentValue) option.selected = true;
+                select.appendChild(option);
+            });
+            const customOption = document.createElement('option');
+            customOption.value = 'custom';
+            customOption.textContent = '➕ Item não cadastrado...';
+            select.appendChild(customOption);
+            if (currentValue === 'custom') {
+                select.value = 'custom';
+            }
+        });
+    }
+
+    // ============================================
+    // CARREGAR SUGESTÕES DE ITENS
+    // ============================================
+    function carregarSugestoes() {
+        const itens = JSON.parse(localStorage.getItem('estoqueTaguaLife') || '[]');
+        const datalist = document.getElementById('itensSugestoes');
+        datalist.innerHTML = itens.map(item => 
+            `<option value="${item.nome}">${item.nome} (${item.quantidade} unid.)</option>`
+        ).join('');
+    }
+
+    // ============================================
+    // VALIDAÇÃO DE ESTOQUE
+    // ============================================
+    function validarEstoqueItem(row) {
+        const select = row.querySelector('.item-select');
+        const qtdInput = row.querySelector('.qtd-input');
+        const statusCell = row.querySelector('.status-cell');
+        const itemNome = select ? select.value.trim() : '';
+        const qtd = parseInt(qtdInput.value) || 0;
+        
+        if (!itemNome || itemNome === '') {
+            statusCell.textContent = '❓';
+            statusCell.style.color = '#999';
+            statusCell.className = 'status-cell';
+            row.classList.remove('linha-erro', 'linha-nao-cadastrado');
+            return { status: 'vazio', message: '❓' };
+        }
+        
+        if (itemNome === 'custom') {
+            statusCell.textContent = '✏️';
+            statusCell.style.color = '#2196F3';
+            statusCell.className = 'status-cell status-nao-cadastrado';
+            row.classList.add('linha-nao-cadastrado');
+            row.classList.remove('linha-erro');
+            return { status: 'nao_cadastrado', message: '✏️ Não cadastrado', item: null };
+        }
+        
+        const estoque = JSON.parse(localStorage.getItem('estoqueTaguaLife') || '[]');
+        const item = estoque.find(i => i.nome.toLowerCase() === itemNome.toLowerCase());
+        
+        if (!item) {
+            statusCell.textContent = '🆕';
+            statusCell.style.color = '#E65100';
+            statusCell.className = 'status-cell status-nao-cadastrado';
+            row.classList.add('linha-nao-cadastrado');
+            row.classList.remove('linha-erro');
+            return { status: 'nao_cadastrado', message: '🆕 Não cadastrado', item: null };
+        }
+        
+        if (qtd > item.quantidade) {
+            statusCell.textContent = `⚠️ ${item.quantidade}`;
+            statusCell.style.color = '#8B3A3A';
+            statusCell.className = 'status-cell status-erro';
+            row.classList.add('linha-erro');
+            row.classList.remove('linha-nao-cadastrado');
+            return { status: 'insuficiente', message: `⚠️ Estoque: ${item.quantidade}`, item: item };
+        }
+        
+        statusCell.textContent = '✅';
+        statusCell.style.color = '#4CAF50';
+        statusCell.className = 'status-cell status-cadastrado';
+        row.classList.remove('linha-erro', 'linha-nao-cadastrado');
+        return { status: 'ok', message: '✅', item: item };
+    }
+
+    function validarTodasLinhas() {
+        const rows = document.querySelectorAll('#tabelaItensBody tr');
+        let temErro = false;
+        let temNaoCadastrado = false;
+        
+        rows.forEach(row => {
+            const result = validarEstoqueItem(row);
+            if (result.status === 'insuficiente') {
+                temErro = true;
+            }
+            if (result.status === 'nao_cadastrado') {
+                temNaoCadastrado = true;
+            }
+        });
+        
+        if (temNaoCadastrado && !temErro) {
+            mostrarMensagem('⚠️ Itens não cadastrados serão registrados sem baixa no estoque', '#E65100');
+        }
+        
+        return { temErro, temNaoCadastrado };
+    }
+
+    // ============================================
+    // ADICIONAR / REMOVER LINHAS
+    // ============================================
+    function adicionarLinha() {
+        const tbody = document.getElementById('tabelaItensBody');
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td class="col-qtd"><input type="number" class="qtd-input" value="1" min="1" /></td>
+            <td class="col-item">
+                <select class="item-select" style="width:100%; padding:0.3rem; border-radius:4px; border:1px solid var(--border-color); background:var(--input-bg); color:var(--text-primary);">
+                    <option value="">Selecione um item...</option>
+                </select>
+            </td>
+            <td class="col-destino"><input type="text" class="destino-input" placeholder="Uso / destino" /></td>
+            <td style="text-align:center; font-size:14px;" class="status-cell">✅</td>
+            <td style="text-align:center;"><span class="remove-item" onclick="removerLinha(this)" style="color:var(--danger); cursor:pointer;"><i class="fas fa-times-circle"></i></span></td>
+        `;
+        tbody.appendChild(tr);
+        
+        carregarSelectItens();
+        carregarSugestoes();
+        
+        const select = tr.querySelector('.item-select');
+        const qtdInput = tr.querySelector('.qtd-input');
+        const destinoInput = tr.querySelector('.destino-input');
+        
+        select.addEventListener('change', function() {
+            if (this.value === 'custom') {
+                const td = this.closest('td');
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.className = 'item-input';
+                input.placeholder = 'Digite o nome do item...';
+                input.style.cssText = 'width:100%; padding:0.3rem; border-radius:4px; border:1px solid var(--border-color); background:var(--input-bg); color:var(--text-primary);';
+                td.innerHTML = '';
+                td.appendChild(input);
+                input.focus();
+                input.addEventListener('change', function() { validarEstoqueItem(tr); });
+                input.addEventListener('input', function() { validarEstoqueItem(tr); });
+                validarEstoqueItem(tr);
+            } else {
+                validarEstoqueItem(tr);
+            }
+        });
+        
+        qtdInput.addEventListener('change', function() { validarEstoqueItem(tr); });
+        qtdInput.addEventListener('input', function() { validarEstoqueItem(tr); });
+        destinoInput.addEventListener('change', function() { validarEstoqueItem(tr); });
+        
+        mostrarMensagem('📋 Linha adicionada!', '#7A816E');
+        mostrarToast('📋 Linha adicionada!', 'info');
+    }
+
+    function removerLinha(element) {
+        const tbody = document.getElementById('tabelaItensBody');
+        if (tbody.querySelectorAll('tr').length <= 1) {
+            mostrarMensagem('⚠️ Mantenha pelo menos uma linha!', '#8B3A3A');
+            return;
+        }
+        element.closest('tr').remove();
+        mostrarMensagem('🗑️ Linha removida!', '#5A614E');
+    }
+
+    // ============================================
+    // CARREGAR DADOS DO FORMULÁRIO
+    // ============================================
+    function carregarDadosFormulario() {
+        const linhas = document.querySelectorAll('#tabelaItensBody tr');
+        const itens = [];
+        linhas.forEach(row => {
+            const select = row.querySelector('.item-select');
+            const input = row.querySelector('.item-input');
+            const qtd = row.querySelector('.qtd-input')?.value?.trim() || '';
+            const destino = row.querySelector('.destino-input')?.value?.trim() || '';
+            let item = '';
+            if (select && select.value !== 'custom' && select.value !== '') {
+                item = select.value;
+            } else if (input) {
+                item = input.value.trim();
+            }
+            if (item) {
+                const estoque = JSON.parse(localStorage.getItem('estoqueTaguaLife') || '[]');
+                const itemEstoque = estoque.find(i => i.nome.toLowerCase() === item.toLowerCase());
+                itens.push({ 
+                    qtd, 
+                    item, 
+                    destino,
+                    cadastrado: !!itemEstoque
+                });
+            }
+        });
+        return {
+            colaborador: document.getElementById('colaborador')?.value || '',
+            dataSaida: document.getElementById('dataSaida')?.value || '',
+            itens: itens,
+            assinatura: document.getElementById('assinatura')?.value || '',
+            horas: document.getElementById('horasSaida')?.value || '',
+            almoxarife: document.getElementById('almoxarife')?.value || '',
+            dataSalvamento: new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })
+        };
+    }
+
+    // ============================================
+    // SALVAR PROTOCOLO
+    // ============================================
+    function salvarProtocolo() {
+        try {
+            const dados = carregarDadosFormulario();
+            
+            if (!dados.colaborador || dados.colaborador.trim() === '') {
+                mostrarMensagem('⚠️ Preencha o nome do COLABORADOR!', '#8B3A3A');
+                mostrarToast('⚠️ Preencha o colaborador!', 'warning');
+                return false;
+            }
+            
+            if (dados.itens.length === 0) {
+                mostrarMensagem('⚠️ Adicione pelo menos um ITEM!', '#8B3A3A');
+                mostrarToast('⚠️ Adicione pelo menos um item!', 'warning');
+                return false;
+            }
+            
+            const validacao = validarTodasLinhas();
+            if (validacao.temErro) {
+                mostrarMensagem('⚠️ Itens com estoque insuficiente!', '#8B3A3A');
+                mostrarToast('⚠️ Estoque insuficiente para alguns itens!', 'danger');
+                return false;
+            }
+            
+            if (validacao.temNaoCadastrado) {
+                if (!confirm('⚠️ Existem itens NÃO CADASTRADOS no sistema.\n\n' +
+                    '✅ Itens cadastrados: terão o estoque baixado automaticamente.\n' +
+                    '🆕 Itens não cadastrados: serão registrados na saída, mas NÃO alterarão o estoque.\n\n' +
+                    'Deseja continuar?')) {
+                    return false;
+                }
+            }
+            
+            const estoque = JSON.parse(localStorage.getItem('estoqueTaguaLife') || '[]');
+            let itensNaoCadastrados = [];
+            let itensBaixados = [];
+            
+            dados.itens.forEach(item => {
+                const itemEstoque = estoque.find(i => i.nome.toLowerCase() === item.item.toLowerCase());
+                if (itemEstoque) {
+                    const qtd = parseInt(item.qtd) || 0;
+                    if (qtd > 0) {
+                        itemEstoque.quantidade = Math.max(0, itemEstoque.quantidade - qtd);
+                        itensBaixados.push(item.item + ' (' + qtd + ' unid.)');
+                    }
+                } else {
+                    if (item.item.trim() !== '') {
+                        itensNaoCadastrados.push(item.item);
+                    }
+                }
+            });
+            
+            localStorage.setItem('estoqueTaguaLife', JSON.stringify(estoque));
+            
+            const protocolos = JSON.parse(localStorage.getItem('saidaMaterialTaguaLife') || '[]');
+            const novoProtocolo = {
+                id: Date.now(),
+                colaborador: dados.colaborador.trim(),
+                dataSaida: dados.dataSaida || '',
+                itens: dados.itens,
+                assinatura: dados.assinatura || '',
+                horas: dados.horas || '',
+                almoxarife: dados.almoxarife || 'Ednaldo de Souza',
+                dataSalvamento: new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' }),
+                itensNaoCadastrados: itensNaoCadastrados,
+                itensBaixados: itensBaixados
+            };
+            
+            protocolos.push(novoProtocolo);
+            localStorage.setItem('saidaMaterialTaguaLife', JSON.stringify(protocolos));
+            
+            let mensagem = `✅ Saída de ${dados.colaborador} registrada com sucesso!`;
+            if (itensNaoCadastrados.length > 0) {
+                mensagem += `\n🆕 Itens não cadastrados: ${itensNaoCadastrados.join(', ')}`;
+            }
+            if (itensBaixados.length > 0) {
+                mensagem += `\n📦 Itens baixados do estoque: ${itensBaixados.join(', ')}`;
+            }
+            mostrarMensagem(mensagem, '#7A816E');
+            mostrarToast('✅ Saída registrada com sucesso!', 'success');
+            
+            const listaEl = document.getElementById('listaProtocolos');
+            if (listaEl && listaEl.style.display !== 'none') {
+                exibirListaProtocolos();
+            }
+            
+            limparCamposSilencioso();
+            
+            return true;
+            
+        } catch (error) {
+            console.error('Erro ao salvar:', error);
+            mostrarMensagem('❌ Erro ao salvar! Tente novamente.', '#8B3A3A');
+            mostrarToast('❌ Erro ao salvar!', 'danger');
+            return false;
+        }
+    }
+
+    // ============================================
+    // EXIBIR LISTA DE PROTOCOLOS
+    // ============================================
+    function exibirListaProtocolos() {
+        const protocolos = JSON.parse(localStorage.getItem('saidaMaterialTaguaLife') || '[]');
+        const container = document.getElementById('conteudoLista');
+        
+        if (protocolos.length === 0) {
+            container.innerHTML = `
+                <div class="lista-vazia">
+                    <i class="fas fa-inbox"></i> 
+                    Nenhuma saída registrada ainda.
+                </div>
+            `;
+        } else {
+            let html = '';
+            protocolos.slice().reverse().forEach(p => {
+                const temNaoCadastrado = p.itensNaoCadastrados && p.itensNaoCadastrados.length > 0;
+                const temBaixados = p.itensBaixados && p.itensBaixados.length > 0;
+                html += `
+                    <div class="protocolo-item">
+                        <div class="head">
+                            <strong>👤 ${p.colaborador || 'Sem nome'}</strong>
+                            <small>📅 ${p.dataSaida || ''}</small>
+                            <span style="background:var(--gray-200); padding:0.1rem 0.6rem; border-radius:40px; font-size:0.6rem; font-weight:500; color:var(--text-secondary);">
+                                ${p.itens.length} item${p.itens.length > 1 ? 'ns' : ''}
+                            </span>
+                            ${temNaoCadastrado ? `<span class="badge-nao-cadastrado">🆕 ${p.itensNaoCadastrados.length} não cadastrado(s)</span>` : ''}
+                            ${temBaixados ? `<span style="background:#4CAF50; color:white; padding:0.05rem 0.5rem; border-radius:40px; font-size:0.5rem; font-weight:600;">📦 ${p.itensBaixados.length} baixados</span>` : ''}
+                        </div>
+                        <div class="detalhes">
+                            ${p.itens.map(i => 
+                                `${i.qtd || '?'}x ${i.item || 'sem descrição'} → ${i.destino || 'sem destino'}${!i.cadastrado ? ' 🆕' : ''}`
+                            ).join(' | ')}
+                        </div>
+                        <div class="acoes">
+                            <button class="btn btn-outline" onclick="carregarProtocolo(${p.id})">
+                                <i class="fas fa-edit"></i> Editar
+                            </button>
+                            <button class="btn btn-outline" onclick="excluirProtocolo(${p.id})" style="color:var(--danger);">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </div>
+                        <div class="meta">💾 Salvo em: ${p.dataSalvamento || 'data desconhecida'}</div>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+        
+        const listaEl = document.getElementById('listaProtocolos');
+        if (listaEl) {
+            listaEl.style.display = 'block';
+        }
+    }
+
+    // ============================================
+    // CARREGAR PROTOCOLO PARA EDIÇÃO
+    // ============================================
+    window.carregarProtocolo = function(id) {
+        const protocolos = JSON.parse(localStorage.getItem('saidaMaterialTaguaLife') || '[]');
+        const p = protocolos.find(item => item.id === id);
+        
+        if (!p) {
+            mostrarMensagem('❌ Registro não encontrado!', '#8B3A3A');
+            return;
+        }
+
+        document.getElementById('colaborador').value = p.colaborador || '';
+        document.getElementById('dataSaida').value = p.dataSaida || '';
+        document.getElementById('assinatura').value = p.assinatura || '';
+        document.getElementById('horasSaida').value = p.horas || '';
+        document.getElementById('almoxarife').value = p.almoxarife || 'Ednaldo de Souza';
+
+        const tbody = document.getElementById('tabelaItensBody');
+        tbody.innerHTML = '';
+        
+        if (p.itens.length === 0) {
+            adicionarLinha();
+        } else {
+            p.itens.forEach((item, index) => {
+                const tr = document.createElement('tr');
+                const isCadastrado = item.cadastrado !== undefined ? item.cadastrado : true;
+                tr.innerHTML = `
+                    <td class="col-qtd"><input type="number" class="qtd-input" value="${item.qtd || 1}" min="1" /></td>
+                    <td class="col-item">
+                        <select class="item-select" style="width:100%; padding:0.3rem; border-radius:4px; border:1px solid var(--border-color); background:var(--input-bg); color:var(--text-primary);">
+                            <option value="">Selecione um item...</option>
+                        </select>
+                    </td>
+                    <td class="col-destino"><input type="text" class="destino-input" value="${item.destino || ''}" placeholder="Uso / destino" /></td>
+                    <td style="text-align:center; font-size:14px;" class="status-cell">${isCadastrado ? '✅' : '🆕'}</td>
+                    <td style="text-align:center;">${p.itens.length > 1 ? `<span class="remove-item" onclick="removerLinha(this)" style="color:var(--danger); cursor:pointer;"><i class="fas fa-times-circle"></i></span>` : ''}</td>
+                `;
+                tbody.appendChild(tr);
+                
+                carregarSelectItens();
+                const select = tr.querySelector('.item-select');
+                if (select) {
+                    const estoque = JSON.parse(localStorage.getItem('estoqueTaguaLife') || '[]');
+                    const existe = estoque.some(i => i.nome.toLowerCase() === item.item.toLowerCase());
+                    if (existe) {
+                        select.value = item.item;
+                    } else {
+                        const td = select.closest('td');
+                        const input = document.createElement('input');
+                        input.type = 'text';
+                        input.className = 'item-input';
+                        input.value = item.item || '';
+                        input.placeholder = 'Digite o nome do item...';
+                        input.style.cssText = 'width:100%; padding:0.3rem; border-radius:4px; border:1px solid var(--border-color); background:var(--input-bg); color:var(--text-primary);';
+                        td.innerHTML = '';
+                        td.appendChild(input);
+                        input.addEventListener('change', function() { validarEstoqueItem(tr); });
+                        input.addEventListener('input', function() { validarEstoqueItem(tr); });
+                    }
+                }
+                
+                const qtdInput = tr.querySelector('.qtd-input');
+                const itemInput = tr.querySelector('.item-input') || tr.querySelector('.item-select');
+                qtdInput.addEventListener('change', function() { validarEstoqueItem(tr); });
+                qtdInput.addEventListener('input', function() { validarEstoqueItem(tr); });
+                if (itemInput) {
+                    itemInput.addEventListener('change', function() { validarEstoqueItem(tr); });
+                    itemInput.addEventListener('input', function() { validarEstoqueItem(tr); });
+                }
+                validarEstoqueItem(tr);
+            });
+        }
+        
+        document.getElementById('listaProtocolos').style.display = 'none';
+        carregarSelectItens();
+        carregarSugestoes();
+        mostrarMensagem('📝 Registro carregado para edição', '#7A816E');
+        mostrarToast('✏️ Editando saída de ' + p.colaborador, 'info');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    // ============================================
+    // EXCLUIR PROTOCOLO
+    // ============================================
+    window.excluirProtocolo = function(id) {
+        if (!confirm('⚠️ Tem certeza que deseja excluir este registro?')) return;
+        
+        let protocolos = JSON.parse(localStorage.getItem('saidaMaterialTaguaLife') || '[]');
+        const p = protocolos.find(item => item.id === id);
+        protocolos = protocolos.filter(p => p.id !== id);
+        localStorage.setItem('saidaMaterialTaguaLife', JSON.stringify(protocolos));
+        
+        exibirListaProtocolos();
+        mostrarMensagem('🗑️ Registro excluído com sucesso!', '#8B3A3A');
+        if (p) mostrarToast('🗑️ Saída de ' + p.colaborador + ' excluída!', 'danger');
+    };
+
+    // ============================================
+    // LIMPAR CAMPOS
+    // ============================================
+    function limparCampos() {
+        if (!confirm('Limpar todos os campos?')) return;
+        limparCamposSilencioso();
+        mostrarMensagem('🧹 Campos limpos!', '#5A614E');
+    }
+
+    function limparCamposSilencioso() {
+        document.querySelectorAll('.protocolo-body input').forEach(el => {
+            if (el.id === 'dataAtual' || el.id === 'horaAtual' || 
+                el.id === 'dataGeracao' || el.id === 'dataCompleta' || 
+                el.id === 'horaCompleta' || el.id === 'clockHours' ||
+                el.id === 'clockMinutes' || el.id === 'clockSeconds' ||
+                el.id === 'clockDate') {
+                return;
+            }
+            if (el.id === 'almoxarife') {
+                el.value = 'Ednaldo de Souza';
+                return;
+            }
+            el.value = '';
+        });
+        
+        const horario = getHorarioBrasilia();
+        document.getElementById('dataSaida').value = horario.data;
+        document.getElementById('horasSaida').value = horario.hora;
+        
+        const tbody = document.getElementById('tabelaItensBody');
+        tbody.innerHTML = '';
+        adicionarLinha();
+        carregarSelectItens();
+        carregarSugestoes();
+    }
+
+    // ============================================
+    // LIMPAR FILTROS
+    // ============================================
+    function limparFiltros() {
+        const agora = new Date();
+        document.getElementById('filtroDia').value = agora.getDate();
+        document.getElementById('filtroMes').value = agora.getMonth();
+        document.getElementById('filtroAno').value = agora.getFullYear();
+        mostrarMensagem('🧹 Filtros resetados para data atual', '#5A614E');
+        mostrarToast('🧹 Filtros resetados!', 'info');
+    }
+
+    // ============================================
+    // IMPRIMIR
+    // ============================================
+    function imprimirProtocolo() {
+        window.print();
+    }
+
+    // ============================================
+    // FUNÇÃO PARA PARSE DE DATA
+    // ============================================
+    function parseDataSalvamento(dataStr) {
+        if (!dataStr) return null;
+        try {
+            const partes = dataStr.split(/[,\s]+/);
+            if (partes.length >= 1) {
+                const dataPartes = partes[0].split('/');
+                if (dataPartes.length === 3) {
+                    const dia = parseInt(dataPartes[0]);
+                    const mes = parseInt(dataPartes[1]) - 1;
+                    const ano = parseInt(dataPartes[2]);
+                    return new Date(ano, mes, dia);
+                }
+            }
+            return null;
+        } catch (e) {
+            return null;
+        }
+    }
+
+    // ============================================
+    // FUNÇÃO PARA GERAR RELATÓRIO PDF
+    // ============================================
+    function gerarRelatorioPDF(filtro = 'geral') {
+        try {
+            const protocolos = JSON.parse(localStorage.getItem('saidaMaterialTaguaLife') || '[]');
+            
+            if (protocolos.length === 0) {
+                mostrarMensagem('⚠️ Nenhuma saída registrada!', '#8B3A3A');
+                mostrarToast('⚠️ Nenhum registro encontrado!', 'warning');
+                return;
+            }
+
+            const agora = new Date();
+            const anoAtual = agora.getFullYear();
+            const mesAtual = agora.getMonth();
+            const diaAtual = agora.getDate();
+
+            let dadosFiltrados = [];
+            let tituloRelatorio = '';
+            let periodoDescricao = '';
+
+            switch(filtro) {
+                case 'dia':
+                    dadosFiltrados = protocolos.filter(p => {
+                        const data = parseDataSalvamento(p.dataSalvamento);
+                        if (!data) return false;
+                        return data.getDate() === diaAtual && 
+                               data.getMonth() === mesAtual && 
+                               data.getFullYear() === anoAtual;
+                    });
+                    tituloRelatorio = `RELATÓRIO DIÁRIO - ${agora.toLocaleDateString('pt-BR')}`;
+                    periodoDescricao = `Dia: ${agora.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}`;
+                    break;
+                case 'mes':
+                    dadosFiltrados = protocolos.filter(p => {
+                        const data = parseDataSalvamento(p.dataSalvamento);
+                        if (!data) return false;
+                        return data.getMonth() === mesAtual && data.getFullYear() === anoAtual;
+                    });
+                    tituloRelatorio = `RELATÓRIO MENSAL - ${agora.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}`;
+                    periodoDescricao = `Mês: ${agora.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}`;
+                    break;
+                case 'ano':
+                    dadosFiltrados = protocolos.filter(p => {
+                        const data = parseDataSalvamento(p.dataSalvamento);
+                        if (!data) return false;
+                        return data.getFullYear() === anoAtual;
+                    });
+                    tituloRelatorio = `RELATÓRIO ANUAL - ${anoAtual}`;
+                    periodoDescricao = `Ano: ${anoAtual}`;
+                    break;
+                case 'geral':
+                default:
+                    dadosFiltrados = protocolos;
+                    tituloRelatorio = 'RELATÓRIO GERAL DE SAÍDAS';
+                    periodoDescricao = 'Todos os registros';
+                    break;
+            }
+
+            if (dadosFiltrados.length === 0) {
+                const msg = filtro === 'dia' ? 'hoje' : 
+                           filtro === 'mes' ? 'este mês' : 
+                           filtro === 'ano' ? 'este ano' : 'geral';
+                mostrarMensagem(`⚠️ Nenhuma saída para ${msg}!`, '#8B3A3A');
+                mostrarToast(`⚠️ Nenhum registro encontrado para ${msg}!`, 'warning');
+                return;
+            }
+
+            const relatorioHTML = gerarHTMLRelatorioSaida(dadosFiltrados, tituloRelatorio, periodoDescricao, filtro);
+            const janelaPDF = window.open('', '_blank', 'width=900,height=700');
+            if (!janelaPDF) {
+                mostrarMensagem('⚠️ Permita pop-ups!', '#8B3A3A');
+                return;
+            }
+            janelaPDF.document.write(relatorioHTML);
+            janelaPDF.document.close();
+            setTimeout(() => janelaPDF.print(), 500);
+            mostrarMensagem(`📄 Relatório ${filtro} gerado! (${dadosFiltrados.length} registros)`, '#7A816E');
+            mostrarToast(`📄 ${dadosFiltrados.length} registros encontrados!`, 'success');
+
+        } catch (error) {
+            console.error('Erro ao gerar relatório:', error);
+            mostrarMensagem('❌ Erro ao gerar relatório!', '#8B3A3A');
+            mostrarToast('❌ Erro ao gerar relatório!', 'danger');
+        }
+    }
+
+    // ============================================
+    // FUNÇÃO PARA GERAR RELATÓRIO PERSONALIZADO
+    // ============================================
+    function gerarRelatorioPersonalizado() {
+        try {
+            const protocolos = JSON.parse(localStorage.getItem('saidaMaterialTaguaLife') || '[]');
+            
+            if (protocolos.length === 0) {
+                mostrarMensagem('⚠️ Nenhuma saída registrada!', '#8B3A3A');
+                mostrarToast('⚠️ Nenhum registro encontrado!', 'warning');
+                return;
+            }
+
+            const dia = parseInt(document.getElementById('filtroDia').value);
+            const mes = parseInt(document.getElementById('filtroMes').value);
+            const ano = parseInt(document.getElementById('filtroAno').value);
+
+            // VALIDAÇÃO: Se dia estiver vazio, busca TODOS os dias do mês
+            // Se dia estiver preenchido, busca apenas aquele dia específico
+            // Se mes estiver vazio, não faz nada
+            if (isNaN(mes) || isNaN(ano)) {
+                mostrarMensagem('⚠️ Selecione o MÊS e o ANO!', '#8B3A3A');
+                mostrarToast('⚠️ Preencha mês e ano!', 'warning');
+                return;
+            }
+
+            if (mes < 0 || mes > 11) {
+                mostrarMensagem('⚠️ Mês inválido!', '#8B3A3A');
+                return;
+            }
+
+            let dadosFiltrados = [];
+            let tituloRelatorio = '';
+            let periodoDescricao = '';
+
+            // Verifica se o dia foi preenchido
+            const temDia = !isNaN(dia) && dia >= 1 && dia <= 31;
+
+            if (temDia) {
+                // FILTRO POR DIA ESPECÍFICO
+                dadosFiltrados = protocolos.filter(p => {
+                    const data = parseDataSalvamento(p.dataSalvamento);
+                    if (!data) return false;
+                    return data.getDate() === dia && 
+                           data.getMonth() === mes && 
+                           data.getFullYear() === ano;
+                });
+                const dataFormatada = new Date(ano, mes, dia).toLocaleDateString('pt-BR', { 
+                    weekday: 'long', 
+                    day: 'numeric', 
+                    month: 'long', 
+                    year: 'numeric' 
+                });
+                tituloRelatorio = `RELATÓRIO POR DIA - ${dataFormatada}`;
+                periodoDescricao = `Data: ${dataFormatada}`;
+            } else {
+                // FILTRO POR MÊS INTEIRO (todos os dias do mês)
+                dadosFiltrados = protocolos.filter(p => {
+                    const data = parseDataSalvamento(p.dataSalvamento);
+                    if (!data) return false;
+                    return data.getMonth() === mes && data.getFullYear() === ano;
+                });
+                const nomeMes = new Date(ano, mes, 1).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+                tituloRelatorio = `RELATÓRIO MENSAL - ${nomeMes}`;
+                periodoDescricao = `Mês: ${nomeMes} (todos os dias)`;
+            }
+
+            if (dadosFiltrados.length === 0) {
+                const msg = temDia ? 
+                    `${dia}/${mes+1}/${ano}` : 
+                    new Date(ano, mes, 1).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+                mostrarMensagem(`⚠️ Nenhuma saída para ${msg}!`, '#8B3A3A');
+                mostrarToast(`⚠️ Nenhum registro encontrado para ${msg}!`, 'warning');
+                return;
+            }
+
+            const relatorioHTML = gerarHTMLRelatorioSaida(dadosFiltrados, tituloRelatorio, periodoDescricao, 'personalizado');
+            const janelaPDF = window.open('', '_blank', 'width=900,height=700');
+            if (!janelaPDF) {
+                mostrarMensagem('⚠️ Permita pop-ups!', '#8B3A3A');
+                return;
+            }
+            janelaPDF.document.write(relatorioHTML);
+            janelaPDF.document.close();
+            setTimeout(() => janelaPDF.print(), 500);
+            mostrarMensagem(`📄 Relatório gerado! (${dadosFiltrados.length} registros)`, '#7A816E');
+            mostrarToast(`📄 ${dadosFiltrados.length} registros encontrados!`, 'success');
+
+        } catch (error) {
+            console.error('Erro ao gerar relatório personalizado:', error);
+            mostrarMensagem('❌ Erro ao gerar relatório!', '#8B3A3A');
+            mostrarToast('❌ Erro ao gerar relatório!', 'danger');
+        }
+    }
+
+    // ============================================
+    // FUNÇÃO PARA GERAR HTML DO RELATÓRIO
+    // ============================================
+    function gerarHTMLRelatorioSaida(dados, titulo, periodo, filtro) {
+        let totalRegistros = dados.length;
+        let totalItens = 0;
+        let colaboradores = {};
+        let totalNaoCadastrados = 0;
+
+        dados.forEach(p => {
+            totalItens += p.itens ? p.itens.length : 0;
+            const nome = p.colaborador || 'Não informado';
+            colaboradores[nome] = (colaboradores[nome] || 0) + (p.itens ? p.itens.length : 0);
+            if (p.itensNaoCadastrados) {
+                totalNaoCadastrados += p.itensNaoCadastrados.length;
+            }
+        });
+
+        let itensHTML = '';
+        dados.slice().reverse().forEach((p, index) => {
+            const temNaoCadastrado = p.itensNaoCadastrados && p.itensNaoCadastrados.length > 0;
+            itensHTML += `
+                <div style="page-break-inside: avoid; margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 10px; ${temNaoCadastrado ? 'border-left:3px solid #FFB300; padding-left:8px;' : ''}">
+                    <div style="font-size:13px; font-weight:bold;">#${index + 1} - ${p.colaborador || 'Não informado'}
+                        <span style="font-weight:normal; color:#7f8c8d; font-size:11px; margin-left:10px;">${p.dataSaida || ''}</span>
+                        ${temNaoCadastrado ? '<span style="background:#FFB300; color:#E65100; font-size:9px; padding:0 6px; border-radius:10px; margin-left:5px;">🆕 Não cadastrado</span>' : ''}
+                    </div>
+                    <div style="font-size:11px; margin:3px 0;">
+                        ${p.itens.map(i => `${i.qtd || '?'}x ${i.item || 'sem descrição'} (${i.destino || 'sem destino'})${!i.cadastrado ? ' 🆕' : ''}`).join('; ')}
+                    </div>
+                    <div style="font-size:10px; color:#999;">Ass: ${p.assinatura || 'N/I'} • Almox: ${p.almoxarife || 'N/I'}</div>
+                </div>
+            `;
+        });
+
+        let colHtml = Object.entries(colaboradores).sort((a, b) => b[1] - a[1]).map(([nome, total]) => 
+            `<tr><td>${nome}</td><td style="text-align:center;">${total}</td></tr>`
+        ).join('');
+
+        const dataGeracao = new Date().toLocaleString('pt-BR');
+
+        const filtroLabel = filtro === 'personalizado' ? 'PERSONALIZADO' : filtro.toUpperCase();
+
+        return `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="UTF-8">
+                <title>${titulo} - TaguáLife</title>
+                <style>
+                    body { font-family: Arial, sans-serif; margin: 30px; color: #2c3e50; }
+                    .header { text-align: center; border-bottom: 3px solid #C1CE83; padding-bottom: 15px; margin-bottom: 20px; }
+                    .header h1 { font-size: 20px; margin: 0; color: #191D1B; }
+                    .header h2 { font-size: 16px; font-weight: normal; color: #7A816E; margin: 5px 0; }
+                    .header .sub { font-size: 12px; color: #7f8c8d; }
+                    .resumo { background: #f8f9fa; padding: 10px 15px; border-radius: 5px; margin: 15px 0; border-left: 4px solid #C1CE83; }
+                    .resumo table { width: 100%; font-size: 12px; }
+                    .resumo td { padding: 3px 8px; }
+                    .resumo .label { font-weight: bold; color: #7A816E; width: 120px; }
+                    .resumo .valor { font-weight: bold; }
+                    .itens { margin-top: 15px; }
+                    .itens .titulo { font-size: 16px; font-weight: bold; border-bottom: 2px solid #C1CE83; padding-bottom: 8px; margin-bottom: 10px; }
+                    .colaboradores { margin-top: 15px; background: #f8f9fa; padding: 10px 15px; border-radius: 5px; }
+                    .colaboradores .titulo { font-weight: bold; margin-bottom: 8px; }
+                    .colaboradores table { width: 100%; font-size: 12px; border-collapse: collapse; }
+                    .colaboradores th { background: #C1CE83; padding: 5px 10px; text-align: left; }
+                    .colaboradores td { padding: 3px 10px; border-bottom: 1px solid #eee; }
+                    .footer { text-align: center; margin-top: 30px; font-size: 10px; color: #999; border-top: 1px solid #ddd; padding-top: 10px; }
+                    .filtro-tag { display: inline-block; background: #C1CE83; color: #191D1B; padding: 2px 12px; border-radius: 20px; font-size: 11px; font-weight: bold; }
+                </style>
+            </head>
+            <body>
+                <div class="header">
+                    <h1>🏢 TaguáLife Center</h1>
+                    <h2>${titulo}</h2>
+                    <div class="sub">${periodo} • <span class="filtro-tag">${filtroLabel}</span></div>
+                    <div style="font-size:10px; color:#999; margin-top:5px;">Gerado em: ${dataGeracao}</div>
+                </div>
+                <div class="resumo">
+                    <table>
+                        <tr>
+                            <td class="label">📊 Total de Saídas:</td>
+                            <td class="valor">${totalRegistros}</td>
+                            <td class="label">📦 Total de Itens:</td>
+                            <td class="valor">${totalItens}</td>
+                        </tr>
+                        <tr>
+                            <td class="label">👤 Colaboradores:</td>
+                            <td class="valor">${Object.keys(colaboradores).length}</td>
+                            <td class="label">🆕 Não Cadastrados:</td>
+                            <td class="valor" style="color:#E65100;">${totalNaoCadastrados}</td>
+                        </tr>
+                    </table>
+                </div>
+                <div class="itens">
+                    <div class="titulo">📋 Detalhamento das Saídas</div>
+                    ${itensHTML}
+                </div>
+                <div class="colaboradores">
+                    <div class="titulo">👤 Estatísticas por Colaborador</div>
+                    <table>
+                        <tr><th>Colaborador</th><th style="text-align:center;">Total de Itens</th></tr>
+                        ${colHtml}
+                    </table>
+                </div>
+                <div class="footer">
+                    Documento gerado pelo Sistema TaguáLife • ${dataGeracao}
+                </div>
+            </body>
+            </html>
+        `;
+    }
+
+    // ============================================
+    // INICIALIZAÇÃO
+    // ============================================
+    document.addEventListener('DOMContentLoaded', function() {
+        const horario = getHorarioBrasilia();
+        document.getElementById('dataSaida').value = horario.data;
+        document.getElementById('horasSaida').value = horario.hora;
+        document.getElementById('almoxarife').value = 'Ednaldo de Souza';
+        
+        carregarSelectItens();
+        carregarSugestoes();
+        
+        // Eventos dos botões
+        document.getElementById('btnSalvar').addEventListener('click', function(e) {
+            e.preventDefault();
+            salvarProtocolo();
+        });
+        
+        document.getElementById('btnLimpar').addEventListener('click', function(e) {
+            e.preventDefault();
+            limparCampos();
+        });
+        
+        document.getElementById('btnImprimir').addEventListener('click', function(e) {
+            e.preventDefault();
+            imprimirProtocolo();
+        });
+        
+        document.getElementById('btnVerSalvos').addEventListener('click', function(e) {
+            e.preventDefault();
+            const el = document.getElementById('listaProtocolos');
+            if (el.style.display === 'none' || el.style.display === '') {
+                exibirListaProtocolos();
+            } else {
+                el.style.display = 'none';
+            }
+        });
+        
+        // Atalho Ctrl+S
+        document.addEventListener('keydown', function(e) {
+            if (e.ctrlKey && e.key === 's') {
+                e.preventDefault();
+                salvarProtocolo();
+            }
+        });
+        
+        carregarTema();
+        atualizarRelogio();
+        setInterval(atualizarRelogio, 1000);
+        
+        // Evento para selects
+        document.addEventListener('change', function(e) {
+            if (e.target.classList.contains('item-select')) {
+                if (e.target.value === 'custom') {
+                    const td = e.target.closest('td');
+                    const input = document.createElement('input');
+                    input.type = 'text';
+                    input.className = 'item-input';
+                    input.placeholder = 'Digite o nome do item...';
+                    input.style.cssText = 'width:100%; padding:0.3rem; border-radius:4px; border:1px solid var(--border-color); background:var(--input-bg); color:var(--text-primary);';
+                    td.innerHTML = '';
+                    td.appendChild(input);
+                    input.focus();
+                    const row = e.target.closest('tr');
+                    input.addEventListener('change', function() { validarEstoqueItem(row); });
+                    input.addEventListener('input', function() { validarEstoqueItem(row); });
+                    validarEstoqueItem(row);
+                } else {
+                    const row = e.target.closest('tr');
+                    validarEstoqueItem(row);
+                }
+            }
+        });
+        
+        // Validar ao digitar quantidade
+        document.addEventListener('input', function(e) {
+            if (e.target.classList.contains('qtd-input')) {
+                const row = e.target.closest('tr');
+                if (row) validarEstoqueItem(row);
+            }
+        });
+        
+        setTimeout(() => {
+            mostrarMensagem('📋 Sistema de Saída de Material (aceita itens não cadastrados)', '#191D1B');
+            mostrarToast('📋 Saída de Material carregada!', 'info');
+        }, 500);
+    });
+</script>
+</body>
+</html>

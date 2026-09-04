@@ -1,0 +1,1562 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TaguáLife Center · Recebimento de Mercadorias</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800;14..32,900&display=swap" rel="stylesheet" />
+    <style>
+        :root {
+            --verde-claro: #C1CE83;
+            --verde-oliva: #7A816E;
+            --branco: #FBFBF7;
+            --preto: #191D1B;
+            --primary: #191D1B;
+            --primary-light: #3A4A3A;
+            --secondary: #7A816E;
+            --gold: #C1CE83;
+            --gold-light: #D8E0B0;
+            --success: #7A816E;
+            --danger: #8B3A3A;
+            --warning: #C1A83C;
+            --gray-50: #FBFBF7;
+            --gray-100: #F0F2EA;
+            --gray-200: #D8DCCE;
+            --gray-300: #B8BEA8;
+            --gray-400: #9AA08E;
+            --gray-500: #7A816E;
+            --gray-600: #5A614E;
+            --gray-700: #3A4132;
+            --gray-800: #191D1B;
+            --gray-900: #0D0F0E;
+            --shadow: 0 4px 24px rgba(25, 29, 27, 0.08);
+            --shadow-hover: 0 6px 32px rgba(25, 29, 27, 0.15);
+            --font-primary: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            --bg-body: #E8EBE0;
+            --bg-card: var(--branco);
+            --text-primary: var(--preto);
+            --text-secondary: var(--verde-oliva);
+            --border-color: var(--gray-200);
+            --input-bg: transparent;
+            --input-border: var(--gray-300);
+            --radius: 16px;
+            --radius-sm: 10px;
+        }
+
+        body.dark-mode {
+            --bg-body: #1a1a1a;
+            --bg-card: #2a2a2a;
+            --text-primary: #e8e8e8;
+            --text-secondary: #b0b8a8;
+            --border-color: #444;
+            --input-bg: #333;
+            --input-border: #555;
+            --gray-50: #2a2a2a;
+            --gray-100: #333;
+            --gray-200: #444;
+            --gray-300: #555;
+            --gray-400: #666;
+            --gray-500: #777;
+            --preto: #e8e8e8;
+            --branco: #2a2a2a;
+            --shadow: 0 4px 24px rgba(0,0,0,0.3);
+            --shadow-hover: 0 6px 32px rgba(0,0,0,0.4);
+        }
+
+        body.dark-mode .app-topbar,
+        body.dark-mode .nav-menu,
+        body.dark-mode .card-recebimento,
+        body.dark-mode .modal-content {
+            background: var(--bg-card);
+            border-color: var(--border-color);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: var(--font-primary);
+            font-weight: 400;
+            background: var(--bg-body);
+            min-height: 100vh;
+            padding: 1rem;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            color: var(--text-primary);
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            transition: background 0.3s, color 0.3s;
+        }
+
+        .app-container { max-width: 1100px; width: 100%; }
+
+        .app-topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.6rem;
+            flex-wrap: wrap;
+            gap: 0.3rem;
+            background: var(--bg-card);
+            padding: 0.4rem 1rem;
+            border-radius: 10px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border-color);
+            transition: background 0.3s, border-color 0.3s;
+        }
+
+        .logo-area {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: var(--preto);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--verde-claro);
+            font-weight: 800;
+            font-size: 0.7rem;
+            flex-direction: column;
+            line-height: 1;
+            padding: 0.2rem;
+            transition: background 0.3s;
+        }
+
+        .logo-icon small { font-size: 0.3rem; color: var(--branco); font-weight: 400; letter-spacing: 0.5px; margin-top: 1px; }
+        .logo-text { display: flex; flex-direction: column; line-height: 1.1; }
+        .logo-text .title { font-size: 1.2rem; font-weight: 800; color: var(--text-primary); letter-spacing: -0.5px; display: flex; align-items: baseline; gap: 0.1rem; }
+        .logo-text .title .tagua { color: var(--text-primary); }
+        .logo-text .title .life { color: var(--verde-claro); font-weight: 800; }
+        .logo-text .slogan { font-size: 0.4rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1.5px; font-weight: 500; margin-top: 1px; }
+
+        .app-topbar .badge { background: var(--verde-claro); padding: 0.2rem 0.7rem; border-radius: 40px; font-size: 0.55rem; font-weight: 600; color: var(--preto); border: 1px solid var(--verde-oliva); }
+
+        .clock-display {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            background: var(--preto);
+            padding: 0.2rem 0.8rem;
+            border-radius: 40px;
+            border: 1px solid var(--verde-claro);
+            font-size: 0.8rem;
+            color: var(--branco);
+            letter-spacing: 1px;
+            transition: background 0.3s;
+        }
+        .clock-display i { color: var(--verde-claro); font-size: 0.7rem; }
+        .clock-display .clock-separator { color: var(--verde-claro); animation: blink 1s step-end infinite; }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+        .clock-display .clock-seconds { color: var(--verde-claro); font-size: 0.7rem; }
+        .clock-display .clock-date { color: var(--verde-oliva); font-size: 0.6rem; font-weight: 400; border-left: 1px solid var(--verde-oliva); padding-left: 0.5rem; }
+
+        .nav-menu {
+            display: flex;
+            gap: 0.2rem;
+            flex-wrap: wrap;
+            background: var(--bg-card);
+            padding: 0.2rem 0.6rem;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            margin-bottom: 0.6rem;
+            box-shadow: 0 1px 4px rgba(25, 29, 27, 0.04);
+            transition: background 0.3s, border-color 0.3s;
+        }
+        .nav-menu .nav-item {
+            padding: 0.25rem 0.8rem;
+            border-radius: 40px;
+            font-size: 0.65rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: 0.2s;
+            border: 1px solid transparent;
+            cursor: pointer;
+        }
+        .nav-menu .nav-item:hover { background: var(--gray-50); color: var(--text-primary); }
+        .nav-menu .nav-item.active { background: var(--preto); color: var(--branco); border-color: var(--preto); }
+        .nav-menu .nav-item i { margin-right: 0.2rem; }
+
+        .btn-theme {
+            background: var(--gray-200);
+            color: var(--preto);
+            border: none;
+            padding: 0.25rem 0.8rem;
+            border-radius: 40px;
+            font-size: 0.65rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: 0.2s;
+            font-family: inherit;
+        }
+        .btn-theme:hover { background: var(--gray-300); }
+
+        .card-recebimento {
+            background: var(--bg-card);
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+            transition: background 0.3s, border-color 0.3s, box-shadow 0.3s;
+        }
+
+        .card-header {
+            background: var(--verde-claro);
+            padding: 0.4rem 1.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 0.4rem;
+            border-bottom: 3px solid var(--verde-oliva);
+        }
+        .card-header .left { display: flex; align-items: center; gap: 0.5rem; color: var(--preto); }
+        .card-header .left i { font-size: 1.1rem; color: var(--preto); }
+        .card-header .left h2 { font-size: 1rem; font-weight: 600; letter-spacing: -0.3px; color: var(--preto); }
+        .card-header .right { display: flex; align-items: center; gap: 0.6rem; color: var(--preto); font-size: 0.7rem; }
+        .card-header .right i { margin-right: 0.15rem; color: var(--preto); }
+
+        .card-body { padding: 1.2rem 1.5rem 1.5rem; }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 0.8rem;
+            background: var(--gray-50);
+            padding: 1rem 1.2rem;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            margin-bottom: 1.2rem;
+        }
+        @media (max-width: 900px) { .form-grid { grid-template-columns: 1fr 1fr; } }
+        @media (max-width: 500px) { .form-grid { grid-template-columns: 1fr; } }
+
+        .campo {
+            display: flex;
+            flex-direction: column;
+            gap: 0.1rem;
+        }
+        .campo label {
+            font-weight: 600;
+            font-size: 0.6rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+        }
+        .campo label i { color: var(--verde-oliva); margin-right: 0.2rem; }
+        .campo input, .campo select, .campo textarea {
+            border: none;
+            border-bottom: 2px solid var(--input-border);
+            background: var(--input-bg);
+            padding: 0.3rem 0.2rem;
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: var(--text-primary);
+            outline: none;
+            transition: 0.2s;
+            font-family: inherit;
+        }
+        .campo input:focus, .campo select:focus, .campo textarea:focus { border-bottom-color: var(--verde-claro); }
+        .campo select { cursor: pointer; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%237A816E' d='M6 8L1 3h10z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 0.3rem center; padding-right: 1.5rem; }
+        .campo textarea { resize: vertical; min-height: 40px; }
+
+        .campo-fornecedor-manual {
+            display: flex;
+            flex-direction: column;
+            gap: 0.3rem;
+        }
+        .campo-fornecedor-manual .input-group {
+            display: flex;
+            gap: 0.3rem;
+            align-items: center;
+        }
+        .campo-fornecedor-manual .input-group select,
+        .campo-fornecedor-manual .input-group input {
+            flex: 1;
+            border: none;
+            border-bottom: 2px solid var(--input-border);
+            background: var(--input-bg);
+            padding: 0.3rem 0.2rem;
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: var(--text-primary);
+            outline: none;
+            transition: 0.2s;
+            font-family: inherit;
+        }
+        .campo-fornecedor-manual .input-group select:focus,
+        .campo-fornecedor-manual .input-group input:focus {
+            border-bottom-color: var(--verde-claro);
+        }
+        .btn-toggle-fornecedor {
+            background: var(--verde-claro);
+            color: var(--preto);
+            border: none;
+            border-radius: 40px;
+            padding: 0.2rem 0.6rem;
+            font-size: 0.55rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+            font-family: inherit;
+            white-space: nowrap;
+        }
+        .btn-toggle-fornecedor:hover {
+            background: var(--verde-oliva);
+            color: white;
+        }
+        .btn-toggle-fornecedor.manual {
+            background: #FFD700;
+            border: 1px solid #191D1B;
+        }
+
+        .btn-salvar-item {
+            display: flex;
+            flex-direction: column;
+            gap: 0.3rem;
+        }
+        .btn-salvar-item button {
+            width: 100%;
+            padding: 0.3rem 1rem;
+            border: none;
+            border-radius: 40px;
+            font-weight: 600;
+            font-size: 0.75rem;
+            background: var(--preto);
+            color: var(--branco);
+            cursor: pointer;
+            transition: 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.3rem;
+            margin-top: 0.1rem;
+            font-family: inherit;
+        }
+        .btn-salvar-item button:hover { background: #2A3A2A; transform: translateY(-1px); }
+
+        .itens-nota {
+            margin: 0.5rem 0 1rem;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+        }
+        .itens-nota table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.75rem;
+        }
+        .itens-nota th {
+            background: var(--gray-100);
+            padding: 0.3rem 0.6rem;
+            text-align: left;
+            font-weight: 600;
+            font-size: 0.6rem;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+            border-bottom: 2px solid var(--border-color);
+        }
+        .itens-nota td {
+            padding: 0.2rem 0.4rem;
+            border-bottom: 1px solid var(--border-color);
+            vertical-align: middle;
+        }
+        .itens-nota td input {
+            width: 100%;
+            border: none;
+            background: var(--input-bg);
+            padding: 0.3rem 0.2rem;
+            font-size: 0.8rem;
+            color: var(--text-primary);
+            outline: none;
+            font-family: inherit;
+        }
+        .itens-nota td input:focus { background: var(--gray-50); border-radius: 4px; }
+        .itens-nota .remove-item { color: var(--danger); cursor: pointer; font-size: 0.9rem; text-align: center; }
+        .itens-nota .remove-item:hover { transform: scale(1.2); }
+        .btn-add-item {
+            background: transparent;
+            border: 2px dashed var(--verde-oliva);
+            padding: 0.2rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            color: var(--text-secondary);
+            font-weight: 600;
+            font-size: 0.7rem;
+            transition: 0.3s;
+            font-family: inherit;
+            margin: 0.3rem 0;
+        }
+        .btn-add-item:hover { background: var(--verde-claro); color: var(--preto); }
+
+        .busca-bar {
+            display: flex;
+            gap: 0.6rem;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        .busca-bar input {
+            flex: 1;
+            min-width: 150px;
+            padding: 0.4rem 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: 40px;
+            font-size: 0.75rem;
+            outline: none;
+            transition: 0.2s;
+            font-family: inherit;
+            background: var(--input-bg);
+            color: var(--text-primary);
+        }
+        .busca-bar input:focus { border-color: var(--verde-claro); }
+        .busca-bar select {
+            padding: 0.4rem 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: 40px;
+            font-size: 0.75rem;
+            outline: none;
+            font-family: inherit;
+            background: var(--input-bg);
+            color: var(--text-primary);
+            cursor: pointer;
+        }
+        .busca-bar select:focus { border-color: var(--verde-claro); }
+
+        .btn-limpar-filtro {
+            padding: 0.4rem 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: 40px;
+            background: transparent;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: 0.2s;
+            font-size: 0.7rem;
+            font-family: inherit;
+        }
+        .btn-limpar-filtro:hover { background: var(--gray-50); }
+
+        .btn-voltar {
+            padding: 0.4rem 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: 40px;
+            background: var(--preto);
+            color: var(--branco);
+            cursor: pointer;
+            transition: 0.2s;
+            font-size: 0.7rem;
+            font-family: inherit;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+        .btn-voltar:hover { background: #2A3A2A; }
+
+        .tabela-wrapper {
+            overflow-x: auto;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .tabela-items {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.75rem;
+        }
+        .tabela-items thead { background: var(--gray-100); position: sticky; top: 0; z-index: 10; }
+        .tabela-items th {
+            padding: 0.4rem 0.6rem;
+            text-align: left;
+            font-weight: 600;
+            font-size: 0.6rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-secondary);
+            border-bottom: 2px solid var(--border-color);
+        }
+        .tabela-items td {
+            padding: 0.3rem 0.6rem;
+            border-bottom: 1px solid var(--border-color);
+            vertical-align: middle;
+        }
+        .tabela-items tr:last-child td { border-bottom: none; }
+        .tabela-items tr:hover { background: var(--gray-50); }
+
+        .tabela-items .status-badge {
+            display: inline-block;
+            padding: 0.1rem 0.5rem;
+            border-radius: 40px;
+            font-size: 0.55rem;
+            font-weight: 600;
+        }
+        .status-badge.recebido { background: #C8E6C9; color: #1B5E20; }
+        .status-badge.pendente { background: #FFF3E0; color: #E65100; }
+
+        .tabela-items .acoes { display: flex; gap: 0.2rem; }
+        .tabela-items .acoes button {
+            border: none;
+            background: transparent;
+            padding: 0.15rem 0.3rem;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: 0.2s;
+            font-size: 0.75rem;
+        }
+        .tabela-items .acoes .btn-editar { color: var(--verde-oliva); }
+        .tabela-items .acoes .btn-editar:hover { background: var(--gray-200); }
+        .tabela-items .acoes .btn-excluir { color: var(--danger); }
+        .tabela-items .acoes .btn-excluir:hover { background: #fee; }
+
+        .totalizador {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.6rem 0;
+            border-top: 2px solid var(--border-color);
+            margin-top: 0.8rem;
+            flex-wrap: wrap;
+            gap: 0.3rem;
+        }
+        .totalizador span { font-size: 0.75rem; color: var(--text-secondary); }
+        .totalizador strong { color: var(--text-primary); }
+
+        .protocolos-salvos {
+            margin-top: 1.5rem;
+            border-top: 2px solid var(--border-color);
+            padding-top: 1.2rem;
+        }
+        .protocolos-salvos .titulo {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .protocolos-salvos .titulo i { color: var(--verde-claro); }
+
+        .protocolo-item {
+            background: var(--gray-50);
+            padding: 0.6rem 1rem;
+            border-radius: 8px;
+            margin-bottom: 0.6rem;
+            border: 1px solid var(--border-color);
+            transition: 0.15s;
+        }
+        .protocolo-item:hover { border-color: var(--verde-oliva); box-shadow: var(--shadow); }
+        .protocolo-item .head {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 0.3rem 0.8rem;
+            margin-bottom: 0.15rem;
+        }
+        .protocolo-item .head strong { color: var(--text-primary); font-size: 0.8rem; }
+        .protocolo-item .head small { color: var(--text-secondary); font-size: 0.65rem; }
+        .protocolo-item .detalhes { color: var(--text-secondary); font-size: 0.7rem; margin-bottom: 0.2rem; }
+        .protocolo-item .detalhes .item-lista {
+            display: inline-block;
+            background: var(--gray-200);
+            padding: 0.1rem 0.5rem;
+            border-radius: 12px;
+            margin: 2px 4px 2px 0;
+            font-size: 0.6rem;
+        }
+        .protocolo-item .acoes { display: flex; gap: 0.3rem; margin-top: 0.2rem; }
+        .protocolo-item .acoes .btn { padding: 0.1rem 0.6rem; font-size: 0.6rem; }
+        .protocolo-item .meta { color: var(--gray-400); font-size: 0.6rem; margin-top: 0.1rem; }
+
+        .lista-vazia { text-align: center; color: var(--text-secondary); padding: 1.5rem 1rem; }
+        .lista-vazia i { font-size: 1.5rem; display: block; margin-bottom: 0.3rem; color: var(--gray-300); }
+
+        .btn-exportar { background: #2C3E50; color: white; }
+        .btn-exportar:hover { background: #1A252F; transform: translateY(-2px); }
+        .btn {
+            border: none;
+            padding: 0.3rem 1rem;
+            border-radius: 40px;
+            font-weight: 500;
+            font-size: 0.65rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: inherit;
+            border: 1px solid transparent;
+            text-decoration: none;
+        }
+        .btn i { font-size: 0.65rem; }
+        .btn-outline { background: transparent; border-color: var(--gray-300); color: var(--text-secondary); }
+        .btn-outline:hover { background: var(--gray-50); }
+        .btn-secondary { background: var(--gray-200); color: var(--preto); }
+        .btn-secondary:hover { background: var(--gray-300); }
+        .btn-print { background: #2C3E50; color: white; }
+        .btn-print:hover { background: #1A252F; transform: translateY(-2px); }
+
+        #feedback {
+            margin-top: 0.5rem;
+            text-align: right;
+            min-height: 1.5rem;
+            font-size: 0.65rem;
+        }
+
+        #toastGlobal {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 500;
+            font-size: 13px;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: 0.4s;
+            z-index: 9999;
+            max-width: 400px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            cursor: default;
+        }
+        #toastGlobal.show { transform: translateY(0); opacity: 1; }
+
+        .campo-recebido-por {
+            display: flex;
+            gap: 0.5rem;
+            align-items: flex-end;
+        }
+        .campo-recebido-por .campo {
+            flex: 1;
+        }
+        .btn-data-hora-agora {
+            background: var(--verde-claro);
+            color: var(--preto);
+            border: none;
+            border-radius: 40px;
+            padding: 0.2rem 0.8rem;
+            font-size: 0.55rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+            font-family: inherit;
+            white-space: nowrap;
+            height: fit-content;
+            margin-bottom: 0.1rem;
+        }
+        .btn-data-hora-agora:hover {
+            background: var(--verde-oliva);
+            color: white;
+        }
+
+        @media (max-width: 768px) {
+            .app-topbar { flex-direction: column; align-items: stretch; }
+            .clock-display { justify-content: center; font-size: 0.7rem; }
+            .nav-menu { justify-content: center; }
+            .nav-menu .nav-item { font-size: 0.55rem; padding: 0.2rem 0.5rem; }
+            .card-body { padding: 1rem; }
+            .form-grid { padding: 0.8rem; }
+            .busca-bar { flex-direction: column; }
+            .busca-bar input { width: 100%; }
+            .itens-nota { font-size: 0.7rem; }
+            .campo-recebido-por { flex-direction: column; gap: 0.3rem; }
+        }
+        @media (max-width: 480px) { .form-grid { grid-template-columns: 1fr; } }
+
+        @media print {
+            .app-topbar, .botoes, .nav-menu, #feedback, .protocolos-salvos, .busca-bar, .form-grid { display: none !important; }
+            .card-recebimento { box-shadow: none; border: 1px solid #ddd; }
+            .card-header { background: #C1CE83 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .tabela-wrapper { max-height: none; overflow: visible; }
+            .tabela-items thead { position: static; }
+            .totalizador { border-top: 1px solid #ddd; }
+        }
+    </style>
+</head>
+<body>
+<div class="app-container">
+    <div class="app-topbar">
+        <a href="index.html" class="logo-area">
+            <div class="logo-icon">T <small>LIFE</small></div>
+            <div class="logo-text">
+                <div class="title"><span class="tagua">Taguá</span><span class="life">Life</span></div>
+                <div class="slogan">Life Conceito em Gestão Condominial</div>
+            </div>
+        </a>
+        <div class="clock-display">
+            <i class="fas fa-clock"></i>
+            <span id="clockHours">00</span><span class="clock-separator">:</span>
+            <span id="clockMinutes">00</span><span class="clock-separator">:</span>
+            <span id="clockSeconds" class="clock-seconds">00</span>
+            <span class="clock-date" id="clockDate">00/00/0000</span>
+        </div>
+        <span class="badge"><i class="fas fa-dolly"></i> Recebimento</span>
+    </div>
+
+    <!-- MENU CORRIGIDO - SEM active FIXO -->
+        <div class="nav-menu">
+            <a class="nav-item" href="index.html"><i class="fas fa-home"></i> Dashboard</a>
+            <a class="nav-item" href="estoque.html"><i class="fas fa-boxes"></i> Estoque</a>
+            <a class="nav-item" href="saida.html"><i class="fas fa-arrow-right"></i> Saída</a>
+            <a class="nav-item" href="mapacota.html"><i class="fas fa-file-invoice"></i> Cotação</a>
+            <a class="nav-item" href="cotacoes_aprovadas.html"><i class="fas fa-check-circle"></i> Aprovadas</a>
+            <a class="nav-item" href="orcamento.html"><i class="fas fa-file-pdf"></i> Orçamento</a>
+            <a class="nav-item" href="fornecedor.html"><i class="fas fa-handshake"></i> Fornecedores</a>
+            <a class="nav-item" href="recebido.html"><i class="fas fa-clipboard-check"></i> Recebido</a>
+            <a class="nav-item" href="backup_automatico.html"><i class="fas fa-database"></i> Backup</a>
+            <button class="nav-item btn-theme" onclick="toggleTheme()" style="margin-left:auto;">
+                <i class="fas fa-moon" id="themeIcon"></i> <span id="themeLabel">Tema</span>
+            </button>
+            <button class="nav-item" onclick="logout()" style="background:#8B3A3A; color:white; border-color:#8B3A3A;">
+                <i class="fas fa-sign-out-alt"></i> Sair
+            </button>
+        </div>
+
+    <div class="card-recebimento">
+        <div class="card-header">
+            <div class="left">
+                <i class="fas fa-dolly"></i>
+                <h2>Recebimento de Mercadorias</h2>
+                <span>• Registro de Entrada</span>
+            </div>
+            <div class="right">
+                <span><i class="far fa-calendar-alt"></i> <span id="dataAtual"></span></span>
+                <span><i class="far fa-clock"></i> <span id="horaAtual"></span></span>
+            </div>
+        </div>
+
+        <div class="card-body">
+            <div class="form-grid">
+                <!-- FORNECEDOR -->
+                <div class="campo campo-fornecedor-manual" style="grid-column: span 2;">
+                    <label><i class="fas fa-truck"></i> FORNECEDOR</label>
+                    <div class="input-group">
+                        <select id="fornecedorSelect" style="display:block;">
+                            <option value="">Selecione um fornecedor...</option>
+                        </select>
+                        <input type="text" id="fornecedorManual" placeholder="Digite o nome..." style="display:none;" />
+                        <button class="btn-toggle-fornecedor" id="btnToggleFornecedor">
+                            <i class="fas fa-pen"></i> Manual
+                        </button>
+                    </div>
+                </div>
+
+                <div class="campo">
+                    <label><i class="fas fa-hashtag"></i> Nº NOTA</label>
+                    <input type="text" id="notaFiscal" placeholder="Ex: 12345" />
+                </div>
+
+                <div class="campo">
+                    <label><i class="fas fa-check-circle"></i> STATUS</label>
+                    <select id="statusRecebimento">
+                        <option value="Recebido">✅ Recebido</option>
+                        <option value="Pendente">⏳ Pendente</option>
+                    </select>
+                </div>
+
+                <!-- NOVO CAMPO: RECEBIDO POR -->
+                <div class="campo" style="grid-column: span 1;">
+                    <label><i class="fas fa-user-check"></i> RECEBIDO POR</label>
+                    <input type="text" id="recebidoPor" placeholder="Nome de quem recebeu" />
+                </div>
+
+                <!-- DATA E HORA DE RECEBIMENTO -->
+                <div class="campo" style="grid-column: span 1;">
+                    <label><i class="fas fa-calendar-day"></i> DATA DO RECEBIMENTO</label>
+                    <input type="date" id="dataRecebimento" />
+                </div>
+
+                <div class="campo" style="grid-column: span 1;">
+                    <label><i class="fas fa-clock"></i> HORA DO RECEBIMENTO</label>
+                    <input type="time" id="horaRecebimento" step="1" />
+                    <button class="btn-data-hora-agora" onclick="preencherDataHoraAgora()" style="margin-top:0.2rem;">
+                        <i class="fas fa-clock"></i> Agora
+                    </button>
+                </div>
+
+                <div class="campo" style="grid-column: span 3;">
+                    <label><i class="fas fa-comment"></i> OBSERVAÇÃO GERAL</label>
+                    <textarea id="obsRecebimento" placeholder="Observações sobre a nota ou recebimento..." rows="1"></textarea>
+                </div>
+            </div>
+
+            <!-- ITENS DA NOTA -->
+            <div style="margin-bottom: 0.5rem;">
+                <label style="font-weight: 600; font-size: 0.7rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.4px;">
+                    <i class="fas fa-list"></i> ITENS DA NOTA
+                </label>
+            </div>
+            <div class="itens-nota">
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width:30px;">#</th>
+                            <th>Item</th>
+                            <th style="width:80px;">Qtd</th>
+                            <th style="width:30px;"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="itensNotaBody">
+                        <tr>
+                            <td style="text-align:center;">1</td>
+                            <td><input type="text" class="item-desc" placeholder="Ex: Caneta azul" /></td>
+                            <td><input type="number" class="item-qtd" value="1" min="1" style="text-align:center;" /></td>
+                            <td style="text-align:center;"><span class="remove-item" onclick="removerLinhaItem(this)"><i class="fas fa-times-circle"></i></span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <button class="btn-add-item" onclick="adicionarLinhaItem()"><i class="fas fa-plus"></i> Adicionar item</button>
+
+            <div style="margin: 0.8rem 0 1rem; text-align:right;">
+                <button class="btn btn-primary" id="btnSalvarRecebimento"><i class="fas fa-save"></i> Registrar Nota</button>
+            </div>
+
+            <div class="busca-bar">
+                <input type="text" id="buscaInput" placeholder="🔍 Buscar por fornecedor, nota, item..." />
+                <select id="filtroStatus">
+                    <option value="">Todos os status</option>
+                    <option value="Recebido">✅ Recebido</option>
+                    <option value="Pendente">⏳ Pendente</option>
+                </select>
+                <button class="btn-limpar-filtro" id="btnLimparFiltro"><i class="fas fa-times"></i> Limpar</button>
+                <button class="btn btn-secondary" id="btnVerSalvosRecebimentos"><i class="fas fa-folder-open"></i> Ver salvos</button>
+                <button class="btn btn-exportar" onclick="exportarRecebimentosCSV()"><i class="fas fa-file-excel"></i> Exportar</button>
+                <button class="btn btn-print" onclick="window.print()"><i class="fas fa-print"></i> Imprimir</button>
+                <a href="index.html" class="btn-voltar"><i class="fas fa-arrow-left"></i> Voltar</a>
+            </div>
+
+            <div class="tabela-wrapper">
+                <table class="tabela-items" id="tabelaRecebimentos">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Fornecedor</th>
+                            <th>Nota Fiscal</th>
+                            <th>Itens</th>
+                            <th>Status</th>
+                            <th>Recebido por</th>
+                            <th>Data/Hora</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="corpoTabela">
+                        <tr>
+                            <td colspan="8" style="text-align:center; padding:2rem; color:var(--gray-400);">
+                                <i class="fas fa-inbox" style="font-size:1.5rem; display:block; margin-bottom:0.3rem;"></i>
+                                Nenhum recebimento registrado.
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="totalizador">
+                <span>Total de recebimentos: <strong id="totalRecebimentos">0</strong></span>
+                <span>✅ Recebidos: <strong id="totalRecebidos">0</strong></span>
+                <span>⏳ Pendentes: <strong id="totalPendentes">0</strong></span>
+            </div>
+
+            <div id="feedback"></div>
+        </div>
+    </div>
+
+    <!-- LISTA DE RECEBIMENTOS SALVOS -->
+    <div id="listaRecebimentos" class="protocolos-salvos" style="display: none;">
+        <div class="titulo"><i class="fas fa-archive"></i> Recebimentos Registrados</div>
+        <div id="conteudoListaRecebimentos"></div>
+    </div>
+</div>
+
+<!-- TOAST -->
+<div id="toastGlobal"></div>
+
+<script>
+    // ============================================
+    // TOAST
+    // ============================================
+    function mostrarToast(mensagem, tipo = 'success') {
+        const toast = document.getElementById('toastGlobal');
+        const cores = { info: '#3498DB', success: '#7A816E', warning: '#C1A83C', danger: '#8B3A3A' };
+        toast.textContent = mensagem;
+        toast.style.background = cores[tipo] || '#191D1B';
+        toast.style.color = 'white';
+        toast.classList.add('show');
+        clearTimeout(toast._timeout);
+        toast._timeout = setTimeout(() => toast.classList.remove('show'), 4000);
+    }
+
+    // ============================================
+    // LOGOUT
+    // ============================================
+    function logout() {
+        if (confirm('Deseja realmente sair do sistema?')) {
+            localStorage.removeItem('tagualife_sessao');
+            window.location.href = 'login.html';
+        }
+    }
+
+    // ============================================
+    // TEMA
+    // ============================================
+    function toggleTheme() {
+        const body = document.body;
+        body.classList.toggle('dark-mode');
+        const isDark = body.classList.contains('dark-mode');
+        localStorage.setItem('tema_TaguáLife', isDark ? 'dark' : 'light');
+        const icon = document.getElementById('themeIcon');
+        const label = document.getElementById('themeLabel');
+        if (isDark) { icon.className = 'fas fa-sun'; label.textContent = 'Claro'; } 
+        else { icon.className = 'fas fa-moon'; label.textContent = 'Tema'; }
+    }
+
+    function carregarTema() {
+        const theme = localStorage.getItem('tema_TaguáLife');
+        if (theme === 'dark') {
+            document.body.classList.add('dark-mode');
+            document.getElementById('themeIcon').className = 'fas fa-sun';
+            document.getElementById('themeLabel').textContent = 'Claro';
+        }
+    }
+
+    // ============================================
+    // RELÓGIO
+    // ============================================
+    function getHorarioBrasilia() {
+        const agora = new Date();
+        const data = agora.toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' });
+        const hora = agora.toLocaleTimeString('pt-BR', { timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit' });
+        const horaCompleta = agora.toLocaleTimeString('pt-BR', { timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        return { data, hora, horaCompleta };
+    }
+
+    function atualizarRelogio() {
+        const horario = getHorarioBrasilia();
+        document.getElementById('clockHours').textContent = horario.hora.split(':')[0] || '00';
+        document.getElementById('clockMinutes').textContent = horario.hora.split(':')[1] || '00';
+        document.getElementById('clockSeconds').textContent = horario.horaCompleta.split(':')[2] || '00';
+        document.getElementById('clockDate').textContent = horario.data;
+        document.getElementById('dataAtual').textContent = horario.data;
+        document.getElementById('horaAtual').textContent = horario.hora;
+    }
+
+    // ============================================
+    // PREENCHER DATA E HORA ATUAL
+    // ============================================
+    function preencherDataHoraAgora() {
+        const agora = new Date();
+        const data = agora.toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' }).split('/');
+        const dataFormatada = `${data[2]}-${data[1].padStart(2,'0')}-${data[0].padStart(2,'0')}`;
+        const hora = agora.toLocaleTimeString('pt-BR', { timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        
+        document.getElementById('dataRecebimento').value = dataFormatada;
+        document.getElementById('horaRecebimento').value = hora;
+        mostrarToast('⏰ Data e hora atualizadas!', 'info');
+    }
+
+    // ============================================
+    // FEEDBACK
+    // ============================================
+    function mostrarMensagem(texto, cor = '#191D1B') {
+        const feedback = document.getElementById('feedback');
+        feedback.innerHTML = `<span style="background:${cor}; color:white; padding:0.2rem 1.2rem; border-radius:40px; display:inline-block; font-size:0.65rem;">${texto}</span>`;
+        setTimeout(() => { feedback.innerHTML = ''; }, 4000);
+    }
+
+    // ============================================
+    // VARIÁVEIS
+    // ============================================
+    let editandoId = null;
+    let modoFornecedorManual = false;
+
+    // ============================================
+    // CARREGAR FORNECEDORES
+    // ============================================
+    function carregarFornecedoresSelect() {
+        const fornecedores = JSON.parse(localStorage.getItem('fornecedoresTaguaLife') || '[]');
+        const select = document.getElementById('fornecedorSelect');
+        select.innerHTML = '<option value="">Selecione um fornecedor...</option>';
+        fornecedores.forEach(f => {
+            select.innerHTML += `<option value="${f.empresa}">${f.empresa}</option>`;
+        });
+        select.innerHTML += `<option value="__manual__">✏️ Digitar manualmente...</option>`;
+    }
+
+    // ============================================
+    // TOGGLE FORNECEDOR MANUAL
+    // ============================================
+    function toggleFornecedorInput() {
+        modoFornecedorManual = !modoFornecedorManual;
+        const select = document.getElementById('fornecedorSelect');
+        const input = document.getElementById('fornecedorManual');
+        const btn = document.getElementById('btnToggleFornecedor');
+        
+        if (modoFornecedorManual) {
+            select.style.display = 'none';
+            input.style.display = 'block';
+            input.focus();
+            btn.classList.add('manual');
+            btn.innerHTML = '<i class="fas fa-list"></i> Lista';
+        } else {
+            select.style.display = 'block';
+            input.style.display = 'none';
+            btn.classList.remove('manual');
+            btn.innerHTML = '<i class="fas fa-pen"></i> Manual';
+        }
+    }
+
+    // ============================================
+    // OBTER FORNECEDOR
+    // ============================================
+    function getFornecedor() {
+        if (modoFornecedorManual) {
+            return document.getElementById('fornecedorManual').value.trim();
+        } else {
+            const select = document.getElementById('fornecedorSelect');
+            if (select.value === '__manual__') {
+                toggleFornecedorInput();
+                return document.getElementById('fornecedorManual').value.trim();
+            }
+            return select.value;
+        }
+    }
+
+    // ============================================
+    // ITENS DA NOTA - ADICIONAR / REMOVER
+    // ============================================
+    function adicionarLinhaItem() {
+        const tbody = document.getElementById('itensNotaBody');
+        const rows = tbody.querySelectorAll('tr');
+        const num = rows.length + 1;
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td style="text-align:center;">${num}</td>
+            <td><input type="text" class="item-desc" placeholder="Ex: Caneta azul" /></td>
+            <td><input type="number" class="item-qtd" value="1" min="1" style="text-align:center;" /></td>
+            <td style="text-align:center;"><span class="remove-item" onclick="removerLinhaItem(this)"><i class="fas fa-times-circle"></i></span></td>
+        `;
+        tbody.appendChild(tr);
+        mostrarToast('📋 Item adicionado!', 'info');
+    }
+
+    function removerLinhaItem(element) {
+        const tbody = document.getElementById('itensNotaBody');
+        if (tbody.querySelectorAll('tr').length <= 1) {
+            mostrarToast('⚠️ Mantenha pelo menos um item!', 'warning');
+            return;
+        }
+        element.closest('tr').remove();
+        renumeraItens();
+        mostrarToast('🗑️ Item removido!', 'info');
+    }
+
+    function renumeraItens() {
+        const rows = document.querySelectorAll('#itensNotaBody tr');
+        rows.forEach((row, index) => {
+            row.querySelector('td:first-child').textContent = index + 1;
+        });
+    }
+
+    // ============================================
+    // COLETAR ITENS DA NOTA
+    // ============================================
+    function coletarItensNota() {
+        const rows = document.querySelectorAll('#itensNotaBody tr');
+        const itens = [];
+        rows.forEach(row => {
+            const desc = row.querySelector('.item-desc')?.value?.trim() || '';
+            const qtd = parseInt(row.querySelector('.item-qtd')?.value) || 0;
+            if (desc && qtd > 0) {
+                itens.push({ descricao: desc, quantidade: qtd });
+            }
+        });
+        return itens;
+    }
+
+    // ============================================
+    // PREENCHER ITENS NA TABELA DE EDIÇÃO
+    // ============================================
+    function preencherItensNota(itens) {
+        const tbody = document.getElementById('itensNotaBody');
+        tbody.innerHTML = '';
+        if (!itens || itens.length === 0) {
+            adicionarLinhaItem();
+            return;
+        }
+        itens.forEach((item, index) => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td style="text-align:center;">${index + 1}</td>
+                <td><input type="text" class="item-desc" value="${item.descricao || ''}" placeholder="Ex: Caneta azul" /></td>
+                <td><input type="number" class="item-qtd" value="${item.quantidade || 1}" min="1" style="text-align:center;" /></td>
+                <td style="text-align:center;">${itens.length > 1 ? `<span class="remove-item" onclick="removerLinhaItem(this)"><i class="fas fa-times-circle"></i></span>` : '<span style="color:var(--gray-300);"><i class="fas fa-circle"></i></span>'}</td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    // ============================================
+    // RENDERIZAR TABELA PRINCIPAL
+    // ============================================
+    function renderizarTabela() {
+        const recebimentos = JSON.parse(localStorage.getItem('recebimentosTaguaLife') || '[]');
+        const busca = document.getElementById('buscaInput').value.toLowerCase().trim();
+        const filtroStatus = document.getElementById('filtroStatus').value;
+
+        let filtrados = recebimentos.filter(item => {
+            const matchBusca = (item.fornecedor || '').toLowerCase().includes(busca) ||
+                              (item.notaFiscal || '').toLowerCase().includes(busca) ||
+                              (item.recebidoPor || '').toLowerCase().includes(busca) ||
+                              (item.itens && item.itens.some(i => i.descricao.toLowerCase().includes(busca)));
+            const matchStatus = filtroStatus === '' || item.status === filtroStatus;
+            return matchBusca && matchStatus;
+        });
+
+        filtrados.sort((a, b) => b.id - a.id);
+
+        const corpo = document.getElementById('corpoTabela');
+
+        if (filtrados.length === 0) {
+            corpo.innerHTML = `<tr><td colspan="8" style="text-align:center; padding:2rem; color:var(--gray-400);">
+                <i class="fas fa-inbox" style="font-size:1.5rem; display:block; margin-bottom:0.3rem;"></i>Nenhum registro encontrado.</td></tr>`;
+        } else {
+            let html = '';
+            filtrados.forEach((item, index) => {
+                const statusClass = item.status === 'Recebido' ? 'recebido' : 'pendente';
+                const itensResumo = item.itens ? item.itens.map(i => `${i.descricao} (${i.quantidade})`).join(', ') : '-';
+                const dataHora = item.dataRecebimento ? `${item.dataRecebimento} ${item.horaRecebimento || ''}` : (item.data || '-');
+                html += `<tr>
+                    <td>${index + 1}</td>
+                    <td><strong>${item.fornecedor || '-'}</strong></td>
+                    <td>${item.notaFiscal || '-'}</td>
+                    <td style="font-size:0.65rem;">${itensResumo}</td>
+                    <td><span class="status-badge ${statusClass}">${item.status}</span></td>
+                    <td>${item.recebidoPor || '-'}</td>
+                    <td style="font-size:0.65rem;">${dataHora}</td>
+                    <td>
+                        <div class="acoes">
+                            <button class="btn-editar" onclick="editarRecebimento(${item.id})" title="Editar"><i class="fas fa-edit"></i></button>
+                            <button class="btn-excluir" onclick="excluirRecebimentoLista(${item.id})" title="Excluir"><i class="fas fa-trash-alt"></i></button>
+                        </div>
+                    </td>
+                </tr>`;
+            });
+            corpo.innerHTML = html;
+        }
+
+        // Atualizar totais
+        const total = recebimentos.length;
+        const recebidos = recebimentos.filter(i => i.status === 'Recebido').length;
+        const pendentes = recebimentos.filter(i => i.status === 'Pendente').length;
+        document.getElementById('totalRecebimentos').textContent = total;
+        document.getElementById('totalRecebidos').textContent = recebidos;
+        document.getElementById('totalPendentes').textContent = pendentes;
+    }
+
+    // ============================================
+    // LIMPAR FORMULÁRIO
+    // ============================================
+    function limparFormulario() {
+        if (modoFornecedorManual) {
+            document.getElementById('fornecedorManual').value = '';
+        } else {
+            document.getElementById('fornecedorSelect').value = '';
+        }
+        document.getElementById('notaFiscal').value = '';
+        document.getElementById('obsRecebimento').value = '';
+        document.getElementById('statusRecebimento').value = 'Recebido';
+        document.getElementById('recebidoPor').value = '';
+        document.getElementById('dataRecebimento').value = '';
+        document.getElementById('horaRecebimento').value = '';
+        editandoId = null;
+        document.getElementById('btnSalvarRecebimento').innerHTML = '<i class="fas fa-save"></i> Registrar Nota';
+        // Resetar itens para uma linha vazia
+        const tbody = document.getElementById('itensNotaBody');
+        tbody.innerHTML = '';
+        adicionarLinhaItem();
+    }
+
+    // ============================================
+    // SALVAR RECEBIMENTO
+    // ============================================
+    function salvarRecebimento() {
+        const fornecedor = getFornecedor();
+        const notaFiscal = document.getElementById('notaFiscal').value.trim();
+        const status = document.getElementById('statusRecebimento').value;
+        const obs = document.getElementById('obsRecebimento').value.trim();
+        const recebidoPor = document.getElementById('recebidoPor').value.trim();
+        const dataRecebimento = document.getElementById('dataRecebimento').value;
+        const horaRecebimento = document.getElementById('horaRecebimento').value;
+        const itens = coletarItensNota();
+
+        if (!fornecedor) {
+            mostrarMensagem('⚠️ Informe o nome do fornecedor!', '#8B3A3A');
+            return;
+        }
+        if (!notaFiscal) {
+            mostrarMensagem('⚠️ Informe o número da nota fiscal!', '#8B3A3A');
+            document.getElementById('notaFiscal').focus();
+            return;
+        }
+        if (!recebidoPor) {
+            mostrarMensagem('⚠️ Informe quem recebeu a mercadoria!', '#8B3A3A');
+            document.getElementById('recebidoPor').focus();
+            return;
+        }
+        if (!dataRecebimento) {
+            mostrarMensagem('⚠️ Informe a data do recebimento!', '#8B3A3A');
+            document.getElementById('dataRecebimento').focus();
+            return;
+        }
+        if (!horaRecebimento) {
+            mostrarMensagem('⚠️ Informe a hora do recebimento!', '#8B3A3A');
+            document.getElementById('horaRecebimento').focus();
+            return;
+        }
+        if (itens.length === 0) {
+            mostrarMensagem('⚠️ Adicione pelo menos um item com descrição e quantidade!', '#8B3A3A');
+            return;
+        }
+
+        let recebimentos = JSON.parse(localStorage.getItem('recebimentosTaguaLife') || '[]');
+
+        // Verificar duplicidade de nota para o mesmo fornecedor
+        if (!editandoId) {
+            const duplicado = recebimentos.find(r => r.fornecedor === fornecedor && r.notaFiscal === notaFiscal);
+            if (duplicado) {
+                mostrarMensagem('⚠️ Esta nota já foi registrada para este fornecedor!', '#8B3A3A');
+                return;
+            }
+        }
+
+        if (editandoId) {
+            const index = recebimentos.findIndex(r => r.id === editandoId);
+            if (index !== -1) {
+                recebimentos[index] = {
+                    ...recebimentos[index],
+                    fornecedor,
+                    notaFiscal,
+                    itens,
+                    obs,
+                    status,
+                    recebidoPor,
+                    dataRecebimento,
+                    horaRecebimento,
+                    dataEdicao: new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })
+                };
+                mostrarMensagem('✅ Recebimento atualizado!', '#7A816E');
+                mostrarToast('✅ Recebimento atualizado!', 'success');
+            }
+            editandoId = null;
+            document.getElementById('btnSalvarRecebimento').innerHTML = '<i class="fas fa-save"></i> Registrar Nota';
+        } else {
+            const dataHoraCompleta = `${dataRecebimento} ${horaRecebimento}`;
+            const novoRecebimento = {
+                id: Date.now(),
+                fornecedor,
+                notaFiscal,
+                itens,
+                obs,
+                status,
+                recebidoPor,
+                dataRecebimento,
+                horaRecebimento,
+                data: dataHoraCompleta,
+                dataRegistro: new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })
+            };
+            recebimentos.push(novoRecebimento);
+            mostrarMensagem('✅ Recebimento registrado com ' + itens.length + ' item(ns)!', '#7A816E');
+            mostrarToast('✅ Recebimento registrado com ' + itens.length + ' itens!', 'success');
+        }
+
+        localStorage.setItem('recebimentosTaguaLife', JSON.stringify(recebimentos));
+        renderizarTabela();
+        limparFormulario();
+
+        if (document.getElementById('listaRecebimentos') && document.getElementById('listaRecebimentos').style.display !== 'none') {
+            exibirListaRecebimentos();
+        }
+    }
+
+    // ============================================
+    // EXIBIR LISTA DE RECEBIMENTOS
+    // ============================================
+    function exibirListaRecebimentos() {
+        const recebimentos = JSON.parse(localStorage.getItem('recebimentosTaguaLife') || '[]');
+        const container = document.getElementById('conteudoListaRecebimentos');
+
+        if (!container) return;
+
+        if (recebimentos.length === 0) {
+            container.innerHTML = `
+                <div class="lista-vazia">
+                    <i class="fas fa-inbox"></i> 
+                    Nenhum recebimento registrado ainda.
+                </div>
+            `;
+        } else {
+            let html = '';
+            recebimentos.slice().reverse().forEach(r => {
+                const itensStr = r.itens ? r.itens.map(i => 
+                    `<span class="item-lista">${i.descricao} (${i.quantidade})</span>`
+                ).join(' ') : 'Sem itens';
+                const dataHora = r.dataRecebimento ? `${r.dataRecebimento} ${r.horaRecebimento || ''}` : (r.data || '-');
+                html += `
+                    <div class="protocolo-item">
+                        <div class="head">
+                            <strong>📄 Nota: ${r.notaFiscal || 'Sem nota'}</strong>
+                            <small>🏢 ${r.fornecedor || 'Sem fornecedor'}</small>
+                            <span style="background:${r.status === 'Recebido' ? '#C8E6C9' : '#FFF3E0'}; padding:0.1rem 0.6rem; border-radius:40px; font-size:0.6rem; font-weight:500; color:${r.status === 'Recebido' ? '#1B5E20' : '#E65100'};">
+                                ${r.status}
+                            </span>
+                            <span style="font-size:0.6rem; font-weight:600;">${r.itens ? r.itens.reduce((acc, i) => acc + i.quantidade, 0) : 0} itens</span>
+                        </div>
+                        <div style="font-size:0.7rem; color:var(--text-secondary);">
+                            <i class="fas fa-user-check"></i> Recebido por: <strong>${r.recebidoPor || '-'}</strong> 
+                            <i class="fas fa-clock" style="margin-left:0.5rem;"></i> ${dataHora}
+                        </div>
+                        <div class="detalhes">${itensStr}</div>
+                        ${r.obs ? `<div class="detalhes" style="color:var(--gray-400); font-size:0.65rem;">📝 ${r.obs}</div>` : ''}
+                        <div class="acoes">
+                            <button class="btn btn-outline" onclick="editarRecebimento(${r.id})">
+                                <i class="fas fa-edit"></i> Editar
+                            </button>
+                            <button class="btn btn-outline" onclick="excluirRecebimentoLista(${r.id})" style="color:var(--danger);">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                            <button class="btn btn-outline" onclick="imprimirRecebimento(${r.id})" style="color:#2C3E50;">
+                                <i class="fas fa-print"></i>
+                            </button>
+                        </div>
+                        <div class="meta">💾 Registrado em: ${r.dataRegistro || r.data || 'data desconhecida'}</div>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        const listaEl = document.getElementById('listaRecebimentos');
+        if (listaEl) {
+            listaEl.style.display = 'block';
+        }
+    }
+
+    // ============================================
+    // IMPRIMIR RECEBIMENTO ESPECÍFICO
+    // ============================================
+    window.imprimirRecebimento = function(id) {
+        const recebimentos = JSON.parse(localStorage.getItem('recebimentosTaguaLife') || '[]');
+        const r = recebimentos.find(item => item.id === id);
+        if (!r) {
+            mostrarMensagem('❌ Registro não encontrado!', '#8B3A3A');
+            return;
+        }
+
+        let itensHtml = '';
+        if (r.itens && r.itens.length > 0) {
+            itensHtml = r.itens.map((i, idx) => 
+                `<tr><td>${idx + 1}</td><td>${i.descricao}</td><td style="text-align:center;">${i.quantidade}</td></tr>`
+            ).join('');
+        } else {
+            itensHtml = '<tr><td colspan="3" style="text-align:center;">Nenhum item</td></tr>';
+        }
+
+        const totalQtd = r.itens ? r.itens.reduce((acc, i) => acc + i.quantidade, 0) : 0;
+        const dataHora = r.dataRecebimento ? `${r.dataRecebimento} ${r.horaRecebimento || ''}` : (r.data || '-');
+
+        const printContent = `
+            <div style="font-family: Arial, sans-serif; max-width: 700px; margin: 20px auto; padding: 20px; border: 1px solid #ddd; border-radius: 8px;">
+                <div style="text-align: center; border-bottom: 3px solid #C1CE83; padding-bottom: 10px; margin-bottom: 15px;">
+                    <h1 style="color: #191D1B; margin: 0;">TaguáLife Center</h1>
+                    <p style="color: #7A816E; margin: 2px 0;">Life Conceito em Gestão Condominial</p>
+                    <h2 style="color: #191D1B; margin: 5px 0;">Comprovante de Recebimento</h2>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 15px; padding: 10px; background: #f8f9fa; border-radius: 6px;">
+                    <div><strong>Data:</strong> ${dataHora}</div>
+                    <div><strong>Status:</strong> ${r.status || 'N/A'}</div>
+                    <div><strong>Nota:</strong> ${r.notaFiscal || 'N/A'}</div>
+                </div>
+                <div style="margin-bottom: 10px;">
+                    <strong>Fornecedor:</strong> ${r.fornecedor || '-'}
+                </div>
+                <div style="margin-bottom: 15px; padding: 8px; background: #e8f4f8; border-radius: 4px;">
+                    <strong><i class="fas fa-user-check"></i> Recebido por:</strong> ${r.recebidoPor || '-'}
+                </div>
+                <table style="width: 100%; border-collapse: collapse; margin-bottom: 15px; font-size: 13px;">
+                    <thead>
+                        <tr style="background: #C1CE83; color: #191D1B;">
+                            <th style="padding: 6px 8px; text-align:left;">#</th>
+                            <th style="padding: 6px 8px; text-align:left;">Item</th>
+                            <th style="padding: 6px 8px; text-align:center;">Quantidade</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${itensHtml}
+                        <tr style="font-weight:bold; border-top:2px solid #191D1B;">
+                            <td colspan="2" style="padding: 6px 8px; text-align:right;">TOTAL</td>
+                            <td style="padding: 6px 8px; text-align:center;">${totalQtd}</td>
+                        </tr>
+                    </tbody>
+                </table>
+                ${r.obs ? `<div style="margin-bottom: 10px; padding: 8px; background: #f8f9fa; border-radius: 4px;"><strong>Observação:</strong> ${r.obs}</div>` : ''}
+                <div style="text-align: center; margin-top: 20px; padding-top: 15px; border-top: 2px solid #C1CE83; color: #999; font-size: 10px;">
+                    Documento gerado pelo Sistema TaguáLife • ${new Date().toLocaleString('pt-BR')}
+                </div>
+            </div>
+        `;
+
+        const win = window.open('', '_blank', 'width=800,height=600');
+        win.document.write(printContent);
+        win.document.close();
+        win.print();
+    };
+
+    // ============================================
+    // EXCLUIR RECEBIMENTO
+    // ============================================
+    window.excluirRecebimentoLista = function(id) {
+        if (!confirm('⚠️ Tem certeza que deseja excluir este recebimento?')) return;
+
+        let recebimentos = JSON.parse(localStorage.getItem('recebimentosTaguaLife') || '[]');
+        const r = recebimentos.find(item => item.id === id);
+        recebimentos = recebimentos.filter(r => r.id !== id);
+        localStorage.setItem('recebimentosTaguaLife', JSON.stringify(recebimentos));
+
+        exibirListaRecebimentos();
+        renderizarTabela();
+        mostrarMensagem('🗑️ Recebimento excluído!', '#8B3A3A');
+        if (r) mostrarToast('🗑️ Nota ' + r.notaFiscal + ' excluída!', 'danger');
+    };
+
+    // ============================================
+    // EDITAR RECEBIMENTO
+    // ============================================
+    window.editarRecebimento = function(id) {
+        const recebimentos = JSON.parse(localStorage.getItem('recebimentosTaguaLife') || '[]');
+        const item = recebimentos.find(r => r.id === id);
+        if (!item) return;
+
+        // Verificar se o fornecedor está na lista ou é manual
+        const fornecedor = item.fornecedor || '';
+        const fornecedores = JSON.parse(localStorage.getItem('fornecedoresTaguaLife') || '[]');
+        const existe = fornecedores.some(f => f.empresa === fornecedor);
+        
+        if (existe) {
+            if (modoFornecedorManual) toggleFornecedorInput();
+            document.getElementById('fornecedorSelect').value = fornecedor;
+        } else {
+            if (!modoFornecedorManual) toggleFornecedorInput();
+            document.getElementById('fornecedorManual').value = fornecedor;
+        }
+
+        document.getElementById('notaFiscal').value = item.notaFiscal || '';
+        document.getElementById('obsRecebimento').value = item.obs || '';
+        document.getElementById('statusRecebimento').value = item.status || 'Recebido';
+        document.getElementById('recebidoPor').value = item.recebidoPor || '';
+        document.getElementById('dataRecebimento').value = item.dataRecebimento || '';
+        document.getElementById('horaRecebimento').value = item.horaRecebimento || '';
+        editandoId = id;
+        document.getElementById('btnSalvarRecebimento').innerHTML = '<i class="fas fa-pen"></i> Atualizar Nota';
+        
+        // Preencher itens
+        preencherItensNota(item.itens || []);
+        
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        document.getElementById('listaRecebimentos').style.display = 'none';
+        mostrarToast('✏️ Editando nota: ' + item.notaFiscal, 'info');
+    };
+
+    // ============================================
+    // EXPORTAR RECEBIMENTOS CSV
+    // ============================================
+    function exportarRecebimentosCSV() {
+        const recebimentos = JSON.parse(localStorage.getItem('recebimentosTaguaLife') || '[]');
+        if (recebimentos.length === 0) {
+            mostrarMensagem('⚠️ Nenhum recebimento para exportar!', '#8B3A3A');
+            return;
+        }
+
+        const cabecalho = 'Fornecedor,Nota Fiscal,Itens,Status,Recebido por,Data,Hora,Observacao,Data Registro\n';
+        const linhas = recebimentos.map(r => {
+            const itensStr = r.itens ? r.itens.map(i => `${i.descricao}(${i.quantidade})`).join('; ') : '';
+            return `"${r.fornecedor || ''}","${r.notaFiscal || ''}","${itensStr}","${r.status || ''}","${r.recebidoPor || ''}","${r.dataRecebimento || ''}","${r.horaRecebimento || ''}","${r.obs || ''}","${r.dataRegistro || r.data || ''}"`;
+        }).join('\n');
+
+        const csv = cabecalho + linhas;
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = `recebimentos_${new Date().toISOString().slice(0,10)}.csv`;
+        link.click();
+        mostrarMensagem('📊 Recebimentos exportados!', '#7A816E');
+        mostrarToast('📊 Recebimentos exportados!', 'success');
+    }
+
+    // ============================================
+    // EVENTOS
+    // ============================================
+    document.addEventListener('DOMContentLoaded', function() {
+        document.getElementById('btnToggleFornecedor').addEventListener('click', function(e) {
+            e.preventDefault();
+            toggleFornecedorInput();
+        });
+
+        document.getElementById('btnSalvarRecebimento').addEventListener('click', function(e) {
+            e.preventDefault();
+            salvarRecebimento();
+        });
+
+        document.getElementById('btnLimparFiltro').addEventListener('click', function() {
+            document.getElementById('buscaInput').value = '';
+            document.getElementById('filtroStatus').value = '';
+            renderizarTabela();
+        });
+
+        document.getElementById('buscaInput').addEventListener('input', renderizarTabela);
+        document.getElementById('filtroStatus').addEventListener('change', renderizarTabela);
+
+        document.getElementById('btnVerSalvosRecebimentos').addEventListener('click', function(e) {
+            e.preventDefault();
+            const el = document.getElementById('listaRecebimentos');
+            if (el.style.display === 'none') {
+                exibirListaRecebimentos();
+            } else {
+                el.style.display = 'none';
+            }
+        });
+
+        // Atalho Ctrl+S
+        document.addEventListener('keydown', function(e) {
+            if (e.ctrlKey && e.key === 's') {
+                e.preventDefault();
+                salvarRecebimento();
+            }
+        });
+
+        // Preencher data e hora atual ao abrir a página
+        preencherDataHoraAgora();
+
+        carregarTema();
+        carregarFornecedoresSelect();
+        atualizarRelogio();
+        setInterval(atualizarRelogio, 1000);
+        renderizarTabela();
+        mostrarMensagem('📋 Recebimento com múltiplos itens por nota', '#191D1B');
+        mostrarToast('📋 Recebimento carregado!', 'info');
+    });
+</script>
+</body>
+</html>
