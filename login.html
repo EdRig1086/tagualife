@@ -108,7 +108,8 @@
             margin-bottom: 0.3rem;
         }
         .form-group label i { margin-right: 0.3rem; color: var(--verde-claro); }
-        .form-group input {
+        .form-group input,
+        .form-group select {
             width: 100%;
             padding: 0.65rem 0.8rem;
             border: none;
@@ -120,7 +121,16 @@
             outline: none;
             font-family: inherit;
         }
-        .form-group input:focus { border-bottom-color: var(--verde-claro); }
+        .form-group input:focus,
+        .form-group select:focus { border-bottom-color: var(--verde-claro); }
+        .form-group select {
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%237A816E' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 0.5rem center;
+            padding-right: 1.8rem;
+        }
 
         .btn-login {
             width: 100%;
@@ -256,6 +266,20 @@
                 <input type="email" id="regEmail" placeholder="seu@email.com" required />
             </div>
             <div class="form-group">
+                <label><i class="fas fa-briefcase"></i> Cargo</label>
+                <select id="regCargo" required>
+                    <option value="">Selecione o cargo</option>
+                    <option value="Administrador">Administrador</option>
+                    <option value="Síndico">Síndico</option>
+                    <option value="Síndica">Síndica</option>
+                    <option value="Almoxarife">Almoxarife</option>
+                    <option value="Porteiro">Porteiro</option>
+                    <option value="Zelador">Zelador</option>
+                    <option value="Manutenção">Manutenção</option>
+                    <option value="Usuário">Usuário</option>
+                </select>
+            </div>
+            <div class="form-group">
                 <label><i class="fas fa-lock"></i> Senha</label>
                 <input type="password" id="regPassword" placeholder="Mínimo 6 caracteres" required minlength="6" />
             </div>
@@ -283,12 +307,10 @@
 
 <script>
     // ============================================
-    // SUPABASE - NOME DIFERENTE PARA NÃO DAR CONFLITO
+    // SUPABASE
     // ============================================
     const SUPABASE_URL = 'https://frlecudymdpnrsilavbj.supabase.co';
     const SUPABASE_ANON_KEY = 'sb_publishable_Uv-GZdW4peH3IZTIwiNYXg_IrYytpn4';
-
-    // Aqui está a correção: usamos outro nome (sb)
     const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     console.log('✅ Supabase conectado com sucesso');
 
@@ -383,7 +405,6 @@
 
             console.log('✅ Login OK:', usuario.nome);
 
-            // Salva sessão
             localStorage.setItem('tagualife_sessao', JSON.stringify({
                 id: usuario.id,
                 nome: usuario.nome,
@@ -406,18 +427,19 @@
     });
 
     // ============================================
-    // REGISTRO
+    // REGISTRO (COM CAMPO CARGO)
     // ============================================
     document.getElementById('formRegister').addEventListener('submit', async function(e) {
         e.preventDefault();
 
         const nome = document.getElementById('regNome').value.trim();
         const email = document.getElementById('regEmail').value.trim().toLowerCase();
+        const cargo = document.getElementById('regCargo').value;
         const senha = document.getElementById('regPassword').value;
         const confirm = document.getElementById('regConfirmPassword').value;
         const btn = document.getElementById('btnRegister');
 
-        if (!nome || !email || !senha || !confirm) {
+        if (!nome || !email || !cargo || !senha || !confirm) {
             mostrarMensagem('⚠️ Preencha todos os campos!', 'warning');
             return;
         }
@@ -455,7 +477,7 @@
                     nome: nome,
                     email: email,
                     senha_hash: senha,
-                    cargo: 'Usuário',
+                    cargo: cargo,
                     ativo: true
                 });
 
@@ -521,7 +543,6 @@
         atualizarHora();
         setInterval(atualizarHora, 1000);
 
-        // Se já estiver logado, redireciona
         const sessao = localStorage.getItem('tagualife_sessao');
         if (sessao) {
             window.location.href = 'index.html';
