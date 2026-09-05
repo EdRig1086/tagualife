@@ -12,12 +12,10 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800;14..32,900&display=swap" rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
-    
-    <!-- Supabase SDK -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
     <style>
-        /* ===== TODOS OS ESTILOS DA SUA PÁGINA ===== */
+        /* ===== TODOS OS ESTILOS ===== */
         :root {
             --verde-claro: #C1CE83;
             --verde-oliva: #7A816E;
@@ -1048,15 +1046,14 @@
 // ============================================================
 // CONFIGURAÇÃO DO SUPABASE - SUBSTITUA PELOS SEUS DADOS!
 // ============================================================
-const SUPABASE_URL = 'https://SEU_PROJETO.supabase.co';  // ← COLOQUE SUA URL
-const SUPABASE_KEY = 'SUA_ANON_KEY';                     // ← COLOQUE SUA CHAVE
+const SUPABASE_URL = 'https://SEU_PROJETO.supabase.co';  // ← SUBSTITUA
+const SUPABASE_KEY = 'SUA_ANON_KEY';                     // ← SUBSTITUA
 const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // ============================================================
-// TODAS AS FUNÇÕES DA PÁGINA
+// TODAS AS FUNÇÕES
 // ============================================================
 
-// ===== VARIÁVEIS GLOBAIS =====
 const CHAVE_STORAGE = 'cotacoesTaguáLife';
 const CHAVE_THEME = 'tema_TaguáLife';
 
@@ -1066,7 +1063,6 @@ let editandoId = null;
 let graficoChart = null;
 let tipoGrafico = 'bar';
 let fornecedorAprovadoId = null;
-let cotacaoEditando = false;
 
 // ===== TOAST =====
 function mostrarToast(mensagem, tipo = 'success') {
@@ -1175,29 +1171,22 @@ function mostrarMensagem(texto, cor = '#191D1B') {
     feedback._timeout = setTimeout(() => { feedback.innerHTML = ''; }, 4000);
 }
 
-// ============================================================
-// FUNÇÕES DO SUPABASE
-// ============================================================
+// ===== FUNÇÕES DO SUPABASE =====
 
-// ===== SALVAR COTAÇÃO NO SUPABASE =====
 async function salvarCotacaoSupabase(concluir = false) {
     try {
-        // Validar campos obrigatórios
         const nome = document.getElementById('nomeCotacao').value.trim();
         const uso = document.getElementById('usoCotacao').value.trim();
         
         if (!nome) {
             mostrarMensagem('⚠️ Preencha o NOME!', '#8B3A3A');
-            document.getElementById('nomeCotacao').focus();
             return;
         }
         if (!uso) {
             mostrarMensagem('⚠️ Preencha o USO!', '#8B3A3A');
-            document.getElementById('usoCotacao').focus();
             return;
         }
 
-        // Coletar itens
         const itens = [];
         document.querySelectorAll('.item-row').forEach(row => {
             const desc = row.querySelector('.item-desc')?.value || '';
@@ -1217,7 +1206,6 @@ async function salvarCotacaoSupabase(concluir = false) {
             return;
         }
 
-        // Coletar fornecedores
         const fornecedoresData = [];
         fornecedores.forEach((f, index) => {
             const nomeInput = document.getElementById(`f${index}Nome`);
@@ -1235,10 +1223,8 @@ async function salvarCotacaoSupabase(concluir = false) {
             });
         });
 
-        // Coletar observações
         const observacaoGeral = document.getElementById('observacao')?.value || '';
 
-        // Calcular totais
         const totais = {};
         fornecedores.forEach(f => {
             let total = 0;
@@ -1250,7 +1236,6 @@ async function salvarCotacaoSupabase(concluir = false) {
             totais[f.id] = total + frete;
         });
 
-        // Encontrar melhor proposta
         let melhorId = null;
         let melhorValor = Infinity;
         fornecedores.forEach(f => {
@@ -1260,7 +1245,6 @@ async function salvarCotacaoSupabase(concluir = false) {
             }
         });
 
-        // Montar objeto da cotação
         const cotacao = {
             nome: nome,
             uso: uso,
@@ -1281,23 +1265,20 @@ async function salvarCotacaoSupabase(concluir = false) {
             melhor_fornecedor_id: melhorId,
             melhor_valor: melhorValor !== Infinity ? melhorValor : 0,
             status: concluir ? 'concluida' : 'rascunho',
-            criado_em: new Date().toISOString()
+            atualizado_em: new Date().toISOString()
         };
 
-        // Verificar se está editando
         if (editandoId) {
-            // Atualizar cotação existente
             const { error } = await supabase
                 .from('cotacoes')
                 .update(cotacao)
                 .eq('id', editandoId);
 
             if (error) throw error;
-            mostrarMensagem('✅ Cotação atualizada com sucesso!', '#7A816E');
+            mostrarMensagem('✅ Cotação atualizada!', '#7A816E');
             mostrarToast('✅ Cotação atualizada!', 'success');
             editandoId = null;
         } else {
-            // Criar nova cotação
             const { data, error } = await supabase
                 .from('cotacoes')
                 .insert([cotacao])
@@ -1310,10 +1291,9 @@ async function salvarCotacaoSupabase(concluir = false) {
 
         if (concluir) {
             limparPagina();
-            mostrarMensagem('🧹 Cotação concluída e página limpa!', '#2E7D32');
+            mostrarMensagem('🧹 Cotação concluída!', '#2E7D32');
         }
 
-        // Atualizar lista
         const listaEl = document.getElementById('listaCotoes');
         if (listaEl && listaEl.style.display !== 'none') {
             await carregarListaSalvos();
@@ -1321,13 +1301,15 @@ async function salvarCotacaoSupabase(concluir = false) {
 
     } catch (error) {
         console.error('Erro ao salvar:', error);
-        mostrarMensagem('❌ Erro ao salvar: ' + error.message, '#8B3A3A');
+        mostrarMensagem('❌ Erro: ' + error.message, '#8B3A3A');
         mostrarToast('❌ Erro ao salvar!', 'danger');
     }
 }
 
-// ===== CARREGAR COTAÇÕES SALVAS =====
-async function carregarCotoesSupabase() {
+async function carregarListaSalvos() {
+    const container = document.getElementById('conteudoLista');
+    if (!container) return;
+
     try {
         const { data, error } = await supabase
             .from('cotacoes')
@@ -1335,14 +1317,45 @@ async function carregarCotoesSupabase() {
             .order('criado_em', { ascending: false });
 
         if (error) throw error;
-        return data || [];
+
+        const cotoes = data || [];
+
+        if (cotoes.length === 0) {
+            container.innerHTML = `<div class="lista-vazia"><i class="fas fa-inbox"></i> Nenhuma cotação registrada ainda.</div>`;
+        } else {
+            let html = '';
+            cotoes.forEach(c => {
+                const totalItens = c.itens ? c.itens.length : 0;
+                const dataCriacao = c.criado_em ? new Date(c.criado_em).toLocaleDateString('pt-BR') : 'Sem data';
+                const status = c.status || 'rascunho';
+                const statusLabel = status === 'concluida' ? '✅ Concluída' : '📝 Rascunho';
+                const statusColor = status === 'concluida' ? '#2E7D32' : '#FFB300';
+                
+                html += `
+                    <div class="protocolo-item">
+                        <div class="head">
+                            <strong>📄 #${String(c.id).substring(0, 8)}</strong>
+                            <small>👤 ${c.nome || 'Sem nome'}</small>
+                            <span style="background:var(--border-color); padding:0.1rem 0.6rem; border-radius:40px; font-size:0.6rem; font-weight:500;">${totalItens} item(ns)</span>
+                            <span style="background:var(--verde-claro); padding:0.1rem 0.6rem; border-radius:40px; font-size:0.6rem; font-weight:600; color:var(--preto);">🏆 ${formatarMoeda(c.melhor_valor || 0)}</span>
+                            <span style="background:${statusColor}; padding:0.1rem 0.6rem; border-radius:40px; font-size:0.6rem; font-weight:600; color:white;">${statusLabel}</span>
+                        </div>
+                        <div class="detalhes">📋 ${c.uso || 'Sem uso'} • 📅 ${dataCriacao}</div>
+                        <div class="acoes">
+                            <button class="btn btn-outline" onclick="carregarCotacaoParaEdicao('${c.id}')"><i class="fas fa-edit"></i> Editar</button>
+                            <button class="btn btn-outline" onclick="excluirCotacaoSupabase('${c.id}')" style="color:var(--danger);"><i class="fas fa-trash-alt"></i></button>
+                        </div>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
     } catch (error) {
-        console.error('Erro ao carregar cotações:', error);
-        return [];
+        console.error('Erro ao carregar lista:', error);
+        container.innerHTML = `<div class="lista-vazia"><i class="fas fa-exclamation-triangle"></i> Erro ao carregar: ${error.message}</div>`;
     }
 }
 
-// ===== CARREGAR COTAÇÃO PARA EDIÇÃO =====
 async function carregarCotacaoParaEdicao(id) {
     try {
         const { data, error } = await supabase
@@ -1357,12 +1370,10 @@ async function carregarCotacaoParaEdicao(id) {
             return;
         }
 
-        // Preencher campos
         document.getElementById('nomeCotacao').value = data.nome || '';
         document.getElementById('usoCotacao').value = data.uso || '';
         document.getElementById('observacao').value = data.observacao || '';
 
-        // Configurar fornecedores
         if (data.fornecedores && data.fornecedores.length > 0) {
             fornecedores = data.fornecedores.map((f, index) => ({
                 id: index + 1,
@@ -1376,7 +1387,6 @@ async function carregarCotacaoParaEdicao(id) {
             editandoId = id;
             renderizarTabela();
 
-            // Preencher itens
             if (data.itens && data.itens.length > 0) {
                 const rows = document.querySelectorAll('.item-row');
                 data.itens.forEach((item, idx) => {
@@ -1387,7 +1397,6 @@ async function carregarCotacaoParaEdicao(id) {
                     }
                 });
 
-                // Preencher preços
                 if (data.precos) {
                     data.precos.forEach((preco, idx) => {
                         if (idx < rows.length) {
@@ -1405,7 +1414,6 @@ async function carregarCotacaoParaEdicao(id) {
                     });
                 }
 
-                // Preencher fretes
                 setTimeout(() => {
                     data.fornecedores.forEach((f, idx) => {
                         const freteInput = document.getElementById(`freteF${idx + 1}`);
@@ -1429,7 +1437,6 @@ async function carregarCotacaoParaEdicao(id) {
     }
 }
 
-// ===== EXCLUIR COTAÇÃO =====
 async function excluirCotacaoSupabase(id) {
     if (!confirm('⚠️ Tem certeza que deseja excluir esta cotação?')) return;
 
@@ -1451,44 +1458,6 @@ async function excluirCotacaoSupabase(id) {
     }
 }
 
-// ===== LISTAR COTAÇÕES SALVAS =====
-async function carregarListaSalvos() {
-    const container = document.getElementById('conteudoLista');
-    if (!container) return;
-
-    const cotoes = await carregarCotoesSupabase();
-
-    if (cotoes.length === 0) {
-        container.innerHTML = `<div class="lista-vazia"><i class="fas fa-inbox"></i> Nenhuma cotação registrada ainda.</div>`;
-    } else {
-        let html = '';
-        cotoes.forEach(c => {
-            const totalItens = c.itens ? c.itens.length : 0;
-            const dataCriacao = c.criado_em ? new Date(c.criado_em).toLocaleDateString('pt-BR') : 'Sem data';
-            const status = c.status === 'concluida' ? '✅ Concluída' : '📝 Rascunho';
-            
-            html += `
-                <div class="protocolo-item">
-                    <div class="head">
-                        <strong>📄 #${String(c.id).substring(0, 8)}</strong>
-                        <small>👤 ${c.nome || 'Sem nome'}</small>
-                        <span style="background:var(--border-color); padding:0.1rem 0.6rem; border-radius:40px; font-size:0.6rem; font-weight:500;">${totalItens} item(ns)</span>
-                        <span style="background:var(--verde-claro); padding:0.1rem 0.6rem; border-radius:40px; font-size:0.6rem; font-weight:600; color:var(--preto);">🏆 ${formatarMoeda(c.melhor_valor || 0)}</span>
-                        <span style="background:${c.status === 'concluida' ? '#2E7D32' : '#FFB300'}; padding:0.1rem 0.6rem; border-radius:40px; font-size:0.6rem; font-weight:600; color:white;">${status}</span>
-                    </div>
-                    <div class="detalhes">📋 ${c.uso || 'Sem uso'} • 📅 ${dataCriacao}</div>
-                    <div class="acoes">
-                        <button class="btn btn-outline" onclick="carregarCotacaoParaEdicao('${c.id}')"><i class="fas fa-edit"></i> Editar</button>
-                        <button class="btn btn-outline" onclick="excluirCotacaoSupabase('${c.id}')" style="color:var(--danger);"><i class="fas fa-trash-alt"></i></button>
-                    </div>
-                </div>
-            `;
-        });
-        container.innerHTML = html;
-    }
-}
-
-// ===== TOGGLE LISTA SALVOS =====
 async function toggleListaSalvos() {
     const el = document.getElementById('listaCotoes');
     if (el.style.display === 'none') {
@@ -1499,9 +1468,7 @@ async function toggleListaSalvos() {
     }
 }
 
-// ============================================================
-// FUNÇÕES DE RENDERIZAÇÃO DA TABELA
-// ============================================================
+// ===== FUNÇÕES DE RENDERIZAÇÃO =====
 
 function inicializarFornecedoresPadrao() {
     fornecedores = [
@@ -1518,10 +1485,8 @@ function renderizarTabela() {
     const thead = document.getElementById('headerFornecedores');
     const tbody = document.getElementById('corpoTabela');
     
-    // Limpar cabeçalho (manter primeiras colunas)
     while (thead.children.length > 3) thead.removeChild(thead.lastChild);
     
-    // Adicionar colunas de fornecedores
     fornecedores.forEach((f, index) => {
         const th = document.createElement('th');
         th.className = 'col-fornecedor fornecedor-header';
@@ -1536,7 +1501,6 @@ function renderizarTabela() {
         thead.appendChild(th);
     });
 
-    // Adicionar coluna de ações
     if (!document.querySelector('.col-acoes')) {
         const thAcoes = document.createElement('th');
         thAcoes.className = 'col-acoes';
@@ -1544,10 +1508,8 @@ function renderizarTabela() {
         thead.appendChild(thAcoes);
     }
 
-    // Limpar corpo
     tbody.innerHTML = '';
 
-    // Linhas de informações dos fornecedores
     const linhasInfo = [
         { label: 'CONTATO:', fields: fornecedores.map((_, idx) => `f${idx}Contato`) },
         { label: 'TELEFONE:', fields: fornecedores.map((_, idx) => `f${idx}Telefone`) }
@@ -1565,7 +1527,6 @@ function renderizarTabela() {
         tbody.appendChild(tr);
     });
 
-    // Linha de subtítulo R$ UND / TOTAL
     const trSub = document.createElement('tr');
     trSub.innerHTML = `
         <td colspan="3" style="background:var(--verde-oliva); font-weight:600; font-size:0.5rem; color:var(--branco); text-align:center; padding:0.2rem;"></td>
@@ -1574,7 +1535,6 @@ function renderizarTabela() {
     `;
     tbody.appendChild(trSub);
 
-    // Cabeçalho dos itens
     const trHeader = document.createElement('tr');
     trHeader.innerHTML = `
         <td class="label-cell" style="font-weight:700; font-size:0.55rem;">ITEM</td>
@@ -1585,10 +1545,8 @@ function renderizarTabela() {
     `;
     tbody.appendChild(trHeader);
 
-    // Adicionar uma linha de item padrão
     adicionarLinhaItemPadrao();
 
-    // Linha de adicionar item
     const trAdd = document.createElement('tr');
     trAdd.className = 'add-item-row';
     trAdd.innerHTML = `
@@ -1598,7 +1556,6 @@ function renderizarTabela() {
     `;
     tbody.appendChild(trAdd);
 
-    // Linha de frete
     const trFrete = document.createElement('tr');
     trFrete.className = 'frete-row';
     trFrete.innerHTML = `
@@ -1615,7 +1572,6 @@ function renderizarTabela() {
     `;
     tbody.appendChild(trFrete);
 
-    // Linha de total
     const trTotal = document.createElement('tr');
     trTotal.className = 'total-row';
     trTotal.innerHTML = `
@@ -1625,7 +1581,6 @@ function renderizarTabela() {
     `;
     tbody.appendChild(trTotal);
 
-    // Linha de melhor proposta
     const trMelhor = document.createElement('tr');
     trMelhor.id = 'linhaMelhorOferta';
     trMelhor.innerHTML = `
@@ -1639,7 +1594,6 @@ function renderizarTabela() {
     `;
     tbody.appendChild(trMelhor);
 
-    // Linha de condições de pagamento
     const trPag = document.createElement('tr');
     trPag.innerHTML = `
         <td class="label-cell-left" colspan="3" style="font-size:0.6rem;">CONDIÇÕES DE PAGAMENTO</td>
@@ -1650,7 +1604,6 @@ function renderizarTabela() {
     `;
     tbody.appendChild(trPag);
 
-    // Linha de prazo de entrega
     const trEntrega = document.createElement('tr');
     trEntrega.innerHTML = `
         <td class="label-cell-left" colspan="3" style="font-size:0.6rem;">PRAZO DE ENTREGA</td>
@@ -1661,7 +1614,6 @@ function renderizarTabela() {
     `;
     tbody.appendChild(trEntrega);
 
-    // Linha de responsável
     const trResp = document.createElement('tr');
     trResp.innerHTML = `
         <td class="label-cell-left" colspan="3" style="font-size:0.6rem;">RESPONSÁVEL</td>
@@ -1672,7 +1624,6 @@ function renderizarTabela() {
     `;
     tbody.appendChild(trResp);
 
-    // Linha de observações do fornecedor
     const trObsInd = document.createElement('tr');
     trObsInd.className = 'obs-individual-row';
     trObsInd.innerHTML = `
@@ -1686,7 +1637,6 @@ function renderizarTabela() {
     `;
     tbody.appendChild(trObsInd);
 
-    // Linha de observações gerais
     const trObsGeral = document.createElement('tr');
     trObsGeral.className = 'obs-row';
     trObsGeral.innerHTML = `
@@ -1698,7 +1648,6 @@ function renderizarTabela() {
     `;
     tbody.appendChild(trObsGeral);
 
-    // Configurar eventos
     configurarEventos();
     initSortable();
     setTimeout(() => atualizarTotais(), 100);
@@ -1733,7 +1682,6 @@ function adicionarLinhaItemPadrao() {
 }
 
 function configurarEventos() {
-    // Eventos de moeda
     document.querySelectorAll('.currency-und, .currency-total, .frete-input').forEach(input => {
         input.addEventListener('input', function() {
             mascaraMoedaSimplificada(this);
@@ -1757,7 +1705,6 @@ function configurarEventos() {
         });
     });
 
-    // Eventos de quantidade
     document.querySelectorAll('.item-qtd').forEach(input => {
         input.addEventListener('input', function() {
             const row = this.closest('.item-row');
@@ -1778,7 +1725,6 @@ function configurarEventos() {
         });
     });
 
-    // Eventos de frete
     document.querySelectorAll('.frete-input').forEach(input => {
         input.addEventListener('change', () => setTimeout(atualizarTotais, 100));
     });
@@ -1803,9 +1749,7 @@ function initSortable() {
     });
 }
 
-// ============================================================
-// FUNÇÕES DE MANIPULAÇÃO
-// ============================================================
+// ===== FUNÇÕES DE MANIPULAÇÃO =====
 
 function adicionarFornecedor() {
     if (fornecedores.length >= 8) {
@@ -1928,7 +1872,6 @@ function aprovarFornecedor(id) {
         mostrarMensagem(`👤 Fornecedor "${nome}" desaprovado`, '#5A614E');
         mostrarToast('👤 Desaprovado!', 'info');
     } else {
-        // Remover aprovação anterior
         document.querySelectorAll('.fornecedor-header').forEach(th => {
             th.classList.remove('fornecedor-aprovado-destaque');
             const btn = th.querySelector('.btn-aprovar-fornecedor');
@@ -1953,9 +1896,7 @@ function aprovarFornecedor(id) {
     atualizarTotais();
 }
 
-// ============================================================
-// FUNÇÕES DE ATUALIZAÇÃO DE TOTAIS E GRÁFICO
-// ============================================================
+// ===== FUNÇÕES DE ATUALIZAÇÃO =====
 
 function atualizarTotais() {
     const rows = document.querySelectorAll('.item-row');
@@ -1992,13 +1933,9 @@ function atualizarTotais() {
 
     document.getElementById('statusItens').textContent = rows.length + ' item(ns)';
 
-    // Destacar melhores preços
     destacarMelhoresPrecos();
-
-    // Atualizar melhor proposta
     atualizarMelhorProposta();
 
-    // Atualizar gráfico
     const labels = [], valores = [];
     fornecedores.forEach(f => {
         const nomeInput = document.getElementById(`f${fornecedores.indexOf(f)}Nome`);
@@ -2175,28 +2112,23 @@ function toggleGrafico() {
     atualizarTotais();
 }
 
-// ============================================================
-// INICIALIZAÇÃO
-// ============================================================
+// ===== INICIALIZAÇÃO =====
 
 function init() {
     carregarTema();
     inicializarFornecedoresPadrao();
     renderizarTabela();
 
-    // Botão Salvar
     document.getElementById('btnSalvar').addEventListener('click', function(e) {
         e.preventDefault();
         salvarCotacaoSupabase(false);
     });
 
-    // Botão Concluir
     document.getElementById('btnConcluir').addEventListener('click', function(e) {
         e.preventDefault();
         salvarCotacaoSupabase(true);
     });
 
-    // Ctrl+S
     document.addEventListener('keydown', function(e) {
         if (e.ctrlKey && e.key === 's') {
             e.preventDefault();
@@ -2208,7 +2140,6 @@ function init() {
     mostrarToast('🟢 Conectado ao Supabase!', 'success');
 }
 
-// Iniciar
 init();
 </script>
 </body>
