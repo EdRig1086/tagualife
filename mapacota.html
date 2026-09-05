@@ -3,288 +3,2105 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>TaguáLife - Mapa de Cotação</title>
+    <title>TaguáLife Center · Mapa de Cotação</title>
     
-    <!-- Font Awesome -->
+    <!-- Bibliotecas -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
-    
-    <!-- Supabase -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800;14..32,900&display=swap" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
     <style>
+        :root {
+            --verde-claro: #C1CE83;
+            --verde-oliva: #7A816E;
+            --verde-escuro: #2E7D32;
+            --branco: #FBFBF7;
+            --preto: #191D1B;
+            --bg-body: #E8EBE0;
+            --bg-card: var(--branco);
+            --text-primary: var(--preto);
+            --text-secondary: var(--verde-oliva);
+            --border-color: #D8DCCE;
+            --shadow: 0 4px 24px rgba(25, 29, 27, 0.08);
+            --font-primary: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            --radius: 16px;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --fornecedor-bg: #C1CE83;
+            --fornecedor-text: #191D1B;
+            --input-bg: transparent;
+            --input-border: var(--border-color);
+            --danger: #8B3A3A;
+        }
+
         * { margin: 0; padding: 0; box-sizing: border-box; }
+
         body {
-            font-family: Arial, sans-serif;
-            background: #f0f2f5;
-            padding: 20px;
+            font-family: var(--font-primary);
+            font-weight: 400;
+            background: var(--bg-body);
+            min-height: 100vh;
+            padding: 0.8rem;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            color: var(--text-primary);
+            transition: var(--transition);
         }
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            background: white;
+
+        .app-container { max-width: 1400px; width: 100%; }
+
+        .app-topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.6rem;
+            flex-wrap: wrap;
+            gap: 0.3rem;
+            background: var(--bg-card);
+            padding: 0.4rem 1.2rem;
             border-radius: 12px;
-            padding: 25px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border-color);
         }
-        h1 { color: #2E7D32; border-bottom: 3px solid #C1CE83; padding-bottom: 10px; }
-        .info { background: #e8f5e9; padding: 15px; border-radius: 8px; margin: 15px 0; }
-        .campo { margin: 10px 0; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-        .campo label { font-weight: bold; min-width: 80px; }
-        .campo input { padding: 8px 12px; border: 1px solid #ccc; border-radius: 6px; flex: 1; min-width: 200px; }
-        .botoes { margin: 20px 0; display: flex; flex-wrap: wrap; gap: 10px; }
-        .btn { padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
-        .btn-verde { background: #2E7D32; color: white; }
-        .btn-azul { background: #1976D2; color: white; }
-        .btn-cinza { background: #6c757d; color: white; }
-        .btn-vermelho { background: #c62828; color: white; }
-        .btn:hover { opacity: 0.8; transform: scale(1.02); }
+
+        .logo-area {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .logo-icon {
+            width: 42px;
+            height: 42px;
+            background: linear-gradient(135deg, var(--verde-escuro), var(--verde-oliva));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 800;
+            font-size: 0.7rem;
+            flex-direction: column;
+            line-height: 1;
+            padding: 0.2rem;
+        }
+        .logo-icon small { font-size: 0.3rem; opacity: 0.8; font-weight: 400; }
+
+        .logo-text .title { font-size: 1.2rem; font-weight: 800; letter-spacing: -0.5px; }
+        .logo-text .title .tagua { color: var(--text-primary); }
+        .logo-text .title .life { color: var(--verde-claro); }
+        .logo-text .slogan {
+            font-size: 0.4rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            font-weight: 500;
+        }
+
+        .app-topbar .badge {
+            background: linear-gradient(135deg, var(--verde-claro), var(--verde-oliva));
+            padding: 0.2rem 0.8rem;
+            border-radius: 40px;
+            font-size: 0.55rem;
+            font-weight: 600;
+            color: var(--preto);
+            border: 1px solid var(--verde-oliva);
+        }
+
+        .clock-display {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            background: var(--preto);
+            padding: 0.2rem 0.8rem;
+            border-radius: 40px;
+            border: 1px solid var(--verde-claro);
+            font-size: 0.8rem;
+            color: var(--branco);
+            letter-spacing: 1px;
+            font-weight: 500;
+        }
+        .clock-display i { color: var(--verde-claro); font-size: 0.7rem; }
+        .clock-display .clock-separator { color: var(--verde-claro); animation: blink 1s step-end infinite; }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+        .clock-display .clock-seconds { color: var(--verde-claro); font-size: 0.7rem; }
+        .clock-display .clock-date { color: var(--verde-oliva); font-size: 0.6rem; font-weight: 400; border-left: 1px solid var(--verde-oliva); padding-left: 0.5rem; }
+
+        .nav-menu {
+            display: flex;
+            gap: 0.2rem;
+            flex-wrap: wrap;
+            background: var(--bg-card);
+            padding: 0.2rem 0.6rem;
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
+            margin-bottom: 0.6rem;
+        }
+
+        .nav-menu .nav-item {
+            padding: 0.25rem 0.8rem;
+            border-radius: 40px;
+            font-size: 0.65rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: var(--transition);
+            border: 1px solid transparent;
+            cursor: pointer;
+            background: transparent;
+        }
+
+        .nav-menu .nav-item:hover { background: var(--verde-claro); color: var(--preto); }
+        .nav-menu .nav-item.active { background: var(--preto); color: var(--branco); border-color: var(--preto); }
+        .nav-menu .nav-item i { margin-right: 0.2rem; }
+
+        .btn-theme {
+            background: var(--border-color);
+            color: var(--text-primary);
+            border: none;
+            padding: 0.25rem 0.8rem;
+            border-radius: 40px;
+            font-size: 0.65rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+            font-family: inherit;
+        }
+        .btn-theme:hover { background: var(--verde-claro); }
+
+        .card-cotacao {
+            background: var(--bg-card);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+            transition: var(--transition);
+        }
+
+        .card-header {
+            background: linear-gradient(135deg, var(--verde-claro), var(--verde-oliva));
+            padding: 0.6rem 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 0.4rem;
+            border-bottom: 3px solid var(--verde-escuro);
+        }
+
+        .card-header .left { display: flex; align-items: center; gap: 0.5rem; color: var(--preto); }
+        .card-header .left i { font-size: 1.3rem; color: var(--preto); }
+        .card-header .left h2 { font-size: 1rem; font-weight: 700; letter-spacing: -0.3px; color: var(--preto); }
+        .card-header .left span { font-size: 0.65rem; opacity: 0.7; color: var(--preto); }
+        .card-header .right { display: flex; align-items: center; gap: 0.6rem; color: var(--preto); font-size: 0.7rem; font-weight: 500; }
+
+        .card-body { padding: 1.5rem; }
+
+        .info-condominio {
+            background: var(--bg-body);
+            padding: 0.4rem 0.8rem;
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
+            margin-bottom: 0.6rem;
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 0.2rem;
+            font-size: 0.65rem;
+        }
+
+        .info-condominio .item { color: var(--text-secondary); }
+        .info-condominio .item strong { color: var(--text-primary); }
+        .info-condominio .item i { color: var(--verde-claro); margin-right: 0.15rem; }
+
+        .objetivo {
+            background: var(--bg-body);
+            padding: 0.3rem 0.8rem;
+            border-radius: 10px;
+            margin-bottom: 0.6rem;
+            border-left: 4px solid var(--verde-claro);
+            font-size: 0.65rem;
+            color: var(--text-primary);
+            font-weight: 500;
+            line-height: 1.3;
+            border: 1px solid var(--border-color);
+        }
+
+        .objetivo i { color: var(--verde-claro); margin-right: 0.2rem; }
+
+        .info-topo {
+            display: flex;
+            gap: 1.5rem;
+            margin-bottom: 0.6rem;
+            padding: 0.4rem 0.8rem;
+            background: var(--bg-body);
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .info-topo .campo {
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+            flex: 1;
+            min-width: 150px;
+        }
+
+        .info-topo .campo label {
+            font-weight: 700;
+            font-size: 0.65rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+        }
+
+        .info-topo .campo input {
+            border: none;
+            border-bottom: 2px solid var(--input-border);
+            background: var(--input-bg);
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: var(--text-primary);
+            padding: 0.1rem 0.2rem;
+            outline: none;
+            width: 100%;
+            min-width: 120px;
+            transition: var(--transition);
+        }
+
+        .info-topo .campo.nome-campo input,
+        .info-topo .campo.uso-campo input {
+            font-size: 0.95rem;
+            padding: 0.2rem 0.3rem;
+            min-width: 200px;
+            border-bottom-width: 2px;
+            border-bottom-color: var(--verde-claro);
+        }
+
+        .info-topo .campo.nome-campo input:focus,
+        .info-topo .campo.uso-campo input:focus {
+            border-bottom-color: var(--verde-oliva);
+            background: var(--bg-body);
+            border-radius: 4px 4px 0 0;
+        }
+
+        .info-topo .campo input:focus { border-bottom-color: var(--verde-claro); }
+        .info-topo .campo input.readonly {
+            background: var(--border-color);
+            border-bottom-color: #aaa;
+            color: var(--text-secondary);
+            cursor: default;
+        }
+
+        .dica-digitacao {
+            font-size: 0.45rem;
+            color: var(--text-secondary);
+            text-align: center;
+            margin-top: 0.2rem;
+            opacity: 0.7;
+            font-style: italic;
+        }
+
+        .dica-digitacao i { margin-right: 0.2rem; color: var(--verde-claro); }
+
+        .tabela-cotacao {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.7rem;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .tabela-cotacao th,
+        .tabela-cotacao td {
+            border: 1px solid var(--border-color);
+            padding: 0.25rem 0.3rem;
+            text-align: center;
+            vertical-align: middle;
+        }
+
+        .tabela-cotacao th {
+            background: var(--verde-oliva);
+            font-weight: 600;
+            font-size: 0.55rem;
+            text-transform: uppercase;
+            color: var(--branco);
+            letter-spacing: 0.3px;
+            padding: 0.3rem 0.3rem;
+        }
+
+        .tabela-cotacao td input {
+            border: none;
+            background: var(--input-bg);
+            width: 100%;
+            text-align: center;
+            font-size: 0.7rem;
+            font-weight: 500;
+            color: var(--text-primary);
+            outline: none;
+            font-family: inherit;
+            padding: 0.05rem 0.15rem;
+            min-width: 40px;
+            transition: var(--transition);
+        }
+
+        .tabela-cotacao td input:focus {
+            background: var(--verde-claro);
+            border-radius: 4px;
+        }
+
+        .tabela-cotacao td input.currency {
+            text-align: right;
+            padding-right: 0.3rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .tabela-cotacao td input.currency::placeholder {
+            color: var(--text-secondary);
+            font-weight: 400;
+        }
+
+        .tabela-cotacao td input.currency-und {
+            text-align: right;
+            padding-right: 0.3rem;
+            font-size: 0.65rem;
+            color: var(--text-secondary);
+        }
+
+        .tabela-cotacao td input.currency-total {
+            text-align: right;
+            padding-right: 0.3rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            font-size: 0.7rem;
+        }
+
+        .tabela-cotacao td input.text-left {
+            text-align: left;
+            padding-left: 0.3rem;
+        }
+
+        .tabela-cotacao td input.fornecedor-field {
+            font-weight: 700 !important;
+            text-transform: uppercase !important;
+            font-size: 0.7rem !important;
+            letter-spacing: 0.3px;
+            color: var(--text-primary) !important;
+        }
+
+        .tabela-cotacao .label-cell {
+            font-weight: 600;
+            color: var(--text-primary);
+            background: var(--bg-body);
+            text-align: center;
+            padding: 0.25rem 0.3rem;
+            white-space: nowrap;
+            font-size: 0.65rem;
+        }
+
+        .tabela-cotacao .label-cell-left {
+            font-weight: 600;
+            color: var(--text-primary);
+            background: var(--bg-body);
+            text-align: left;
+            padding: 0.25rem 0.6rem;
+            font-size: 0.65rem;
+        }
+
+        .tabela-cotacao .total-cell {
+            font-weight: 700;
+            color: var(--text-primary);
+            background: var(--branco) !important;
+            font-size: 0.75rem;
+            padding: 0.25rem 0.3rem;
+            text-align: right;
+            padding-right: 0.5rem;
+            transition: var(--transition);
+            border-color: var(--border-color) !important;
+        }
+
+        .tabela-cotacao .best-cell {
+            font-weight: 900 !important;
+            padding: 0.4rem 0.3rem;
+            background: var(--verde-claro) !important;
+            color: var(--preto) !important;
+            border: 3px solid var(--preto) !important;
+            font-size: 0.85rem !important;
+            border-radius: 4px;
+        }
+
+        .tabela-cotacao .best-cell .melhor-valor {
+            font-size: 1.2rem;
+            font-weight: 900;
+            color: var(--preto);
+        }
+
+        .tabela-cotacao .best-cell .melhor-fornecedor-nome {
+            display: block;
+            margin-top: 0.1rem;
+            font-size: 0.75rem;
+            font-weight: 800;
+            color: var(--preto);
+            letter-spacing: 0.3px;
+        }
+
+        .tabela-cotacao .best-cell .melhor-fornecedor-nome i {
+            margin-right: 0.2rem;
+            color: var(--verde-oliva);
+        }
+
+        .tabela-cotacao .best-cell .melhor-detalhes {
+            display: block;
+            font-size: 0.6rem;
+            font-weight: 600;
+            color: var(--verde-oliva);
+            margin-top: 0.1rem;
+        }
+
+        .tabela-cotacao .fornecedor-header {
+            background: var(--fornecedor-bg) !important;
+            color: var(--fornecedor-text) !important;
+            font-weight: 700;
+            font-size: 0.55rem;
+            min-width: 110px;
+            padding: 0.3rem 0.2rem;
+            border-color: var(--verde-oliva) !important;
+            position: relative;
+            transition: var(--transition);
+        }
+
+        .tabela-cotacao .fornecedor-header input {
+            color: var(--fornecedor-text) !important;
+            font-weight: 700;
+            text-align: center;
+            font-size: 0.7rem;
+            background: transparent;
+            text-transform: uppercase;
+        }
+
+        .tabela-cotacao .fornecedor-header input::placeholder {
+            color: rgba(25, 29, 27, 0.5);
+            text-transform: none;
+        }
+
+        .tabela-cotacao .sub-info {
+            font-size: 0.5rem;
+            font-weight: 500;
+            padding: 0.2rem 0.2rem;
+            background: var(--verde-oliva) !important;
+            color: var(--branco) !important;
+            border-color: var(--border-color) !important;
+        }
+
+        .tabela-cotacao .remove-item {
+            color: var(--danger);
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: var(--transition);
+        }
+
+        .tabela-cotacao .remove-item:hover { transform: scale(1.2); }
+
+        .btn-fornecedor {
+            border: none;
+            background: transparent;
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 0.6rem;
+            padding: 0.15rem 0.5rem;
+            transition: var(--transition);
+            font-family: inherit;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.2rem;
+            border: 1px dashed var(--border-color);
+            border-radius: 4px;
+        }
+
+        .btn-fornecedor:hover { background: var(--bg-body); border-color: var(--verde-oliva); }
+
+        .btn-add-item {
+            border: none;
+            background: transparent;
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 0.65rem;
+            padding: 0.15rem 0.7rem;
+            transition: var(--transition);
+            font-family: inherit;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.2rem;
+        }
+
+        .btn-add-item:hover { color: var(--text-primary); text-decoration: underline; }
+
+        .campo-moeda {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .campo-moeda .simbolo-moeda {
+            position: absolute;
+            left: 4px;
+            font-size: 0.6rem;
+            font-weight: 700;
+            color: var(--text-secondary);
+            pointer-events: none;
+            opacity: 0.6;
+        }
+
+        .campo-moeda input {
+            padding-left: 22px !important;
+            text-align: right !important;
+        }
+
+        .grafico-comparativo {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background: var(--bg-body);
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
+        }
+        .grafico-comparativo canvas { max-height: 150px; width: 100% !important; }
+        .grafico-comparativo .titulo-grafico {
+            font-weight: 600;
+            font-size: 0.65rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.3rem;
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+        .grafico-comparativo .titulo-grafico i { color: var(--verde-claro); }
+
+        .protocolo-footer {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            border-top: 2px solid var(--border-color);
+            padding-top: 0.6rem;
+            margin-top: 0.6rem;
+            gap: 0.4rem;
+        }
+
+        .protocolo-footer .info {
+            color: var(--text-secondary);
+            font-size: 0.6rem;
+            display: flex;
+            align-items: center;
+            gap: 0.2rem;
+        }
+
+        .protocolo-footer .info i { color: var(--verde-claro); }
+
+        .botoes { display: flex; flex-wrap: wrap; gap: 0.3rem; }
+
+        .btn {
+            border: none;
+            padding: 0.3rem 1rem;
+            border-radius: 40px;
+            font-weight: 500;
+            font-size: 0.65rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            cursor: pointer;
+            transition: var(--transition);
+            font-family: inherit;
+            border: 1px solid transparent;
+            text-decoration: none;
+        }
+
+        .btn i { font-size: 0.65rem; }
+
+        .btn-outline { background: transparent; border-color: var(--border-color); color: var(--text-secondary); }
+        .btn-outline:hover { background: var(--bg-body); border-color: var(--verde-claro); }
+        .btn-primary { background: var(--preto); color: var(--branco); box-shadow: 0 2px 12px rgba(25, 29, 27, 0.2); }
+        .btn-primary:hover { background: var(--verde-escuro); transform: translateY(-2px); box-shadow: 0 4px 20px rgba(46, 125, 50, 0.3); }
+        .btn-success { background: var(--verde-oliva); color: var(--branco); }
+        .btn-success:hover { background: var(--verde-escuro); transform: translateY(-2px); }
+        .btn-voltar { background: var(--border-color); color: var(--text-primary); }
+        .btn-voltar:hover { background: var(--verde-claro); transform: translateY(-2px); }
+        .btn-danger { background: #8B3A3A; color: var(--branco); }
+        .btn-danger:hover { background: #6A2A2A; transform: translateY(-2px); }
+        .btn-secondary { background: var(--border-color); color: var(--text-primary); }
+        .btn-secondary:hover { background: var(--verde-claro); transform: translateY(-2px); }
+
         #feedback {
-            padding: 12px;
-            border-radius: 6px;
-            margin: 15px 0;
-            min-height: 50px;
-            background: #f8f9fa;
-            border: 1px solid #ddd;
-            font-family: monospace;
-            font-size: 14px;
+            margin-top: 0.3rem;
+            text-align: right;
+            min-height: 1.2rem;
+            font-size: 0.65rem;
         }
-        .sucesso { background: #d4edda; border-color: #28a745; color: #155724; }
-        .erro { background: #f8d7da; border-color: #dc3545; color: #721c24; }
-        .carregando { background: #fff3cd; border-color: #ffc107; color: #856404; }
-        .lista-item {
-            background: #f8f9fa;
-            padding: 10px 15px;
-            margin: 5px 0;
-            border-radius: 6px;
-            border-left: 4px solid #2E7D32;
+
+        #toastGlobal {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 12px 24px;
+            border-radius: 10px;
+            font-weight: 500;
+            font-size: 13px;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 9999;
+            max-width: 400px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            cursor: default;
+            border: 1px solid rgba(255,255,255,0.1);
         }
-        .lista-item strong { color: #2E7D32; }
-        .status-badge {
+        #toastGlobal.show { transform: translateY(0); opacity: 1; }
+
+        .protocolos-salvos {
+            margin-top: 1.5rem;
+            border-top: 2px solid var(--border-color);
+            padding-top: 1.2rem;
+        }
+        .protocolos-salvos .titulo {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .protocolos-salvos .titulo i { color: var(--verde-claro); }
+
+        .protocolo-item {
+            background: var(--bg-body);
+            padding: 0.6rem 1rem;
+            border-radius: 10px;
+            margin-bottom: 0.6rem;
+            border: 1px solid var(--border-color);
+            transition: var(--transition);
+        }
+        .protocolo-item:hover { border-color: var(--verde-claro); box-shadow: var(--shadow); }
+        .protocolo-item .head {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 0.3rem 0.8rem;
+            margin-bottom: 0.15rem;
+        }
+        .protocolo-item .head strong { color: var(--text-primary); font-size: 0.8rem; }
+        .protocolo-item .head small { color: var(--text-secondary); font-size: 0.65rem; }
+        .protocolo-item .detalhes { color: var(--text-secondary); font-size: 0.7rem; margin-bottom: 0.2rem; }
+        .protocolo-item .acoes { display: flex; gap: 0.3rem; margin-top: 0.2rem; }
+        .protocolo-item .acoes .btn { padding: 0.1rem 0.6rem; font-size: 0.6rem; }
+        .protocolo-item .meta { color: #aaa; font-size: 0.6rem; margin-top: 0.1rem; }
+
+        .lista-vazia { text-align: center; color: var(--text-secondary); padding: 1.5rem 1rem; }
+        .lista-vazia i { font-size: 1.5rem; display: block; margin-bottom: 0.3rem; color: var(--border-color); }
+
+        .drag-handle {
+            cursor: grab;
+            opacity: 0.5;
+            font-size: 0.7rem;
+            margin-right: 2px;
+        }
+        .drag-handle:hover { opacity: 1; }
+
+        .remove-fornecedor {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: #8B3A3A;
+            color: var(--branco);
+            border: none;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            font-size: 0.5rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: var(--transition);
+            opacity: 0.7;
+        }
+
+        .remove-fornecedor:hover { opacity: 1; transform: scale(1.1); }
+
+        .btn-aprovar-fornecedor {
+            background: var(--verde-oliva);
+            color: white;
+            border: none;
+            border-radius: 40px;
+            padding: 0.1rem 0.6rem;
+            font-size: 0.5rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            font-family: inherit;
+            white-space: nowrap;
+        }
+        .btn-aprovar-fornecedor:hover {
+            background: var(--verde-escuro);
+            transform: scale(1.05);
+        }
+        .btn-aprovar-fornecedor.aprovado {
+            background: var(--verde-claro);
+            color: var(--preto);
+            cursor: default;
+        }
+        .btn-aprovar-fornecedor.aprovado:hover { transform: none; }
+        .btn-aprovar-fornecedor i { margin-right: 0.15rem; font-size: 0.5rem; }
+
+        .fornecedor-aprovado-destaque {
+            border: 2px solid var(--verde-oliva) !important;
+            background: rgba(193, 206, 131, 0.15) !important;
+            position: relative;
+        }
+        .fornecedor-aprovado-destaque::before {
+            content: "⭐ APROVADO";
+            position: absolute;
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--verde-oliva);
+            color: var(--branco);
+            font-size: 0.5rem;
+            font-weight: 800;
+            padding: 0.05rem 0.6rem;
+            border-radius: 40px;
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+            z-index: 10;
+        }
+
+        .melhor-preco-item {
+            background: #C8E6C9 !important;
+            border: 2px solid #2E7D32 !important;
+            border-radius: 4px !important;
+            color: #1B5E20 !important;
+            font-weight: 700 !important;
+            position: relative;
+        }
+
+        .melhor-preco-item .simbolo-moeda {
+            color: #1B5E20 !important;
+        }
+
+        .melhor-preco-item input {
+            color: #1B5E20 !important;
+            font-weight: 700 !important;
+        }
+
+        .melhor-preco-badge {
             display: inline-block;
-            padding: 2px 10px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: bold;
+            background: var(--verde-escuro);
+            color: white;
+            font-size: 0.45rem;
+            font-weight: 700;
+            padding: 0.05rem 0.4rem;
+            border-radius: 40px;
+            margin-left: 0.2rem;
+            white-space: nowrap;
+            letter-spacing: 0.3px;
         }
-        .status-rascunho { background: #ffd54f; color: #333; }
-        .status-concluida { background: #81c784; color: white; }
+
+        .melhor-preco-badge i { margin-right: 0.1rem; font-size: 0.4rem; }
+
+        @media (max-width: 768px) {
+            .app-topbar { flex-direction: column; align-items: stretch; }
+            .clock-display { justify-content: center; font-size: 0.7rem; }
+            .nav-menu { justify-content: center; }
+            .nav-menu .nav-item { font-size: 0.55rem; padding: 0.2rem 0.5rem; }
+            .tabela-cotacao { font-size: 0.6rem; }
+            .tabela-cotacao th,
+            .tabela-cotacao td { padding: 0.15rem 0.2rem; }
+            .tabela-cotacao td input { font-size: 0.6rem; }
+            .info-topo { flex-direction: column; gap: 0.2rem; }
+            .info-topo .campo input { width: 100%; }
+            .info-topo .campo.nome-campo input,
+            .info-topo .campo.uso-campo input { min-width: 100px; font-size: 0.85rem; }
+            .botoes .btn { font-size: 0.6rem; padding: 0.25rem 0.6rem; }
+            .logo-text .title { font-size: 1rem; }
+            .logo-text .slogan { font-size: 0.35rem; }
+            .card-body { padding: 1rem; }
+            .campo-moeda input { padding-left: 16px !important; font-size: 0.6rem !important; }
+        }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h1>🏢 TaguáLife - Mapa de Cotação</h1>
-    
-    <div class="info">
-        <strong>✅ Conectado ao Supabase</strong><br>
-        Projeto: <code>frlecudymdpnrsilavbj.supabase.co</code>
+<div class="app-container">
+    <!-- TOPBAR -->
+    <div class="app-topbar">
+        <a href="#" class="logo-area">
+            <div class="logo-icon">T <small>LIFE</small></div>
+            <div class="logo-text">
+                <div class="title"><span class="tagua">Taguá</span><span class="life">Life</span></div>
+                <div class="slogan">Life Conceito em Gestão Condominial</div>
+            </div>
+        </a>
+        <div class="clock-display">
+            <i class="fas fa-clock"></i>
+            <span id="clockHours">00</span><span class="clock-separator">:</span>
+            <span id="clockMinutes">00</span><span class="clock-separator">:</span>
+            <span id="clockSeconds" class="clock-seconds">00</span>
+            <span class="clock-date" id="clockDate">00/00/0000</span>
+        </div>
+        <span class="badge"><i class="fas fa-file-invoice"></i> Mapa de Cotação</span>
     </div>
 
-    <!-- Campos -->
-    <div class="campo">
-        <label>👤 NOME:</label>
-        <input type="text" id="nome" value="Compra de Material" placeholder="Digite o nome da cotação">
-    </div>
-    <div class="campo">
-        <label>📋 USO:</label>
-        <input type="text" id="uso" value="Manutenção" placeholder="Digite o uso">
-    </div>
-    <div class="campo">
-        <label>📝 OBS:</label>
-        <input type="text" id="obs" placeholder="Observações (opcional)">
-    </div>
-
-    <!-- Botões -->
-    <div class="botoes">
-        <button class="btn btn-verde" onclick="testarConexao()">🔌 Testar Conexão</button>
-        <button class="btn btn-azul" onclick="salvarCotacao()">💾 Salvar Cotação</button>
-        <button class="btn btn-cinza" onclick="listarCotoes()">📋 Ver Salvos</button>
-        <button class="btn btn-vermelho" onclick="excluirUltima()">🗑️ Excluir Última</button>
-        <button class="btn btn-cinza" onclick="limparCampos()">🧹 Limpar</button>
+    <!-- MENU -->
+    <div class="nav-menu">
+        <a class="nav-item" href="#"><i class="fas fa-home"></i> Dashboard</a>
+        <a class="nav-item" href="#"><i class="fas fa-boxes"></i> Estoque</a>
+        <a class="nav-item" href="#"><i class="fas fa-arrow-right"></i> Saída</a>
+        <a class="nav-item active" href="#"><i class="fas fa-file-invoice"></i> Cotação</a>
+        <a class="nav-item" href="#"><i class="fas fa-check-circle"></i> Aprovadas</a>
+        <a class="nav-item" href="#"><i class="fas fa-handshake"></i> Fornecedores</a>
+        <button class="nav-item btn-theme" onclick="toggleTheme()" style="margin-left:auto;">
+            <i class="fas fa-moon" id="themeIcon"></i> <span id="themeLabel">Tema</span>
+        </button>
     </div>
 
-    <!-- Feedback -->
-    <div id="feedback">🟢 Clique em "Testar Conexão" para começar.</div>
+    <!-- CONTEÚDO PRINCIPAL -->
+    <div class="card-cotacao" id="cotacaoParaImprimir">
+        <div class="card-header">
+            <div class="left">
+                <i class="fas fa-file-invoice"></i>
+                <h2>Mapa de Cotação</h2>
+                <span>• Comparativo de Preços</span>
+            </div>
+            <div class="right">
+                <span><i class="far fa-calendar-alt"></i> <span id="dataAtual"></span></span>
+                <span><i class="far fa-clock"></i> <span id="horaAtual"></span></span>
+            </div>
+        </div>
 
-    <!-- Lista de cotações -->
-    <div id="lista" style="margin-top: 20px;"></div>
+        <div class="card-body">
+            <div class="info-condominio">
+                <div class="item"><i class="fas fa-building"></i> <strong>Condomínio TaguáLife Center</strong> - Apart-Hotel</div>
+                <div class="item"><i class="fas fa-map-marker-alt"></i> CSG 03, Lote 07 - Taguatinga Sul - DF</div>
+                <div class="item"><i class="fas fa-id-card"></i> CNPJ: 34.330.943/0003-66</div>
+            </div>
+
+            <div class="objetivo">
+                <i class="fas fa-bullseye"></i> Objetivo: Assegurar que os produtos e/ou serviços estejam em conformidade com os requisitos especificados e sejam adquiridos de fornecedores qualificados
+            </div>
+
+            <div class="info-topo">
+                <div class="campo nome-campo">
+                    <label><i class="fas fa-user"></i> NOME:</label>
+                    <input type="text" id="nomeCotacao" value="" placeholder="Digite o nome completo" />
+                </div>
+                <div class="campo uso-campo">
+                    <label><i class="fas fa-briefcase"></i> USO:</label>
+                    <input type="text" id="usoCotacao" value="" placeholder="Digite o uso" />
+                </div>
+                <div class="campo" style="margin-left:auto; flex:0 0 auto; min-width:100px;">
+                    <label><i class="fas fa-calendar"></i> DATA:</label>
+                    <input type="text" id="dataTopo" style="width:100px;" class="readonly" readonly />
+                </div>
+                <div class="campo" style="flex:0 0 auto; min-width:80px;">
+                    <label><i class="fas fa-clock"></i> HORA:</label>
+                    <input type="text" id="horaTopo" style="width:80px;" class="readonly" readonly />
+                </div>
+            </div>
+
+            <div class="dica-digitacao no-print">
+                <i class="fas fa-lightbulb"></i> Dica: Digite apenas números (ex: 22) que o sistema converte automaticamente para R$ 22,00
+            </div>
+
+            <div style="overflow-x:auto;">
+                <table class="tabela-cotacao" id="tabelaCotacao">
+                    <thead>
+                        <tr id="headerFornecedores">
+                            <th class="col-item"></th>
+                            <th class="col-material" style="text-align:left;"></th>
+                            <th class="col-qtd"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="corpoTabela">
+                    </tbody>
+                </table>
+            </div>
+
+            <div style="text-align:center; padding:0.3rem 0; background:var(--bg-body); border-radius:6px; margin-top:0.3rem;" class="no-print">
+                <button class="btn-fornecedor" onclick="adicionarFornecedor()">
+                    <i class="fas fa-plus-circle"></i> Adicionar Fornecedor
+                </button>
+                <span style="color:#aaa; margin:0 0.5rem;">|</span>
+                <button class="btn-fornecedor" onclick="adicionarItem()">
+                    <i class="fas fa-plus"></i> Adicionar Item
+                </button>
+            </div>
+
+            <div class="grafico-comparativo no-print">
+                <div class="titulo-grafico">
+                    <i class="fas fa-chart-bar"></i> Comparativo de Valores por Fornecedor
+                    <button class="btn btn-outline" style="margin-left:auto; padding:0.1rem 0.5rem; font-size:0.55rem;" onclick="toggleGrafico()">
+                        <i class="fas fa-sync-alt"></i> Radar
+                    </button>
+                </div>
+                <canvas id="graficoComparativo"></canvas>
+            </div>
+
+            <div class="protocolo-footer">
+                <div class="info">
+                    <i class="fas fa-print"></i>
+                    <span>Documento gerado em <span id="dataGeracao"></span> - <span id="horaGeracao"></span></span>
+                    <span style="margin-left:0.5rem;" id="statusItens">0 itens</span>
+                </div>
+                <div class="botoes no-print">
+                    <button class="btn btn-danger" onclick="limparPagina()"><i class="fas fa-broom"></i> Nova Cotação</button>
+                    <button class="btn btn-secondary" onclick="toggleListaSalvos()"><i class="fas fa-folder-open"></i> Ver salvos</button>
+                    <button class="btn btn-success" onclick="window.print()"><i class="fas fa-print"></i> Imprimir</button>
+                    <button class="btn btn-primary" id="btnSalvar"><i class="fas fa-save"></i> Salvar</button>
+                    <button class="btn btn-primary" id="btnConcluir" style="background:#2E7D32; color:white;"><i class="fas fa-check-circle"></i> Concluir</button>
+                </div>
+            </div>
+
+            <div id="feedback"></div>
+        </div>
+    </div>
+
+    <!-- LISTA DE COTAÇÕES SALVAS -->
+    <div id="listaCotoes" class="protocolos-salvos" style="display: none;">
+        <div class="titulo"><i class="fas fa-archive"></i> Cotações Registradas</div>
+        <div id="conteudoLista"></div>
+    </div>
 </div>
+
+<!-- TOAST -->
+<div id="toastGlobal"></div>
 
 <script>
 // ============================================================
-// CONFIGURAÇÃO DO SUPABASE
+// CONFIGURAÇÃO DO SUPABASE - CORRIGIDO!
 // ============================================================
 const SUPABASE_URL = 'https://frlecudymdpnrsilavbj.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_Uv-GZdW4peH3IZTIwiNYXg_IrYytpn4';
+const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-console.log('🔵 Iniciando...');
+console.log('✅ Supabase configurado!');
 console.log('URL:', SUPABASE_URL);
 
-// Verificar se o Supabase foi carregado
-if (typeof supabase === 'undefined') {
-    document.getElementById('feedback').innerHTML = '❌ ERRO: Supabase não carregou! Verifique sua internet.';
-    document.getElementById('feedback').className = 'erro';
-} else {
-    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-    window.db = supabaseClient;
-    console.log('✅ Supabase inicializado!');
-    document.getElementById('feedback').innerHTML = '🟢 Pronto! Clique em "Testar Conexão".';
+// ============================================================
+// TODAS AS FUNÇÕES
+// ============================================================
+
+const CHAVE_THEME = 'tema_TaguáLife';
+
+let fornecedores = [];
+let proximoIdFornecedor = 1;
+let editandoId = null;
+let graficoChart = null;
+let tipoGrafico = 'bar';
+let fornecedorAprovadoId = null;
+
+// ===== TOAST =====
+function mostrarToast(mensagem, tipo = 'success') {
+    const toast = document.getElementById('toastGlobal');
+    const cores = { info: '#3498DB', success: '#2E7D32', warning: '#C1A83C', danger: '#8B3A3A' };
+    toast.textContent = mensagem;
+    toast.style.background = cores[tipo] || '#191D1B';
+    toast.style.color = 'white';
+    toast.classList.add('show');
+    clearTimeout(toast._timeout);
+    toast._timeout = setTimeout(() => toast.classList.remove('show'), 4000);
 }
 
-// ===== FUNÇÕES =====
-
-function mostrarFeedback(msg, tipo = '') {
-    const el = document.getElementById('feedback');
-    el.textContent = msg;
-    el.className = tipo;
-    console.log(msg);
+// ===== RELÓGIO =====
+function getHorarioBrasilia() {
+    const agora = new Date();
+    const data = agora.toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' });
+    const hora = agora.toLocaleTimeString('pt-BR', { timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit' });
+    const horaCompleta = agora.toLocaleTimeString('pt-BR', { timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    return { data, hora, horaCompleta };
 }
 
-async function testarConexao() {
-    try {
-        mostrarFeedback('🔄 Testando conexão...', 'carregando');
-        
-        const { data, error } = await window.db
-            .from('cotacoes')
-            .select('count', { count: 'exact', head: true });
-        
-        if (error) throw error;
-        
-        mostrarFeedback('✅ Conexão OK! Tabela "cotacoes" existe e está acessível.', 'sucesso');
-        
-    } catch (error) {
-        console.error('❌ Erro:', error);
-        mostrarFeedback('❌ ERRO: ' + error.message, 'erro');
+function atualizarRelogio() {
+    const horario = getHorarioBrasilia();
+    document.getElementById('clockHours').textContent = horario.hora.split(':')[0] || '00';
+    document.getElementById('clockMinutes').textContent = horario.hora.split(':')[1] || '00';
+    document.getElementById('clockSeconds').textContent = horario.horaCompleta.split(':')[2] || '00';
+    document.getElementById('clockDate').textContent = horario.data;
+    document.getElementById('dataAtual').textContent = horario.data;
+    document.getElementById('horaAtual').textContent = horario.hora;
+    document.getElementById('dataGeracao').textContent = horario.data;
+    document.getElementById('horaGeracao').textContent = horario.horaCompleta;
+    document.getElementById('dataTopo').value = horario.data;
+    document.getElementById('horaTopo').value = horario.hora;
+}
+atualizarRelogio();
+setInterval(atualizarRelogio, 1000);
+
+// ===== TEMA =====
+function toggleTheme() {
+    const body = document.body;
+    body.classList.toggle('dark-mode');
+    const isDark = body.classList.contains('dark-mode');
+    localStorage.setItem(CHAVE_THEME, isDark ? 'dark' : 'light');
+    const icon = document.getElementById('themeIcon');
+    const label = document.getElementById('themeLabel');
+    if (isDark) { icon.className = 'fas fa-sun'; label.textContent = 'Claro'; } 
+    else { icon.className = 'fas fa-moon'; label.textContent = 'Tema'; }
+}
+
+function carregarTema() {
+    const theme = localStorage.getItem(CHAVE_THEME);
+    if (theme === 'dark') {
+        document.body.classList.add('dark-mode');
+        document.getElementById('themeIcon').className = 'fas fa-sun';
+        document.getElementById('themeLabel').textContent = 'Claro';
     }
 }
 
-async function salvarCotacao() {
+// ===== FORMATAÇÃO =====
+function parseMoeda(valor) {
+    if (!valor) return 0;
+    let limpo = String(valor).replace(/[^0-9,.]/g, '');
+    if (limpo.includes(',')) {
+        limpo = limpo.replace(/\./g, '').replace(',', '.');
+    }
+    return parseFloat(limpo) || 0;
+}
+
+function formatarMoeda(valor) {
+    return 'R$ ' + valor.toFixed(2).replace('.', ',');
+}
+
+function formatarMoedaInput(valor) {
+    return valor.toFixed(2).replace('.', ',');
+}
+
+function textoParaNumero(texto) {
+    if (!texto) return 0;
+    let limpo = texto.replace(/[^0-9,]/g, '');
+    if (limpo.includes(',')) {
+        limpo = limpo.replace(',', '.');
+    }
+    return parseFloat(limpo) || 0;
+}
+
+function mascaraMoedaSimplificada(input) {
+    let valor = input.value.replace(/[^0-9]/g, '');
+    if (valor === '') { input.value = ''; return; }
+    let numero = parseInt(valor, 10);
+    if (isNaN(numero)) { input.value = ''; return; }
+    let reais = numero / 100;
+    let formatado = reais.toFixed(2).replace('.', ',');
+    let partes = formatado.split(',');
+    let inteiro = partes[0];
+    let decimal = partes[1];
+    inteiro = inteiro.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    input.value = inteiro + ',' + decimal;
+}
+
+// ===== FEEDBACK =====
+function mostrarMensagem(texto, cor = '#191D1B') {
+    const feedback = document.getElementById('feedback');
+    feedback.innerHTML = `<span style="background:${cor}; color:white; padding:0.2rem 1.2rem; border-radius:40px; display:inline-block; font-size:0.65rem;">${texto}</span>`;
+    clearTimeout(feedback._timeout);
+    feedback._timeout = setTimeout(() => { feedback.innerHTML = ''; }, 4000);
+}
+
+// ============================================================
+// FUNÇÕES DO SUPABASE
+// ============================================================
+
+async function salvarCotacaoSupabase(concluir = false) {
     try {
-        const nome = document.getElementById('nome').value.trim() || 'Sem nome';
-        const uso = document.getElementById('uso').value.trim() || 'Sem uso';
-        const obs = document.getElementById('obs').value.trim() || '';
+        const nome = document.getElementById('nomeCotacao').value.trim();
+        const uso = document.getElementById('usoCotacao').value.trim();
         
-        mostrarFeedback('🔄 Salvando cotação...', 'carregando');
-        
-        const dados = {
+        if (!nome) {
+            mostrarMensagem('⚠️ Preencha o NOME!', '#8B3A3A');
+            return;
+        }
+        if (!uso) {
+            mostrarMensagem('⚠️ Preencha o USO!', '#8B3A3A');
+            return;
+        }
+
+        // Coletar itens
+        const itens = [];
+        document.querySelectorAll('.item-row').forEach(row => {
+            const desc = row.querySelector('.item-desc')?.value || '';
+            const qtd = parseInt(row.querySelector('.item-qtd')?.value) || 1;
+            if (desc) {
+                const precos = {};
+                fornecedores.forEach(f => {
+                    const totalInput = row.querySelector(`.f${f.id}-total`);
+                    precos[f.id] = totalInput ? textoParaNumero(totalInput.value) : 0;
+                });
+                itens.push({ descricao: desc, quantidade: qtd, precos });
+            }
+        });
+
+        if (itens.length === 0) {
+            mostrarMensagem('⚠️ Adicione pelo menos um item!', '#8B3A3A');
+            return;
+        }
+
+        // Coletar fornecedores
+        const fornecedoresData = [];
+        fornecedores.forEach((f, index) => {
+            const nomeInput = document.getElementById(`f${index}Nome`);
+            const contatoInput = document.getElementById(`f${index}Contato`);
+            const telefoneInput = document.getElementById(`f${index}Telefone`);
+            const obsInput = document.getElementById(`obsF${f.id}`);
+            const freteInput = document.getElementById(`freteF${f.id}`);
+            
+            fornecedoresData.push({
+                nome: nomeInput ? nomeInput.value.trim() : f.nome || '',
+                contato: contatoInput ? contatoInput.value.trim() : '',
+                telefone: telefoneInput ? telefoneInput.value.trim() : '',
+                obs: obsInput ? obsInput.value.trim() : '',
+                frete: freteInput ? textoParaNumero(freteInput.value) : 0
+            });
+        });
+
+        const observacaoGeral = document.getElementById('observacao')?.value || '';
+
+        // Calcular totais
+        const totais = {};
+        fornecedores.forEach(f => {
+            let total = 0;
+            itens.forEach(item => {
+                total += item.precos[f.id] || 0;
+            });
+            const freteInput = document.getElementById(`freteF${f.id}`);
+            const frete = freteInput ? textoParaNumero(freteInput.value) : 0;
+            totais[f.id] = total + frete;
+        });
+
+        // Encontrar melhor proposta
+        let melhorId = null;
+        let melhorValor = Infinity;
+        fornecedores.forEach(f => {
+            if (totais[f.id] > 0 && totais[f.id] < melhorValor) {
+                melhorValor = totais[f.id];
+                melhorId = f.id;
+            }
+        });
+
+        // Montar objeto
+        const cotacao = {
             nome: nome,
             uso: uso,
-            observacao: obs,
-            status: 'rascunho',
-            melhor_valor: 0,
-            criado_em: new Date().toISOString()
+            observacao: observacaoGeral,
+            fornecedores: fornecedoresData,
+            itens: itens.map(item => ({
+                descricao: item.descricao,
+                quantidade: item.quantidade
+            })),
+            precos: itens.map(item => {
+                const obj = { descricao: item.descricao };
+                fornecedores.forEach(f => {
+                    obj[`fornecedor_${f.id}`] = item.precos[f.id] || 0;
+                });
+                return obj;
+            }),
+            totais: totais,
+            melhor_fornecedor_id: melhorId,
+            melhor_valor: melhorValor !== Infinity ? melhorValor : 0,
+            status: concluir ? 'concluida' : 'rascunho',
+            atualizado_em: new Date().toISOString()
         };
-        
-        const { data, error } = await window.db
-            .from('cotacoes')
-            .insert([dados])
-            .select();
-        
-        if (error) throw error;
-        
-        mostrarFeedback('✅ Cotação salva com sucesso!\nID: ' + data[0].id, 'sucesso');
-        await listarCotoes();
-        
+
+        if (editandoId) {
+            const { error } = await supabaseClient
+                .from('cotacoes')
+                .update(cotacao)
+                .eq('id', editandoId);
+
+            if (error) throw error;
+            mostrarMensagem('✅ Cotação atualizada!', '#7A816E');
+            mostrarToast('✅ Cotação atualizada!', 'success');
+            editandoId = null;
+        } else {
+            const { data, error } = await supabaseClient
+                .from('cotacoes')
+                .insert([cotacao])
+                .select();
+
+            if (error) throw error;
+            mostrarMensagem('✅ Cotação salva com sucesso!', '#7A816E');
+            mostrarToast('✅ Cotação salva!', 'success');
+        }
+
+        if (concluir) {
+            limparPagina();
+            mostrarMensagem('🧹 Cotação concluída!', '#2E7D32');
+        }
+
+        const listaEl = document.getElementById('listaCotoes');
+        if (listaEl && listaEl.style.display !== 'none') {
+            await carregarListaSalvos();
+        }
+
     } catch (error) {
-        console.error('❌ Erro:', error);
-        mostrarFeedback('❌ ERRO: ' + error.message, 'erro');
+        console.error('Erro ao salvar:', error);
+        mostrarMensagem('❌ Erro: ' + error.message, '#8B3A3A');
+        mostrarToast('❌ Erro ao salvar!', 'danger');
     }
 }
 
-async function listarCotoes() {
+async function carregarListaSalvos() {
+    const container = document.getElementById('conteudoLista');
+    if (!container) return;
+
     try {
-        mostrarFeedback('🔄 Carregando cotações...', 'carregando');
-        
-        const { data, error } = await window.db
+        const { data, error } = await supabaseClient
             .from('cotacoes')
             .select('*')
-            .order('criado_em', { ascending: false })
-            .limit(10);
-        
+            .order('criado_em', { ascending: false });
+
         if (error) throw error;
-        
-        const container = document.getElementById('lista');
-        
-        if (data.length === 0) {
-            container.innerHTML = '<p style="text-align:center; color:#666;">📭 Nenhuma cotação encontrada.</p>';
-            mostrarFeedback('📭 Nenhuma cotação salva.', '');
+
+        const cotoes = data || [];
+
+        if (cotoes.length === 0) {
+            container.innerHTML = `<div class="lista-vazia"><i class="fas fa-inbox"></i> Nenhuma cotação registrada ainda.</div>`;
         } else {
-            let html = '<h3 style="margin-top:0;">📋 Últimas Cotações</h3>';
-            data.forEach(item => {
-                const dataCriacao = item.criado_em ? new Date(item.criado_em).toLocaleString('pt-BR') : 'Sem data';
-                const statusClass = item.status === 'concluida' ? 'status-concluida' : 'status-rascunho';
+            let html = '';
+            cotoes.forEach(c => {
+                const totalItens = c.itens ? c.itens.length : 0;
+                const dataCriacao = c.criado_em ? new Date(c.criado_em).toLocaleDateString('pt-BR') : 'Sem data';
+                const status = c.status || 'rascunho';
+                const statusLabel = status === 'concluida' ? '✅ Concluída' : '📝 Rascunho';
+                const statusColor = status === 'concluida' ? '#2E7D32' : '#FFB300';
                 
                 html += `
-                    <div class="lista-item">
-                        <strong>${item.nome || 'Sem nome'}</strong> - ${item.uso || 'Sem uso'}
-                        <span class="status-badge ${statusClass}">${item.status || 'rascunho'}</span>
-                        <br>
-                        <small>📅 ${dataCriacao}</small>
-                        <small style="margin-left:10px;">🆔 ${item.id.substring(0, 8)}</small>
-                        ${item.observacao ? `<br><small>📝 ${item.observacao}</small>` : ''}
+                    <div class="protocolo-item">
+                        <div class="head">
+                            <strong>📄 #${String(c.id).substring(0, 8)}</strong>
+                            <small>👤 ${c.nome || 'Sem nome'}</small>
+                            <span style="background:var(--border-color); padding:0.1rem 0.6rem; border-radius:40px; font-size:0.6rem; font-weight:500;">${totalItens} item(ns)</span>
+                            <span style="background:var(--verde-claro); padding:0.1rem 0.6rem; border-radius:40px; font-size:0.6rem; font-weight:600; color:var(--preto);">🏆 ${formatarMoeda(c.melhor_valor || 0)}</span>
+                            <span style="background:${statusColor}; padding:0.1rem 0.6rem; border-radius:40px; font-size:0.6rem; font-weight:600; color:white;">${statusLabel}</span>
+                        </div>
+                        <div class="detalhes">📋 ${c.uso || 'Sem uso'} • 📅 ${dataCriacao}</div>
+                        <div class="acoes">
+                            <button class="btn btn-outline" onclick="carregarCotacaoParaEdicao('${c.id}')"><i class="fas fa-edit"></i> Editar</button>
+                            <button class="btn btn-outline" onclick="excluirCotacaoSupabase('${c.id}')" style="color:var(--danger);"><i class="fas fa-trash-alt"></i></button>
+                        </div>
                     </div>
                 `;
             });
             container.innerHTML = html;
-            mostrarFeedback(`✅ ${data.length} cotações carregadas.`, 'sucesso');
         }
-        
     } catch (error) {
-        console.error('❌ Erro:', error);
-        mostrarFeedback('❌ ERRO: ' + error.message, 'erro');
+        console.error('Erro ao carregar lista:', error);
+        container.innerHTML = `<div class="lista-vazia"><i class="fas fa-exclamation-triangle"></i> Erro ao carregar: ${error.message}</div>`;
     }
 }
 
-async function excluirUltima() {
+async function carregarCotacaoParaEdicao(id) {
     try {
-        if (!confirm('⚠️ Tem certeza que deseja excluir a última cotação?')) return;
-        
-        mostrarFeedback('🔄 Excluindo...', 'carregando');
-        
-        const { data: lista, error: erroLista } = await window.db
+        const { data, error } = await supabaseClient
             .from('cotacoes')
-            .select('id')
-            .order('criado_em', { ascending: false })
-            .limit(1);
-        
-        if (erroLista) throw erroLista;
-        
-        if (lista.length === 0) {
-            mostrarFeedback('📭 Nenhuma cotação para excluir.', '');
+            .select('*')
+            .eq('id', id)
+            .single();
+
+        if (error) throw error;
+        if (!data) {
+            mostrarMensagem('❌ Cotação não encontrada!', '#8B3A3A');
             return;
         }
-        
-        const id = lista[0].id;
-        
-        const { error } = await window.db
+
+        document.getElementById('nomeCotacao').value = data.nome || '';
+        document.getElementById('usoCotacao').value = data.uso || '';
+        document.getElementById('observacao').value = data.observacao || '';
+
+        if (data.fornecedores && data.fornecedores.length > 0) {
+            fornecedores = data.fornecedores.map((f, index) => ({
+                id: index + 1,
+                nome: f.nome || '',
+                contato: f.contato || '',
+                telefone: f.telefone || '',
+                obs: f.obs || '',
+                frete: f.frete || 0
+            }));
+            proximoIdFornecedor = fornecedores.length + 1;
+            editandoId = id;
+            renderizarTabela();
+
+            if (data.itens && data.itens.length > 0) {
+                const rows = document.querySelectorAll('.item-row');
+                data.itens.forEach((item, idx) => {
+                    if (idx < rows.length) {
+                        const row = rows[idx];
+                        row.querySelector('.item-desc').value = item.descricao || '';
+                        row.querySelector('.item-qtd').value = item.quantidade || 1;
+                    }
+                });
+
+                if (data.precos) {
+                    data.precos.forEach((preco, idx) => {
+                        if (idx < rows.length) {
+                            const row = rows[idx];
+                            fornecedores.forEach(f => {
+                                const totalInput = row.querySelector(`.f${f.id}-total`);
+                                if (totalInput) {
+                                    const valor = preco[`fornecedor_${f.id}`] || 0;
+                                    if (valor > 0) {
+                                        totalInput.value = formatarMoedaInput(valor);
+                                    }
+                                }
+                            });
+                        }
+                    });
+                }
+
+                setTimeout(() => {
+                    data.fornecedores.forEach((f, idx) => {
+                        const freteInput = document.getElementById(`freteF${idx + 1}`);
+                        if (freteInput && f.frete > 0) {
+                            freteInput.value = formatarMoedaInput(f.frete);
+                        }
+                    });
+                    atualizarTotais();
+                }, 200);
+            }
+        }
+
+        mostrarMensagem('📝 Cotação carregada para edição', '#7A816E');
+        mostrarToast('✏️ Cotação carregada!', 'info');
+        document.getElementById('listaCotoes').style.display = 'none';
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+
+    } catch (error) {
+        console.error('Erro ao carregar cotação:', error);
+        mostrarMensagem('❌ Erro ao carregar: ' + error.message, '#8B3A3A');
+    }
+}
+
+async function excluirCotacaoSupabase(id) {
+    if (!confirm('⚠️ Tem certeza que deseja excluir esta cotação?')) return;
+
+    try {
+        const { error } = await supabaseClient
             .from('cotacoes')
             .delete()
             .eq('id', id);
-        
+
         if (error) throw error;
-        
-        mostrarFeedback('🗑️ Última cotação excluída!', 'sucesso');
-        await listarCotoes();
-        
+
+        mostrarMensagem('🗑️ Cotação excluída!', '#8B3A3A');
+        mostrarToast('🗑️ Cotação excluída!', 'danger');
+        await carregarListaSalvos();
+
     } catch (error) {
-        console.error('❌ Erro:', error);
-        mostrarFeedback('❌ ERRO: ' + error.message, 'erro');
+        console.error('Erro ao excluir:', error);
+        mostrarMensagem('❌ Erro ao excluir: ' + error.message, '#8B3A3A');
     }
 }
 
-function limparCampos() {
-    document.getElementById('nome').value = '';
-    document.getElementById('uso').value = '';
-    document.getElementById('obs').value = '';
-    document.getElementById('lista').innerHTML = '';
-    mostrarFeedback('🧹 Campos limpos!', '');
+async function toggleListaSalvos() {
+    const el = document.getElementById('listaCotoes');
+    if (el.style.display === 'none') {
+        await carregarListaSalvos();
+        el.style.display = 'block';
+    } else {
+        el.style.display = 'none';
+    }
 }
 
-// ===== AUTO EXECUTAR AO ABRIR =====
-console.log('🚀 Página carregada!');
-setTimeout(() => {
-    testarConexao();
-}, 500);
+// ============================================================
+// FUNÇÕES DE RENDERIZAÇÃO
+// ============================================================
+
+function inicializarFornecedoresPadrao() {
+    fornecedores = [
+        { id: 1, nome: '', contato: '', telefone: '', obs: '', frete: 0 },
+        { id: 2, nome: '', contato: '', telefone: '', obs: '', frete: 0 },
+        { id: 3, nome: '', contato: '', telefone: '', obs: '', frete: 0 },
+        { id: 4, nome: '', contato: '', telefone: '', obs: '', frete: 0 }
+    ];
+    proximoIdFornecedor = 5;
+    fornecedorAprovadoId = null;
+}
+
+function renderizarTabela() {
+    const thead = document.getElementById('headerFornecedores');
+    const tbody = document.getElementById('corpoTabela');
+    
+    while (thead.children.length > 3) thead.removeChild(thead.lastChild);
+    
+    fornecedores.forEach((f, index) => {
+        const th = document.createElement('th');
+        th.className = 'col-fornecedor fornecedor-header';
+        th.style.position = 'relative';
+        th.innerHTML = `
+            <input type="text" id="f${index}Nome" value="${f.nome}" placeholder="FORNECEDOR ${index + 1}" style="font-weight:700; font-size:0.7rem; text-transform:uppercase; color:var(--fornecedor-text);" />
+            <button class="btn-aprovar-fornecedor" onclick="aprovarFornecedor(${f.id})" title="Aprovar este fornecedor">
+                <i class="fas fa-check-circle"></i> Aprovar
+            </button>
+            ${fornecedores.length > 1 ? `<button class="remove-fornecedor" onclick="removerFornecedor(${f.id})" title="Remover fornecedor">×</button>` : ''}
+        `;
+        thead.appendChild(th);
+    });
+
+    if (!document.querySelector('.col-acoes')) {
+        const thAcoes = document.createElement('th');
+        thAcoes.className = 'col-acoes';
+        thAcoes.style.width = '25px';
+        thead.appendChild(thAcoes);
+    }
+
+    tbody.innerHTML = '';
+
+    const linhasInfo = [
+        { label: 'CONTATO:', fields: fornecedores.map((_, idx) => `f${idx}Contato`) },
+        { label: 'TELEFONE:', fields: fornecedores.map((_, idx) => `f${idx}Telefone`) }
+    ];
+
+    linhasInfo.forEach(info => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td colspan="3" style="background:var(--bg-body); font-weight:700; font-size:0.5rem; text-align:right; padding-right:0.8rem; color:var(--verde-oliva);">${info.label}</td>
+            ${fornecedores.map((f, idx) => `
+                <td><input type="text" id="${info.fields[idx]}" value="${f[info.label.replace(':', '').toLowerCase().trim()] || ''}" placeholder="${info.label.replace(':', '')}" class="fornecedor-field" /></td>
+            `).join('')}
+            <td></td>
+        `;
+        tbody.appendChild(tr);
+    });
+
+    const trSub = document.createElement('tr');
+    trSub.innerHTML = `
+        <td colspan="3" style="background:var(--verde-oliva); font-weight:600; font-size:0.5rem; color:var(--branco); text-align:center; padding:0.2rem;"></td>
+        ${fornecedores.map(() => `<td class="sub-info">R$ UND / TOTAL</td>`).join('')}
+        <td style="background:var(--verde-oliva);"></td>
+    `;
+    tbody.appendChild(trSub);
+
+    const trHeader = document.createElement('tr');
+    trHeader.innerHTML = `
+        <td class="label-cell" style="font-weight:700; font-size:0.55rem;">ITEM</td>
+        <td class="label-cell" style="font-weight:700; font-size:0.55rem; text-align:left; padding-left:0.6rem;">MATERIAL / SERVIÇO</td>
+        <td class="label-cell" style="font-weight:700; font-size:0.55rem;">QTD</td>
+        ${fornecedores.map(() => `<td style="background:var(--bg-body);"></td>`).join('')}
+        <td style="background:var(--bg-body);"></td>
+    `;
+    tbody.appendChild(trHeader);
+
+    adicionarLinhaItemPadrao();
+
+    const trAdd = document.createElement('tr');
+    trAdd.className = 'add-item-row';
+    trAdd.innerHTML = `
+        <td colspan="${3 + fornecedores.length + 1}" style="text-align:center; padding:0.3rem; background:var(--bg-body);">
+            <button class="btn-add-item" onclick="adicionarItem()"><i class="fas fa-plus"></i> Adicionar Item</button>
+        </td>
+    `;
+    tbody.appendChild(trAdd);
+
+    const trFrete = document.createElement('tr');
+    trFrete.className = 'frete-row';
+    trFrete.innerHTML = `
+        <td colspan="3" class="label-cell-left" style="font-size:0.6rem; font-weight:700; color:var(--verde-oliva);">🚚 FRETE</td>
+        ${fornecedores.map(f => `
+            <td>
+                <div class="campo-moeda">
+                    <span class="simbolo-moeda">R$</span>
+                    <input type="text" id="freteF${f.id}" value="" placeholder="0,00" style="font-weight:600; font-size:0.7rem; text-align:right; padding-right:0.3rem; color:var(--text-primary);" class="frete-input currency" />
+                </div>
+            </td>
+        `).join('')}
+        <td></td>
+    `;
+    tbody.appendChild(trFrete);
+
+    const trTotal = document.createElement('tr');
+    trTotal.className = 'total-row';
+    trTotal.innerHTML = `
+        <td colspan="3" class="label-cell" style="text-align:right; font-weight:700;">VALOR TOTAL + FRETE</td>
+        ${fornecedores.map(f => `<td class="total-cell" id="totalF${f.id}">R$ 0,00</td>`).join('')}
+        <td></td>
+    `;
+    tbody.appendChild(trTotal);
+
+    const trMelhor = document.createElement('tr');
+    trMelhor.id = 'linhaMelhorOferta';
+    trMelhor.innerHTML = `
+        <td colspan="3" class="label-cell" style="text-align:right; font-weight:900; color:var(--preto);">🏆 MELHOR PROPOSTA</td>
+        <td class="best-cell" colspan="${fornecedores.length}" id="melhorOferta" style="text-align:center; padding:0.4rem;">
+            <span class="melhor-valor" id="melhorValor">R$ 0,00</span>
+            <span class="melhor-fornecedor-nome" id="melhorFornecedor"><i class="fas fa-tag"></i> Nenhum fornecedor</span>
+            <span class="melhor-detalhes" id="melhorDetalhes"></span>
+        </td>
+        <td></td>
+    `;
+    tbody.appendChild(trMelhor);
+
+    const trPag = document.createElement('tr');
+    trPag.innerHTML = `
+        <td class="label-cell-left" colspan="3" style="font-size:0.6rem;">CONDIÇÕES DE PAGAMENTO</td>
+        ${fornecedores.map(f => `
+            <td><input type="text" id="p${f.id}" value="À VISTA" placeholder="Pagamento" style="font-weight:500; font-size:0.65rem;" /></td>
+        `).join('')}
+        <td></td>
+    `;
+    tbody.appendChild(trPag);
+
+    const trEntrega = document.createElement('tr');
+    trEntrega.innerHTML = `
+        <td class="label-cell-left" colspan="3" style="font-size:0.6rem;">PRAZO DE ENTREGA</td>
+        ${fornecedores.map(f => `
+            <td><input type="text" id="e${f.id}" value="IMEDIATO" placeholder="Prazo" style="font-weight:500; font-size:0.65rem;" /></td>
+        `).join('')}
+        <td></td>
+    `;
+    tbody.appendChild(trEntrega);
+
+    const trResp = document.createElement('tr');
+    trResp.innerHTML = `
+        <td class="label-cell-left" colspan="3" style="font-size:0.6rem;">RESPONSÁVEL</td>
+        ${fornecedores.map(f => `
+            <td><input type="text" id="r${f.id}" value="EDNALDO" placeholder="Responsável" style="font-weight:600; font-size:0.65rem; text-transform:uppercase;" /></td>
+        `).join('')}
+        <td></td>
+    `;
+    tbody.appendChild(trResp);
+
+    const trObsInd = document.createElement('tr');
+    trObsInd.className = 'obs-individual-row';
+    trObsInd.innerHTML = `
+        <td colspan="3" class="obs-label" style="font-size:0.55rem; color:var(--verde-oliva);">OBS. FORNECEDOR:</td>
+        ${fornecedores.map(f => `
+            <td class="obs-input">
+                <input type="text" id="obsF${f.id}" value="" placeholder="Obs. Fornecedor" style="font-size:0.6rem;" />
+            </td>
+        `).join('')}
+        <td></td>
+    `;
+    tbody.appendChild(trObsInd);
+
+    const trObsGeral = document.createElement('tr');
+    trObsGeral.className = 'obs-row';
+    trObsGeral.innerHTML = `
+        <td colspan="3" class="obs-label">OBSERVAÇÕES GERAIS:</td>
+        <td colspan="${fornecedores.length}" class="obs-input">
+            <input type="text" id="observacao" placeholder="Digite aqui suas anotações gerais..." />
+        </td>
+        <td></td>
+    `;
+    tbody.appendChild(trObsGeral);
+
+    configurarEventos();
+    initSortable();
+    setTimeout(() => atualizarTotais(), 100);
+}
+
+function adicionarLinhaItemPadrao() {
+    const tbody = document.getElementById('corpoTabela');
+    const tr = document.createElement('tr');
+    tr.className = 'item-row';
+    let html = `
+        <td class="label-cell"><span class="drag-handle"><i class="fas fa-grip-vertical"></i></span> 1</td>
+        <td><input type="text" class="text-left item-desc" placeholder="Descreva o material" style="font-size:0.7rem; width:100%;" /></td>
+        <td><input type="text" class="item-qtd" value="1" style="text-align:center; font-size:0.7rem;" /></td>
+    `;
+    fornecedores.forEach(f => {
+        html += `
+            <td>
+                <div class="campo-moeda">
+                    <span class="simbolo-moeda">R$</span>
+                    <input type="text" class="currency currency-und f${f.id}-und" value="" placeholder="0,00" style="font-size:0.65rem;" />
+                </div>
+                <div class="campo-moeda">
+                    <span class="simbolo-moeda">R$</span>
+                    <input type="text" class="currency currency-total f${f.id}-total" value="" placeholder="0,00" style="font-size:0.7rem;" />
+                </div>
+            </td>
+        `;
+    });
+    html += `<td><span class="remove-item" onclick="removerItem(this)"><i class="fas fa-times-circle"></i></span></td>`;
+    tr.innerHTML = html;
+    tbody.appendChild(tr);
+}
+
+function configurarEventos() {
+    document.querySelectorAll('.currency-und, .currency-total, .frete-input').forEach(input => {
+        input.addEventListener('input', function() {
+            mascaraMoedaSimplificada(this);
+            const row = this.closest('.item-row');
+            if (row && this.classList.contains('currency-und')) {
+                const qtd = parseFloat(row.querySelector('.item-qtd')?.value?.replace(',', '.') || 1);
+                const undValor = textoParaNumero(this.value);
+                const totalInput = row.querySelector(`.${this.className.split(' ')[2]}-total`);
+                if (totalInput && !isNaN(undValor) && undValor > 0) {
+                    totalInput.value = formatarMoedaInput(qtd * undValor);
+                }
+            }
+            atualizarTotais();
+        });
+
+        input.addEventListener('blur', function() {
+            if (this.value === '') return;
+            const valor = textoParaNumero(this.value);
+            if (valor > 0) this.value = formatarMoedaInput(valor);
+            else this.value = '';
+        });
+    });
+
+    document.querySelectorAll('.item-qtd').forEach(input => {
+        input.addEventListener('input', function() {
+            const row = this.closest('.item-row');
+            if (row) {
+                const qtd = parseFloat(this.value?.replace(',', '.') || 1);
+                row.querySelectorAll('.currency-und').forEach(undInput => {
+                    const undValor = textoParaNumero(undInput.value);
+                    if (undValor > 0) {
+                        const classe = undInput.className.split(' ')[2];
+                        const totalInput = row.querySelector(`.${classe}-total`);
+                        if (totalInput) {
+                            totalInput.value = formatarMoedaInput(qtd * undValor);
+                        }
+                    }
+                });
+            }
+            atualizarTotais();
+        });
+    });
+
+    document.querySelectorAll('.frete-input').forEach(input => {
+        input.addEventListener('change', () => setTimeout(atualizarTotais, 100));
+    });
+}
+
+function initSortable() {
+    const tbody = document.getElementById('corpoTabela');
+    if (window.sortableInstance) window.sortableInstance.destroy();
+    window.sortableInstance = new Sortable(tbody, {
+        handle: '.drag-handle',
+        animation: 150,
+        filter: '.add-item-row, .frete-row, .total-row, #linhaMelhorOferta, .obs-row, .obs-individual-row',
+        onEnd: function() {
+            tbody.querySelectorAll('.item-row').forEach((row, index) => {
+                const labelCell = row.querySelector('.label-cell');
+                if (labelCell) {
+                    labelCell.innerHTML = `<span class="drag-handle"><i class="fas fa-grip-vertical"></i></span> ${index + 1}`;
+                }
+            });
+            atualizarTotais();
+        }
+    });
+}
+
+// ============================================================
+// FUNÇÕES DE MANIPULAÇÃO
+// ============================================================
+
+function adicionarFornecedor() {
+    if (fornecedores.length >= 8) {
+        mostrarMensagem('⚠️ Máximo de 8 fornecedores!', '#8B3A3A');
+        return;
+    }
+    const novoId = proximoIdFornecedor++;
+    fornecedores.push({ id: novoId, nome: '', contato: '', telefone: '', obs: '', frete: 0 });
+    renderizarTabela();
+    mostrarMensagem('➕ Fornecedor adicionado!', '#7A816E');
+    mostrarToast('➕ Fornecedor adicionado!', 'info');
+}
+
+function removerFornecedor(id) {
+    if (fornecedores.length <= 1) {
+        mostrarMensagem('⚠️ Mantenha pelo menos 1 fornecedor!', '#8B3A3A');
+        return;
+    }
+    if (!confirm('Remover este fornecedor?')) return;
+    const index = fornecedores.findIndex(f => f.id === id);
+    if (index === -1) return;
+    fornecedores.splice(index, 1);
+    if (fornecedorAprovadoId === id) fornecedorAprovadoId = null;
+    renderizarTabela();
+    mostrarMensagem('🗑️ Fornecedor removido!', '#5A614E');
+}
+
+function adicionarItem() {
+    const tbody = document.getElementById('corpoTabela');
+    const rows = tbody.querySelectorAll('.item-row');
+    const num = rows.length + 1;
+    const addRow = tbody.querySelector('.add-item-row');
+    const tr = document.createElement('tr');
+    tr.className = 'item-row';
+    let html = `
+        <td class="label-cell"><span class="drag-handle"><i class="fas fa-grip-vertical"></i></span> ${num}</td>
+        <td><input type="text" class="text-left item-desc" placeholder="Descreva o material" style="font-size:0.7rem; width:100%;" /></td>
+        <td><input type="text" class="item-qtd" value="1" style="text-align:center; font-size:0.7rem;" /></td>
+    `;
+    fornecedores.forEach(f => {
+        html += `
+            <td>
+                <div class="campo-moeda">
+                    <span class="simbolo-moeda">R$</span>
+                    <input type="text" class="currency currency-und f${f.id}-und" value="" placeholder="0,00" style="font-size:0.65rem;" />
+                </div>
+                <div class="campo-moeda">
+                    <span class="simbolo-moeda">R$</span>
+                    <input type="text" class="currency currency-total f${f.id}-total" value="" placeholder="0,00" style="font-size:0.7rem;" />
+                </div>
+            </td>
+        `;
+    });
+    html += `<td><span class="remove-item" onclick="removerItem(this)"><i class="fas fa-times-circle"></i></span></td>`;
+    tr.innerHTML = html;
+    tbody.insertBefore(tr, addRow);
+    configurarEventos();
+    initSortable();
+    atualizarTotais();
+    mostrarMensagem('📋 Item adicionado!', '#7A816E');
+}
+
+function removerItem(element) {
+    const row = element.closest('.item-row');
+    const tbody = document.getElementById('corpoTabela');
+    if (tbody.querySelectorAll('.item-row').length <= 1) {
+        mostrarMensagem('⚠️ Mantenha pelo menos um item!', '#8B3A3A');
+        return;
+    }
+    if (confirm('Remover este item?')) {
+        row.remove();
+        tbody.querySelectorAll('.item-row').forEach((row, index) => {
+            const labelCell = row.querySelector('.label-cell');
+            if (labelCell) {
+                labelCell.innerHTML = `<span class="drag-handle"><i class="fas fa-grip-vertical"></i></span> ${index + 1}`;
+            }
+        });
+        atualizarTotais();
+        mostrarMensagem('🗑️ Item removido!', '#5A614E');
+    }
+}
+
+function limparPagina() {
+    if (!confirm('Deseja limpar todos os campos para iniciar uma nova cotação?')) return;
+    editandoId = null;
+    document.getElementById('nomeCotacao').value = '';
+    document.getElementById('usoCotacao').value = '';
+    document.getElementById('observacao').value = '';
+    fornecedorAprovadoId = null;
+    inicializarFornecedoresPadrao();
+    renderizarTabela();
+    mostrarMensagem('🧹 Página limpa para nova cotação!', '#5A614E');
+    mostrarToast('🧹 Nova cotação iniciada!', 'info');
+}
+
+function aprovarFornecedor(id) {
+    const f = fornecedores.find(item => item.id === id);
+    if (!f) {
+        mostrarMensagem('⚠️ Fornecedor não encontrado!', '#8B3A3A');
+        return;
+    }
+    const index = fornecedores.indexOf(f);
+    const nomeInput = document.getElementById(`f${index}Nome`);
+    const nome = nomeInput ? nomeInput.value.trim() : f.nome || '';
+    if (!nome) {
+        mostrarMensagem('⚠️ Informe o nome do fornecedor!', '#8B3A3A');
+        return;
+    }
+
+    if (fornecedorAprovadoId === id) {
+        fornecedorAprovadoId = null;
+        document.querySelectorAll('.fornecedor-header').forEach(th => {
+            th.classList.remove('fornecedor-aprovado-destaque');
+            const btn = th.querySelector('.btn-aprovar-fornecedor');
+            if (btn) {
+                btn.classList.remove('aprovado');
+                btn.innerHTML = '<i class="fas fa-check-circle"></i> Aprovar';
+            }
+        });
+        mostrarMensagem(`👤 Fornecedor "${nome}" desaprovado`, '#5A614E');
+        mostrarToast('👤 Desaprovado!', 'info');
+    } else {
+        document.querySelectorAll('.fornecedor-header').forEach(th => {
+            th.classList.remove('fornecedor-aprovado-destaque');
+            const btn = th.querySelector('.btn-aprovar-fornecedor');
+            if (btn) {
+                btn.classList.remove('aprovado');
+                btn.innerHTML = '<i class="fas fa-check-circle"></i> Aprovar';
+            }
+        });
+        fornecedorAprovadoId = id;
+        document.querySelectorAll('.fornecedor-header').forEach((th, idx) => {
+            const fId = fornecedores[idx]?.id;
+            const btn = th.querySelector('.btn-aprovar-fornecedor');
+            if (btn && fId === id) {
+                th.classList.add('fornecedor-aprovado-destaque');
+                btn.classList.add('aprovado');
+                btn.innerHTML = '<i class="fas fa-star"></i> Aprovado ✓';
+            }
+        });
+        mostrarMensagem(`⭐ "${nome}" aprovado!`, '#7A816E');
+        mostrarToast(`⭐ "${nome}" aprovado!`, 'success');
+    }
+    atualizarTotais();
+}
+
+// ============================================================
+// FUNÇÕES DE ATUALIZAÇÃO
+// ============================================================
+
+function atualizarTotais() {
+    const rows = document.querySelectorAll('.item-row');
+    const totais = {}, qtdItens = {}, fletes = {};
+    
+    fornecedores.forEach(f => {
+        totais[f.id] = 0;
+        qtdItens[f.id] = 0;
+        const freteInput = document.getElementById(`freteF${f.id}`);
+        fletes[f.id] = freteInput ? textoParaNumero(freteInput.value) : 0;
+    });
+
+    rows.forEach(row => {
+        fornecedores.forEach(f => {
+            const totalInput = row.querySelector(`.f${f.id}-total`);
+            if (totalInput && totalInput.value) {
+                const valor = textoParaNumero(totalInput.value);
+                if (!isNaN(valor) && valor > 0) {
+                    totais[f.id] += valor;
+                    qtdItens[f.id] += 1;
+                }
+            }
+        });
+    });
+
+    fornecedores.forEach(f => {
+        const el = document.getElementById(`totalF${f.id}`);
+        if (el) {
+            const total = totais[f.id] || 0;
+            const frete = fletes[f.id] || 0;
+            el.textContent = formatarMoeda(total + frete);
+        }
+    });
+
+    document.getElementById('statusItens').textContent = rows.length + ' item(ns)';
+
+    destacarMelhoresPrecos();
+    atualizarMelhorProposta();
+
+    const labels = [], valores = [];
+    fornecedores.forEach(f => {
+        const nomeInput = document.getElementById(`f${fornecedores.indexOf(f)}Nome`);
+        labels.push(nomeInput ? nomeInput.value || `Fornecedor ${fornecedores.indexOf(f) + 1}` : `Fornecedor ${fornecedores.indexOf(f) + 1}`);
+        const el = document.getElementById(`totalF${f.id}`);
+        valores.push(el ? parseFloat(el.textContent.replace('R$ ', '').replace('.', '').replace(',', '.')) || 0 : 0);
+    });
+    atualizarGrafico(labels, valores);
+}
+
+function destacarMelhoresPrecos() {
+    const rows = document.querySelectorAll('.item-row');
+    document.querySelectorAll('.melhor-preco-item').forEach(el => el.classList.remove('melhor-preco-item'));
+    document.querySelectorAll('.melhor-preco-badge').forEach(el => el.remove());
+
+    rows.forEach(row => {
+        let menorPreco = Infinity;
+        fornecedores.forEach(f => {
+            const totalInput = row.querySelector(`.f${f.id}-total`);
+            if (totalInput && totalInput.value) {
+                const valor = textoParaNumero(totalInput.value);
+                if (valor > 0 && valor < menorPreco) menorPreco = valor;
+            }
+        });
+
+        if (menorPreco !== Infinity) {
+            fornecedores.forEach(f => {
+                const totalInput = row.querySelector(`.f${f.id}-total`);
+                if (totalInput && totalInput.value) {
+                    const valor = textoParaNumero(totalInput.value);
+                    if (valor > 0 && Math.abs(valor - menorPreco) < 0.01) {
+                        const cell = totalInput.closest('td');
+                        if (cell) {
+                            cell.classList.add('melhor-preco-item');
+                            const badge = document.createElement('span');
+                            badge.className = 'melhor-preco-badge';
+                            badge.innerHTML = '<i class="fas fa-arrow-down"></i> MENOR PREÇO';
+                            cell.appendChild(badge);
+                        }
+                    }
+                }
+            });
+        }
+    });
+}
+
+function atualizarMelhorProposta() {
+    const melhorValorEl = document.getElementById('melhorValor');
+    const melhorFornecedorEl = document.getElementById('melhorFornecedor');
+    const melhorDetalhesEl = document.getElementById('melhorDetalhes');
+
+    if (fornecedorAprovadoId !== null) {
+        const f = fornecedores.find(item => item.id === fornecedorAprovadoId);
+        if (f) {
+            const nomeInput = document.getElementById(`f${fornecedores.indexOf(f)}Nome`);
+            const nome = nomeInput ? nomeInput.value.trim() : f.nome || 'Fornecedor';
+            const el = document.getElementById(`totalF${f.id}`);
+            const valor = el ? parseFloat(el.textContent.replace('R$ ', '').replace('.', '').replace(',', '.')) || 0 : 0;
+            melhorValorEl.textContent = formatarMoeda(valor);
+            melhorFornecedorEl.innerHTML = `<i class="fas fa-star" style="color:#C1CE83;"></i> ⭐ ${nome} (ESCOLHIDO)`;
+            melhorFornecedorEl.style.background = '#C1CE83';
+            melhorFornecedorEl.style.padding = '0.1rem 0.5rem';
+            melhorFornecedorEl.style.borderRadius = '4px';
+            melhorFornecedorEl.style.display = 'inline-block';
+            melhorDetalhesEl.textContent = '✅ APROVADO MANUALMENTE';
+            return;
+        }
+    }
+
+    let melhores = [];
+    const totalItens = document.querySelectorAll('.item-row').length;
+
+    fornecedores.forEach(f => {
+        let total = 0, qtd = 0;
+        document.querySelectorAll('.item-row').forEach(row => {
+            const totalInput = row.querySelector(`.f${f.id}-total`);
+            if (totalInput && totalInput.value) {
+                const valor = textoParaNumero(totalInput.value);
+                if (valor > 0) { total += valor; qtd++; }
+            }
+        });
+        if (qtd > 0) {
+            const freteInput = document.getElementById(`freteF${f.id}`);
+            const frete = freteInput ? textoParaNumero(freteInput.value) : 0;
+            const nomeInput = document.getElementById(`f${fornecedores.indexOf(f)}Nome`);
+            melhores.push({
+                id: f.id,
+                nome: nomeInput ? nomeInput.value.trim() : f.nome || 'Fornecedor',
+                total: total + frete,
+                qtd: qtd,
+                totalItens: totalItens
+            });
+        }
+    });
+
+    if (melhores.length === 0) {
+        melhorValorEl.textContent = 'R$ 0,00';
+        melhorFornecedorEl.innerHTML = '<i class="fas fa-tag"></i> Nenhum fornecedor';
+        melhorDetalhesEl.textContent = '';
+        melhorFornecedorEl.style.background = '';
+        melhorFornecedorEl.style.padding = '';
+        melhorFornecedorEl.style.display = '';
+        return;
+    }
+
+    melhores.sort((a, b) => {
+        if (a.qtd !== b.qtd) return b.qtd - a.qtd;
+        return a.total - b.total;
+    });
+
+    const melhor = melhores[0];
+    melhorValorEl.textContent = formatarMoeda(melhor.total);
+    melhorFornecedorEl.innerHTML = `<i class="fas fa-tag"></i> ${melhor.nome} (${melhor.qtd}/${melhor.totalItens} itens) 🏆`;
+    melhorFornecedorEl.style.background = '';
+    melhorFornecedorEl.style.padding = '';
+    melhorFornecedorEl.style.display = '';
+    melhorDetalhesEl.textContent = `📦 ${melhor.qtd} itens cotados`;
+}
+
+function atualizarGrafico(labels, valores) {
+    const ctx = document.getElementById('graficoComparativo');
+    if (!ctx) return;
+    if (window.graficoChart) window.graficoChart.destroy();
+
+    const temDados = valores.some(v => v > 0);
+    const isRadar = tipoGrafico === 'radar';
+
+    window.graficoChart = new Chart(ctx, {
+        type: isRadar ? 'radar' : 'bar',
+        data: {
+            labels: labels.length > 0 ? labels : ['Sem dados'],
+            datasets: [{
+                label: 'Total (R$)',
+                data: labels.length > 0 ? valores : [0],
+                backgroundColor: isRadar ? 'rgba(193, 206, 131, 0.2)' : '#C1CE83',
+                borderColor: '#191D1B',
+                borderWidth: isRadar ? 2 : 1,
+                pointBackgroundColor: '#C1CE83',
+                pointBorderColor: '#191D1B',
+                pointRadius: isRadar ? 4 : 0,
+                ...(isRadar ? {} : { borderRadius: 4 })
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: isRadar ? {
+                r: {
+                    beginAtZero: true,
+                    ticks: { font: { size: 8 } },
+                    pointLabels: { font: { size: 8 } }
+                }
+            } : {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        font: { size: 9 },
+                        callback: function(value) { return 'R$ ' + value.toFixed(2); }
+                    }
+                },
+                x: {
+                    ticks: { font: { size: 8 } }
+                }
+            }
+        }
+    });
+}
+
+function toggleGrafico() {
+    tipoGrafico = tipoGrafico === 'bar' ? 'radar' : 'bar';
+    mostrarToast('📊 Gráfico: ' + (tipoGrafico === 'bar' ? 'Barras' : 'Radar'), 'info');
+    atualizarTotais();
+}
+
+// ============================================================
+// INICIALIZAÇÃO
+// ============================================================
+
+function init() {
+    carregarTema();
+    inicializarFornecedoresPadrao();
+    renderizarTabela();
+
+    document.getElementById('btnSalvar').addEventListener('click', function(e) {
+        e.preventDefault();
+        salvarCotacaoSupabase(false);
+    });
+
+    document.getElementById('btnConcluir').addEventListener('click', function(e) {
+        e.preventDefault();
+        salvarCotacaoSupabase(true);
+    });
+
+    document.addEventListener('keydown', function(e) {
+        if (e.ctrlKey && e.key === 's') {
+            e.preventDefault();
+            salvarCotacaoSupabase(false);
+        }
+    });
+
+    mostrarMensagem('🟢 Sistema conectado ao Supabase!', '#2E7D32');
+    mostrarToast('🟢 Conectado ao Supabase!', 'success');
+}
+
+init();
 </script>
 </body>
 </html>
