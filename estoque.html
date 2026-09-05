@@ -8,6 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800;14..32,900&display=swap" rel="stylesheet" />
+    <script src="auth.js"></script>
     <style>
         :root {
             --verde-claro: #C1CE83;
@@ -141,6 +142,19 @@
         .logo-text .slogan { font-size: 0.4rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1.5px; font-weight: 500; margin-top: 1px; }
 
         .app-topbar .badge { background: var(--verde-claro); padding: 0.2rem 0.7rem; border-radius: 40px; font-size: 0.55rem; font-weight: 600; color: var(--preto); border: 1px solid var(--verde-oliva); }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+            background: var(--gray-50);
+            padding: 0.2rem 0.7rem;
+            border-radius: 40px;
+            border: 1px solid var(--border-color);
+        }
+        .user-info strong { color: var(--text-primary); }
 
         .clock-display {
             display: flex;
@@ -439,7 +453,6 @@
         .totalizador span { font-size: 0.75rem; color: var(--text-secondary); }
         .totalizador strong { color: var(--text-primary); }
 
-        /* ===== LISTA DE ITENS SALVOS ===== */
         .protocolos-salvos {
             margin-top: 1.5rem;
             border-top: 2px solid var(--border-color);
@@ -489,7 +502,6 @@
             font-size: 0.65rem;
         }
 
-        /* ===== TOAST ===== */
         #toastGlobal {
             position: fixed;
             bottom: 20px;
@@ -508,7 +520,6 @@
         }
         #toastGlobal.show { transform: translateY(0); opacity: 1; }
 
-        /* ===== BOTÕES DE RELATÓRIO ===== */
         .btn-relatorio-dia { background: #2C3E50; color: white; }
         .btn-relatorio-dia:hover { background: #1A252F; transform: translateY(-2px); }
         .btn-relatorio-mes { background: #3498DB; color: white; }
@@ -550,6 +561,18 @@
         .btn-secondary { background: var(--gray-200); color: var(--preto); }
         .btn-secondary:hover { background: var(--gray-300); }
 
+        .aviso-permissao {
+            background: #FFF3E0;
+            border: 1px solid #FFB74D;
+            color: #E65100;
+            padding: 0.6rem 1rem;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            margin-bottom: 1rem;
+            display: none;
+        }
+        .aviso-permissao.show { display: block; }
+
         @media (max-width: 768px) {
             .app-topbar { flex-direction: column; align-items: stretch; }
             .clock-display { justify-content: center; font-size: 0.7rem; }
@@ -588,27 +611,30 @@
             <span id="clockSeconds" class="clock-seconds">00</span>
             <span class="clock-date" id="clockDate">00/00/0000</span>
         </div>
+        <div class="user-info">
+            <i class="fas fa-user"></i>
+            <span><strong id="usuarioLogado">—</strong> · <span id="cargoLogado">—</span></span>
+        </div>
         <span class="badge"><i class="fas fa-boxes"></i> Controle de Estoque</span>
     </div>
 
-    <!-- MENU CORRIGIDO - SEM active FIXO -->
-        <div class="nav-menu">
-            <a class="nav-item" href="index.html"><i class="fas fa-home"></i> Dashboard</a>
-            <a class="nav-item" href="estoque.html"><i class="fas fa-boxes"></i> Estoque</a>
-            <a class="nav-item" href="saida.html"><i class="fas fa-arrow-right"></i> Saída</a>
-            <a class="nav-item" href="mapacota.html"><i class="fas fa-file-invoice"></i> Cotação</a>
-            <a class="nav-item" href="cotacoes_aprovadas.html"><i class="fas fa-check-circle"></i> Aprovadas</a>
-            <a class="nav-item" href="orcamento.html"><i class="fas fa-file-pdf"></i> Orçamento</a>
-            <a class="nav-item" href="fornecedor.html"><i class="fas fa-handshake"></i> Fornecedores</a>
-            <a class="nav-item" href="recebido.html"><i class="fas fa-clipboard-check"></i> Recebido</a>
-            <a class="nav-item" href="backup_automatico.html"><i class="fas fa-database"></i> Backup</a>
-            <button class="nav-item btn-theme" onclick="toggleTheme()" style="margin-left:auto;">
-                <i class="fas fa-moon" id="themeIcon"></i> <span id="themeLabel">Tema</span>
-            </button>
-            <button class="nav-item" onclick="logout()" style="background:#8B3A3A; color:white; border-color:#8B3A3A;">
-                <i class="fas fa-sign-out-alt"></i> Sair
-            </button>
-        </div>
+    <div class="nav-menu">
+        <a class="nav-item" href="index.html"><i class="fas fa-home"></i> Dashboard</a>
+        <a class="nav-item active" href="estoque.html"><i class="fas fa-boxes"></i> Estoque</a>
+        <a class="nav-item" href="saida.html"><i class="fas fa-arrow-right"></i> Saída</a>
+        <a class="nav-item" href="mapacota.html"><i class="fas fa-file-invoice"></i> Cotação</a>
+        <a class="nav-item" href="cotacoes_aprovadas.html"><i class="fas fa-check-circle"></i> Aprovadas</a>
+        <a class="nav-item" href="orcamento.html"><i class="fas fa-file-pdf"></i> Orçamento</a>
+        <a class="nav-item" href="fornecedor.html"><i class="fas fa-handshake"></i> Fornecedores</a>
+        <a class="nav-item" href="recebido.html"><i class="fas fa-clipboard-check"></i> Recebido</a>
+        <a class="nav-item" href="backup_automatico.html"><i class="fas fa-database"></i> Backup</a>
+        <button class="nav-item btn-theme" onclick="toggleTheme()" style="margin-left:auto;">
+            <i class="fas fa-moon" id="themeIcon"></i> <span id="themeLabel">Tema</span>
+        </button>
+        <button class="nav-item" onclick="logout()" style="background:#8B3A3A; color:white; border-color:#8B3A3A;">
+            <i class="fas fa-sign-out-alt"></i> Sair
+        </button>
+    </div>
 
     <div class="card-estoque">
         <div class="card-header">
@@ -623,7 +649,12 @@
         </div>
 
         <div class="card-body">
-            <div class="form-grid">
+            <div class="aviso-permissao" id="avisoPermissao">
+                <i class="fas fa-lock"></i> Seu perfil tem acesso apenas para <strong>visualização</strong>. Você não pode cadastrar, editar ou excluir itens.
+            </div>
+
+            <!-- FORMULÁRIO - só aparece se puder cadastrar/editar -->
+            <div class="form-grid" id="formCadastro" data-perm="cadastrar">
                 <div class="campo">
                     <label><i class="fas fa-tag"></i> ITEM</label>
                     <input type="text" id="itemNome" placeholder="Nome do item" data-validar="nome" />
@@ -668,7 +699,7 @@
                     <input type="number" id="itemLimiteCustom" value="5" min="1" />
                 </div>
                 <div class="campo btn-salvar-item">
-                    <button id="btnSalvarItem"><i class="fas fa-save"></i> Salvar</button>
+                    <button id="btnSalvarItem" data-perm="cadastrar"><i class="fas fa-save"></i> Salvar</button>
                 </div>
             </div>
 
@@ -724,7 +755,6 @@
                 <span>⚠️ Baixo estoque: <strong id="totalBaixoEstoque">0</strong></span>
             </div>
 
-            <!-- BOTÕES DE RELATÓRIO E EXPORTAÇÃO -->
             <div style="margin-top: 1rem; padding-top: 1rem; border-top: 2px solid var(--border-color); display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center;">
                 <span style="font-weight: 600; font-size: 0.7rem; color: var(--text-secondary);">
                     <i class="fas fa-file-pdf"></i> RELATÓRIOS:
@@ -748,15 +778,15 @@
                 <button class="btn btn-exportar" onclick="exportarCSV()">
                     <i class="fas fa-file-excel"></i> CSV
                 </button>
-                <button class="btn btn-importar" onclick="document.getElementById('importCSV').click()">
+                <button class="btn btn-importar" data-perm="cadastrar" onclick="document.getElementById('importCSV').click()">
                     <i class="fas fa-file-import"></i> Importar
                 </button>
                 <input type="file" accept=".csv" onchange="importarCSV(event)" style="display:none;" id="importCSV" />
                 
-                <button class="btn btn-backup" onclick="backupEstoque()">
+                <button class="btn btn-backup" data-perm="cadastrar" onclick="backupEstoque()">
                     <i class="fas fa-database"></i> Backup
                 </button>
-                <button class="btn btn-backup" onclick="document.getElementById('restoreBackup').click()" style="background:#8E44AD;">
+                <button class="btn btn-backup" data-perm="excluir" onclick="document.getElementById('restoreBackup').click()" style="background:#8E44AD;">
                     <i class="fas fa-undo"></i> Restaurar
                 </button>
                 <input type="file" accept=".json" onchange="restaurarBackup(event)" style="display:none;" id="restoreBackup" />
@@ -766,14 +796,12 @@
         </div>
     </div>
 
-    <!-- LISTA DE ITENS SALVOS -->
     <div id="listaEstoque" class="protocolos-salvos" style="display: none;">
         <div class="titulo"><i class="fas fa-archive"></i> Itens Cadastrados</div>
         <div id="conteudoListaEstoque"></div>
     </div>
 </div>
 
-<!-- TOAST -->
 <div id="toastGlobal"></div>
 
 <script>
@@ -851,16 +879,6 @@
     }
 
     // ============================================
-    // LOGOUT
-    // ============================================
-    function logout() {
-        if (confirm('Deseja realmente sair do sistema?')) {
-            localStorage.removeItem('tagualife_sessao');
-            window.location.href = 'login.html';
-        }
-    }
-
-    // ============================================
     // VARIÁVEIS
     // ============================================
     let editandoId = null;
@@ -882,7 +900,7 @@
     }
 
     // ============================================
-    // RENDERIZAR TABELA COM PAGINAÇÃO
+    // RENDERIZAR TABELA COM PAGINAÇÃO + PERMISSÕES
     // ============================================
     function renderizarTabela() {
         const itens = JSON.parse(localStorage.getItem('estoqueTaguaLife') || '[]');
@@ -901,7 +919,6 @@
             return matchBusca && matchCategoria && matchEstoque;
         });
         
-        // Ordenação
         filtrados.sort((a, b) => {
             let valA = a[ordemAtual.campo] || '';
             let valB = b[ordemAtual.campo] || '';
@@ -926,6 +943,8 @@
         const paginaItens = filtrados.slice(inicio, fim);
         
         const corpo = document.getElementById('corpoTabela');
+        const podeEdit = typeof podeEditar === 'function' ? podeEditar() : true;
+        const podeDel = typeof podeExcluir === 'function' ? podeExcluir() : true;
 
         if (paginaItens.length === 0) {
             corpo.innerHTML = `<tr><td colspan="7" style="text-align:center; padding:2rem; color:var(--gray-400);">
@@ -935,6 +954,15 @@
             paginaItens.forEach((item, index) => {
                 const limite = item.limite || 5;
                 const isBaixo = item.quantidade < limite;
+                let botoes = '';
+                if (podeEdit) {
+                    botoes += `<button class="btn-editar" data-perm="editar" onclick="editarItem(${item.id})" title="Editar"><i class="fas fa-edit"></i></button>`;
+                }
+                if (podeDel) {
+                    botoes += `<button class="btn-excluir" data-perm="excluir" onclick="excluirItemEstoque(${item.id})" title="Excluir"><i class="fas fa-trash-alt"></i></button>`;
+                }
+                if (!botoes) botoes = '<span style="font-size:0.6rem; color:var(--gray-400);">—</span>';
+
                 html += `<tr class="${isBaixo ? 'estoque-baixo' : ''}" data-item-id="${item.id}">
                     <td>${inicio + index + 1}</td>
                     <td><strong>${item.nome || 'Sem nome'}</strong></td>
@@ -942,17 +970,11 @@
                     <td>${item.fabricante || '-'}</td>
                     <td style="text-align:center; font-weight:600; ${isBaixo ? 'color:#E65100;' : ''}">${item.quantidade}</td>
                     <td><span class="categoria-badge">${item.categoria || 'Outros'}</span></td>
-                    <td>
-                        <div class="acoes">
-                            <button class="btn-editar" onclick="editarItem(${item.id})" title="Editar"><i class="fas fa-edit"></i></button>
-                            <button class="btn-excluir" onclick="excluirItemEstoque(${item.id})" title="Excluir"><i class="fas fa-trash-alt"></i></button>
-                        </div>
-                    </td>
+                    <td><div class="acoes">${botoes}</div></td>
                 </tr>`;
             });
             corpo.innerHTML = html;
             
-            // Paginação
             let pagHtml = '<tr><td colspan="7" style="padding:8px; text-align:center; background:var(--gray-50);">';
             pagHtml += `<button class="btn btn-outline" onclick="paginaAnterior()" ${paginaAtual <= 1 ? 'disabled' : ''}><i class="fas fa-chevron-left"></i></button>`;
             pagHtml += `<span style="margin:0 10px; font-weight:600;">Página ${paginaAtual} de ${totalPaginas || 1}</span>`;
@@ -962,7 +984,6 @@
             corpo.innerHTML += pagHtml;
         }
 
-        // Atualizar estatísticas
         document.getElementById('totalItens').textContent = itens.length;
         const categorias = {};
         itens.forEach(item => { if (item.categoria) categorias[item.categoria] = (categorias[item.categoria] || 0) + 1; });
@@ -970,11 +991,7 @@
         
         const baixoEstoque = itens.filter(item => (item.quantidade || 0) < (item.limite || 5)).length;
         document.getElementById('totalBaixoEstoque').textContent = baixoEstoque;
-        if (baixoEstoque > 0) {
-            document.getElementById('totalBaixoEstoque').style.color = '#E65100';
-        } else {
-            document.getElementById('totalBaixoEstoque').style.color = '';
-        }
+        document.getElementById('totalBaixoEstoque').style.color = baixoEstoque > 0 ? '#E65100' : '';
     }
 
     function paginaAnterior() {
@@ -988,7 +1005,7 @@
     }
 
     // ============================================
-    // VALIDAÇÃO EM TEMPO REAL
+    // VALIDAÇÃO
     // ============================================
     document.getElementById('itemNome').addEventListener('input', function() {
         const status = document.getElementById('statusNome');
@@ -1001,14 +1018,9 @@
         }
     });
 
-    // Limite personalizado
     document.getElementById('itemLimite').addEventListener('change', function() {
         const customDiv = document.getElementById('limiteCustom');
-        if (this.value === 'custom') {
-            customDiv.style.display = 'block';
-        } else {
-            customDiv.style.display = 'none';
-        }
+        customDiv.style.display = this.value === 'custom' ? 'block' : 'none';
     });
 
     // ============================================
@@ -1028,16 +1040,25 @@
     }
 
     // ============================================
-    // SALVAR ITEM
+    // SALVAR ITEM (COM PERMISSÃO)
     // ============================================
     function salvarItem() {
+        if (typeof podeCadastrar === 'function' && !podeCadastrar() && !editandoId) {
+            mostrarToast('⛔ Você não tem permissão para cadastrar.', 'danger');
+            return;
+        }
+        if (editandoId && typeof podeEditar === 'function' && !podeEditar()) {
+            mostrarToast('⛔ Você não tem permissão para editar.', 'danger');
+            return;
+        }
+
         const nome = document.getElementById('itemNome').value.trim();
         const descricao = document.getElementById('itemDescricao').value.trim();
         const fabricante = document.getElementById('itemFabricante').value.trim();
         const quantidade = parseInt(document.getElementById('itemQuantidade').value) || 0;
         const categoria = document.getElementById('itemCategoria').value;
         let limite = parseInt(document.getElementById('itemLimite').value);
-        if (limite === 'custom' || isNaN(limite)) {
+        if (isNaN(limite) || document.getElementById('itemLimite').value === 'custom') {
             limite = parseInt(document.getElementById('itemLimiteCustom').value) || 5;
         }
 
@@ -1046,10 +1067,8 @@
             document.getElementById('itemNome').focus();
             return;
         }
-
         if (nome.length < 2) {
             mostrarMensagem('⚠️ Nome deve ter pelo menos 2 caracteres!', '#8B3A3A');
-            document.getElementById('itemNome').focus();
             return;
         }
 
@@ -1067,12 +1086,7 @@
         } else {
             const novoItem = {
                 id: Date.now(),
-                nome: nome,
-                descricao: descricao,
-                fabricante: fabricante,
-                quantidade: quantidade,
-                categoria: categoria,
-                limite: limite,
+                nome, descricao, fabricante, quantidade, categoria, limite,
                 dataCadastro: new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })
             };
             itens.push(novoItem);
@@ -1090,26 +1104,27 @@
     }
 
     // ============================================
-    // EXIBIR LISTA DE ITENS
+    // EXIBIR LISTA
     // ============================================
     function exibirListaEstoque() {
         const itens = JSON.parse(localStorage.getItem('estoqueTaguaLife') || '[]');
         const container = document.getElementById('conteudoListaEstoque');
-
         if (!container) return;
 
+        const podeEdit = typeof podeEditar === 'function' ? podeEditar() : true;
+        const podeDel = typeof podeExcluir === 'function' ? podeExcluir() : true;
+
         if (itens.length === 0) {
-            container.innerHTML = `
-                <div class="lista-vazia">
-                    <i class="fas fa-inbox"></i> 
-                    Nenhum item cadastrado ainda.
-                </div>
-            `;
+            container.innerHTML = `<div class="lista-vazia"><i class="fas fa-inbox"></i> Nenhum item cadastrado ainda.</div>`;
         } else {
             let html = '';
             itens.slice().reverse().forEach(item => {
                 const limite = item.limite || 5;
                 const isBaixo = item.quantidade < limite;
+                let acoes = '';
+                if (podeEdit) acoes += `<button class="btn btn-outline" data-perm="editar" onclick="editarItem(${item.id})"><i class="fas fa-edit"></i> Editar</button>`;
+                if (podeDel) acoes += `<button class="btn btn-outline" data-perm="excluir" onclick="excluirItemEstoque(${item.id})" style="color:var(--danger);"><i class="fas fa-trash-alt"></i></button>`;
+
                 html += `
                     <div class="protocolo-item" ${isBaixo ? 'style="border-left:4px solid #FF6F00;"' : ''}>
                         <div class="head">
@@ -1118,42 +1133,30 @@
                             <span style="background:${isBaixo ? '#FF6F00' : 'var(--gray-200)'}; padding:0.1rem 0.6rem; border-radius:40px; font-size:0.6rem; font-weight:500; color:${isBaixo ? 'white' : 'var(--text-secondary)'};">
                                 ${item.quantidade || 0} unid. ${isBaixo ? '⚠️' : ''}
                             </span>
-                            ${isBaixo ? '<span style="background:#8B3A3A; color:white; padding:0.05rem 0.5rem; border-radius:40px; font-size:0.5rem; font-weight:600;">BAIXO ESTOQUE</span>' : ''}
-                            <span style="font-size:0.5rem; color:var(--gray-400);">Limite: ${limite}</span>
                         </div>
-                        <div class="detalhes">
-                            ${item.descricao || ''} ${item.fabricante ? '• ' + item.fabricante : ''}
-                        </div>
-                        <div class="acoes">
-                            <button class="btn btn-outline" onclick="editarItem(${item.id})">
-                                <i class="fas fa-edit"></i> Editar
-                            </button>
-                            <button class="btn btn-outline" onclick="excluirItemEstoque(${item.id})" style="color:var(--danger);">
-                                <i class="fas fa-trash-alt"></i>
-                            </button>
-                        </div>
+                        <div class="detalhes">${item.descricao || ''} ${item.fabricante ? '• ' + item.fabricante : ''}</div>
+                        <div class="acoes">${acoes}</div>
                         <div class="meta">💾 Cadastrado em: ${item.dataCadastro || 'data desconhecida'}</div>
-                    </div>
-                `;
+                    </div>`;
             });
             container.innerHTML = html;
         }
-
-        const listaEl = document.getElementById('listaEstoque');
-        if (listaEl) {
-            listaEl.style.display = 'block';
-        }
+        document.getElementById('listaEstoque').style.display = 'block';
     }
 
     // ============================================
-    // EXCLUIR ITEM
+    // EXCLUIR (COM PERMISSÃO)
     // ============================================
     window.excluirItemEstoque = function(id) {
+        if (typeof podeExcluir === 'function' && !podeExcluir()) {
+            mostrarToast('⛔ Apenas o Administrador pode excluir itens.', 'danger');
+            return;
+        }
         if (!confirm('⚠️ Tem certeza que deseja excluir este item?')) return;
 
         let itens = JSON.parse(localStorage.getItem('estoqueTaguaLife') || '[]');
         const item = itens.find(i => i.id === id);
-        itens = itens.filter(item => item.id !== id);
+        itens = itens.filter(i => i.id !== id);
         localStorage.setItem('estoqueTaguaLife', JSON.stringify(itens));
 
         exibirListaEstoque();
@@ -1163,9 +1166,14 @@
     };
 
     // ============================================
-    // EDITAR ITEM
+    // EDITAR (COM PERMISSÃO)
     // ============================================
     window.editarItem = function(id) {
+        if (typeof podeEditar === 'function' && !podeEditar()) {
+            mostrarToast('⛔ Você não tem permissão para editar.', 'danger');
+            return;
+        }
+
         const itens = JSON.parse(localStorage.getItem('estoqueTaguaLife') || '[]');
         const item = itens.find(i => i.id === id);
         if (!item) return;
@@ -1195,7 +1203,7 @@
     };
 
     // ============================================
-    // EXPORTAR CSV
+    // EXPORTAR / IMPORTAR / BACKUP
     // ============================================
     function exportarCSV() {
         const itens = JSON.parse(localStorage.getItem('estoqueTaguaLife') || '[]');
@@ -1203,45 +1211,40 @@
             mostrarMensagem('⚠️ Nenhum item para exportar!', '#8B3A3A');
             return;
         }
-        
         const cabecalho = 'Nome,Descrição,Fabricante,Quantidade,Categoria,Limite,DataCadastro\n';
         const linhas = itens.map(item => 
             `"${item.nome || ''}","${item.descricao || ''}","${item.fabricante || ''}",${item.quantidade || 0},"${item.categoria || 'Outros'}",${item.limite || 5},"${item.dataCadastro || ''}"`
         ).join('\n');
-        
-        const csv = cabecalho + linhas;
-        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const blob = new Blob([cabecalho + linhas], { type: 'text/csv;charset=utf-8;' });
         const link = document.createElement('a');
         link.href = URL.createObjectURL(blob);
         link.download = `estoque_${new Date().toISOString().slice(0,10)}.csv`;
         link.click();
-        mostrarMensagem('📊 CSV exportado com sucesso!', '#7A816E');
+        mostrarMensagem('📊 CSV exportado!', '#7A816E');
         mostrarToast('📊 CSV exportado!', 'success');
     }
 
-    // ============================================
-    // IMPORTAR CSV
-    // ============================================
     function importarCSV(event) {
+        if (typeof podeCadastrar === 'function' && !podeCadastrar()) {
+            mostrarToast('⛔ Sem permissão para importar.', 'danger');
+            return;
+        }
         const file = event.target.files[0];
         if (!file) return;
-        
         const reader = new FileReader();
         reader.onload = function(e) {
             try {
                 const linhas = e.target.result.split('\n').filter(l => l.trim());
                 if (linhas.length < 2) {
-                    mostrarMensagem('⚠️ Arquivo vazio ou inválido!', '#8B3A3A');
+                    mostrarMensagem('⚠️ Arquivo inválido!', '#8B3A3A');
                     return;
                 }
-                
-                const cabecalho = linhas[0].split(',').map(h => h.replace(/"/g, '').trim());
                 const itensImportados = [];
-                
                 for (let i = 1; i < linhas.length; i++) {
                     const dados = linhas[i].split(',').map(d => d.replace(/"/g, '').trim());
                     if (dados.length >= 3) {
                         itensImportados.push({
+                            id: Date.now() + Math.random(),
                             nome: dados[0] || 'Item sem nome',
                             descricao: dados[1] || '',
                             fabricante: dados[2] || '',
@@ -1252,32 +1255,24 @@
                         });
                     }
                 }
-                
                 if (itensImportados.length === 0) {
-                    mostrarMensagem('⚠️ Nenhum item válido encontrado!', '#8B3A3A');
+                    mostrarMensagem('⚠️ Nenhum item válido!', '#8B3A3A');
                     return;
                 }
-                
                 let estoque = JSON.parse(localStorage.getItem('estoqueTaguaLife') || '[]');
-                itensImportados.forEach(item => {
-                    item.id = Date.now() + Math.random();
-                    estoque.push(item);
-                });
+                estoque = estoque.concat(itensImportados);
                 localStorage.setItem('estoqueTaguaLife', JSON.stringify(estoque));
                 renderizarTabela();
                 mostrarMensagem(`✅ ${itensImportados.length} itens importados!`, '#7A816E');
                 mostrarToast(`✅ ${itensImportados.length} itens importados!`, 'success');
             } catch(err) {
-                mostrarMensagem('❌ Erro ao importar: ' + err.message, '#8B3A3A');
+                mostrarMensagem('❌ Erro: ' + err.message, '#8B3A3A');
             }
         };
         reader.readAsText(file);
         event.target.value = '';
     }
 
-    // ============================================
-    // BACKUP E RESTAURAÇÃO
-    // ============================================
     function backupEstoque() {
         const dados = {
             itens: JSON.parse(localStorage.getItem('estoqueTaguaLife') || '[]'),
@@ -1285,7 +1280,7 @@
             versao: '1.0'
         };
         if (dados.itens.length === 0) {
-            mostrarMensagem('⚠️ Nenhum item para fazer backup!', '#8B3A3A');
+            mostrarMensagem('⚠️ Nenhum item para backup!', '#8B3A3A');
             return;
         }
         const blob = new Blob([JSON.stringify(dados, null, 2)], { type: 'application/json' });
@@ -1293,19 +1288,21 @@
         link.href = URL.createObjectURL(blob);
         link.download = `backup_estoque_${new Date().toISOString().slice(0,10)}.json`;
         link.click();
-        mostrarMensagem('💾 Backup criado com sucesso!', '#7A816E');
+        mostrarMensagem('💾 Backup criado!', '#7A816E');
         mostrarToast('💾 Backup criado!', 'success');
     }
 
     function restaurarBackup(event) {
+        if (typeof podeExcluir === 'function' && !podeExcluir()) {
+            mostrarToast('⛔ Apenas Administrador pode restaurar backup.', 'danger');
+            return;
+        }
         const file = event.target.files[0];
         if (!file) return;
-        
         if (!confirm('⚠️ Isso substituirá todos os dados atuais. Continuar?')) {
             event.target.value = '';
             return;
         }
-        
         const reader = new FileReader();
         reader.onload = function(e) {
             try {
@@ -1313,13 +1310,13 @@
                 if (dados.itens && Array.isArray(dados.itens)) {
                     localStorage.setItem('estoqueTaguaLife', JSON.stringify(dados.itens));
                     renderizarTabela();
-                    mostrarMensagem(`✅ Backup restaurado! ${dados.itens.length} itens carregados.`, '#7A816E');
+                    mostrarMensagem(`✅ Backup restaurado! ${dados.itens.length} itens.`, '#7A816E');
                     mostrarToast(`✅ ${dados.itens.length} itens restaurados!`, 'success');
                 } else {
-                    mostrarMensagem('❌ Arquivo de backup inválido!', '#8B3A3A');
+                    mostrarMensagem('❌ Arquivo inválido!', '#8B3A3A');
                 }
             } catch(err) {
-                mostrarMensagem('❌ Erro ao restaurar: ' + err.message, '#8B3A3A');
+                mostrarMensagem('❌ Erro: ' + err.message, '#8B3A3A');
             }
         };
         reader.readAsText(file);
@@ -1327,22 +1324,19 @@
     }
 
     // ============================================
-    // FUNÇÃO PARA GERAR RELATÓRIO PDF
+    // RELATÓRIOS PDF (mantidos iguais)
     // ============================================
     function gerarRelatorioPDF(filtro = 'geral', dataRef = null) {
         try {
             const itens = JSON.parse(localStorage.getItem('estoqueTaguaLife') || '[]');
-            
             if (itens.length === 0) {
                 mostrarMensagem('⚠️ Nenhum item para gerar relatório!', '#8B3A3A');
                 return;
             }
-
             let dataReferencia = dataRef ? new Date(dataRef) : new Date();
             let dadosFiltrados = [];
             let tituloRelatorio = '';
             let periodoDescricao = '';
-
             const ano = dataReferencia.getFullYear();
             const mes = dataReferencia.getMonth();
             const dia = dataReferencia.getDate();
@@ -1375,30 +1369,27 @@
                     tituloRelatorio = `RELATÓRIO ANUAL - ${ano}`;
                     periodoDescricao = `Ano: ${ano}`;
                     break;
-                case 'geral':
                 default:
                     dadosFiltrados = itens;
                     tituloRelatorio = 'RELATÓRIO GERAL DE ESTOQUE';
                     periodoDescricao = 'Todos os registros';
-                    break;
             }
 
             if (dadosFiltrados.length === 0) {
-                mostrarMensagem(`⚠️ Nenhum item encontrado para ${filtro} selecionado!`, '#8B3A3A');
+                mostrarMensagem(`⚠️ Nenhum item encontrado para ${filtro}!`, '#8B3A3A');
                 return;
             }
 
             const relatorioHTML = gerarHTMLRelatorioEstoque(dadosFiltrados, tituloRelatorio, periodoDescricao, filtro);
             const janelaPDF = window.open('', '_blank', 'width=900,height=700');
             if (!janelaPDF) {
-                mostrarMensagem('⚠️ Por favor, permita pop-ups para gerar o PDF!', '#8B3A3A');
+                mostrarMensagem('⚠️ Permita pop-ups para gerar o PDF!', '#8B3A3A');
                 return;
             }
             janelaPDF.document.write(relatorioHTML);
             janelaPDF.document.close();
             setTimeout(() => janelaPDF.print(), 500);
             mostrarMensagem(`📄 Relatório ${filtro} gerado! (${dadosFiltrados.length} itens)`, '#7A816E');
-
         } catch (error) {
             mostrarMensagem('❌ Erro ao gerar relatório!', '#8B3A3A');
         }
@@ -1409,13 +1400,11 @@
         let totalQuantidade = 0;
         let categorias = {};
         let baixoEstoque = 0;
-
         dados.forEach(item => {
             totalQuantidade += item.quantidade || 0;
             if (item.categoria) categorias[item.categoria] = (categorias[item.categoria] || 0) + 1;
             if ((item.quantidade || 0) < (item.limite || 5)) baixoEstoque++;
         });
-
         let itensHTML = '';
         dados.sort((a, b) => (a.nome || '').localeCompare(b.nome || ''));
         dados.forEach((item, index) => {
@@ -1433,79 +1422,55 @@
                         <span style="float:right; background:#C1CE83; padding:0 8px; border-radius:10px; font-size:10px;">${item.categoria || 'Outros'}</span>
                     </div>
                     <div style="font-size:9px; color:#999; margin-top:2px;">Cadastrado: ${item.dataCadastro || 'data desconhecida'} • Limite: ${limite}</div>
-                </div>
-            `;
+                </div>`;
         });
-
         let catHtml = Object.entries(categorias).sort((a, b) => b[1] - a[1]).map(([cat, qtd]) => 
             `<tr><td>${cat}</td><td style="text-align:center;">${qtd}</td></tr>`
         ).join('');
-
-        return `
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <meta charset="UTF-8">
-                <title>${titulo} - TaguáLife</title>
-                <style>
-                    body { font-family: Arial, sans-serif; margin: 30px; color: #2c3e50; }
-                    .header { text-align: center; border-bottom: 3px solid #C1CE83; padding-bottom: 15px; margin-bottom: 20px; }
-                    .header h1 { font-size: 20px; margin: 0; }
-                    .header h2 { font-size: 16px; font-weight: normal; color: #7A816E; margin: 5px 0; }
-                    .resumo { background: #f8f9fa; padding: 10px 15px; border-radius: 5px; margin: 15px 0; border-left: 4px solid #C1CE83; }
-                    .resumo table { width: 100%; font-size: 12px; }
-                    .resumo td { padding: 3px 8px; }
-                    .resumo .label { font-weight: bold; color: #7A816E; width: 120px; }
-                    .itens { margin-top: 15px; }
-                    .itens .titulo { font-size: 16px; font-weight: bold; border-bottom: 2px solid #C1CE83; padding-bottom: 8px; margin-bottom: 10px; }
-                    .categorias { margin-top: 15px; background: #f8f9fa; padding: 10px 15px; border-radius: 5px; }
-                    .categorias table { width: 100%; font-size: 12px; border-collapse: collapse; }
-                    .categorias th { background: #C1CE83; padding: 5px 10px; text-align: left; }
-                    .categorias td { padding: 3px 10px; border-bottom: 1px solid #eee; }
-                    .footer { text-align: center; margin-top: 30px; font-size: 10px; color: #999; border-top: 1px solid #ddd; padding-top: 10px; }
-                    @media print { body { margin: 15px; } }
-                </style>
-            </head>
-            <body>
-                <div class="header">
-                    <h1>🏢 TaguáLife Center</h1>
-                    <h2>${titulo}</h2>
-                    <div style="font-size:12px; color:#7f8c8d;">${periodo}</div>
-                    <div style="font-size:10px; color:#999; margin-top:3px;">Gerado em: ${new Date().toLocaleString('pt-BR')}</div>
-                </div>
-                <div class="resumo">
-                    <table>
-                        <tr>
-                            <td class="label">📦 Total de Itens:</td><td><strong>${totalItens}</strong></td>
-                            <td class="label">📊 Quantidade Total:</td><td><strong>${totalQuantidade}</strong></td>
-                        </tr>
-                        <tr>
-                            <td class="label">📂 Categorias:</td><td><strong>${Object.keys(categorias).length}</strong></td>
-                            <td class="label">⚠️ Baixo Estoque:</td><td><strong style="color:#E65100;">${baixoEstoque}</strong></td>
-                        </tr>
-                    </table>
-                </div>
-                <div class="itens">
-                    <div class="titulo">📋 Lista de Itens</div>
-                    ${itensHTML}
-                </div>
-                <div class="categorias">
-                    <div style="font-weight:bold; margin-bottom:8px;">📂 Distribuição por Categoria</div>
-                    <table>
-                        <tr><th>Categoria</th><th style="text-align:center;">Quantidade</th></tr>
-                        ${catHtml}
-                    </table>
-                </div>
-                <div class="footer">Documento gerado pelo Sistema TaguáLife • ${new Date().toLocaleString('pt-BR')}</div>
-            </body>
-            </html>
-        `;
+        return `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${titulo} - TaguáLife</title>
+            <style>
+                body { font-family: Arial, sans-serif; margin: 30px; color: #2c3e50; }
+                .header { text-align: center; border-bottom: 3px solid #C1CE83; padding-bottom: 15px; margin-bottom: 20px; }
+                .header h1 { font-size: 20px; margin: 0; }
+                .header h2 { font-size: 16px; font-weight: normal; color: #7A816E; margin: 5px 0; }
+                .resumo { background: #f8f9fa; padding: 10px 15px; border-radius: 5px; margin: 15px 0; border-left: 4px solid #C1CE83; }
+                .resumo table { width: 100%; font-size: 12px; }
+                .resumo td { padding: 3px 8px; }
+                .resumo .label { font-weight: bold; color: #7A816E; width: 120px; }
+                .itens .titulo { font-size: 16px; font-weight: bold; border-bottom: 2px solid #C1CE83; padding-bottom: 8px; margin-bottom: 10px; }
+                .categorias { margin-top: 15px; background: #f8f9fa; padding: 10px 15px; border-radius: 5px; }
+                .categorias table { width: 100%; font-size: 12px; border-collapse: collapse; }
+                .categorias th { background: #C1CE83; padding: 5px 10px; text-align: left; }
+                .categorias td { padding: 3px 10px; border-bottom: 1px solid #eee; }
+                .footer { text-align: center; margin-top: 30px; font-size: 10px; color: #999; border-top: 1px solid #ddd; padding-top: 10px; }
+            </style></head><body>
+            <div class="header"><h1>🏢 TaguáLife Center</h1><h2>${titulo}</h2>
+            <div style="font-size:12px; color:#7f8c8d;">${periodo}</div>
+            <div style="font-size:10px; color:#999; margin-top:3px;">Gerado em: ${new Date().toLocaleString('pt-BR')}</div></div>
+            <div class="resumo"><table>
+                <tr><td class="label">📦 Total de Itens:</td><td><strong>${totalItens}</strong></td>
+                <td class="label">📊 Quantidade Total:</td><td><strong>${totalQuantidade}</strong></td></tr>
+                <tr><td class="label">📂 Categorias:</td><td><strong>${Object.keys(categorias).length}</strong></td>
+                <td class="label">⚠️ Baixo Estoque:</td><td><strong style="color:#E65100;">${baixoEstoque}</strong></td></tr>
+            </table></div>
+            <div class="itens"><div class="titulo">📋 Lista de Itens</div>${itensHTML}</div>
+            <div class="categorias"><div style="font-weight:bold; margin-bottom:8px;">📂 Distribuição por Categoria</div>
+            <table><tr><th>Categoria</th><th style="text-align:center;">Quantidade</th></tr>${catHtml}</table></div>
+            <div class="footer">Documento gerado pelo Sistema TaguáLife • ${new Date().toLocaleString('pt-BR')}</div>
+            </body></html>`;
     }
 
     // ============================================
-    // EVENTOS
+    // EVENTOS + PERMISSÕES
     // ============================================
     document.addEventListener('DOMContentLoaded', function() {
+        // auth.js já protege a página e aplica data-perm
+        // Mostra aviso se for só visualização
+        if (typeof podeCadastrar === 'function' && !podeCadastrar()) {
+            const aviso = document.getElementById('avisoPermissao');
+            if (aviso) aviso.classList.add('show');
+        }
+
         document.getElementById('btnSalvarItem').addEventListener('click', function(e) {
             e.preventDefault();
             salvarItem();
@@ -1535,14 +1500,10 @@
         document.getElementById('btnVerSalvosEstoque').addEventListener('click', function(e) {
             e.preventDefault();
             const el = document.getElementById('listaEstoque');
-            if (el.style.display === 'none') {
-                exibirListaEstoque();
-            } else {
-                el.style.display = 'none';
-            }
+            if (el.style.display === 'none') exibirListaEstoque();
+            else el.style.display = 'none';
         });
 
-        // Enter para navegar
         document.getElementById('itemNome').addEventListener('keypress', function(e) {
             if (e.key === 'Enter') { e.preventDefault(); document.getElementById('itemDescricao').focus(); }
         });
@@ -1556,7 +1517,6 @@
             if (e.key === 'Enter') { e.preventDefault(); salvarItem(); }
         });
 
-        // Atalho Ctrl+S
         document.addEventListener('keydown', function(e) {
             if (e.ctrlKey && e.key === 's') {
                 e.preventDefault();
