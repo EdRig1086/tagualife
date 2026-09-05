@@ -3,292 +3,120 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🏢 Cotação TaguáLife</title>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <style>
-        * { box-sizing: border-box; }
-        body { 
-            font-family: Arial, sans-serif; 
-            background: #f0f2f5; 
-            padding: 20px;
-            display: flex;
-            justify-content: center;
-        }
-        .container { 
-            max-width: 900px; 
-            width: 100%;
-            background: white; 
-            padding: 30px; 
-            border-radius: 12px; 
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-        }
-        h1 { color: #2E7D32; border-bottom: 3px solid #C1CE83; padding-bottom: 10px; }
-        .info { background: #e8f5e9; padding: 15px; border-radius: 8px; margin: 15px 0; border-left: 4px solid #2E7D32; }
-        .campo { margin: 10px 0; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-        .campo label { font-weight: bold; min-width: 80px; }
-        .campo input { padding: 8px 12px; border: 1px solid #ccc; border-radius: 6px; flex: 1; min-width: 200px; }
-        .botoes { margin: 20px 0; display: flex; flex-wrap: wrap; gap: 10px; }
-        .btn { padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; transition: all 0.2s; }
-        .btn:hover { transform: scale(1.05); opacity: 0.9; }
-        .btn-verde { background: #2E7D32; color: white; }
-        .btn-azul { background: #1976D2; color: white; }
-        .btn-cinza { background: #6c757d; color: white; }
-        .btn-vermelho { background: #c62828; color: white; }
-        .btn-amarelo { background: #f9a825; color: black; }
-        #feedback { 
-            padding: 12px; 
-            border-radius: 6px; 
-            margin: 15px 0; 
-            min-height: 60px;
-            background: #f8f9fa;
-            border: 1px solid #ddd;
-            white-space: pre-wrap;
-            font-family: monospace;
-            font-size: 14px;
-        }
-        #feedback.sucesso { background: #d4edda; border-color: #28a745; color: #155724; }
-        #feedback.erro { background: #f8d7da; border-color: #dc3545; color: #721c24; }
-        #feedback.carregando { background: #fff3cd; border-color: #ffc107; color: #856404; }
-        .lista-item {
-            background: #f8f9fa;
-            padding: 10px 15px;
-            margin: 5px 0;
-            border-radius: 6px;
-            border-left: 4px solid #2E7D32;
-        }
-        .lista-item strong { color: #2E7D32; }
-        .lista-item small { color: #666; }
-        .status-badge {
-            display: inline-block;
-            padding: 2px 10px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: bold;
-        }
-        .status-rascunho { background: #ffd54f; color: #333; }
-        .status-concluida { background: #81c784; color: white; }
-    </style>
+    <title>Teste Supabase</title>
 </head>
 <body>
+    <h1>Teste Supabase</h1>
+    <button onclick="testarConexao()">Testar Conexão</button>
+    <button onclick="listarDados()">Listar Dados</button>
+    <button onclick="salvarDado()">Salvar Dado</button>
+    <pre id="resultado">Aguardando ação...</pre>
 
-<div class="container">
-    <h1>🏢 TaguáLife - Mapa de Cotação</h1>
-    
-    <div class="info">
-        <strong>✅ Conectado ao Supabase</strong><br>
-        Projeto: <code>frlecudymdpnrsilavbj.supabase.co</code>
-    </div>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2">
+    </script>
+    <script>
+        // CONFIGURAÇÃO
+        const SUPABASE_URL = 'https://frlecudymdpnrsilavbj.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_Uv-GZdW4peH3IZTIwiNYXg_IrYytpn4';
+        
+        console.log('🔵 Inicializando Supabase...');
+        console.log('URL:', SUPABASE_URL);
+        console.log('KEY:', SUPABASE_KEY.substring(0, 20) + '...');
+        
+        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        console.log('✅ Supabase criado!');
+        
+        function mostrar(texto) {
+            document.getElementById('resultado').textContent = texto;
+            console.log(texto);
+        }
 
-    <!-- Campos -->
-    <div class="campo">
-        <label>👤 NOME:</label>
-        <input type="text" id="nome" value="Compra de Material" placeholder="Digite o nome da cotação">
-    </div>
-    <div class="campo">
-        <label>📋 USO:</label>
-        <input type="text" id="uso" value="Manutenção" placeholder="Digite o uso">
-    </div>
-    <div class="campo">
-        <label>📝 OBS:</label>
-        <input type="text" id="obs" placeholder="Observações (opcional)">
-    </div>
-
-    <!-- Botões -->
-    <div class="botoes">
-        <button class="btn btn-verde" onclick="testarConexao()">🔌 Testar Conexão</button>
-        <button class="btn btn-azul" onclick="salvarCotacao()">💾 Salvar Cotação</button>
-        <button class="btn btn-cinza" onclick="listarCotoes()">📋 Ver Salvos</button>
-        <button class="btn btn-amarelo" onclick="limparCampos()">🧹 Limpar</button>
-        <button class="btn btn-vermelho" onclick="excluirUltima()">🗑️ Excluir Última</button>
-    </div>
-
-    <!-- Feedback -->
-    <div id="feedback">🟢 Clique em "Testar Conexão" para começar.</div>
-
-    <!-- Lista de cotações -->
-    <div id="lista" style="margin-top: 20px;"></div>
-</div>
-
-<script>
-// ============================================================
-// CONFIGURAÇÃO DO SUPABASE
-// ============================================================
-const SUPABASE_URL = 'https://frlecudymdpnrsilavbj.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_Uv-GZdW4peH3IZTIwiNYXg_IrYytpn4';
-
-// Verificar se o Supabase foi carregado
-if (typeof supabase === 'undefined') {
-    document.getElementById('feedback').innerHTML = '❌ ERRO: Supabase não carregou! Verifique sua internet.';
-    document.getElementById('feedback').className = 'feedback erro';
-} else {
-    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-    window.db = supabaseClient;
-    console.log('✅ Supabase inicializado!');
-}
-
-// ===== FUNÇÕES =====
-
-function mostrarFeedback(msg, tipo = 'info') {
-    const el = document.getElementById('feedback');
-    el.textContent = msg;
-    el.className = 'feedback';
-    if (tipo === 'sucesso') el.classList.add('sucesso');
-    else if (tipo === 'erro') el.classList.add('erro');
-    else if (tipo === 'carregando') el.classList.add('carregando');
-    console.log(msg);
-}
-
-async function testarConexao() {
-    try {
-        mostrarFeedback('🔄 Testando conexão com Supabase...', 'carregando');
-        
-        const { data, error } = await window.db
-            .from('cotacoes')
-            .select('count', { count: 'exact', head: true });
-        
-        if (error) throw error;
-        
-        mostrarFeedback('✅ Conexão OK! Tabela "cotacoes" existe e está acessível.', 'sucesso');
-        
-    } catch (error) {
-        console.error('❌ Erro:', error);
-        mostrarFeedback('❌ ERRO: ' + error.message, 'erro');
-    }
-}
-
-async function salvarCotacao() {
-    try {
-        const nome = document.getElementById('nome').value.trim() || 'Sem nome';
-        const uso = document.getElementById('uso').value.trim() || 'Sem uso';
-        const obs = document.getElementById('obs').value.trim() || '';
-        
-        mostrarFeedback('🔄 Salvando cotação...', 'carregando');
-        
-        const dados = {
-            nome: nome,
-            uso: uso,
-            observacao: obs,
-            status: 'rascunho',
-            melhor_valor: 0,
-            fornecedores: [],
-            itens: [],
-            criado_em: new Date().toISOString()
-        };
-        
-        const { data, error } = await window.db
-            .from('cotacoes')
-            .insert([dados])
-            .select();
-        
-        if (error) throw error;
-        
-        mostrarFeedback('✅ Cotação salva com sucesso!\nID: ' + data[0].id, 'sucesso');
-        
-        // Atualizar lista
-        await listarCotoes();
-        
-    } catch (error) {
-        console.error('❌ Erro:', error);
-        mostrarFeedback('❌ ERRO: ' + error.message, 'erro');
-    }
-}
-
-async function listarCotoes() {
-    try {
-        mostrarFeedback('🔄 Carregando cotações...', 'carregando');
-        
-        const { data, error } = await window.db
-            .from('cotacoes')
-            .select('*')
-            .order('criado_em', { ascending: false })
-            .limit(10);
-        
-        if (error) throw error;
-        
-        const container = document.getElementById('lista');
-        
-        if (data.length === 0) {
-            container.innerHTML = '<p style="text-align:center; color:#666;">📭 Nenhuma cotação encontrada.</p>';
-            mostrarFeedback('📭 Nenhuma cotação salva.', 'info');
-        } else {
-            let html = '<h3 style="margin-top:0;">📋 Últimas Cotações</h3>';
-            data.forEach(item => {
-                const dataCriacao = item.criado_em ? new Date(item.criado_em).toLocaleString('pt-BR') : 'Sem data';
-                const statusClass = item.status === 'concluida' ? 'status-concluida' : 'status-rascunho';
+        async function testarConexao() {
+            try {
+                mostrar('🔄 Testando conexão...');
                 
-                html += `
-                    <div class="lista-item">
-                        <strong>${item.nome || 'Sem nome'}</strong> - ${item.uso || 'Sem uso'}
-                        <span class="status-badge ${statusClass}">${item.status || 'rascunho'}</span>
-                        <br>
-                        <small>📅 ${dataCriacao}</small>
-                        <small style="margin-left:10px;">🆔 ${item.id.substring(0, 8)}</small>
-                        ${item.observacao ? `<br><small>📝 ${item.observacao}</small>` : ''}
-                    </div>
-                `;
-            });
-            container.innerHTML = html;
-            mostrarFeedback(`✅ ${data.length} cotações carregadas.`, 'sucesso');
+                // Teste simples
+                const { data, error } = await supabase
+                    .from('cotacoes')
+                    .select('count', { count: 'exact', head: true });
+                
+                if (error) {
+                    throw error;
+                }
+                
+                mostrar('✅ Conexão OK! Tabela existe!');
+                
+            } catch (error) {
+                console.error('❌ Erro:', error);
+                mostrar('❌ ERRO: ' + error.message + '\n\nVerifique o Console (F12) para mais detalhes.');
+            }
         }
-        
-    } catch (error) {
-        console.error('❌ Erro:', error);
-        mostrarFeedback('❌ ERRO: ' + error.message, 'erro');
-    }
-}
 
-async function excluirUltima() {
-    try {
-        if (!confirm('⚠️ Tem certeza que deseja excluir a última cotação?')) return;
-        
-        mostrarFeedback('🔄 Excluindo...', 'carregando');
-        
-        // Buscar a última
-        const { data: lista, error: erroLista } = await window.db
-            .from('cotacoes')
-            .select('id')
-            .order('criado_em', { ascending: false })
-            .limit(1);
-        
-        if (erroLista) throw erroLista;
-        
-        if (lista.length === 0) {
-            mostrarFeedback('📭 Nenhuma cotação para excluir.', 'info');
-            return;
+        async function listarDados() {
+            try {
+                mostrar('🔄 Carregando dados...');
+                
+                const { data, error } = await supabase
+                    .from('cotacoes')
+                    .select('*')
+                    .limit(5);
+                
+                if (error) throw error;
+                
+                if (data.length === 0) {
+                    mostrar('📭 Nenhum registro encontrado.');
+                } else {
+                    let texto = '📋 Registros encontrados:\n\n';
+                    data.forEach((item, i) => {
+                        texto += `${i+1}. ${item.nome || 'Sem nome'} - ${item.uso || 'Sem uso'}\n`;
+                        texto += `   ID: ${item.id.substring(0, 8)}\n`;
+                        texto += `   Data: ${new Date(item.criado_em).toLocaleString('pt-BR')}\n\n`;
+                    });
+                    mostrar(texto);
+                }
+                
+            } catch (error) {
+                console.error('❌ Erro:', error);
+                mostrar('❌ ERRO: ' + error.message);
+            }
         }
-        
-        const id = lista[0].id;
-        
-        const { error } = await window.db
-            .from('cotacoes')
-            .delete()
-            .eq('id', id);
-        
-        if (error) throw error;
-        
-        mostrarFeedback('🗑️ Última cotação excluída!', 'sucesso');
-        await listarCotoes();
-        
-    } catch (error) {
-        console.error('❌ Erro:', error);
-        mostrarFeedback('❌ ERRO: ' + error.message, 'erro');
-    }
-}
 
-function limparCampos() {
-    document.getElementById('nome').value = '';
-    document.getElementById('uso').value = '';
-    document.getElementById('obs').value = '';
-    document.getElementById('lista').innerHTML = '';
-    mostrarFeedback('🧹 Campos limpos!', 'info');
-}
+        async function salvarDado() {
+            try {
+                mostrar('🔄 Salvando...');
+                
+                const dado = {
+                    nome: 'Teste ' + new Date().toLocaleTimeString(),
+                    uso: 'Teste Rápido',
+                    status: 'rascunho',
+                    melhor_valor: 0
+                };
+                
+                const { data, error } = await supabase
+                    .from('cotacoes')
+                    .insert([dado])
+                    .select();
+                
+                if (error) throw error;
+                
+                mostrar('✅ Salvo com sucesso!\nID: ' + data[0].id);
+                
+            } catch (error) {
+                console.error('❌ Erro:', error);
+                mostrar('❌ ERRO: ' + error.message);
+            }
+        }
 
-// ===== AUTO EXECUTAR AO ABRIR =====
-console.log('🚀 Página carregada!');
-mostrarFeedback('🟢 Pronto! Clique em "Testar Conexão" para verificar.', 'info');
-setTimeout(() => {
-    testarConexao();
-}, 500);
-</script>
+        // Executar ao carregar
+        console.log('🚀 Página pronta!');
+        mostrar('🟢 Clique em "Testar Conexão" para começar.');
+        
+        // Verificar se o Supabase foi carregado
+        if (typeof supabase === 'undefined') {
+            mostrar('❌ Supabase não foi carregado! Verifique sua conexão com a internet.');
+        } else {
+            console.log('✅ Supabase carregado com sucesso!');
+        }
+    </script>
 </body>
 </html>
