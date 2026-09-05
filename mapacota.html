@@ -15,7 +15,6 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
     <style>
-        /* ===== TODOS OS ESTILOS ===== */
         :root {
             --verde-claro: #C1CE83;
             --verde-oliva: #7A816E;
@@ -28,7 +27,6 @@
             --text-secondary: var(--verde-oliva);
             --border-color: #D8DCCE;
             --shadow: 0 4px 24px rgba(25, 29, 27, 0.08);
-            --shadow-hover: 0 8px 40px rgba(25, 29, 27, 0.15);
             --font-primary: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
             --radius: 16px;
             --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -36,29 +34,7 @@
             --fornecedor-text: #191D1B;
             --input-bg: transparent;
             --input-border: var(--border-color);
-            --melhor-preco-bg: #C8E6C9;
-            --melhor-preco-border: #2E7D32;
-            --melhor-preco-text: #1B5E20;
             --danger: #8B3A3A;
-        }
-
-        body.dark-mode {
-            --bg-body: #0a0a0a;
-            --bg-card: #161616;
-            --text-primary: #e8e8e8;
-            --text-secondary: #a0a8a0;
-            --border-color: #2a2a2a;
-            --preto: #e8e8e8;
-            --branco: #161616;
-            --shadow: 0 4px 24px rgba(0,0,0,0.6);
-            --shadow-hover: 0 8px 40px rgba(0,0,0,0.8);
-            --fornecedor-bg: #3A4A3A;
-            --fornecedor-text: #e8e8e8;
-            --input-bg: #222;
-            --input-border: #444;
-            --melhor-preco-bg: #1a3a1a;
-            --melhor-preco-border: #4CAF50;
-            --melhor-preco-text: #81C784;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -76,10 +52,7 @@
             transition: var(--transition);
         }
 
-        .app-container {
-            max-width: 1400px;
-            width: 100%;
-        }
+        .app-container { max-width: 1400px; width: 100%; }
 
         .app-topbar {
             display: flex;
@@ -93,7 +66,6 @@
             border-radius: 12px;
             box-shadow: var(--shadow);
             border: 1px solid var(--border-color);
-            transition: var(--transition);
         }
 
         .logo-area {
@@ -118,15 +90,10 @@
             flex-direction: column;
             line-height: 1;
             padding: 0.2rem;
-            box-shadow: 0 2px 8px rgba(46, 125, 50, 0.3);
         }
-        .logo-icon small { font-size: 0.3rem; opacity: 0.8; font-weight: 400; letter-spacing: 0.5px; }
-        
-        .logo-text .title {
-            font-size: 1.2rem;
-            font-weight: 800;
-            letter-spacing: -0.5px;
-        }
+        .logo-icon small { font-size: 0.3rem; opacity: 0.8; font-weight: 400; }
+
+        .logo-text .title { font-size: 1.2rem; font-weight: 800; letter-spacing: -0.5px; }
         .logo-text .title .tagua { color: var(--text-primary); }
         .logo-text .title .life { color: var(--verde-claro); }
         .logo-text .slogan {
@@ -145,7 +112,6 @@
             font-weight: 600;
             color: var(--preto);
             border: 1px solid var(--verde-oliva);
-            box-shadow: 0 2px 8px rgba(193, 206, 131, 0.3);
         }
 
         .clock-display {
@@ -160,7 +126,6 @@
             color: var(--branco);
             letter-spacing: 1px;
             font-weight: 500;
-            box-shadow: 0 2px 12px rgba(193, 206, 131, 0.15);
         }
         .clock-display i { color: var(--verde-claro); font-size: 0.7rem; }
         .clock-display .clock-separator { color: var(--verde-claro); animation: blink 1s step-end infinite; }
@@ -177,8 +142,6 @@
             border-radius: 10px;
             border: 1px solid var(--border-color);
             margin-bottom: 0.6rem;
-            box-shadow: 0 1px 4px rgba(25, 29, 27, 0.04);
-            transition: var(--transition);
         }
 
         .nav-menu .nav-item {
@@ -251,7 +214,6 @@
             flex-wrap: wrap;
             gap: 0.2rem;
             font-size: 0.65rem;
-            transition: var(--transition);
         }
 
         .info-condominio .item { color: var(--text-secondary); }
@@ -283,7 +245,6 @@
             border: 1px solid var(--border-color);
             flex-wrap: wrap;
             align-items: center;
-            transition: var(--transition);
         }
 
         .info-topo .campo {
@@ -322,7 +283,6 @@
             font-size: 0.95rem;
             padding: 0.2rem 0.3rem;
             min-width: 200px;
-            width: 100%;
             border-bottom-width: 2px;
             border-bottom-color: var(--verde-claro);
         }
@@ -638,7 +598,6 @@
             padding-top: 0.6rem;
             margin-top: 0.6rem;
             gap: 0.4rem;
-            transition: border-color 0.3s;
         }
 
         .protocolo-footer .info {
@@ -829,20 +788,20 @@
         }
 
         .melhor-preco-item {
-            background: var(--melhor-preco-bg) !important;
-            border: 2px solid var(--melhor-preco-border) !important;
+            background: #C8E6C9 !important;
+            border: 2px solid #2E7D32 !important;
             border-radius: 4px !important;
-            color: var(--melhor-preco-text) !important;
+            color: #1B5E20 !important;
             font-weight: 700 !important;
             position: relative;
         }
 
         .melhor-preco-item .simbolo-moeda {
-            color: var(--melhor-preco-text) !important;
+            color: #1B5E20 !important;
         }
 
         .melhor-preco-item input {
-            color: var(--melhor-preco-text) !important;
+            color: #1B5E20 !important;
             font-weight: 700 !important;
         }
 
@@ -879,20 +838,6 @@
             .logo-text .slogan { font-size: 0.35rem; }
             .card-body { padding: 1rem; }
             .campo-moeda input { padding-left: 16px !important; font-size: 0.6rem !important; }
-        }
-
-        @media print {
-            .app-topbar, .nav-menu, .botoes, #feedback, .no-print, .btn-aprovar-fornecedor,
-            .remove-fornecedor, .btn-fornecedor, .btn-add-item, .remove-item,
-            .grafico-comparativo, .dica-digitacao, .protocolos-salvos {
-                display: none !important;
-            }
-            body { background: white !important; padding: 0.2in !important; color: #000 !important; }
-            .card-cotacao { box-shadow: none !important; border: 1px solid #ddd !important; border-radius: 4px !important; background: white !important; }
-            .card-header { background: #C1CE83 !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-            .tabela-cotacao th { background: #7A816E !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; color: white !important; }
-            .tabela-cotacao .fornecedor-header { background: #C1CE83 !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-            .tabela-cotacao .best-cell { background: #C1CE83 !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
         }
     </style>
 </head>
@@ -1044,7 +989,7 @@
 
 <script>
 // ============================================================
-// CONFIGURAÇÃO DO SUPABASE - JÁ CONFIGURADO!
+// CONFIGURAÇÃO DO SUPABASE
 // ============================================================
 const SUPABASE_URL = 'https://frlecudymdpnrsilavbj.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_Uv-GZdW4peH3IZTIwiNYXg_IrYytpn4';
@@ -1054,7 +999,6 @@ const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 // TODAS AS FUNÇÕES
 // ============================================================
 
-const CHAVE_STORAGE = 'cotacoesTaguáLife';
 const CHAVE_THEME = 'tema_TaguáLife';
 
 let fornecedores = [];
@@ -1189,6 +1133,7 @@ async function salvarCotacaoSupabase(concluir = false) {
             return;
         }
 
+        // Coletar itens
         const itens = [];
         document.querySelectorAll('.item-row').forEach(row => {
             const desc = row.querySelector('.item-desc')?.value || '';
@@ -1208,6 +1153,7 @@ async function salvarCotacaoSupabase(concluir = false) {
             return;
         }
 
+        // Coletar fornecedores
         const fornecedoresData = [];
         fornecedores.forEach((f, index) => {
             const nomeInput = document.getElementById(`f${index}Nome`);
@@ -1227,6 +1173,7 @@ async function salvarCotacaoSupabase(concluir = false) {
 
         const observacaoGeral = document.getElementById('observacao')?.value || '';
 
+        // Calcular totais
         const totais = {};
         fornecedores.forEach(f => {
             let total = 0;
@@ -1238,6 +1185,7 @@ async function salvarCotacaoSupabase(concluir = false) {
             totais[f.id] = total + frete;
         });
 
+        // Encontrar melhor proposta
         let melhorId = null;
         let melhorValor = Infinity;
         fornecedores.forEach(f => {
@@ -1247,6 +1195,7 @@ async function salvarCotacaoSupabase(concluir = false) {
             }
         });
 
+        // Montar objeto
         const cotacao = {
             nome: nome,
             uso: uso,
@@ -1958,7 +1907,6 @@ function destacarMelhoresPrecos() {
     const rows = document.querySelectorAll('.item-row');
     document.querySelectorAll('.melhor-preco-item').forEach(el => el.classList.remove('melhor-preco-item'));
     document.querySelectorAll('.melhor-preco-badge').forEach(el => el.remove());
-    document.querySelectorAll('.melhor-preco-header-badge').forEach(el => el.remove());
 
     rows.forEach(row => {
         let menorPreco = Infinity;
