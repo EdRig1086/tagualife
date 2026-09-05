@@ -4,14 +4,20 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>TaguáLife Center · Mapa de Cotação</title>
+    
+    <!-- Bibliotecas -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800;14..32,900&display=swap" rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+    
+    <!-- Supabase SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
     <style>
-        /* ===== ESTILOS PADRÃO (mesmo do INDEX.HTML) ===== */
+        /* ===== TODOS OS ESTILOS DA SUA PÁGINA ===== */
         :root {
             --verde-claro: #C1CE83;
             --verde-oliva: #7A816E;
@@ -35,6 +41,7 @@
             --melhor-preco-bg: #C8E6C9;
             --melhor-preco-border: #2E7D32;
             --melhor-preco-text: #1B5E20;
+            --danger: #8B3A3A;
         }
 
         body.dark-mode {
@@ -56,160 +63,7 @@
             --melhor-preco-text: #81C784;
         }
 
-        body.dark-mode .app-topbar,
-        body.dark-mode .nav-menu,
-        body.dark-mode .card-cotacao {
-            background: var(--bg-card);
-            border-color: var(--border-color);
-        }
-
-        body.dark-mode .info-condominio,
-        body.dark-mode .info-topo,
-        body.dark-mode .tabela-cotacao .label-cell,
-        body.dark-mode .tabela-cotacao .label-cell-left,
-        body.dark-mode .obs-row td,
-        body.dark-mode .obs-individual-row td {
-            background: var(--gray-50);
-        }
-
-        body.dark-mode .tabela-cotacao td input {
-            color: #e8e8e8;
-        }
-
-        body.dark-mode .tabela-cotacao td input:focus {
-            background: #3a4a3a;
-        }
-
-        body.dark-mode .clock-display {
-            background: #111;
-        }
-
-        body.dark-mode .logo-icon {
-            background: linear-gradient(135deg, #1a4a1a, var(--verde-oliva));
-        }
-
-        /* ===== DESTAQUE DO MELHOR PREÇO ===== */
-        .melhor-preco-item {
-            background: var(--melhor-preco-bg) !important;
-            border: 2px solid var(--melhor-preco-border) !important;
-            border-radius: 4px !important;
-            color: var(--melhor-preco-text) !important;
-            font-weight: 700 !important;
-            position: relative;
-        }
-
-        .melhor-preco-item .simbolo-moeda {
-            color: var(--melhor-preco-text) !important;
-        }
-
-        .melhor-preco-item input {
-            color: var(--melhor-preco-text) !important;
-            font-weight: 700 !important;
-        }
-
-        .melhor-preco-badge {
-            display: inline-block;
-            background: var(--verde-escuro);
-            color: white;
-            font-size: 0.45rem;
-            font-weight: 700;
-            padding: 0.05rem 0.4rem;
-            border-radius: 40px;
-            margin-left: 0.2rem;
-            white-space: nowrap;
-            letter-spacing: 0.3px;
-        }
-
-        .melhor-preco-badge i {
-            margin-right: 0.1rem;
-            font-size: 0.4rem;
-        }
-
-        /* ===== ESTILOS PARA APROVAÇÃO MANUAL ===== */
-        .btn-aprovar-fornecedor {
-            background: var(--verde-oliva);
-            color: white;
-            border: none;
-            border-radius: 40px;
-            padding: 0.1rem 0.6rem;
-            font-size: 0.5rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: var(--transition);
-            font-family: inherit;
-            white-space: nowrap;
-        }
-        .btn-aprovar-fornecedor:hover {
-            background: var(--verde-escuro);
-            transform: scale(1.05);
-        }
-        .btn-aprovar-fornecedor.aprovado {
-            background: var(--verde-claro);
-            color: var(--preto);
-            cursor: default;
-        }
-        .btn-aprovar-fornecedor.aprovado:hover {
-            transform: none;
-        }
-        .btn-aprovar-fornecedor i {
-            margin-right: 0.15rem;
-            font-size: 0.5rem;
-        }
-
-        .fornecedor-aprovado-destaque {
-            border: 2px solid var(--verde-oliva) !important;
-            background: rgba(193, 206, 131, 0.15) !important;
-            position: relative;
-        }
-        .fornecedor-aprovado-destaque::before {
-            content: "⭐ APROVADO";
-            position: absolute;
-            top: -10px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: var(--verde-oliva);
-            color: var(--branco);
-            font-size: 0.5rem;
-            font-weight: 800;
-            padding: 0.05rem 0.6rem;
-            border-radius: 40px;
-            letter-spacing: 0.5px;
-            white-space: nowrap;
-            z-index: 10;
-        }
-
-        .badge-aprovado-manual {
-            background: var(--verde-claro);
-            color: var(--preto);
-            font-size: 0.6rem;
-            font-weight: 700;
-            padding: 0.05rem 0.6rem;
-            border-radius: 40px;
-            margin-left: 0.3rem;
-            display: inline-block;
-            border: 1px solid var(--preto);
-        }
-
-        .fornecedor-aprovado-manual {
-            background: var(--verde-claro) !important;
-            color: var(--preto) !important;
-            border: 3px solid var(--preto) !important;
-            font-weight: 900 !important;
-        }
-
-        .tabela-cotacao .fornecedor-header .btn-aprovar-fornecedor {
-            margin-top: 0.15rem;
-            display: block;
-            width: 100%;
-            text-align: center;
-        }
-
-        /* ===== RESTO DOS ESTILOS ===== */
-        * { 
-            margin: 0; 
-            padding: 0; 
-            box-sizing: border-box; 
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
             font-family: var(--font-primary);
@@ -485,19 +339,21 @@
         .info-topo .campo input:focus { border-bottom-color: var(--verde-claro); }
         .info-topo .campo input.readonly {
             background: var(--border-color);
-            border-bottom-color: var(--gray-400);
+            border-bottom-color: #aaa;
             color: var(--text-secondary);
             cursor: default;
         }
 
-        .info-topo .campo input.invalid {
-            border-bottom-color: #ff0000 !important;
-            background: rgba(255, 0, 0, 0.05) !important;
+        .dica-digitacao {
+            font-size: 0.45rem;
+            color: var(--text-secondary);
+            text-align: center;
+            margin-top: 0.2rem;
+            opacity: 0.7;
+            font-style: italic;
         }
 
-        .info-topo .campo input.valid {
-            border-bottom-color: var(--verde-claro) !important;
-        }
+        .dica-digitacao i { margin-right: 0.2rem; color: var(--verde-claro); }
 
         .tabela-cotacao {
             width: 100%;
@@ -563,11 +419,6 @@
             padding-right: 0.3rem;
             font-size: 0.65rem;
             color: var(--text-secondary);
-        }
-
-        .tabela-cotacao td input.currency-und::placeholder {
-            color: var(--gray-400);
-            font-size: 0.6rem;
         }
 
         .tabela-cotacao td input.currency-total {
@@ -703,52 +554,6 @@
         }
 
         .tabela-cotacao .remove-item:hover { transform: scale(1.2); }
-        .tabela-cotacao .add-item-row td { padding: 0.3rem; }
-
-        .btn-add-item {
-            border: none;
-            background: transparent;
-            color: var(--text-secondary);
-            cursor: pointer;
-            font-weight: 500;
-            font-size: 0.65rem;
-            padding: 0.15rem 0.7rem;
-            transition: var(--transition);
-            font-family: inherit;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.2rem;
-        }
-
-        .btn-add-item:hover { color: var(--text-primary); text-decoration: underline; }
-
-        .col-item { min-width: 40px; width: 40px; }
-        .col-material { min-width: 200px; width: 26%; max-width: 300px; }
-        .col-qtd { min-width: 40px; width: 40px; }
-        .col-fornecedor { min-width: 110px; width: 16%; }
-
-        .fornecedor-cell { position: relative; }
-
-        .fornecedor-cell .remove-fornecedor {
-            position: absolute;
-            top: -8px;
-            right: -8px;
-            background: #8B3A3A;
-            color: var(--branco);
-            border: none;
-            border-radius: 50%;
-            width: 18px;
-            height: 18px;
-            font-size: 0.5rem;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: var(--transition);
-            opacity: 0.7;
-        }
-
-        .fornecedor-cell .remove-fornecedor:hover { opacity: 1; transform: scale(1.1); }
 
         .btn-fornecedor {
             border: none;
@@ -769,92 +574,62 @@
 
         .btn-fornecedor:hover { background: var(--bg-body); border-color: var(--verde-oliva); }
 
-        .obs-row td { background: var(--bg-body); padding: 0.15rem 0.3rem; }
-
-        .obs-row .obs-label {
-            font-weight: 600;
-            font-size: 0.6rem;
-            color: var(--text-secondary);
-            text-align: right;
-            padding-right: 0.8rem;
-            white-space: nowrap;
-            background: var(--bg-body);
-        }
-
-        .obs-row .obs-input { padding: 0.1rem 0.3rem; }
-
-        .obs-row .obs-input input {
-            width: 100%;
+        .btn-add-item {
             border: none;
-            border-bottom: 1.5px solid var(--input-border);
-            background: var(--input-bg);
-            font-size: 0.7rem;
-            color: var(--text-primary);
-            padding: 0.15rem 0.2rem;
-            outline: none;
-            font-family: inherit;
-            transition: var(--transition);
-        }
-
-        .obs-row .obs-input input:focus { border-bottom-color: var(--verde-claro); }
-
-        .obs-individual-row td { background: var(--bg-body); padding: 0.1rem 0.3rem; }
-
-        .obs-individual-row .obs-label {
-            font-weight: 600;
-            font-size: 0.55rem;
+            background: transparent;
             color: var(--text-secondary);
-            text-align: right;
-            padding-right: 0.8rem;
-            white-space: nowrap;
-            background: var(--bg-body);
-        }
-
-        .obs-individual-row .obs-input { padding: 0.05rem 0.2rem; }
-
-        .obs-individual-row .obs-input input {
-            width: 100%;
-            border: none;
-            border-bottom: 1px solid var(--input-border);
-            background: var(--input-bg);
+            cursor: pointer;
+            font-weight: 500;
             font-size: 0.65rem;
-            color: var(--text-primary);
-            padding: 0.1rem 0.2rem;
-            outline: none;
-            font-family: inherit;
+            padding: 0.15rem 0.7rem;
             transition: var(--transition);
+            font-family: inherit;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.2rem;
         }
 
-        .obs-individual-row .obs-input input:focus { border-bottom-color: var(--verde-claro); }
+        .btn-add-item:hover { color: var(--text-primary); text-decoration: underline; }
 
-        .obs-individual-row .obs-input input.obs-preenchida {
-            background: #FFF8E1 !important;
-            border-bottom: 2px solid #FFB300 !important;
-            border-radius: 4px 4px 0 0;
+        .campo-moeda {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .campo-moeda .simbolo-moeda {
+            position: absolute;
+            left: 4px;
+            font-size: 0.6rem;
+            font-weight: 700;
+            color: var(--text-secondary);
+            pointer-events: none;
+            opacity: 0.6;
+        }
+
+        .campo-moeda input {
+            padding-left: 22px !important;
+            text-align: right !important;
+        }
+
+        .grafico-comparativo {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background: var(--bg-body);
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
+        }
+        .grafico-comparativo canvas { max-height: 150px; width: 100% !important; }
+        .grafico-comparativo .titulo-grafico {
             font-weight: 600;
-            color: #E65100;
-            box-shadow: 0 0 8px rgba(255, 179, 0, 0.3);
+            font-size: 0.65rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.3rem;
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
         }
-
-        .obs-individual-row .obs-input input.obs-preenchida:focus {
-            background: #FFFDE7 !important;
-            border-bottom-color: #FF6F00 !important;
-            box-shadow: 0 0 12px rgba(255, 179, 0, 0.5);
-        }
-
-        .obs-individual-row .obs-input input.obs-preenchida::placeholder { color: #B8860B; font-weight: 400; }
-
-        .obs-individual-row .obs-input input.obs-vazia {
-            background: transparent !important;
-            border-bottom: 1px solid var(--input-border) !important;
-            box-shadow: none !important;
-        }
-
-        .obs-individual-row .obs-input .obs-alerta-icon {
-            font-size: 0.7rem;
-            margin-left: 0.2rem;
-            color: #FF6F00;
-        }
+        .grafico-comparativo .titulo-grafico i { color: var(--verde-claro); }
 
         .protocolo-footer {
             display: flex;
@@ -906,22 +681,10 @@
         .btn-success:hover { background: var(--verde-escuro); transform: translateY(-2px); }
         .btn-voltar { background: var(--border-color); color: var(--text-primary); }
         .btn-voltar:hover { background: var(--verde-claro); transform: translateY(-2px); }
-        .btn-secondary { background: var(--border-color); color: var(--text-primary); }
-        .btn-secondary:hover { background: var(--verde-claro); transform: translateY(-2px); }
         .btn-danger { background: #8B3A3A; color: var(--branco); }
         .btn-danger:hover { background: #6A2A2A; transform: translateY(-2px); }
-
-        .btn-relatorio-dia { background: #2C3E50; color: white; }
-        .btn-relatorio-dia:hover { background: #1A252F; transform: translateY(-2px); }
-        .btn-relatorio-mes { background: #3498DB; color: white; }
-        .btn-relatorio-mes:hover { background: #2176A1; transform: translateY(-2px); }
-        .btn-relatorio-ano { background: #27AE60; color: white; }
-        .btn-relatorio-ano:hover { background: #1A7A42; transform: translateY(-2px); }
-        .btn-relatorio-geral { background: #8E44AD; color: white; }
-        .btn-relatorio-geral:hover { background: #6C3483; transform: translateY(-2px); }
-
-        .btn-csv { background: #27AE60; color: white; }
-        .btn-csv:hover { background: #1A7A42; transform: translateY(-2px); }
+        .btn-secondary { background: var(--border-color); color: var(--text-primary); }
+        .btn-secondary:hover { background: var(--verde-claro); transform: translateY(-2px); }
 
         #feedback {
             margin-top: 0.3rem;
@@ -986,69 +749,10 @@
         .protocolo-item .detalhes { color: var(--text-secondary); font-size: 0.7rem; margin-bottom: 0.2rem; }
         .protocolo-item .acoes { display: flex; gap: 0.3rem; margin-top: 0.2rem; }
         .protocolo-item .acoes .btn { padding: 0.1rem 0.6rem; font-size: 0.6rem; }
-        .protocolo-item .meta { color: var(--gray-400); font-size: 0.6rem; margin-top: 0.1rem; }
+        .protocolo-item .meta { color: #aaa; font-size: 0.6rem; margin-top: 0.1rem; }
 
         .lista-vazia { text-align: center; color: var(--text-secondary); padding: 1.5rem 1rem; }
         .lista-vazia i { font-size: 1.5rem; display: block; margin-bottom: 0.3rem; color: var(--border-color); }
-
-        .tooltip {
-            position: relative;
-            display: inline-block;
-        }
-
-        .tooltip .tooltip-text {
-            visibility: hidden;
-            width: 200px;
-            background: var(--preto);
-            color: var(--branco);
-            text-align: center;
-            border-radius: 6px;
-            padding: 0.3rem 0.5rem;
-            position: absolute;
-            z-index: 1;
-            bottom: 125%;
-            left: 50%;
-            transform: translateX(-50%);
-            opacity: 0;
-            transition: opacity 0.3s;
-            font-size: 0.6rem;
-            font-weight: 400;
-        }
-
-        .tooltip .tooltip-text::after {
-            content: "";
-            position: absolute;
-            top: 100%;
-            left: 50%;
-            margin-left: -5px;
-            border-width: 5px;
-            border-style: solid;
-            border-color: var(--preto) transparent transparent transparent;
-        }
-
-        .tooltip:hover .tooltip-text {
-            visibility: visible;
-            opacity: 1;
-        }
-
-        .grafico-comparativo {
-            margin-top: 0.5rem;
-            padding: 0.5rem;
-            background: var(--bg-body);
-            border-radius: 10px;
-            border: 1px solid var(--border-color);
-        }
-        .grafico-comparativo canvas { max-height: 150px; width: 100% !important; }
-        .grafico-comparativo .titulo-grafico {
-            font-weight: 600;
-            font-size: 0.65rem;
-            color: var(--text-secondary);
-            margin-bottom: 0.3rem;
-            display: flex;
-            align-items: center;
-            gap: 0.3rem;
-        }
-        .grafico-comparativo .titulo-grafico i { color: var(--verde-claro); }
 
         .drag-handle {
             cursor: grab;
@@ -1058,304 +762,106 @@
         }
         .drag-handle:hover { opacity: 1; }
 
-        /* ===== ESTILO DO INDICADOR DE MOEDA ===== */
-        .campo-moeda {
-            position: relative;
+        .remove-fornecedor {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: #8B3A3A;
+            color: var(--branco);
+            border: none;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            font-size: 0.5rem;
+            cursor: pointer;
             display: flex;
             align-items: center;
-        }
-
-        .campo-moeda .simbolo-moeda {
-            position: absolute;
-            left: 4px;
-            font-size: 0.6rem;
-            font-weight: 700;
-            color: var(--text-secondary);
-            pointer-events: none;
-            opacity: 0.6;
-        }
-
-        .campo-moeda input {
-            padding-left: 22px !important;
-            text-align: right !important;
-        }
-
-        .dica-digitacao {
-            font-size: 0.45rem;
-            color: var(--text-secondary);
-            text-align: center;
-            margin-top: 0.2rem;
+            justify-content: center;
+            transition: var(--transition);
             opacity: 0.7;
-            font-style: italic;
         }
 
-        .dica-digitacao i {
-            margin-right: 0.2rem;
-            color: var(--verde-claro);
-        }
+        .remove-fornecedor:hover { opacity: 1; transform: scale(1.1); }
 
-        /* ===== BADGE DE ITENS COTADOS ===== */
-        .badge-itens-cotados {
-            display: inline-block;
+        .btn-aprovar-fornecedor {
+            background: var(--verde-oliva);
+            color: white;
+            border: none;
+            border-radius: 40px;
+            padding: 0.1rem 0.6rem;
+            font-size: 0.5rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            font-family: inherit;
+            white-space: nowrap;
+        }
+        .btn-aprovar-fornecedor:hover {
+            background: var(--verde-escuro);
+            transform: scale(1.05);
+        }
+        .btn-aprovar-fornecedor.aprovado {
             background: var(--verde-claro);
             color: var(--preto);
+            cursor: default;
+        }
+        .btn-aprovar-fornecedor.aprovado:hover { transform: none; }
+        .btn-aprovar-fornecedor i { margin-right: 0.15rem; font-size: 0.5rem; }
+
+        .fornecedor-aprovado-destaque {
+            border: 2px solid var(--verde-oliva) !important;
+            background: rgba(193, 206, 131, 0.15) !important;
+            position: relative;
+        }
+        .fornecedor-aprovado-destaque::before {
+            content: "⭐ APROVADO";
+            position: absolute;
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--verde-oliva);
+            color: var(--branco);
             font-size: 0.5rem;
+            font-weight: 800;
+            padding: 0.05rem 0.6rem;
+            border-radius: 40px;
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+            z-index: 10;
+        }
+
+        .melhor-preco-item {
+            background: var(--melhor-preco-bg) !important;
+            border: 2px solid var(--melhor-preco-border) !important;
+            border-radius: 4px !important;
+            color: var(--melhor-preco-text) !important;
+            font-weight: 700 !important;
+            position: relative;
+        }
+
+        .melhor-preco-item .simbolo-moeda {
+            color: var(--melhor-preco-text) !important;
+        }
+
+        .melhor-preco-item input {
+            color: var(--melhor-preco-text) !important;
+            font-weight: 700 !important;
+        }
+
+        .melhor-preco-badge {
+            display: inline-block;
+            background: var(--verde-escuro);
+            color: white;
+            font-size: 0.45rem;
             font-weight: 700;
             padding: 0.05rem 0.4rem;
             border-radius: 40px;
-            margin-top: 0.1rem;
+            margin-left: 0.2rem;
+            white-space: nowrap;
+            letter-spacing: 0.3px;
         }
 
-        .badge-itens-cotados.completo {
-            background: #2E7D32;
-            color: white;
-        }
-
-        .badge-itens-cotados.parcial {
-            background: #FFB300;
-            color: #E65100;
-        }
-
-        .badge-itens-cotados.poucos {
-            background: #FF6F00;
-            color: white;
-        }
-
-        /* ===== MELHORIAS NA IMPRESSÃO ===== */
-        @media print {
-            /* Esconde elementos interativos e cabeçalho superior */
-            .app-topbar, .nav-menu, .botoes, #feedback, .no-print, .btn-aprovar-fornecedor,
-            .remove-fornecedor, .btn-fornecedor, .btn-add-item, .remove-item,
-            .grafico-comparativo, .dica-digitacao, #btnVerSalvos, .protocolos-salvos,
-            .btn-relatorio-dia, .btn-relatorio-mes, .btn-relatorio-ano, .btn-relatorio-geral,
-            .btn-csv {
-                display: none !important;
-            }
-
-            /* Reset de cores e fundos */
-            body {
-                background: white !important;
-                padding: 0.2in !important;
-                color: #000 !important;
-            }
-
-            .card-cotacao {
-                box-shadow: none !important;
-                border: 1px solid #ddd !important;
-                border-radius: 4px !important;
-                background: white !important;
-            }
-
-            .card-header {
-                background: #C1CE83 !important;
-                -webkit-print-color-adjust: exact !important;
-                print-color-adjust: exact !important;
-                padding: 0.3rem 0.8rem !important;
-                border-bottom: 2px solid #2E7D32 !important;
-            }
-            .card-header .left h2, .card-header .left i, .card-header .left span,
-            .card-header .right {
-                color: #191D1B !important;
-            }
-
-            .card-body {
-                padding: 0.3rem 0.5rem !important;
-            }
-
-            .info-condominio, .objetivo, .info-topo {
-                background: #f5f5f5 !important;
-                border: 1px solid #ddd !important;
-                -webkit-print-color-adjust: exact !important;
-                print-color-adjust: exact !important;
-                font-size: 0.6rem !important;
-                padding: 0.2rem 0.5rem !important;
-                margin-bottom: 0.3rem !important;
-            }
-            .info-condominio .item, .objetivo, .info-topo .campo label,
-            .info-topo .campo input {
-                color: #000 !important;
-            }
-            .info-topo .campo input {
-                border-bottom: 1px solid #000 !important;
-                background: transparent !important;
-            }
-            .info-topo .campo input.readonly {
-                background: #eee !important;
-            }
-
-            .tabela-cotacao {
-                font-size: 0.55rem !important;
-                border-collapse: collapse !important;
-                width: 100% !important;
-                border: 1px solid #aaa !important;
-            }
-            .tabela-cotacao th,
-            .tabela-cotacao td {
-                border: 1px solid #aaa !important;
-                padding: 0.1rem 0.2rem !important;
-                background: white !important;
-                color: #000 !important;
-            }
-            .tabela-cotacao th {
-                background: #7A816E !important;
-                -webkit-print-color-adjust: exact !important;
-                print-color-adjust: exact !important;
-                color: white !important;
-            }
-            .tabela-cotacao .fornecedor-header {
-                background: #C1CE83 !important;
-                -webkit-print-color-adjust: exact !important;
-                print-color-adjust: exact !important;
-                color: #191D1B !important;
-            }
-            .tabela-cotacao .sub-info {
-                background: #7A816E !important;
-                -webkit-print-color-adjust: exact !important;
-                print-color-adjust: exact !important;
-                color: white !important;
-            }
-            .tabela-cotacao .label-cell,
-            .tabela-cotacao .label-cell-left {
-                background: #f0f0f0 !important;
-                -webkit-print-color-adjust: exact !important;
-                print-color-adjust: exact !important;
-                color: #000 !important;
-            }
-            .tabela-cotacao .total-cell {
-                background: white !important;
-                -webkit-print-color-adjust: exact !important;
-                print-color-adjust: exact !important;
-                color: #000 !important;
-                font-weight: 700 !important;
-            }
-            .tabela-cotacao .best-cell {
-                background: #C1CE83 !important;
-                -webkit-print-color-adjust: exact !important;
-                print-color-adjust: exact !important;
-                color: #191D1B !important;
-                border: 3px solid #191D1B !important;
-            }
-            .tabela-cotacao .melhor-preco-item {
-                background: #C8E6C9 !important;
-                border: 2px solid #2E7D32 !important;
-                -webkit-print-color-adjust: exact !important;
-                print-color-adjust: exact !important;
-                color: #1B5E20 !important;
-            }
-            .tabela-cotacao .melhor-preco-item .simbolo-moeda {
-                color: #1B5E20 !important;
-            }
-            .tabela-cotacao .melhor-preco-item input {
-                color: #1B5E20 !important;
-            }
-            .melhor-preco-badge {
-                display: inline-block !important;
-                background: #2E7D32 !important;
-                color: white !important;
-                -webkit-print-color-adjust: exact !important;
-                print-color-adjust: exact !important;
-                font-size: 0.4rem !important;
-                padding: 0.05rem 0.3rem !important;
-                border-radius: 40px !important;
-                margin-left: 0.2rem !important;
-            }
-            .obs-row td, .obs-individual-row td {
-                background: #f9f9f9 !important;
-                -webkit-print-color-adjust: exact !important;
-                print-color-adjust: exact !important;
-            }
-            .obs-row .obs-input input,
-            .obs-individual-row .obs-input input {
-                border-bottom: 1px solid #000 !important;
-                background: transparent !important;
-                color: #000 !important;
-            }
-            .obs-individual-row .obs-input input.obs-preenchida {
-                background: #FFF8E1 !important;
-                border-bottom: 2px solid #FFB300 !important;
-                -webkit-print-color-adjust: exact !important;
-                print-color-adjust: exact !important;
-                color: #E65100 !important;
-            }
-            .obs-individual-row .obs-input .obs-alerta-icon {
-                display: none !important;
-            }
-            .campo-moeda .simbolo-moeda {
-                display: none !important;
-            }
-            .campo-moeda input {
-                padding-left: 4px !important;
-            }
-            .tabela-cotacao td input {
-                background: transparent !important;
-                border: none !important;
-                color: #000 !important;
-                font-size: 0.55rem !important;
-            }
-            .tabela-cotacao .fornecedor-header input {
-                color: #191D1B !important;
-            }
-            .fornecedor-aprovado-manual {
-                background: #C1CE83 !important;
-                border: 3px solid #191D1B !important;
-                -webkit-print-color-adjust: exact !important;
-                print-color-adjust: exact !important;
-            }
-            .fornecedor-aprovado-destaque::before {
-                display: none !important;
-            }
-
-            .protocolo-footer {
-                padding-top: 0.3rem !important;
-                margin-top: 0.3rem !important;
-                border-top: 1px solid #aaa !important;
-            }
-            .protocolo-footer .info {
-                color: #555 !important;
-                font-size: 0.5rem !important;
-            }
-            .protocolo-footer .info i {
-                color: #7A816E !important;
-            }
-
-            /* Quebra de página */
-            .item-row, .obs-row, .obs-individual-row, .total-row, .best-row {
-                page-break-inside: avoid;
-            }
-            .tabela-cotacao thead {
-                display: table-header-group;
-            }
-            .tabela-cotacao tfoot {
-                display: table-footer-group;
-            }
-
-            /* Rodapé na impressão */
-            .print-footer {
-                display: block !important;
-                text-align: center;
-                font-size: 0.5rem;
-                color: #999;
-                border-top: 1px solid #ddd;
-                padding-top: 6px;
-                margin-top: 12px;
-            }
-            .print-footer .page-number:after {
-                content: " Página " counter(page) " de " counter(pages);
-            }
-            @page {
-                margin: 0.5in;
-                @bottom-center {
-                    content: "Página " counter(page) " de " counter(pages);
-                    font-size: 0.5rem;
-                    color: #999;
-                }
-            }
-        }
-
-        /* ===== RODAPÉ DE IMPRESSÃO ===== */
-        .print-footer {
-            display: none;
-        }
+        .melhor-preco-badge i { margin-right: 0.1rem; font-size: 0.4rem; }
 
         @media (max-width: 768px) {
             .app-topbar { flex-direction: column; align-items: stretch; }
@@ -1370,13 +876,25 @@
             .info-topo .campo input { width: 100%; }
             .info-topo .campo.nome-campo input,
             .info-topo .campo.uso-campo input { min-width: 100px; font-size: 0.85rem; }
-            .col-fornecedor { min-width: 70px; }
-            .col-material { min-width: 100px; max-width: 180px; }
             .botoes .btn { font-size: 0.6rem; padding: 0.25rem 0.6rem; }
             .logo-text .title { font-size: 1rem; }
             .logo-text .slogan { font-size: 0.35rem; }
             .card-body { padding: 1rem; }
             .campo-moeda input { padding-left: 16px !important; font-size: 0.6rem !important; }
+        }
+
+        @media print {
+            .app-topbar, .nav-menu, .botoes, #feedback, .no-print, .btn-aprovar-fornecedor,
+            .remove-fornecedor, .btn-fornecedor, .btn-add-item, .remove-item,
+            .grafico-comparativo, .dica-digitacao, .protocolos-salvos {
+                display: none !important;
+            }
+            body { background: white !important; padding: 0.2in !important; color: #000 !important; }
+            .card-cotacao { box-shadow: none !important; border: 1px solid #ddd !important; border-radius: 4px !important; background: white !important; }
+            .card-header { background: #C1CE83 !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+            .tabela-cotacao th { background: #7A816E !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; color: white !important; }
+            .tabela-cotacao .fornecedor-header { background: #C1CE83 !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+            .tabela-cotacao .best-cell { background: #C1CE83 !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
         }
     </style>
 </head>
@@ -1385,7 +903,7 @@
 <div class="app-container">
     <!-- TOPBAR -->
     <div class="app-topbar">
-        <a href="index.html" class="logo-area">
+        <a href="#" class="logo-area">
             <div class="logo-icon">T <small>LIFE</small></div>
             <div class="logo-text">
                 <div class="title"><span class="tagua">Taguá</span><span class="life">Life</span></div>
@@ -1404,20 +922,14 @@
 
     <!-- MENU -->
     <div class="nav-menu">
-        <a class="nav-item" href="index.html"><i class="fas fa-home"></i> Dashboard</a>
-        <a class="nav-item" href="estoque.html"><i class="fas fa-boxes"></i> Estoque</a>
-        <a class="nav-item" href="saida.html"><i class="fas fa-arrow-right"></i> Saída</a>
-        <a class="nav-item active" href="mapacota.html"><i class="fas fa-file-invoice"></i> Cotação</a>
-        <a class="nav-item" href="cotacoes_aprovadas.html"><i class="fas fa-check-circle"></i> Aprovadas</a>
-        <a class="nav-item" href="orcamento.html"><i class="fas fa-file-pdf"></i> Orçamento</a>
-        <a class="nav-item" href="fornecedor.html"><i class="fas fa-handshake"></i> Fornecedores</a>
-        <a class="nav-item" href="recebido.html"><i class="fas fa-clipboard-check"></i> Recebido</a>
-        <a class="nav-item" href="backup_automatico.html"><i class="fas fa-database"></i> Backup</a>
+        <a class="nav-item" href="#"><i class="fas fa-home"></i> Dashboard</a>
+        <a class="nav-item" href="#"><i class="fas fa-boxes"></i> Estoque</a>
+        <a class="nav-item" href="#"><i class="fas fa-arrow-right"></i> Saída</a>
+        <a class="nav-item active" href="#"><i class="fas fa-file-invoice"></i> Cotação</a>
+        <a class="nav-item" href="#"><i class="fas fa-check-circle"></i> Aprovadas</a>
+        <a class="nav-item" href="#"><i class="fas fa-handshake"></i> Fornecedores</a>
         <button class="nav-item btn-theme" onclick="toggleTheme()" style="margin-left:auto;">
             <i class="fas fa-moon" id="themeIcon"></i> <span id="themeLabel">Tema</span>
-        </button>
-        <button class="nav-item" onclick="logout()" style="background:#8B3A3A; color:white; border-color:#8B3A3A;">
-            <i class="fas fa-sign-out-alt"></i> Sair
         </button>
     </div>
 
@@ -1447,15 +959,13 @@
             </div>
 
             <div class="info-topo">
-                <div class="campo nome-campo tooltip">
+                <div class="campo nome-campo">
                     <label><i class="fas fa-user"></i> NOME:</label>
-                    <input type="text" id="nomeCotacao" value="" placeholder="Digite o nome completo" data-validar="nome" />
-                    <span class="tooltip-text">Nome completo do responsável pela cotação</span>
+                    <input type="text" id="nomeCotacao" value="" placeholder="Digite o nome completo" />
                 </div>
-                <div class="campo uso-campo tooltip">
+                <div class="campo uso-campo">
                     <label><i class="fas fa-briefcase"></i> USO:</label>
-                    <input type="text" id="usoCotacao" value="" placeholder="Digite o uso" data-validar="uso" />
-                    <span class="tooltip-text">Finalidade ou área de aplicação</span>
+                    <input type="text" id="usoCotacao" value="" placeholder="Digite o uso" />
                 </div>
                 <div class="campo" style="margin-left:auto; flex:0 0 auto; min-width:100px;">
                     <label><i class="fas fa-calendar"></i> DATA:</label>
@@ -1467,7 +977,6 @@
                 </div>
             </div>
 
-            <!-- DICA DE DIGITAÇÃO -->
             <div class="dica-digitacao no-print">
                 <i class="fas fa-lightbulb"></i> Dica: Digite apenas números (ex: 22) que o sistema converte automaticamente para R$ 22,00
             </div>
@@ -1490,24 +999,16 @@
                 <button class="btn-fornecedor" onclick="adicionarFornecedor()">
                     <i class="fas fa-plus-circle"></i> Adicionar Fornecedor
                 </button>
-                <span style="color:var(--gray-400); margin:0 0.5rem;">|</span>
+                <span style="color:#aaa; margin:0 0.5rem;">|</span>
                 <button class="btn-fornecedor" onclick="adicionarItem()">
                     <i class="fas fa-plus"></i> Adicionar Item
-                </button>
-                <span style="color:var(--gray-400); margin:0 0.5rem;">|</span>
-                <button class="btn-fornecedor" onclick="carregarItensEstoque()" style="border-color:var(--verde-claro);">
-                    <i class="fas fa-boxes"></i> Itens do Estoque
-                </button>
-                <span style="color:var(--gray-400); margin:0 0.5rem;">|</span>
-                <button class="btn-fornecedor" onclick="salvarFornecedorDaCotacao()" style="border-color:#3498DB;">
-                    <i class="fas fa-save"></i> Salvar Fornecedor
                 </button>
             </div>
 
             <div class="grafico-comparativo no-print">
                 <div class="titulo-grafico">
                     <i class="fas fa-chart-bar"></i> Comparativo de Valores por Fornecedor
-                    <button class="btn btn-outline" style="margin-left:auto; padding:0.1rem 0.5rem; font-size:0.55rem;" onclick="toggleGraficoComparativo()">
+                    <button class="btn btn-outline" style="margin-left:auto; padding:0.1rem 0.5rem; font-size:0.55rem;" onclick="toggleGrafico()">
                         <i class="fas fa-sync-alt"></i> Radar
                     </button>
                 </div>
@@ -1522,43 +1023,14 @@
                 </div>
                 <div class="botoes no-print">
                     <button class="btn btn-danger" onclick="limparPagina()"><i class="fas fa-broom"></i> Nova Cotação</button>
-                    <button class="btn btn-secondary" id="btnVerSalvos"><i class="fas fa-folder-open"></i> Ver salvos</button>
-                    <a href="index.html" class="btn btn-voltar"><i class="fas fa-arrow-left"></i> Voltar</a>
+                    <button class="btn btn-secondary" onclick="toggleListaSalvos()"><i class="fas fa-folder-open"></i> Ver salvos</button>
                     <button class="btn btn-success" onclick="window.print()"><i class="fas fa-print"></i> Imprimir</button>
                     <button class="btn btn-primary" id="btnSalvar"><i class="fas fa-save"></i> Salvar</button>
                     <button class="btn btn-primary" id="btnConcluir" style="background:#2E7D32; color:white;"><i class="fas fa-check-circle"></i> Concluir</button>
                 </div>
             </div>
 
-            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 2px solid var(--border-color);" class="no-print">
-                <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center;">
-                    <span style="font-weight: 600; font-size: 0.7rem; color: var(--text-secondary);">
-                        <i class="fas fa-file-pdf"></i> RELATÓRIOS:
-                    </span>
-                    <button class="btn btn-relatorio-dia" onclick="gerarRelatorioPDF('dia')">
-                        <i class="fas fa-calendar-day"></i> Dia
-                    </button>
-                    <button class="btn btn-relatorio-mes" onclick="gerarRelatorioPDF('mes')">
-                        <i class="fas fa-calendar-alt"></i> Mês
-                    </button>
-                    <button class="btn btn-relatorio-ano" onclick="gerarRelatorioPDF('ano')">
-                        <i class="fas fa-calendar-year"></i> Ano
-                    </button>
-                    <button class="btn btn-relatorio-geral" onclick="gerarRelatorioPDF('geral')">
-                        <i class="fas fa-file-pdf"></i> Geral
-                    </button>
-                    <button class="btn btn-csv" onclick="exportarCSV()">
-                        <i class="fas fa-file-csv"></i> CSV
-                    </button>
-                </div>
-            </div>
-
             <div id="feedback"></div>
-        </div>
-
-        <!-- Rodapé que será mostrado apenas na impressão -->
-        <div class="print-footer">
-            <span class="page-number"></span> • TaguáLife Center • Sistema de Gestão Condominial
         </div>
     </div>
 
@@ -1573,1372 +1045,753 @@
 <div id="toastGlobal"></div>
 
 <script>
-(function() {
-    // ===== CONSTANTES =====
-    const CHAVE_STORAGE = 'cotacoesTaguáLife';
-    const CHAVE_THEME = 'tema_TaguáLife';
-    const CHAVE_APROVADAS = 'cotacoesAprovadasTaguaLife';
-    
-    let fornecedores = [];
-    let proximoIdFornecedor = 1;
-    let editandoId = null;
-    let graficoChart = null;
-    let tipoGraficoComparativo = 'bar';
-    let fornecedorAprovadoId = null;
+// ============================================================
+// CONFIGURAÇÃO DO SUPABASE - SUBSTITUA PELOS SEUS DADOS!
+// ============================================================
+const SUPABASE_URL = 'https://SEU_PROJETO.supabase.co';  // ← COLOQUE SUA URL
+const SUPABASE_KEY = 'SUA_ANON_KEY';                     // ← COLOQUE SUA CHAVE
+const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    const VALORES_PADRAO = {
-        pagamento: ['À VISTA', 'À VISTA', 'À VISTA', 'À VISTA'],
-        entrega: ['IMEDIATO', 'IMEDIATO', 'IMEDIATO', 'IMEDIATO'],
-        responsavel: ['EDNALDO', 'EDNALDO', 'EDNALDO', 'EDNALDO']
-    };
+// ============================================================
+// TODAS AS FUNÇÕES DA PÁGINA
+// ============================================================
 
-    // ===== TOAST =====
-    function mostrarToast(mensagem, tipo = 'success') {
-        const toast = document.getElementById('toastGlobal');
-        const cores = { info: '#3498DB', success: '#2E7D32', warning: '#C1A83C', danger: '#8B3A3A' };
-        toast.textContent = mensagem;
-        toast.style.background = cores[tipo] || '#191D1B';
-        toast.style.color = 'white';
-        toast.classList.add('show');
-        clearTimeout(toast._timeout);
-        toast._timeout = setTimeout(() => toast.classList.remove('show'), 4000);
+// ===== VARIÁVEIS GLOBAIS =====
+const CHAVE_STORAGE = 'cotacoesTaguáLife';
+const CHAVE_THEME = 'tema_TaguáLife';
+
+let fornecedores = [];
+let proximoIdFornecedor = 1;
+let editandoId = null;
+let graficoChart = null;
+let tipoGrafico = 'bar';
+let fornecedorAprovadoId = null;
+let cotacaoEditando = false;
+
+// ===== TOAST =====
+function mostrarToast(mensagem, tipo = 'success') {
+    const toast = document.getElementById('toastGlobal');
+    const cores = { info: '#3498DB', success: '#2E7D32', warning: '#C1A83C', danger: '#8B3A3A' };
+    toast.textContent = mensagem;
+    toast.style.background = cores[tipo] || '#191D1B';
+    toast.style.color = 'white';
+    toast.classList.add('show');
+    clearTimeout(toast._timeout);
+    toast._timeout = setTimeout(() => toast.classList.remove('show'), 4000);
+}
+
+// ===== RELÓGIO =====
+function getHorarioBrasilia() {
+    const agora = new Date();
+    const data = agora.toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' });
+    const hora = agora.toLocaleTimeString('pt-BR', { timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit' });
+    const horaCompleta = agora.toLocaleTimeString('pt-BR', { timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    return { data, hora, horaCompleta };
+}
+
+function atualizarRelogio() {
+    const horario = getHorarioBrasilia();
+    document.getElementById('clockHours').textContent = horario.hora.split(':')[0] || '00';
+    document.getElementById('clockMinutes').textContent = horario.hora.split(':')[1] || '00';
+    document.getElementById('clockSeconds').textContent = horario.horaCompleta.split(':')[2] || '00';
+    document.getElementById('clockDate').textContent = horario.data;
+    document.getElementById('dataAtual').textContent = horario.data;
+    document.getElementById('horaAtual').textContent = horario.hora;
+    document.getElementById('dataGeracao').textContent = horario.data;
+    document.getElementById('horaGeracao').textContent = horario.horaCompleta;
+    document.getElementById('dataTopo').value = horario.data;
+    document.getElementById('horaTopo').value = horario.hora;
+}
+atualizarRelogio();
+setInterval(atualizarRelogio, 1000);
+
+// ===== TEMA =====
+function toggleTheme() {
+    const body = document.body;
+    body.classList.toggle('dark-mode');
+    const isDark = body.classList.contains('dark-mode');
+    localStorage.setItem(CHAVE_THEME, isDark ? 'dark' : 'light');
+    const icon = document.getElementById('themeIcon');
+    const label = document.getElementById('themeLabel');
+    if (isDark) { icon.className = 'fas fa-sun'; label.textContent = 'Claro'; } 
+    else { icon.className = 'fas fa-moon'; label.textContent = 'Tema'; }
+}
+
+function carregarTema() {
+    const theme = localStorage.getItem(CHAVE_THEME);
+    if (theme === 'dark') {
+        document.body.classList.add('dark-mode');
+        document.getElementById('themeIcon').className = 'fas fa-sun';
+        document.getElementById('themeLabel').textContent = 'Claro';
     }
+}
 
-    // ===== LOGOUT =====
-    function logout() {
-        if (confirm('Deseja realmente sair do sistema?')) {
-            localStorage.removeItem('tagualife_sessao');
-            window.location.href = 'login.html';
-        }
+// ===== FORMATAÇÃO =====
+function parseMoeda(valor) {
+    if (!valor) return 0;
+    let limpo = String(valor).replace(/[^0-9,.]/g, '');
+    if (limpo.includes(',')) {
+        limpo = limpo.replace(/\./g, '').replace(',', '.');
     }
+    return parseFloat(limpo) || 0;
+}
 
-    // ===== FUNÇÕES DE FORMATAÇÃO =====
-    function parseMoeda(valor) {
-        if (!valor) return 0;
-        let limpo = String(valor).replace(/[^0-9,.]/g, '');
-        if (limpo.includes(',')) {
-            limpo = limpo.replace(/\./g, '').replace(',', '.');
-        }
-        return parseFloat(limpo) || 0;
+function formatarMoeda(valor) {
+    return 'R$ ' + valor.toFixed(2).replace('.', ',');
+}
+
+function formatarMoedaInput(valor) {
+    return valor.toFixed(2).replace('.', ',');
+}
+
+function textoParaNumero(texto) {
+    if (!texto) return 0;
+    let limpo = texto.replace(/[^0-9,]/g, '');
+    if (limpo.includes(',')) {
+        limpo = limpo.replace(',', '.');
     }
+    return parseFloat(limpo) || 0;
+}
 
-    function formatarMoeda(valor) {
-        return 'R$ ' + valor.toFixed(2).replace('.', ',');
-    }
+function mascaraMoedaSimplificada(input) {
+    let valor = input.value.replace(/[^0-9]/g, '');
+    if (valor === '') { input.value = ''; return; }
+    let numero = parseInt(valor, 10);
+    if (isNaN(numero)) { input.value = ''; return; }
+    let reais = numero / 100;
+    let formatado = reais.toFixed(2).replace('.', ',');
+    let partes = formatado.split(',');
+    let inteiro = partes[0];
+    let decimal = partes[1];
+    inteiro = inteiro.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    input.value = inteiro + ',' + decimal;
+}
 
-    function formatarMoedaInput(valor) {
-        return valor.toFixed(2).replace('.', ',');
-    }
+// ===== FEEDBACK =====
+function mostrarMensagem(texto, cor = '#191D1B') {
+    const feedback = document.getElementById('feedback');
+    feedback.innerHTML = `<span style="background:${cor}; color:white; padding:0.2rem 1.2rem; border-radius:40px; display:inline-block; font-size:0.65rem;">${texto}</span>`;
+    clearTimeout(feedback._timeout);
+    feedback._timeout = setTimeout(() => { feedback.innerHTML = ''; }, 4000);
+}
 
-    function mascaraMoedaSimplificada(input) {
-        let valor = input.value.replace(/[^0-9]/g, '');
-        if (valor === '') {
-            input.value = '';
-            return;
-        }
-        let numero = parseInt(valor, 10);
-        if (isNaN(numero)) {
-            input.value = '';
-            return;
-        }
-        let reais = numero / 100;
-        let formatado = reais.toFixed(2).replace('.', ',');
-        let partes = formatado.split(',');
-        let inteiro = partes[0];
-        let decimal = partes[1];
-        inteiro = inteiro.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-        input.value = inteiro + ',' + decimal;
-    }
+// ============================================================
+// FUNÇÕES DO SUPABASE
+// ============================================================
 
-    function textoParaNumero(texto) {
-        if (!texto) return 0;
-        let limpo = texto.replace(/[^0-9,]/g, '');
-        if (limpo.includes(',')) {
-            limpo = limpo.replace(',', '.');
-        }
-        return parseFloat(limpo) || 0;
-    }
-
-    // ===== RELÓGIO =====
-    function getHorarioBrasilia() {
-        const agora = new Date();
-        const data = agora.toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' });
-        const hora = agora.toLocaleTimeString('pt-BR', { timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit' });
-        const horaCompleta = agora.toLocaleTimeString('pt-BR', { timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit', second: '2-digit' });
-        return { data, hora, horaCompleta };
-    }
-
-    function atualizarRelogio() {
-        const horario = getHorarioBrasilia();
-        document.getElementById('clockHours').textContent = horario.hora.split(':')[0] || '00';
-        document.getElementById('clockMinutes').textContent = horario.hora.split(':')[1] || '00';
-        document.getElementById('clockSeconds').textContent = horario.horaCompleta.split(':')[2] || '00';
-        document.getElementById('clockDate').textContent = horario.data;
-    }
-    atualizarRelogio();
-    setInterval(atualizarRelogio, 1000);
-
-    function atualizarDataHora() {
-        const horario = getHorarioBrasilia();
-        document.getElementById('dataAtual').textContent = horario.data;
-        document.getElementById('horaAtual').textContent = horario.hora;
-        document.getElementById('dataGeracao').textContent = horario.data;
-        document.getElementById('horaGeracao').textContent = horario.horaCompleta;
-        document.getElementById('dataTopo').value = horario.data;
-        document.getElementById('horaTopo').value = horario.hora;
-    }
-    atualizarDataHora();
-    setInterval(atualizarDataHora, 1000);
-
-    // ===== TEMA =====
-    function toggleTheme() {
-        const body = document.body;
-        body.classList.toggle('dark-mode');
-        const isDark = body.classList.contains('dark-mode');
-        localStorage.setItem(CHAVE_THEME, isDark ? 'dark' : 'light');
-        const icon = document.getElementById('themeIcon');
-        const label = document.getElementById('themeLabel');
-        if (isDark) { icon.className = 'fas fa-sun'; label.textContent = 'Claro'; } 
-        else { icon.className = 'fas fa-moon'; label.textContent = 'Tema'; }
-    }
-
-    function carregarTema() {
-        const theme = localStorage.getItem(CHAVE_THEME);
-        if (theme === 'dark') {
-            document.body.classList.add('dark-mode');
-            document.getElementById('themeIcon').className = 'fas fa-sun';
-            document.getElementById('themeLabel').textContent = 'Claro';
-        }
-    }
-
-    // ===== FEEDBACK =====
-    function mostrarMensagem(texto, cor = '#191D1B') {
-        const feedback = document.getElementById('feedback');
-        feedback.innerHTML = `<span style="background:${cor}; color:white; padding:0.2rem 1.2rem; border-radius:40px; display:inline-block; font-size:0.65rem;">${texto}</span>`;
-        clearTimeout(feedback._timeout);
-        feedback._timeout = setTimeout(() => { feedback.innerHTML = ''; }, 4000);
-    }
-
-    // ===== FUNÇÃO PARA DESTACAR MELHORES PREÇOS POR ITEM =====
-    function destacarMelhoresPrecos() {
-        const rows = document.querySelectorAll('.item-row');
-        if (rows.length === 0 || fornecedores.length === 0) return;
-
-        document.querySelectorAll('.melhor-preco-item').forEach(el => {
-            el.classList.remove('melhor-preco-item');
-        });
-        document.querySelectorAll('.melhor-preco-badge').forEach(el => el.remove());
-
-        rows.forEach(row => {
-            let menorPreco = Infinity;
-            let fornecedorComMenorPreco = null;
-
-            fornecedores.forEach(f => {
-                const totalInput = row.querySelector(`.f${f.id}-total`);
-                if (totalInput && totalInput.value) {
-                    const valor = textoParaNumero(totalInput.value);
-                    if (valor > 0 && valor < menorPreco) {
-                        menorPreco = valor;
-                        fornecedorComMenorPreco = f.id;
-                    }
-                }
-            });
-
-            if (fornecedorComMenorPreco !== null && menorPreco !== Infinity) {
-                let empate = false;
-                let qtdEmpate = 0;
-                fornecedores.forEach(f => {
-                    const totalInput = row.querySelector(`.f${f.id}-total`);
-                    if (totalInput && totalInput.value) {
-                        const valor = textoParaNumero(totalInput.value);
-                        if (valor > 0 && Math.abs(valor - menorPreco) < 0.01) {
-                            qtdEmpate++;
-                        }
-                    }
-                });
-
-                fornecedores.forEach(f => {
-                    const totalInput = row.querySelector(`.f${f.id}-total`);
-                    if (totalInput && totalInput.value) {
-                        const valor = textoParaNumero(totalInput.value);
-                        if (valor > 0 && Math.abs(valor - menorPreco) < 0.01) {
-                            const cell = totalInput.closest('td');
-                            if (cell) {
-                                cell.classList.add('melhor-preco-item');
-                                if (qtdEmpate === 1 || f.id === fornecedorComMenorPreco) {
-                                    const badge = document.createElement('span');
-                                    badge.className = 'melhor-preco-badge';
-                                    badge.innerHTML = '<i class="fas fa-arrow-down"></i> MENOR PREÇO';
-                                    if (qtdEmpate > 1) {
-                                        badge.innerHTML = '<i class="fas fa-arrow-down"></i> MENOR PREÇO ⚡';
-                                    }
-                                    cell.style.position = 'relative';
-                                    cell.appendChild(badge);
-                                }
-                            }
-                        }
-                    }
-                });
-
-                if (qtdEmpate === 1) {
-                    const fIndex = fornecedores.findIndex(f => f.id === fornecedorComMenorPreco);
-                    if (fIndex !== -1) {
-                        const header = document.querySelector(`#headerFornecedores th:nth-child(${fIndex + 4})`);
-                        if (header) {
-                            let badge = header.querySelector('.melhor-preco-header-badge');
-                            if (!badge) {
-                                badge = document.createElement('span');
-                                badge.className = 'melhor-preco-header-badge';
-                                badge.style.cssText = `
-                                    display: block;
-                                    background: #2E7D32;
-                                    color: white;
-                                    font-size: 0.4rem;
-                                    padding: 0.05rem 0.3rem;
-                                    border-radius: 40px;
-                                    margin-top: 0.1rem;
-                                    font-weight: 700;
-                                    letter-spacing: 0.3px;
-                                `;
-                                badge.textContent = '⭐ MELHOR PREÇO';
-                                header.appendChild(badge);
-                            }
-                        }
-                    }
-                }
-            }
-        });
-    }
-
-    // ===== SALVAR FORNECEDOR DA COTAÇÃO =====
-    function salvarFornecedorDaCotacao() {
-        const nomeInput = document.querySelector('.fornecedor-header input');
-        const nome = nomeInput ? nomeInput.value.trim() : '';
+// ===== SALVAR COTAÇÃO NO SUPABASE =====
+async function salvarCotacaoSupabase(concluir = false) {
+    try {
+        // Validar campos obrigatórios
+        const nome = document.getElementById('nomeCotacao').value.trim();
+        const uso = document.getElementById('usoCotacao').value.trim();
+        
         if (!nome) {
-            mostrarMensagem('⚠️ Informe o nome do fornecedor!', '#8B3A3A');
+            mostrarMensagem('⚠️ Preencha o NOME!', '#8B3A3A');
+            document.getElementById('nomeCotacao').focus();
             return;
         }
-        let contato = '';
-        let telefone = '';
-        document.querySelectorAll('#corpoTabela .fornecedor-field').forEach((input) => {
-            const label = input.closest('tr')?.querySelector('td:first-child')?.textContent?.trim();
-            if (label === 'CONTATO:') contato = input.value.trim();
-            else if (label === 'TELEFONE:') telefone = input.value.trim();
-        });
-        let fornecedores = JSON.parse(localStorage.getItem('fornecedoresTaguaLife') || '[]');
-        if (fornecedores.find(f => f.empresa.toLowerCase() === nome.toLowerCase())) {
-            mostrarMensagem('⚠️ Fornecedor já cadastrado!', '#8B3A3A');
-            return;
-        }
-        const novoFornecedor = {
-            id: Date.now(),
-            empresa: nome,
-            atividade: 'Outros',
-            contato: contato || '',
-            telefone: telefone || '',
-            endereco: '',
-            email: '',
-            avaliacao: 0,
-            dataCadastro: new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })
-        };
-        fornecedores.push(novoFornecedor);
-        localStorage.setItem('fornecedoresTaguaLife', JSON.stringify(fornecedores));
-        carregarFornecedoresEstoque();
-        mostrarMensagem(`✅ Fornecedor "${nome}" salvo!`, '#7A816E');
-        mostrarToast(`✅ Fornecedor "${nome}" salvo!`, 'success');
-    }
-
-    // ===== CARREGAR FORNECEDORES DO ESTOQUE =====
-    function carregarFornecedoresEstoque() {
-        const fornecedoresEstoque = JSON.parse(localStorage.getItem('fornecedoresTaguaLife') || '[]');
-    }
-
-    // ===== CARREGAR ITENS DO ESTOQUE =====
-    function carregarItensEstoque() {
-        const itensEstoque = JSON.parse(localStorage.getItem('estoqueTaguaLife') || '[]');
-        if (itensEstoque.length === 0) {
-            mostrarMensagem('⚠️ Nenhum item no estoque!', '#8B3A3A');
-            return;
-        }
-        const rows = document.querySelectorAll('.item-row');
-        if (rows.length > 0 && !confirm('Substituir itens atuais?')) return;
-        const tbody = document.getElementById('corpoTabela');
-        document.querySelectorAll('.item-row').forEach(row => row.remove());
-        itensEstoque.forEach((item, index) => {
-            if (index === 0) {
-                const firstRow = tbody.querySelector('.item-row');
-                if (firstRow) {
-                    firstRow.querySelector('.item-desc').value = item.nome || '';
-                    firstRow.querySelector('.item-qtd').value = '1';
-                }
-            } else {
-                adicionarItemComDescricao(item.nome || '');
-            }
-        });
-        mostrarMensagem(`✅ ${itensEstoque.length} itens carregados!`, '#7A816E');
-        mostrarToast(`✅ ${itensEstoque.length} itens carregados!`, 'success');
-        atualizarTotais();
-    }
-
-    function adicionarItemComDescricao(descricao) {
-        const tbody = document.getElementById('corpoTabela');
-        const rows = tbody.querySelectorAll('.item-row');
-        const num = rows.length + 1;
-        const addRow = tbody.querySelector('.add-item-row');
-        const tr = document.createElement('tr');
-        tr.className = 'item-row';
-        let html = `
-            <td class="label-cell"><span class="drag-handle"><i class="fas fa-grip-vertical"></i></span> ${num}</td>
-            <td><input type="text" class="text-left item-desc" value="${descricao}" placeholder="Descreva o material" style="font-size:0.7rem; width:100%;" data-validar="descricao" /></td>
-            <td><input type="text" class="item-qtd" value="1" style="text-align:center; font-size:0.7rem;" data-validar="quantidade" /></td>
-        `;
-        fornecedores.forEach(f => {
-            html += `
-                <td>
-                    <div class="campo-moeda">
-                        <span class="simbolo-moeda">R$</span>
-                        <input type="text" class="currency currency-und f${f.id}-und" value="" placeholder="0,00" style="font-size:0.65rem;" />
-                    </div>
-                    <div class="campo-moeda">
-                        <span class="simbolo-moeda">R$</span>
-                        <input type="text" class="currency currency-total f${f.id}-total" value="" placeholder="0,00" style="font-size:0.7rem;" />
-                    </div>
-                </td>
-            `;
-        });
-        html += `<td><span class="remove-item" onclick="removerItem(this)"><i class="fas fa-times-circle"></i></span></td>`;
-        tr.innerHTML = html;
-        tbody.insertBefore(tr, addRow);
-        
-        tr.querySelectorAll('.currency-und, .currency-total').forEach(input => {
-            input.addEventListener('input', function() {
-                mascaraMoedaSimplificada(this);
-                const row = this.closest('.item-row');
-                if (row && this.classList.contains('currency-und')) {
-                    const qtd = parseFloat(row.querySelector('.item-qtd')?.value?.replace(',', '.') || 1);
-                    const undValor = textoParaNumero(this.value);
-                    const totalInput = row.querySelector(`.${this.className.split(' ')[2]}-total`);
-                    if (totalInput && !isNaN(undValor) && undValor > 0) {
-                        const total = qtd * undValor;
-                        totalInput.value = formatarMoedaInput(total);
-                    }
-                }
-                atualizarTotais();
-            });
-            
-            input.addEventListener('blur', function() {
-                if (this.value === '') return;
-                const valor = textoParaNumero(this.value);
-                if (valor > 0) {
-                    this.value = formatarMoedaInput(valor);
-                } else {
-                    this.value = '';
-                }
-            });
-            
-            input.addEventListener('focus', function() {
-                if (this.value === '') return;
-                const valor = textoParaNumero(this.value);
-                if (valor > 0) {
-                    this.value = formatarMoedaInput(valor);
-                }
-            });
-        });
-        
-        initSortable();
-        atualizarTotais();
-    }
-
-    // ===== SORTABLE =====
-    let sortableInstance = null;
-
-    function initSortable() {
-        const tbody = document.getElementById('corpoTabela');
-        if (sortableInstance) sortableInstance.destroy();
-        sortableInstance = new Sortable(tbody, {
-            handle: '.drag-handle',
-            animation: 150,
-            filter: '.add-item-row',
-            onEnd: function() {
-                tbody.querySelectorAll('.item-row').forEach((row, index) => {
-                    const labelCell = row.querySelector('.label-cell');
-                    if (labelCell) {
-                        labelCell.innerHTML = `<span class="drag-handle"><i class="fas fa-grip-vertical"></i></span> ${index + 1}`;
-                    }
-                });
-                atualizarTotais();
-            }
-        });
-    }
-
-    // ===== VALIDAÇÃO =====
-    function validarCampo(input) {
-        const tipo = input.dataset.validar;
-        const valor = input.value.trim();
-        let isValid = true;
-        if (tipo === 'nome' || tipo === 'uso') {
-            if (valor.length < 2) { isValid = false; input.classList.add('invalid'); input.classList.remove('valid'); }
-            else { input.classList.remove('invalid'); input.classList.add('valid'); }
-        }
-        return isValid;
-    }
-
-    // ===== APROVAR FORNECEDOR MANUALMENTE =====
-    window.aprovarFornecedorManual = function(id) {
-        const f = fornecedores.find(item => item.id === id);
-        if (!f) {
-            mostrarMensagem('⚠️ Fornecedor não encontrado!', '#8B3A3A');
-            return;
-        }
-        const nomeInput = document.getElementById(`f${fornecedores.indexOf(f)}Nome`);
-        const nome = nomeInput ? nomeInput.value.trim() : '';
-        if (!nome) {
-            mostrarMensagem('⚠️ Informe o nome do fornecedor!', '#8B3A3A');
-            return;
-        }
-        const rows = document.querySelectorAll('.item-row');
-        let totalGeral = 0, qtdItens = 0;
-        rows.forEach(row => {
-            const totalInput = row.querySelector(`.f${id}-total`);
-            if (totalInput && totalInput.value) {
-                const valor = textoParaNumero(totalInput.value);
-                if (valor > 0) { totalGeral += valor; qtdItens++; }
-            }
-        });
-        if (qtdItens === 0) {
-            mostrarMensagem('⚠️ Este fornecedor não tem valores!', '#8B3A3A');
-            return;
-        }
-        const freteInput = document.getElementById(`freteF${id}`);
-        const frete = freteInput ? textoParaNumero(freteInput.value) : 0;
-        const totalComFrete = totalGeral + frete;
-        const aprovacao = {
-            id: Date.now(),
-            cotacaoId: Date.now(),
-            fornecedor: nome,
-            sindica: 'Elisabeth Velásquez',
-            data: new Date().toLocaleDateString('pt-BR'),
-            hora: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
-            valor: totalComFrete,
-            valorFormatado: formatarMoeda(totalComFrete),
-            status: 'Aprovado',
-            observacao: `Cotação de ${document.getElementById('nomeCotacao')?.value || 'N/A'} - Fornecedor ${nome} aprovado manualmente`,
-            dataSalvamento: new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' }),
-            aprovadoManual: true,
-            detalhes: { itens: qtdItens, subtotal: totalGeral, frete: frete }
-        };
-        let aprovacoes = JSON.parse(localStorage.getItem(CHAVE_APROVADAS) || '[]');
-        const duplicado = aprovacoes.find(a => 
-            a.fornecedor === nome && a.data === aprovacao.data && Math.abs(a.valor - totalComFrete) < 0.01
-        );
-        if (duplicado) {
-            mostrarMensagem('⚠️ Esta aprovação já foi registrada!', '#C1A83C');
-            return;
-        }
-        aprovacoes.push(aprovacao);
-        localStorage.setItem(CHAVE_APROVADAS, JSON.stringify(aprovacoes));
-        if (fornecedorAprovadoId !== null && fornecedorAprovadoId !== id) {
-            document.querySelectorAll('.fornecedor-header').forEach(th => {
-                th.classList.remove('fornecedor-aprovado-manual', 'fornecedor-aprovado-destaque');
-                const btn = th.querySelector('.btn-aprovar-fornecedor');
-                if (btn) { btn.classList.remove('aprovado'); btn.innerHTML = '<i class="fas fa-check-circle"></i> Aprovar'; }
-            });
-        }
-        fornecedorAprovadoId = id;
-        document.querySelectorAll('.fornecedor-header').forEach((th, index) => {
-            const fId = fornecedores[index]?.id;
-            const btn = th.querySelector('.btn-aprovar-fornecedor');
-            if (btn) {
-                if (fId === id) {
-                    th.classList.add('fornecedor-aprovado-manual', 'fornecedor-aprovado-destaque');
-                    btn.classList.add('aprovado');
-                    btn.innerHTML = '<i class="fas fa-star"></i> Aprovado ✓';
-                } else {
-                    th.classList.remove('fornecedor-aprovado-manual', 'fornecedor-aprovado-destaque');
-                    btn.classList.remove('aprovado');
-                    btn.innerHTML = '<i class="fas fa-check-circle"></i> Aprovar';
-                }
-            }
-        });
-        localStorage.setItem('fornecedorAprovado_' + CHAVE_STORAGE, JSON.stringify({ id: f.id, nome: nome }));
-        atualizarLinhaMelhorProposta();
-        mostrarMensagem(`⭐ "${nome}" aprovado e registrado nas Aprovadas!`, '#7A816E');
-        mostrarToast(`⭐ "${nome}" aprovado!`, 'success');
-        const listaEl = document.getElementById('listaCotoes');
-        if (listaEl && listaEl.style.display !== 'none') exibirListaCotoes();
-    };
-
-    function salvarFornecedorAprovado() {
-        if (fornecedorAprovadoId === null) {
-            localStorage.removeItem('fornecedorAprovado_' + CHAVE_STORAGE);
-            return;
-        }
-        const f = fornecedores.find(item => item.id === fornecedorAprovadoId);
-        if (f) {
-            const nomeInput = document.getElementById(`f${fornecedores.indexOf(f)}Nome`);
-            const nome = nomeInput ? nomeInput.value.trim() : f.nome || '';
-            localStorage.setItem('fornecedorAprovado_' + CHAVE_STORAGE, JSON.stringify({ id: f.id, nome: nome }));
-        }
-    }
-
-    function carregarFornecedorAprovado() {
-        const data = localStorage.getItem('fornecedorAprovado_' + CHAVE_STORAGE);
-        if (data) {
-            try {
-                const parsed = JSON.parse(data);
-                const f = fornecedores.find(item => item.id === parsed.id);
-                if (f) {
-                    const nomeInput = document.getElementById(`f${fornecedores.indexOf(f)}Nome`);
-                    const nomeAtual = nomeInput ? nomeInput.value.trim() : '';
-                    if (nomeAtual === parsed.nome || !nomeAtual) {
-                        fornecedorAprovadoId = f.id;
-                        document.querySelectorAll('.fornecedor-header').forEach((th, index) => {
-                            const fId = fornecedores[index]?.id;
-                            const btn = th.querySelector('.btn-aprovar-fornecedor');
-                            if (btn && fId === fornecedorAprovadoId) {
-                                th.classList.add('fornecedor-aprovado-manual', 'fornecedor-aprovado-destaque');
-                                btn.classList.add('aprovado');
-                                btn.innerHTML = '<i class="fas fa-star"></i> Aprovado ✓';
-                            }
-                        });
-                        atualizarLinhaMelhorProposta();
-                    }
-                }
-            } catch (e) { console.warn('Erro ao carregar fornecedor aprovado:', e); }
-        }
-    }
-
-    // ===== ATUALIZAR LINHA DE MELHOR PROPOSTA =====
-    function atualizarLinhaMelhorProposta() {
-        const melhorValorEl = document.getElementById('melhorValor');
-        const melhorFornecedorEl = document.getElementById('melhorFornecedor');
-        const melhorDetalhesEl = document.getElementById('melhorDetalhes');
-
-        if (fornecedorAprovadoId !== null) {
-            const f = fornecedores.find(item => item.id === fornecedorAprovadoId);
-            if (f) {
-                const nomeInput = document.getElementById(`f${fornecedores.indexOf(f)}Nome`);
-                const nome = nomeInput ? nomeInput.value.trim() : f.nome || 'Fornecedor';
-                let total = 0, qtdItens = 0;
-                document.querySelectorAll('.item-row').forEach(row => {
-                    const totalInput = row.querySelector(`.f${f.id}-total`);
-                    if (totalInput && totalInput.value) {
-                        const valor = textoParaNumero(totalInput.value);
-                        if (valor > 0) { total += valor; qtdItens++; }
-                    }
-                });
-                const freteInput = document.getElementById(`freteF${f.id}`);
-                const frete = freteInput ? textoParaNumero(freteInput.value) : 0;
-                const totalComFrete = total + frete;
-                const totalItens = document.querySelectorAll('.item-row').length;
-                melhorValorEl.textContent = formatarMoeda(totalComFrete);
-                melhorValorEl.style.color = '#191D1B';
-                melhorValorEl.style.fontWeight = '900';
-                const freteInfo = frete > 0 ? ` + 🚚 ${formatarMoeda(frete)} frete` : '';
-                melhorFornecedorEl.innerHTML = `<i class="fas fa-star" style="color:#C1CE83;"></i> ⭐ ${nome} (ESCOLHIDO MANUALMENTE)`;
-                melhorFornecedorEl.style.color = '#191D1B';
-                melhorFornecedorEl.style.fontWeight = '900';
-                melhorFornecedorEl.style.background = '#C1CE83';
-                melhorFornecedorEl.style.padding = '0.1rem 0.5rem';
-                melhorFornecedorEl.style.borderRadius = '4px';
-                melhorFornecedorEl.style.display = 'inline-block';
-                melhorDetalhesEl.textContent = `📦 ${qtdItens}/${totalItens} itens • ${formatarMoeda(total)} subtotal${freteInfo} • ✅ APROVADO`;
-                melhorDetalhesEl.style.color = '#191D1B';
-                melhorDetalhesEl.style.fontWeight = '600';
-                
-                document.querySelectorAll('.total-cell').forEach((el, idx) => {
-                    const fId = fornecedores[idx]?.id;
-                    if (fId === fornecedorAprovadoId) {
-                        el.style.background = '#C1CE83';
-                        el.style.color = '#191D1B';
-                        el.style.fontWeight = '900';
-                        el.style.border = '3px solid #191D1B';
-                        el.style.fontSize = '0.85rem';
-                        el.style.boxShadow = '0 0 20px rgba(193, 206, 131, 0.5)';
-                    } else {
-                        el.style.background = '';
-                        el.style.color = '';
-                        el.style.fontWeight = '';
-                        el.style.border = '';
-                        el.style.fontSize = '';
-                        el.style.boxShadow = '';
-                    }
-                });
-                const linhaMelhor = document.getElementById('linhaMelhorOferta');
-                if (linhaMelhor) {
-                    const labelCell = linhaMelhor.querySelector('.label-cell');
-                    if (labelCell) {
-                        labelCell.innerHTML = '⭐ FORNECEDOR ESCOLHIDO MANUALMENTE';
-                        labelCell.style.color = '#191D1B';
-                        labelCell.style.fontWeight = '900';
-                        labelCell.style.background = '#C1CE83';
-                    }
-                }
-                return;
-            }
-        }
-
-        const totalItens = document.querySelectorAll('.item-row').length;
-        let melhores = [];
-
-        fornecedores.forEach(f => {
-            let total = 0, qtdItens = 0;
-            document.querySelectorAll('.item-row').forEach(row => {
-                const totalInput = row.querySelector(`.f${f.id}-total`);
-                if (totalInput && totalInput.value) {
-                    const valor = textoParaNumero(totalInput.value);
-                    if (valor > 0) { total += valor; qtdItens++; }
-                }
-            });
-            if (qtdItens > 0) {
-                const freteInput = document.getElementById(`freteF${f.id}`);
-                const frete = freteInput ? textoParaNumero(freteInput.value) : 0;
-                const totalComFrete = total + frete;
-                const nomeInput = document.getElementById(`f${fornecedores.indexOf(f)}Nome`);
-                const nome = nomeInput ? nomeInput.value.trim() : f.nome || 'Fornecedor';
-                melhores.push({
-                    id: f.id,
-                    nome: nome,
-                    total: totalComFrete,
-                    qtdItens: qtdItens,
-                    totalItens: totalItens,
-                    subtotal: total,
-                    frete: frete,
-                    percentual: Math.round((qtdItens / totalItens) * 100)
-                });
-            }
-        });
-
-        if (melhores.length === 0) {
-            melhorValorEl.textContent = 'R$ 0,00';
-            melhorFornecedorEl.innerHTML = '<i class="fas fa-tag"></i> Nenhum fornecedor';
-            melhorDetalhesEl.textContent = '';
-            document.querySelectorAll('.total-cell').forEach(el => {
-                el.style.background = '';
-                el.style.color = '';
-                el.style.fontWeight = '';
-                el.style.border = '';
-                el.style.fontSize = '';
-                el.style.boxShadow = '';
-            });
-            const linhaMelhor = document.getElementById('linhaMelhorOferta');
-            if (linhaMelhor) {
-                const labelCell = linhaMelhor.querySelector('.label-cell');
-                if (labelCell) {
-                    labelCell.innerHTML = '🏆 MELHOR PROPOSTA';
-                    labelCell.style.color = '';
-                    labelCell.style.fontWeight = '900';
-                    labelCell.style.background = '';
-                }
-            }
+        if (!uso) {
+            mostrarMensagem('⚠️ Preencha o USO!', '#8B3A3A');
+            document.getElementById('usoCotacao').focus();
             return;
         }
 
-        melhores.sort((a, b) => {
-            if (a.qtdItens !== b.qtdItens) {
-                return b.qtdItens - a.qtdItens;
-            }
-            return a.total - b.total;
-        });
-
-        const melhor = melhores[0];
-        const nomeInput = document.getElementById(`f${fornecedores.findIndex(f => f.id === melhor.id)}Nome`);
-        const nome = nomeInput ? nomeInput.value.trim() : melhor.nome;
-
-        melhorValorEl.textContent = formatarMoeda(melhor.total);
-        melhorValorEl.style.color = '#191D1B';
-        melhorValorEl.style.fontWeight = '900';
-
-        const freteInfo = melhor.frete > 0 ? ` + 🚚 ${formatarMoeda(melhor.frete)} frete` : '';
-        const emoji = melhor.qtdItens === melhor.totalItens ? '✅ COMPLETO' : 
-                     melhor.qtdItens >= Math.ceil(melhor.totalItens * 0.7) ? '📊 MAIORIA' : '📌 PARCIAL';
-        
-        melhorFornecedorEl.innerHTML = `<i class="fas fa-tag"></i> ${nome} (${melhor.qtdItens}/${melhor.totalItens} itens - ${melhor.percentual}%) 🏆`;
-        melhorFornecedorEl.style.color = '#191D1B';
-        melhorFornecedorEl.style.fontWeight = '800';
-        melhorFornecedorEl.style.background = '';
-        melhorFornecedorEl.style.padding = '';
-        melhorFornecedorEl.style.borderRadius = '';
-        melhorFornecedorEl.style.display = '';
-
-        melhorDetalhesEl.textContent = `📦 ${melhor.qtdItens} itens • ${formatarMoeda(melhor.total)} total${freteInfo} • ${emoji}`;
-        melhorDetalhesEl.style.color = '#191D1B';
-        melhorDetalhesEl.style.fontWeight = '600';
-
-        document.querySelectorAll('.total-cell').forEach((el, idx) => {
-            const fId = fornecedores[idx]?.id;
-            if (fId === melhor.id) {
-                el.style.background = '#C1CE83';
-                el.style.color = '#191D1B';
-                el.style.fontWeight = '900';
-                el.style.border = '3px solid #191D1B';
-                el.style.fontSize = '0.85rem';
-                el.style.boxShadow = '';
-            } else {
-                el.style.background = '';
-                el.style.color = '';
-                el.style.fontWeight = '';
-                el.style.border = '';
-                el.style.fontSize = '';
-                el.style.boxShadow = '';
-            }
-        });
-
-        const linhaMelhor = document.getElementById('linhaMelhorOferta');
-        if (linhaMelhor) {
-            const labelCell = linhaMelhor.querySelector('.label-cell');
-            if (labelCell) {
-                labelCell.innerHTML = '🏆 MELHOR PROPOSTA';
-                labelCell.style.color = '';
-                labelCell.style.fontWeight = '900';
-                labelCell.style.background = '';
-            }
-        }
-    }
-
-    // ===== INICIALIZAR =====
-    function inicializarFornecedoresPadrao() {
-        fornecedores = [
-            { id: 1, nome: '', contato: '', telefone: '', obs: '', frete: 0 },
-            { id: 2, nome: '', contato: '', telefone: '', obs: '', frete: 0 },
-            { id: 3, nome: '', contato: '', telefone: '', obs: '', frete: 0 },
-            { id: 4, nome: '', contato: '', telefone: '', obs: '', frete: 0 }
-        ];
-        proximoIdFornecedor = 5;
-        fornecedorAprovadoId = null;
-    }
-
-    // ===== COLETAR DADOS COTAÇÃO =====
-    function coletarDadosCotacao() {
-        const tbody = document.getElementById('corpoTabela');
+        // Coletar itens
         const itens = [];
-        tbody.querySelectorAll('.item-row').forEach(row => {
+        document.querySelectorAll('.item-row').forEach(row => {
             const desc = row.querySelector('.item-desc')?.value || '';
-            const qtd = row.querySelector('.item-qtd')?.value || '0';
+            const qtd = parseInt(row.querySelector('.item-qtd')?.value) || 1;
             if (desc) {
-                const valores = {};
+                const precos = {};
                 fornecedores.forEach(f => {
-                    const total = row.querySelector(`.f${f.id}-total`)?.value || '0';
-                    valores[f.id] = total;
+                    const totalInput = row.querySelector(`.f${f.id}-total`);
+                    precos[f.id] = totalInput ? textoParaNumero(totalInput.value) : 0;
                 });
-                itens.push({ desc, qtd, valores });
+                itens.push({ descricao: desc, quantidade: qtd, precos });
             }
         });
+
+        if (itens.length === 0) {
+            mostrarMensagem('⚠️ Adicione pelo menos um item!', '#8B3A3A');
+            return;
+        }
+
+        // Coletar fornecedores
+        const fornecedoresData = [];
         fornecedores.forEach((f, index) => {
             const nomeInput = document.getElementById(`f${index}Nome`);
             const contatoInput = document.getElementById(`f${index}Contato`);
             const telefoneInput = document.getElementById(`f${index}Telefone`);
             const obsInput = document.getElementById(`obsF${f.id}`);
             const freteInput = document.getElementById(`freteF${f.id}`);
-            f.nome = nomeInput ? nomeInput.value : f.nome || '';
-            f.contato = contatoInput ? contatoInput.value : f.contato || '';
-            f.telefone = telefoneInput ? telefoneInput.value : f.telefone || '';
-            f.obs = obsInput ? obsInput.value : f.obs || '';
-            f.frete = freteInput ? textoParaNumero(freteInput.value) : f.frete || 0;
+            
+            fornecedoresData.push({
+                nome: nomeInput ? nomeInput.value.trim() : f.nome || '',
+                contato: contatoInput ? contatoInput.value.trim() : '',
+                telefone: telefoneInput ? telefoneInput.value.trim() : '',
+                obs: obsInput ? obsInput.value.trim() : '',
+                frete: freteInput ? textoParaNumero(freteInput.value) : 0
+            });
         });
-        return {
-            nome: document.getElementById('nomeCotacao')?.value || '',
-            uso: document.getElementById('usoCotacao')?.value || '',
-            fornecedores: fornecedores.map(f => ({ id: f.id, nome: f.nome || '', contato: f.contato || '', telefone: f.telefone || '', obs: f.obs || '', frete: f.frete || 0 })),
-            itens: itens,
-            pagamento: fornecedores.map((f, idx) => { const input = document.getElementById(`p${f.id}`); return input ? input.value : VALORES_PADRAO.pagamento[idx] || ''; }),
-            entrega: fornecedores.map((f, idx) => { const input = document.getElementById(`e${f.id}`); return input ? input.value : VALORES_PADRAO.entrega[idx] || ''; }),
-            responsavel: fornecedores.map((f, idx) => { const input = document.getElementById(`r${f.id}`); return input ? input.value : VALORES_PADRAO.responsavel[idx] || ''; }),
-            observacao: document.getElementById('observacao')?.value || '',
-            fornecedorAprovadoId: fornecedorAprovadoId
+
+        // Coletar observações
+        const observacaoGeral = document.getElementById('observacao')?.value || '';
+
+        // Calcular totais
+        const totais = {};
+        fornecedores.forEach(f => {
+            let total = 0;
+            itens.forEach(item => {
+                total += item.precos[f.id] || 0;
+            });
+            const freteInput = document.getElementById(`freteF${f.id}`);
+            const frete = freteInput ? textoParaNumero(freteInput.value) : 0;
+            totais[f.id] = total + frete;
+        });
+
+        // Encontrar melhor proposta
+        let melhorId = null;
+        let melhorValor = Infinity;
+        fornecedores.forEach(f => {
+            if (totais[f.id] > 0 && totais[f.id] < melhorValor) {
+                melhorValor = totais[f.id];
+                melhorId = f.id;
+            }
+        });
+
+        // Montar objeto da cotação
+        const cotacao = {
+            nome: nome,
+            uso: uso,
+            observacao: observacaoGeral,
+            fornecedores: fornecedoresData,
+            itens: itens.map(item => ({
+                descricao: item.descricao,
+                quantidade: item.quantidade
+            })),
+            precos: itens.map(item => {
+                const obj = { descricao: item.descricao };
+                fornecedores.forEach(f => {
+                    obj[`fornecedor_${f.id}`] = item.precos[f.id] || 0;
+                });
+                return obj;
+            }),
+            totais: totais,
+            melhor_fornecedor_id: melhorId,
+            melhor_valor: melhorValor !== Infinity ? melhorValor : 0,
+            status: concluir ? 'concluida' : 'rascunho',
+            criado_em: new Date().toISOString()
         };
-    }
 
-    // ===== RENDERIZAR TABELA =====
-    function renderizarTabela() {
-        const thead = document.getElementById('headerFornecedores');
-        const tbody = document.getElementById('corpoTabela');
-        while (thead.children.length > 3) thead.removeChild(thead.lastChild);
-        fornecedores.forEach((f, index) => {
-            const th = document.createElement('th');
-            th.className = 'col-fornecedor fornecedor-header';
-            th.style.position = 'relative';
-            th.innerHTML = `
-                <input type="text" id="f${index}Nome" value="${f.nome}" placeholder="FORNECEDOR ${index + 1}" style="font-weight:700; font-size:0.7rem; text-transform:uppercase; color:var(--fornecedor-text);" data-validar="fornecedor" />
-                <button class="btn-aprovar-fornecedor" onclick="aprovarFornecedorManual(${f.id})" title="Aprovar este fornecedor">
-                    <i class="fas fa-check-circle"></i> Aprovar
-                </button>
-                ${fornecedores.length > 1 ? `<button class="remove-fornecedor" onclick="removerFornecedor(${f.id})" title="Remover fornecedor">×</button>` : ''}
-            `;
-            thead.appendChild(th);
-        });
-        if (!document.querySelector('.col-acoes')) {
-            const thAcoes = document.createElement('th');
-            thAcoes.className = 'col-acoes';
-            thAcoes.style.width = '25px';
-            thAcoes.innerHTML = '';
-            thead.appendChild(thAcoes);
-        }
+        // Verificar se está editando
+        if (editandoId) {
+            // Atualizar cotação existente
+            const { error } = await supabase
+                .from('cotacoes')
+                .update(cotacao)
+                .eq('id', editandoId);
 
-        const itensExistentes = [];
-        document.querySelectorAll('.item-row').forEach(row => {
-            const desc = row.querySelector('.item-desc')?.value || '';
-            const qtd = row.querySelector('.item-qtd')?.value || '1';
-            const valores = {};
-            fornecedores.forEach(f => { valores[f.id] = row.querySelector(`.f${f.id}-total`)?.value || ''; });
-            itensExistentes.push({ desc, qtd, valores });
-        });
-        tbody.innerHTML = '';
-
-        // Linhas de informação
-        const linhasInfo = [
-            { label: 'CONTATO:', fields: fornecedores.map((_, idx) => `f${idx}Contato`) },
-            { label: 'TELEFONE:', fields: fornecedores.map((_, idx) => `f${idx}Telefone`) }
-        ];
-        linhasInfo.forEach(info => {
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td colspan="3" style="background:var(--bg-body); font-weight:700; font-size:0.5rem; text-align:right; padding-right:0.8rem; color:var(--verde-oliva);">${info.label}</td>
-                ${fornecedores.map((f, idx) => `
-                    <td><input type="text" id="${info.fields[idx]}" value="${f[info.label.replace(':', '').toLowerCase().trim()] || ''}" placeholder="${info.label.replace(':', '')}" class="fornecedor-field" data-validar="fornecedor" /></td>
-                `).join('')}
-                <td></td>
-            `;
-            tbody.appendChild(tr);
-        });
-
-        const trSub = document.createElement('tr');
-        trSub.innerHTML = `
-            <td colspan="3" style="background:var(--verde-oliva); font-weight:600; font-size:0.5rem; color:var(--branco); text-align:center; padding:0.2rem;"></td>
-            ${fornecedores.map(() => `<td class="sub-info">R$ UND / TOTAL</td>`).join('')}
-            <td style="background:var(--verde-oliva);"></td>
-        `;
-        tbody.appendChild(trSub);
-
-        const trHeader = document.createElement('tr');
-        trHeader.innerHTML = `
-            <td class="label-cell" style="font-weight:700; font-size:0.55rem; color:var(--preto); background:var(--bg-body);">ITEM</td>
-            <td class="label-cell" style="font-weight:700; font-size:0.55rem; color:var(--preto); background:var(--bg-body); text-align:left; padding-left:0.6rem;">MATERIAL / SERVIÇO</td>
-            <td class="label-cell" style="font-weight:700; font-size:0.55rem; color:var(--preto); background:var(--bg-body);">QTD</td>
-            ${fornecedores.map(() => `<td style="background:var(--bg-body);"></td>`).join('')}
-            <td style="background:var(--bg-body);"></td>
-        `;
-        tbody.appendChild(trHeader);
-
-        if (itensExistentes.length > 0) {
-            itensExistentes.forEach((item, idx) => {
-                const tr = document.createElement('tr');
-                tr.className = 'item-row';
-                let html = `
-                    <td class="label-cell"><span class="drag-handle"><i class="fas fa-grip-vertical"></i></span> ${idx + 1}</td>
-                    <td><input type="text" class="text-left item-desc" value="${item.desc}" placeholder="Descreva o material" style="font-size:0.7rem; width:100%;" data-validar="descricao" /></td>
-                    <td><input type="text" class="item-qtd" value="${item.qtd}" style="text-align:center; font-size:0.7rem;" data-validar="quantidade" /></td>
-                `;
-                fornecedores.forEach(f => {
-                    const val = item.valores[f.id] || '';
-                    html += `
-                        <td>
-                            <div class="campo-moeda">
-                                <span class="simbolo-moeda">R$</span>
-                                <input type="text" class="currency currency-und f${f.id}-und" value="${val}" placeholder="0,00" style="font-size:0.65rem;" />
-                            </div>
-                            <div class="campo-moeda">
-                                <span class="simbolo-moeda">R$</span>
-                                <input type="text" class="currency currency-total f${f.id}-total" value="${val}" placeholder="0,00" style="font-size:0.7rem;" />
-                            </div>
-                        </td>
-                    `;
-                });
-                html += `<td><span class="remove-item" onclick="removerItem(this)"><i class="fas fa-times-circle"></i></span></td>`;
-                tr.innerHTML = html;
-                tbody.appendChild(tr);
-            });
+            if (error) throw error;
+            mostrarMensagem('✅ Cotação atualizada com sucesso!', '#7A816E');
+            mostrarToast('✅ Cotação atualizada!', 'success');
+            editandoId = null;
         } else {
-            const tr = document.createElement('tr');
-            tr.className = 'item-row';
-            let html = `
-                <td class="label-cell"><span class="drag-handle"><i class="fas fa-grip-vertical"></i></span> 1</td>
-                <td><input type="text" class="text-left item-desc" value="" placeholder="Descreva o material" style="font-size:0.7rem; width:100%;" data-validar="descricao" /></td>
-                <td><input type="text" class="item-qtd" value="1" style="text-align:center; font-size:0.7rem;" data-validar="quantidade" /></td>
-            `;
-            fornecedores.forEach(f => {
-                html += `
-                    <td>
-                        <div class="campo-moeda">
-                            <span class="simbolo-moeda">R$</span>
-                            <input type="text" class="currency currency-und f${f.id}-und" value="" placeholder="0,00" style="font-size:0.65rem;" />
-                        </div>
-                        <div class="campo-moeda">
-                            <span class="simbolo-moeda">R$</span>
-                            <input type="text" class="currency currency-total f${f.id}-total" value="" placeholder="0,00" style="font-size:0.7rem;" />
-                        </div>
-                    </td>
-                `;
-            });
-            html += `<td><span class="remove-item" onclick="removerItem(this)"><i class="fas fa-times-circle"></i></span></td>`;
-            tr.innerHTML = html;
-            tbody.appendChild(tr);
+            // Criar nova cotação
+            const { data, error } = await supabase
+                .from('cotacoes')
+                .insert([cotacao])
+                .select();
+
+            if (error) throw error;
+            mostrarMensagem('✅ Cotação salva com sucesso!', '#7A816E');
+            mostrarToast('✅ Cotação salva!', 'success');
         }
 
-        const trAdd = document.createElement('tr');
-        trAdd.className = 'add-item-row';
-        trAdd.innerHTML = `
-            <td colspan="${3 + fornecedores.length + 1}" style="text-align:center; padding:0.3rem; background:var(--bg-body);">
-                <button class="btn-add-item" onclick="adicionarItem()"><i class="fas fa-plus"></i> Adicionar Item</button>
-            </td>
-        `;
-        tbody.appendChild(trAdd);
+        if (concluir) {
+            limparPagina();
+            mostrarMensagem('🧹 Cotação concluída e página limpa!', '#2E7D32');
+        }
 
-        const trFrete = document.createElement('tr');
-        trFrete.className = 'frete-row';
-        trFrete.innerHTML = `
-            <td colspan="3" class="label-cell-left" style="font-size:0.6rem; font-weight:700; color:var(--verde-oliva);">🚚 FRETE</td>
-            ${fornecedores.map(f => `
-                <td>
-                    <div class="campo-moeda">
-                        <span class="simbolo-moeda">R$</span>
-                        <input type="text" id="freteF${f.id}" value="${f.frete > 0 ? formatarMoedaInput(f.frete) : ''}" placeholder="0,00" style="font-weight:600; font-size:0.7rem; text-align:right; padding-right:0.3rem; color:var(--text-primary);" class="frete-input currency" />
-                    </div>
-                </td>
-            `).join('')}
-            <td></td>
-        `;
-        tbody.appendChild(trFrete);
+        // Atualizar lista
+        const listaEl = document.getElementById('listaCotoes');
+        if (listaEl && listaEl.style.display !== 'none') {
+            await carregarListaSalvos();
+        }
 
-        const trTotal = document.createElement('tr');
-        trTotal.className = 'total-row';
-        trTotal.innerHTML = `
-            <td colspan="3" class="label-cell" style="text-align:right; font-weight:700;">VALOR TOTAL + FRETE</td>
-            ${fornecedores.map(f => `<td class="total-cell" id="totalF${f.id}">R$ 0,00</td>`).join('')}
-            <td></td>
-        `;
-        tbody.appendChild(trTotal);
+    } catch (error) {
+        console.error('Erro ao salvar:', error);
+        mostrarMensagem('❌ Erro ao salvar: ' + error.message, '#8B3A3A');
+        mostrarToast('❌ Erro ao salvar!', 'danger');
+    }
+}
 
-        const trMelhor = document.createElement('tr');
-        trMelhor.id = 'linhaMelhorOferta';
-        trMelhor.innerHTML = `
-            <td colspan="3" class="label-cell" style="text-align:right; font-weight:900; color:var(--preto);">🏆 MELHOR PROPOSTA</td>
-            <td class="best-cell" colspan="${fornecedores.length}" id="melhorOferta" style="text-align:center; padding:0.4rem;">
-                <span class="melhor-valor" id="melhorValor">R$ 0,00</span>
-                <span class="melhor-fornecedor-nome" id="melhorFornecedor"><i class="fas fa-tag"></i> Nenhum fornecedor</span>
-                <span class="melhor-detalhes" id="melhorDetalhes"></span>
-            </td>
-            <td></td>
-        `;
-        tbody.appendChild(trMelhor);
+// ===== CARREGAR COTAÇÕES SALVAS =====
+async function carregarCotoesSupabase() {
+    try {
+        const { data, error } = await supabase
+            .from('cotacoes')
+            .select('*')
+            .order('criado_em', { ascending: false });
 
-        const trPag = document.createElement('tr');
-        trPag.innerHTML = `
-            <td class="label-cell-left" colspan="3" style="font-size:0.6rem;">CONDIÇÕES DE PAGAMENTO</td>
-            ${fornecedores.map((f, idx) => `
-                <td><input type="text" id="p${f.id}" value="${VALORES_PADRAO.pagamento[idx] || ''}" placeholder="Pagamento" style="font-weight:500; font-size:0.65rem;" data-validar="pagamento" /></td>
-            `).join('')}
-            <td></td>
-        `;
-        tbody.appendChild(trPag);
+        if (error) throw error;
+        return data || [];
+    } catch (error) {
+        console.error('Erro ao carregar cotações:', error);
+        return [];
+    }
+}
 
-        const trEntrega = document.createElement('tr');
-        trEntrega.innerHTML = `
-            <td class="label-cell-left" colspan="3" style="font-size:0.6rem;">PRAZO DE ENTREGA</td>
-            ${fornecedores.map((f, idx) => `
-                <td><input type="text" id="e${f.id}" value="${VALORES_PADRAO.entrega[idx] || ''}" placeholder="Prazo" style="font-weight:500; font-size:0.65rem;" data-validar="entrega" /></td>
-            `).join('')}
-            <td></td>
-        `;
-        tbody.appendChild(trEntrega);
+// ===== CARREGAR COTAÇÃO PARA EDIÇÃO =====
+async function carregarCotacaoParaEdicao(id) {
+    try {
+        const { data, error } = await supabase
+            .from('cotacoes')
+            .select('*')
+            .eq('id', id)
+            .single();
 
-        const trResp = document.createElement('tr');
-        trResp.innerHTML = `
-            <td class="label-cell-left" colspan="3" style="font-size:0.6rem;">RESPONSÁVEL</td>
-            ${fornecedores.map((f, idx) => `
-                <td><input type="text" id="r${f.id}" value="${VALORES_PADRAO.responsavel[idx] || ''}" placeholder="Responsável" style="font-weight:600; font-size:0.65rem; text-transform:uppercase;" data-validar="responsavel" /></td>
-            `).join('')}
-            <td></td>
-        `;
-        tbody.appendChild(trResp);
+        if (error) throw error;
+        if (!data) {
+            mostrarMensagem('❌ Cotação não encontrada!', '#8B3A3A');
+            return;
+        }
 
-        const trObsInd = document.createElement('tr');
-        trObsInd.className = 'obs-individual-row';
-        trObsInd.innerHTML = `
-            <td colspan="3" class="obs-label" style="font-size:0.55rem; color:var(--verde-oliva);">OBS. FORNECEDOR:</td>
-            ${fornecedores.map(f => `
-                <td class="obs-input">
-                    <input type="text" id="obsF${f.id}" value="${f.obs || ''}" placeholder="Obs. Fornecedor" style="font-size:0.6rem;" data-validar="obs" />
-                </td>
-            `).join('')}
-            <td></td>
-        `;
-        tbody.appendChild(trObsInd);
+        // Preencher campos
+        document.getElementById('nomeCotacao').value = data.nome || '';
+        document.getElementById('usoCotacao').value = data.uso || '';
+        document.getElementById('observacao').value = data.observacao || '';
 
-        const trObsGeral = document.createElement('tr');
-        trObsGeral.className = 'obs-row';
-        trObsGeral.innerHTML = `
-            <td colspan="3" class="obs-label">OBSERVAÇÕES GERAIS:</td>
-            <td colspan="${fornecedores.length}" class="obs-input">
-                <input type="text" id="observacao" placeholder="Digite aqui suas anotações gerais..." data-validar="obs" />
-            </td>
-            <td></td>
-        `;
-        tbody.appendChild(trObsGeral);
+        // Configurar fornecedores
+        if (data.fornecedores && data.fornecedores.length > 0) {
+            fornecedores = data.fornecedores.map((f, index) => ({
+                id: index + 1,
+                nome: f.nome || '',
+                contato: f.contato || '',
+                telefone: f.telefone || '',
+                obs: f.obs || '',
+                frete: f.frete || 0
+            }));
+            proximoIdFornecedor = fornecedores.length + 1;
+            editandoId = id;
+            renderizarTabela();
 
-        // ===== EVENTOS =====
-        document.querySelectorAll('.currency-und, .currency-total, .frete-input').forEach(input => {
-            input.replaceWith(input.cloneNode(true));
-        });
-
-        document.querySelectorAll('.currency-und, .currency-total, .frete-input').forEach(input => {
-            input.addEventListener('input', function() {
-                mascaraMoedaSimplificada(this);
-                const row = this.closest('.item-row');
-                if (row && this.classList.contains('currency-und')) {
-                    const qtd = parseFloat(row.querySelector('.item-qtd')?.value?.replace(',', '.') || 1);
-                    const undValor = textoParaNumero(this.value);
-                    const totalInput = row.querySelector(`.${this.className.split(' ')[2]}-total`);
-                    if (totalInput && !isNaN(undValor) && undValor > 0) {
-                        const total = qtd * undValor;
-                        totalInput.value = formatarMoedaInput(total);
-                    } else if (totalInput && undValor === 0) {
-                        totalInput.value = '';
-                    }
-                }
-                atualizarTotais();
-            });
-
-            input.addEventListener('blur', function() {
-                if (this.value === '') return;
-                const valor = textoParaNumero(this.value);
-                if (valor > 0) {
-                    this.value = formatarMoedaInput(valor);
-                } else {
-                    this.value = '';
-                }
-            });
-
-            input.addEventListener('focus', function() {
-                if (this.value === '') return;
-                const valor = textoParaNumero(this.value);
-                if (valor > 0) {
-                    this.value = formatarMoedaInput(valor);
-                }
-            });
-        });
-
-        document.querySelectorAll('.item-qtd').forEach(input => {
-            input.addEventListener('input', function() {
-                const row = this.closest('.item-row');
-                if (row) {
-                    const qtd = parseFloat(this.value?.replace(',', '.') || 1);
-                    if (!isNaN(qtd) && qtd > 0) {
-                        row.querySelectorAll('.currency-und').forEach(undInput => {
-                            const undValor = textoParaNumero(undInput.value);
-                            if (undValor > 0) {
-                                const classe = undInput.className.split(' ')[2];
-                                const totalInput = row.querySelector(`.${classe}-total`);
-                                if (totalInput) {
-                                    const total = qtd * undValor;
-                                    totalInput.value = formatarMoedaInput(total);
-                                }
-                            }
-                        });
-                    }
-                }
-                atualizarTotais();
-            });
-        });
-
-        document.querySelectorAll('.frete-input').forEach(input => {
-            input.addEventListener('change', function() { setTimeout(() => atualizarTotais(), 100); });
-            input.addEventListener('blur', function() { setTimeout(() => atualizarTotais(), 100); });
-        });
-
-        document.querySelectorAll('#corpoTabela .obs-individual-row .obs-input input').forEach(input => {
-            input.addEventListener('input', function() {
-                const valor = this.value.trim();
-                if (valor !== '') {
-                    this.classList.remove('obs-vazia');
-                    this.classList.add('obs-preenchida');
-                    if (!this.parentElement.querySelector('.obs-alerta-icon')) {
-                        const icon = document.createElement('span');
-                        icon.className = 'obs-alerta-icon';
-                        icon.innerHTML = '⚠️';
-                        this.parentElement.appendChild(icon);
-                    }
-                } else {
-                    this.classList.remove('obs-preenchida');
-                    this.classList.add('obs-vazia');
-                    const icon = this.parentElement.querySelector('.obs-alerta-icon');
-                    if (icon) icon.remove();
-                }
-            });
-        });
-
-        document.addEventListener('input', function(e) {
-            if (e.target.closest('.item-row')) {
-                const row = e.target.closest('.item-row');
-                const qtd = parseFloat(row.querySelector('.item-qtd')?.value?.replace(',', '.') || 1);
-                fornecedores.forEach(f => {
-                    const undInput = row.querySelector(`.f${f.id}-und`);
-                    const totalInput = row.querySelector(`.f${f.id}-total`);
-                    if (undInput && totalInput) {
-                        const und = textoParaNumero(undInput.value);
-                        if (und > 0 && !isNaN(und)) {
-                            totalInput.value = formatarMoedaInput(qtd * und);
-                        }
+            // Preencher itens
+            if (data.itens && data.itens.length > 0) {
+                const rows = document.querySelectorAll('.item-row');
+                data.itens.forEach((item, idx) => {
+                    if (idx < rows.length) {
+                        const row = rows[idx];
+                        row.querySelector('.item-desc').value = item.descricao || '';
+                        row.querySelector('.item-qtd').value = item.quantidade || 1;
                     }
                 });
-                atualizarTotais();
-            }
-        });
 
-        document.addEventListener('change', function(e) {
-            if (e.target.closest('.item-row') || e.target.closest('.frete-input')) {
-                setTimeout(() => { atualizarTotais(); }, 100);
-            }
-        });
-
-        document.querySelectorAll('[data-validar]').forEach(input => {
-            input.addEventListener('blur', function() { validarCampo(this); });
-            input.addEventListener('input', function() {
-                if (this.value.trim().length > 0) validarCampo(this);
-            });
-        });
-
-        initSortable();
-        setTimeout(() => {
-            carregarFornecedorAprovado();
-            atualizarTotais();
-            document.querySelectorAll('#corpoTabela .obs-individual-row .obs-input input').forEach(input => {
-                const valor = input.value.trim();
-                if (valor !== '') {
-                    input.classList.remove('obs-vazia');
-                    input.classList.add('obs-preenchida');
-                    if (!input.parentElement.querySelector('.obs-alerta-icon')) {
-                        const icon = document.createElement('span');
-                        icon.className = 'obs-alerta-icon';
-                        icon.innerHTML = '⚠️';
-                        input.parentElement.appendChild(icon);
-                    }
-                }
-            });
-        }, 100);
-    }
-
-    // ===== TOGGLE GRÁFICO =====
-    function toggleGraficoComparativo() {
-        tipoGraficoComparativo = tipoGraficoComparativo === 'bar' ? 'radar' : 'bar';
-        mostrarToast('📊 Gráfico: ' + (tipoGraficoComparativo === 'bar' ? 'Barras' : 'Radar'), 'info');
-        atualizarTotais();
-    }
-
-    // ===== ATUALIZAR TOTAIS E GRÁFICO =====
-    function atualizarTotais() {
-        const rows = document.querySelectorAll('.item-row');
-        const totais = {}, qtdItens = {}, fletes = {};
-        fornecedores.forEach(f => { totais[f.id] = 0; qtdItens[f.id] = 0; const freteInput = document.getElementById(`freteF${f.id}`); fletes[f.id] = freteInput ? textoParaNumero(freteInput.value) : 0; });
-        rows.forEach(row => {
-            fornecedores.forEach(f => {
-                const totalInput = row.querySelector(`.f${f.id}-total`);
-                if (totalInput && totalInput.value) {
-                    const valor = textoParaNumero(totalInput.value);
-                    if (!isNaN(valor) && valor > 0) { totais[f.id] += valor; qtdItens[f.id] += 1; }
-                }
-            });
-        });
-        fornecedores.forEach(f => {
-            const el = document.getElementById(`totalF${f.id}`);
-            if (el) {
-                const total = totais[f.id] || 0;
-                const frete = fletes[f.id] || 0;
-                el.textContent = formatarMoeda(total + frete);
-            }
-        });
-        document.getElementById('statusItens').textContent = rows.length + ' item(ns)';
-        
-        destacarMelhoresPrecos();
-        
-        atualizarLinhaMelhorProposta();
-        const labelsGrafico = [], valoresGrafico = [];
-        fornecedores.forEach(f => {
-            const nomeInput = document.getElementById(`f${fornecedores.indexOf(f)}Nome`);
-            labelsGrafico.push(nomeInput ? nomeInput.value || `Fornecedor ${fornecedores.indexOf(f) + 1}` : `Fornecedor ${fornecedores.indexOf(f) + 1}`);
-            const el = document.getElementById(`totalF${f.id}`);
-            valoresGrafico.push(el ? parseFloat(el.textContent.replace('R$ ', '').replace('.', '').replace(',', '.')) || 0 : 0);
-        });
-        atualizarGrafico(labelsGrafico, valoresGrafico);
-    }
-
-    function atualizarGrafico(labels, valores) {
-        const ctx = document.getElementById('graficoComparativo');
-        if (!ctx) return;
-        if (window.graficoChart) window.graficoChart.destroy();
-        const temDados = valores.some(v => v > 0);
-        if (!temDados) {
-            window.graficoChart = new Chart(ctx, {
-                type: 'bar',
-                data: { labels: labels.length > 0 ? labels : ['Sem dados'], datasets: [{ label: 'Total (R$)', data: labels.length > 0 ? valores : [0], backgroundColor: '#C1CE83', borderColor: '#7A816E', borderWidth: 1 }] },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { font: { size: 9 } } }, x: { ticks: { font: { size: 8 } } } } }
-            });
-            return;
-        }
-        const cores = ['#C1CE83', '#7A816E', '#D8E0B0', '#B8BEA8', '#9AA08E', '#5A614E'];
-        const isRadar = tipoGraficoComparativo === 'radar';
-        window.graficoChart = new Chart(ctx, {
-            type: isRadar ? 'radar' : 'bar',
-            data: {
-                labels: labels,
-                datasets: [{
-                    label: 'Total (R$)',
-                    data: valores,
-                    backgroundColor: isRadar ? 'rgba(193, 206, 131, 0.2)' : cores.slice(0, labels.length),
-                    borderColor: '#191D1B',
-                    borderWidth: isRadar ? 2 : 1,
-                    pointBackgroundColor: '#C1CE83',
-                    pointBorderColor: '#191D1B',
-                    pointRadius: isRadar ? 4 : 0,
-                    ...(isRadar ? {} : { borderRadius: 4 })
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { legend: { display: false } },
-                scales: isRadar ? { r: { beginAtZero: true, ticks: { font: { size: 8 } }, pointLabels: { font: { size: 8 } } } } :
-                    { y: { beginAtZero: true, ticks: { font: { size: 9 }, callback: function(value) { return 'R$ ' + value.toFixed(2); } } }, x: { ticks: { font: { size: 8 } } } }
-            }
-        });
-    }
-
-    // ===== ADICIONAR FORNECEDOR =====
-    window.adicionarFornecedor = function() {
-        if (fornecedores.length >= 8) {
-            mostrarMensagem('⚠️ Máximo de 8 fornecedores!', '#8B3A3A');
-            return;
-        }
-        const novoId = proximoIdFornecedor++;
-        fornecedores.push({ id: novoId, nome: '', contato: '', telefone: '', obs: '', frete: 0 });
-        VALORES_PADRAO.pagamento.push('À VISTA');
-        VALORES_PADRAO.entrega.push('IMEDIATO');
-        VALORES_PADRAO.responsavel.push('EDNALDO');
-        renderizarTabela();
-        mostrarMensagem('➕ Fornecedor adicionado!', '#7A816E');
-        mostrarToast('➕ Fornecedor adicionado!', 'info');
-    };
-
-    window.removerFornecedor = function(id) {
-        if (fornecedores.length <= 1) {
-            mostrarMensagem('⚠️ Mantenha pelo menos 1 fornecedor!', '#8B3A3A');
-            return;
-        }
-        if (!confirm('Remover este fornecedor?')) return;
-        const index = fornecedores.findIndex(f => f.id === id);
-        if (index === -1) return;
-        if (fornecedorAprovadoId === id) { fornecedorAprovadoId = null; localStorage.removeItem('fornecedorAprovado_' + CHAVE_STORAGE); }
-        fornecedores.splice(index, 1);
-        if (index < VALORES_PADRAO.pagamento.length) {
-            VALORES_PADRAO.pagamento.splice(index, 1);
-            VALORES_PADRAO.entrega.splice(index, 1);
-            VALORES_PADRAO.responsavel.splice(index, 1);
-        }
-        renderizarTabela();
-        mostrarMensagem('🗑️ Fornecedor removido!', '#5A614E');
-        mostrarToast('🗑️ Fornecedor removido!', 'danger');
-    };
-
-    window.adicionarItem = function() {
-        const tbody = document.getElementById('corpoTabela');
-        const rows = tbody.querySelectorAll('.item-row');
-        const num = rows.length + 1;
-        const addRow = tbody.querySelector('.add-item-row');
-        const tr = document.createElement('tr');
-        tr.className = 'item-row';
-        let html = `
-            <td class="label-cell"><span class="drag-handle"><i class="fas fa-grip-vertical"></i></span> ${num}</td>
-            <td><input type="text" class="text-left item-desc" placeholder="Descreva o material" style="font-size:0.7rem; width:100%;" data-validar="descricao" /></td>
-            <td><input type="text" class="item-qtd" value="1" style="text-align:center; font-size:0.7rem;" data-validar="quantidade" /></td>
-        `;
-        fornecedores.forEach(f => {
-            html += `
-                <td>
-                    <div class="campo-moeda">
-                        <span class="simbolo-moeda">R$</span>
-                        <input type="text" class="currency currency-und f${f.id}-und" value="" placeholder="0,00" style="font-size:0.65rem;" />
-                    </div>
-                    <div class="campo-moeda">
-                        <span class="simbolo-moeda">R$</span>
-                        <input type="text" class="currency currency-total f${f.id}-total" value="" placeholder="0,00" style="font-size:0.7rem;" />
-                    </div>
-                </td>
-            `;
-        });
-        html += `<td><span class="remove-item" onclick="removerItem(this)"><i class="fas fa-times-circle"></i></span></td>`;
-        tr.innerHTML = html;
-        tbody.insertBefore(tr, addRow);
-        
-        tr.querySelectorAll('.currency-und, .currency-total').forEach(input => {
-            input.addEventListener('input', function() {
-                mascaraMoedaSimplificada(this);
-                const row = this.closest('.item-row');
-                if (row && this.classList.contains('currency-und')) {
-                    const qtd = parseFloat(row.querySelector('.item-qtd')?.value?.replace(',', '.') || 1);
-                    const undValor = textoParaNumero(this.value);
-                    const totalInput = row.querySelector(`.${this.className.split(' ')[2]}-total`);
-                    if (totalInput && !isNaN(undValor) && undValor > 0) {
-                        const total = qtd * undValor;
-                        totalInput.value = formatarMoedaInput(total);
-                    }
-                }
-                atualizarTotais();
-            });
-            
-            input.addEventListener('blur', function() {
-                if (this.value === '') return;
-                const valor = textoParaNumero(this.value);
-                if (valor > 0) {
-                    this.value = formatarMoedaInput(valor);
-                } else {
-                    this.value = '';
-                }
-            });
-            
-            input.addEventListener('focus', function() {
-                if (this.value === '') return;
-                const valor = textoParaNumero(this.value);
-                if (valor > 0) {
-                    this.value = formatarMoedaInput(valor);
-                }
-            });
-        });
-        
-        tr.querySelector('.item-qtd').addEventListener('input', function() {
-            const row = this.closest('.item-row');
-            if (row) {
-                const qtd = parseFloat(this.value?.replace(',', '.') || 1);
-                if (!isNaN(qtd) && qtd > 0) {
-                    row.querySelectorAll('.currency-und').forEach(undInput => {
-                        const undValor = textoParaNumero(undInput.value);
-                        if (undValor > 0) {
-                            const classe = undInput.className.split(' ')[2];
-                            const totalInput = row.querySelector(`.${classe}-total`);
-                            if (totalInput) {
-                                const total = qtd * undValor;
-                                totalInput.value = formatarMoedaInput(total);
-                            }
+                // Preencher preços
+                if (data.precos) {
+                    data.precos.forEach((preco, idx) => {
+                        if (idx < rows.length) {
+                            const row = rows[idx];
+                            fornecedores.forEach(f => {
+                                const totalInput = row.querySelector(`.f${f.id}-total`);
+                                if (totalInput) {
+                                    const valor = preco[`fornecedor_${f.id}`] || 0;
+                                    if (valor > 0) {
+                                        totalInput.value = formatarMoedaInput(valor);
+                                    }
+                                }
+                            });
                         }
                     });
                 }
+
+                // Preencher fretes
+                setTimeout(() => {
+                    data.fornecedores.forEach((f, idx) => {
+                        const freteInput = document.getElementById(`freteF${idx + 1}`);
+                        if (freteInput && f.frete > 0) {
+                            freteInput.value = formatarMoedaInput(f.frete);
+                        }
+                    });
+                    atualizarTotais();
+                }, 200);
+            }
+        }
+
+        mostrarMensagem('📝 Cotação carregada para edição', '#7A816E');
+        mostrarToast('✏️ Cotação carregada!', 'info');
+        document.getElementById('listaCotoes').style.display = 'none';
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+
+    } catch (error) {
+        console.error('Erro ao carregar cotação:', error);
+        mostrarMensagem('❌ Erro ao carregar: ' + error.message, '#8B3A3A');
+    }
+}
+
+// ===== EXCLUIR COTAÇÃO =====
+async function excluirCotacaoSupabase(id) {
+    if (!confirm('⚠️ Tem certeza que deseja excluir esta cotação?')) return;
+
+    try {
+        const { error } = await supabase
+            .from('cotacoes')
+            .delete()
+            .eq('id', id);
+
+        if (error) throw error;
+
+        mostrarMensagem('🗑️ Cotação excluída!', '#8B3A3A');
+        mostrarToast('🗑️ Cotação excluída!', 'danger');
+        await carregarListaSalvos();
+
+    } catch (error) {
+        console.error('Erro ao excluir:', error);
+        mostrarMensagem('❌ Erro ao excluir: ' + error.message, '#8B3A3A');
+    }
+}
+
+// ===== LISTAR COTAÇÕES SALVAS =====
+async function carregarListaSalvos() {
+    const container = document.getElementById('conteudoLista');
+    if (!container) return;
+
+    const cotoes = await carregarCotoesSupabase();
+
+    if (cotoes.length === 0) {
+        container.innerHTML = `<div class="lista-vazia"><i class="fas fa-inbox"></i> Nenhuma cotação registrada ainda.</div>`;
+    } else {
+        let html = '';
+        cotoes.forEach(c => {
+            const totalItens = c.itens ? c.itens.length : 0;
+            const dataCriacao = c.criado_em ? new Date(c.criado_em).toLocaleDateString('pt-BR') : 'Sem data';
+            const status = c.status === 'concluida' ? '✅ Concluída' : '📝 Rascunho';
+            
+            html += `
+                <div class="protocolo-item">
+                    <div class="head">
+                        <strong>📄 #${String(c.id).substring(0, 8)}</strong>
+                        <small>👤 ${c.nome || 'Sem nome'}</small>
+                        <span style="background:var(--border-color); padding:0.1rem 0.6rem; border-radius:40px; font-size:0.6rem; font-weight:500;">${totalItens} item(ns)</span>
+                        <span style="background:var(--verde-claro); padding:0.1rem 0.6rem; border-radius:40px; font-size:0.6rem; font-weight:600; color:var(--preto);">🏆 ${formatarMoeda(c.melhor_valor || 0)}</span>
+                        <span style="background:${c.status === 'concluida' ? '#2E7D32' : '#FFB300'}; padding:0.1rem 0.6rem; border-radius:40px; font-size:0.6rem; font-weight:600; color:white;">${status}</span>
+                    </div>
+                    <div class="detalhes">📋 ${c.uso || 'Sem uso'} • 📅 ${dataCriacao}</div>
+                    <div class="acoes">
+                        <button class="btn btn-outline" onclick="carregarCotacaoParaEdicao('${c.id}')"><i class="fas fa-edit"></i> Editar</button>
+                        <button class="btn btn-outline" onclick="excluirCotacaoSupabase('${c.id}')" style="color:var(--danger);"><i class="fas fa-trash-alt"></i></button>
+                    </div>
+                </div>
+            `;
+        });
+        container.innerHTML = html;
+    }
+}
+
+// ===== TOGGLE LISTA SALVOS =====
+async function toggleListaSalvos() {
+    const el = document.getElementById('listaCotoes');
+    if (el.style.display === 'none') {
+        await carregarListaSalvos();
+        el.style.display = 'block';
+    } else {
+        el.style.display = 'none';
+    }
+}
+
+// ============================================================
+// FUNÇÕES DE RENDERIZAÇÃO DA TABELA
+// ============================================================
+
+function inicializarFornecedoresPadrao() {
+    fornecedores = [
+        { id: 1, nome: '', contato: '', telefone: '', obs: '', frete: 0 },
+        { id: 2, nome: '', contato: '', telefone: '', obs: '', frete: 0 },
+        { id: 3, nome: '', contato: '', telefone: '', obs: '', frete: 0 },
+        { id: 4, nome: '', contato: '', telefone: '', obs: '', frete: 0 }
+    ];
+    proximoIdFornecedor = 5;
+    fornecedorAprovadoId = null;
+}
+
+function renderizarTabela() {
+    const thead = document.getElementById('headerFornecedores');
+    const tbody = document.getElementById('corpoTabela');
+    
+    // Limpar cabeçalho (manter primeiras colunas)
+    while (thead.children.length > 3) thead.removeChild(thead.lastChild);
+    
+    // Adicionar colunas de fornecedores
+    fornecedores.forEach((f, index) => {
+        const th = document.createElement('th');
+        th.className = 'col-fornecedor fornecedor-header';
+        th.style.position = 'relative';
+        th.innerHTML = `
+            <input type="text" id="f${index}Nome" value="${f.nome}" placeholder="FORNECEDOR ${index + 1}" style="font-weight:700; font-size:0.7rem; text-transform:uppercase; color:var(--fornecedor-text);" />
+            <button class="btn-aprovar-fornecedor" onclick="aprovarFornecedor(${f.id})" title="Aprovar este fornecedor">
+                <i class="fas fa-check-circle"></i> Aprovar
+            </button>
+            ${fornecedores.length > 1 ? `<button class="remove-fornecedor" onclick="removerFornecedor(${f.id})" title="Remover fornecedor">×</button>` : ''}
+        `;
+        thead.appendChild(th);
+    });
+
+    // Adicionar coluna de ações
+    if (!document.querySelector('.col-acoes')) {
+        const thAcoes = document.createElement('th');
+        thAcoes.className = 'col-acoes';
+        thAcoes.style.width = '25px';
+        thead.appendChild(thAcoes);
+    }
+
+    // Limpar corpo
+    tbody.innerHTML = '';
+
+    // Linhas de informações dos fornecedores
+    const linhasInfo = [
+        { label: 'CONTATO:', fields: fornecedores.map((_, idx) => `f${idx}Contato`) },
+        { label: 'TELEFONE:', fields: fornecedores.map((_, idx) => `f${idx}Telefone`) }
+    ];
+
+    linhasInfo.forEach(info => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td colspan="3" style="background:var(--bg-body); font-weight:700; font-size:0.5rem; text-align:right; padding-right:0.8rem; color:var(--verde-oliva);">${info.label}</td>
+            ${fornecedores.map((f, idx) => `
+                <td><input type="text" id="${info.fields[idx]}" value="${f[info.label.replace(':', '').toLowerCase().trim()] || ''}" placeholder="${info.label.replace(':', '')}" class="fornecedor-field" /></td>
+            `).join('')}
+            <td></td>
+        `;
+        tbody.appendChild(tr);
+    });
+
+    // Linha de subtítulo R$ UND / TOTAL
+    const trSub = document.createElement('tr');
+    trSub.innerHTML = `
+        <td colspan="3" style="background:var(--verde-oliva); font-weight:600; font-size:0.5rem; color:var(--branco); text-align:center; padding:0.2rem;"></td>
+        ${fornecedores.map(() => `<td class="sub-info">R$ UND / TOTAL</td>`).join('')}
+        <td style="background:var(--verde-oliva);"></td>
+    `;
+    tbody.appendChild(trSub);
+
+    // Cabeçalho dos itens
+    const trHeader = document.createElement('tr');
+    trHeader.innerHTML = `
+        <td class="label-cell" style="font-weight:700; font-size:0.55rem;">ITEM</td>
+        <td class="label-cell" style="font-weight:700; font-size:0.55rem; text-align:left; padding-left:0.6rem;">MATERIAL / SERVIÇO</td>
+        <td class="label-cell" style="font-weight:700; font-size:0.55rem;">QTD</td>
+        ${fornecedores.map(() => `<td style="background:var(--bg-body);"></td>`).join('')}
+        <td style="background:var(--bg-body);"></td>
+    `;
+    tbody.appendChild(trHeader);
+
+    // Adicionar uma linha de item padrão
+    adicionarLinhaItemPadrao();
+
+    // Linha de adicionar item
+    const trAdd = document.createElement('tr');
+    trAdd.className = 'add-item-row';
+    trAdd.innerHTML = `
+        <td colspan="${3 + fornecedores.length + 1}" style="text-align:center; padding:0.3rem; background:var(--bg-body);">
+            <button class="btn-add-item" onclick="adicionarItem()"><i class="fas fa-plus"></i> Adicionar Item</button>
+        </td>
+    `;
+    tbody.appendChild(trAdd);
+
+    // Linha de frete
+    const trFrete = document.createElement('tr');
+    trFrete.className = 'frete-row';
+    trFrete.innerHTML = `
+        <td colspan="3" class="label-cell-left" style="font-size:0.6rem; font-weight:700; color:var(--verde-oliva);">🚚 FRETE</td>
+        ${fornecedores.map(f => `
+            <td>
+                <div class="campo-moeda">
+                    <span class="simbolo-moeda">R$</span>
+                    <input type="text" id="freteF${f.id}" value="" placeholder="0,00" style="font-weight:600; font-size:0.7rem; text-align:right; padding-right:0.3rem; color:var(--text-primary);" class="frete-input currency" />
+                </div>
+            </td>
+        `).join('')}
+        <td></td>
+    `;
+    tbody.appendChild(trFrete);
+
+    // Linha de total
+    const trTotal = document.createElement('tr');
+    trTotal.className = 'total-row';
+    trTotal.innerHTML = `
+        <td colspan="3" class="label-cell" style="text-align:right; font-weight:700;">VALOR TOTAL + FRETE</td>
+        ${fornecedores.map(f => `<td class="total-cell" id="totalF${f.id}">R$ 0,00</td>`).join('')}
+        <td></td>
+    `;
+    tbody.appendChild(trTotal);
+
+    // Linha de melhor proposta
+    const trMelhor = document.createElement('tr');
+    trMelhor.id = 'linhaMelhorOferta';
+    trMelhor.innerHTML = `
+        <td colspan="3" class="label-cell" style="text-align:right; font-weight:900; color:var(--preto);">🏆 MELHOR PROPOSTA</td>
+        <td class="best-cell" colspan="${fornecedores.length}" id="melhorOferta" style="text-align:center; padding:0.4rem;">
+            <span class="melhor-valor" id="melhorValor">R$ 0,00</span>
+            <span class="melhor-fornecedor-nome" id="melhorFornecedor"><i class="fas fa-tag"></i> Nenhum fornecedor</span>
+            <span class="melhor-detalhes" id="melhorDetalhes"></span>
+        </td>
+        <td></td>
+    `;
+    tbody.appendChild(trMelhor);
+
+    // Linha de condições de pagamento
+    const trPag = document.createElement('tr');
+    trPag.innerHTML = `
+        <td class="label-cell-left" colspan="3" style="font-size:0.6rem;">CONDIÇÕES DE PAGAMENTO</td>
+        ${fornecedores.map(f => `
+            <td><input type="text" id="p${f.id}" value="À VISTA" placeholder="Pagamento" style="font-weight:500; font-size:0.65rem;" /></td>
+        `).join('')}
+        <td></td>
+    `;
+    tbody.appendChild(trPag);
+
+    // Linha de prazo de entrega
+    const trEntrega = document.createElement('tr');
+    trEntrega.innerHTML = `
+        <td class="label-cell-left" colspan="3" style="font-size:0.6rem;">PRAZO DE ENTREGA</td>
+        ${fornecedores.map(f => `
+            <td><input type="text" id="e${f.id}" value="IMEDIATO" placeholder="Prazo" style="font-weight:500; font-size:0.65rem;" /></td>
+        `).join('')}
+        <td></td>
+    `;
+    tbody.appendChild(trEntrega);
+
+    // Linha de responsável
+    const trResp = document.createElement('tr');
+    trResp.innerHTML = `
+        <td class="label-cell-left" colspan="3" style="font-size:0.6rem;">RESPONSÁVEL</td>
+        ${fornecedores.map(f => `
+            <td><input type="text" id="r${f.id}" value="EDNALDO" placeholder="Responsável" style="font-weight:600; font-size:0.65rem; text-transform:uppercase;" /></td>
+        `).join('')}
+        <td></td>
+    `;
+    tbody.appendChild(trResp);
+
+    // Linha de observações do fornecedor
+    const trObsInd = document.createElement('tr');
+    trObsInd.className = 'obs-individual-row';
+    trObsInd.innerHTML = `
+        <td colspan="3" class="obs-label" style="font-size:0.55rem; color:var(--verde-oliva);">OBS. FORNECEDOR:</td>
+        ${fornecedores.map(f => `
+            <td class="obs-input">
+                <input type="text" id="obsF${f.id}" value="" placeholder="Obs. Fornecedor" style="font-size:0.6rem;" />
+            </td>
+        `).join('')}
+        <td></td>
+    `;
+    tbody.appendChild(trObsInd);
+
+    // Linha de observações gerais
+    const trObsGeral = document.createElement('tr');
+    trObsGeral.className = 'obs-row';
+    trObsGeral.innerHTML = `
+        <td colspan="3" class="obs-label">OBSERVAÇÕES GERAIS:</td>
+        <td colspan="${fornecedores.length}" class="obs-input">
+            <input type="text" id="observacao" placeholder="Digite aqui suas anotações gerais..." />
+        </td>
+        <td></td>
+    `;
+    tbody.appendChild(trObsGeral);
+
+    // Configurar eventos
+    configurarEventos();
+    initSortable();
+    setTimeout(() => atualizarTotais(), 100);
+}
+
+function adicionarLinhaItemPadrao() {
+    const tbody = document.getElementById('corpoTabela');
+    const tr = document.createElement('tr');
+    tr.className = 'item-row';
+    let html = `
+        <td class="label-cell"><span class="drag-handle"><i class="fas fa-grip-vertical"></i></span> 1</td>
+        <td><input type="text" class="text-left item-desc" placeholder="Descreva o material" style="font-size:0.7rem; width:100%;" /></td>
+        <td><input type="text" class="item-qtd" value="1" style="text-align:center; font-size:0.7rem;" /></td>
+    `;
+    fornecedores.forEach(f => {
+        html += `
+            <td>
+                <div class="campo-moeda">
+                    <span class="simbolo-moeda">R$</span>
+                    <input type="text" class="currency currency-und f${f.id}-und" value="" placeholder="0,00" style="font-size:0.65rem;" />
+                </div>
+                <div class="campo-moeda">
+                    <span class="simbolo-moeda">R$</span>
+                    <input type="text" class="currency currency-total f${f.id}-total" value="" placeholder="0,00" style="font-size:0.7rem;" />
+                </div>
+            </td>
+        `;
+    });
+    html += `<td><span class="remove-item" onclick="removerItem(this)"><i class="fas fa-times-circle"></i></span></td>`;
+    tr.innerHTML = html;
+    tbody.appendChild(tr);
+}
+
+function configurarEventos() {
+    // Eventos de moeda
+    document.querySelectorAll('.currency-und, .currency-total, .frete-input').forEach(input => {
+        input.addEventListener('input', function() {
+            mascaraMoedaSimplificada(this);
+            const row = this.closest('.item-row');
+            if (row && this.classList.contains('currency-und')) {
+                const qtd = parseFloat(row.querySelector('.item-qtd')?.value?.replace(',', '.') || 1);
+                const undValor = textoParaNumero(this.value);
+                const totalInput = row.querySelector(`.${this.className.split(' ')[2]}-total`);
+                if (totalInput && !isNaN(undValor) && undValor > 0) {
+                    totalInput.value = formatarMoedaInput(qtd * undValor);
+                }
             }
             atualizarTotais();
         });
-        
-        initSortable();
-        atualizarTotais();
-        mostrarMensagem('📋 Item adicionado!', '#7A816E');
-    };
 
-    window.removerItem = function(element) {
-        const row = element.closest('.item-row');
-        const tbody = document.getElementById('corpoTabela');
-        if (tbody.querySelectorAll('.item-row').length <= 1) {
-            mostrarMensagem('⚠️ Mantenha pelo menos um item!', '#8B3A3A');
-            return;
-        }
-        if (confirm('Remover este item?')) {
-            row.remove();
+        input.addEventListener('blur', function() {
+            if (this.value === '') return;
+            const valor = textoParaNumero(this.value);
+            if (valor > 0) this.value = formatarMoedaInput(valor);
+            else this.value = '';
+        });
+    });
+
+    // Eventos de quantidade
+    document.querySelectorAll('.item-qtd').forEach(input => {
+        input.addEventListener('input', function() {
+            const row = this.closest('.item-row');
+            if (row) {
+                const qtd = parseFloat(this.value?.replace(',', '.') || 1);
+                row.querySelectorAll('.currency-und').forEach(undInput => {
+                    const undValor = textoParaNumero(undInput.value);
+                    if (undValor > 0) {
+                        const classe = undInput.className.split(' ')[2];
+                        const totalInput = row.querySelector(`.${classe}-total`);
+                        if (totalInput) {
+                            totalInput.value = formatarMoedaInput(qtd * undValor);
+                        }
+                    }
+                });
+            }
+            atualizarTotais();
+        });
+    });
+
+    // Eventos de frete
+    document.querySelectorAll('.frete-input').forEach(input => {
+        input.addEventListener('change', () => setTimeout(atualizarTotais, 100));
+    });
+}
+
+function initSortable() {
+    const tbody = document.getElementById('corpoTabela');
+    if (window.sortableInstance) window.sortableInstance.destroy();
+    window.sortableInstance = new Sortable(tbody, {
+        handle: '.drag-handle',
+        animation: 150,
+        filter: '.add-item-row, .frete-row, .total-row, #linhaMelhorOferta, .obs-row, .obs-individual-row',
+        onEnd: function() {
             tbody.querySelectorAll('.item-row').forEach((row, index) => {
                 const labelCell = row.querySelector('.label-cell');
                 if (labelCell) {
@@ -2946,550 +1799,417 @@
                 }
             });
             atualizarTotais();
-            mostrarMensagem('🗑️ Item removido!', '#5A614E');
         }
-    };
+    });
+}
 
-    // ===== SALVAR COTAÇÃO =====
-    function salvarCotacao(concluir = false) {
-        const nomeInput = document.getElementById('nomeCotacao');
-        const usoInput = document.getElementById('usoCotacao');
-        let isValid = true;
-        if (!nomeInput.value.trim()) { nomeInput.classList.add('invalid'); isValid = false; }
-        if (!usoInput.value.trim()) { usoInput.classList.add('invalid'); isValid = false; }
-        if (!isValid) {
-            mostrarMensagem('⚠️ Preencha NOME e USO!', '#8B3A3A');
-            return;
-        }
-        const tbody = document.getElementById('corpoTabela');
-        const itens = [];
-        tbody.querySelectorAll('.item-row').forEach(row => {
-            const desc = row.querySelector('.item-desc')?.value || '';
-            const qtd = row.querySelector('.item-qtd')?.value || '0';
-            if (desc) {
-                const valores = {};
-                fornecedores.forEach(f => { valores[f.id] = formatarMoeda(textoParaNumero(row.querySelector(`.f${f.id}-total`)?.value || '0')); });
-                itens.push({ desc, qtd, valores });
-            }
-        });
-        if (itens.length === 0) {
-            mostrarMensagem('⚠️ Adicione pelo menos um item!', '#8B3A3A');
-            return;
-        }
-        const fornecedoresSalvos = [];
-        fornecedores.forEach((f, index) => {
-            const nomeInput = document.getElementById(`f${index}Nome`);
-            const contatoInput = document.getElementById(`f${index}Contato`);
-            const telefoneInput = document.getElementById(`f${index}Telefone`);
-            const obsInput = document.getElementById(`obsF${f.id}`);
-            const freteInput = document.getElementById(`freteF${f.id}`);
-            fornecedoresSalvos.push({
-                id: f.id,
-                nome: nomeInput ? nomeInput.value.trim() : f.nome || '',
-                contato: contatoInput ? contatoInput.value.trim() : f.contato || '',
-                telefone: telefoneInput ? telefoneInput.value.trim() : f.telefone || '',
-                obs: obsInput ? obsInput.value.trim() : f.obs || '',
-                frete: freteInput ? textoParaNumero(freteInput.value) : f.frete || 0
-            });
-        });
-        const observacaoGeral = document.getElementById('observacao')?.value || '';
-        const nomePrincipal = document.getElementById('nomeCotacao')?.value || '';
-        const usoPrincipal = document.getElementById('usoCotacao')?.value || '';
-        const totais = {};
-        fornecedores.forEach(f => { const el = document.getElementById(`totalF${f.id}`); totais[f.id] = el?.textContent || 'R$ 0,00'; });
-        const melhorValor = document.getElementById('melhorValor')?.textContent || 'R$ 0,00';
-        const melhorFornecedor = document.getElementById('melhorFornecedor')?.textContent || '';
-        const melhorDetalhes = document.getElementById('melhorDetalhes')?.textContent || '';
-        let cotoes = JSON.parse(localStorage.getItem(CHAVE_STORAGE) || '[]');
-        let fornecedorAprovadoFinal = null;
-        if (fornecedorAprovadoId !== null) {
-            const f = fornecedores.find(item => item.id === fornecedorAprovadoId);
-            if (f) {
-                const nomeInput = document.getElementById(`f${fornecedores.indexOf(f)}Nome`);
-                fornecedorAprovadoFinal = { id: f.id, nome: nomeInput ? nomeInput.value.trim() : f.nome || '' };
-            }
-        }
-        if (editandoId) {
-            const index = cotoes.findIndex(c => c.id === editandoId);
-            if (index !== -1) {
-                cotoes[index] = {
-                    id: cotoes[index].id,
-                    data: cotoes[index].data,
-                    hora: cotoes[index].hora,
-                    nome: nomePrincipal,
-                    uso: usoPrincipal,
-                    fornecedores: fornecedoresSalvos,
-                    itens: itens,
-                    totais: totais,
-                    pagamento: fornecedores.map((f, idx) => { const input = document.getElementById(`p${f.id}`); return input ? input.value : VALORES_PADRAO.pagamento[idx] || ''; }),
-                    entrega: fornecedores.map((f, idx) => { const input = document.getElementById(`e${f.id}`); return input ? input.value : VALORES_PADRAO.entrega[idx] || ''; }),
-                    responsavel: fornecedores.map((f, idx) => { const input = document.getElementById(`r${f.id}`); return input ? input.value : VALORES_PADRAO.responsavel[idx] || ''; }),
-                    observacao: observacaoGeral,
-                    melhor: { valor: melhorValor, fornecedor: melhorFornecedor, detalhes: melhorDetalhes },
-                    fornecedorAprovado: fornecedorAprovadoFinal,
-                    dataEdicao: new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })
-                };
-                mostrarMensagem('✅ Cotação atualizada!', '#7A816E');
-                mostrarToast('✅ Cotação atualizada!', 'success');
-            }
-            editandoId = null;
-        } else {
-            const cotacao = {
-                id: Date.now(),
-                data: document.getElementById('dataAtual').textContent,
-                hora: document.getElementById('horaAtual').textContent,
-                nome: nomePrincipal,
-                uso: usoPrincipal,
-                fornecedores: fornecedoresSalvos,
-                itens: itens,
-                totais: totais,
-                pagamento: fornecedores.map((f, idx) => { const input = document.getElementById(`p${f.id}`); return input ? input.value : VALORES_PADRAO.pagamento[idx] || ''; }),
-                entrega: fornecedores.map((f, idx) => { const input = document.getElementById(`e${f.id}`); return input ? input.value : VALORES_PADRAO.entrega[idx] || ''; }),
-                responsavel: fornecedores.map((f, idx) => { const input = document.getElementById(`r${f.id}`); return input ? input.value : VALORES_PADRAO.responsavel[idx] || ''; }),
-                observacao: observacaoGeral,
-                melhor: { valor: melhorValor, fornecedor: melhorFornecedor, detalhes: melhorDetalhes },
-                fornecedorAprovado: fornecedorAprovadoFinal,
-                dataSalvamento: new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })
-            };
-            cotoes.push(cotacao);
-            if (concluir) {
-                mostrarMensagem('✅ Cotação CONCLUÍDA e registrada!', '#2E7D32');
-                mostrarToast('✅ Cotação CONCLUÍDA!', 'success');
-            } else {
-                mostrarMensagem('✅ Cotação salva!', '#7A816E');
-                mostrarToast('✅ Cotação salva!', 'success');
-            }
-        }
-        localStorage.setItem(CHAVE_STORAGE, JSON.stringify(cotoes));
-        if (document.getElementById('listaCotoes') && document.getElementById('listaCotoes').style.display !== 'none') exibirListaCotoes();
-        if (concluir) {
-            limparPaginaSilencioso();
-            mostrarMensagem('🧹 Cotação concluída e página limpa para nova!', '#2E7D32');
-        }
+// ============================================================
+// FUNÇÕES DE MANIPULAÇÃO
+// ============================================================
+
+function adicionarFornecedor() {
+    if (fornecedores.length >= 8) {
+        mostrarMensagem('⚠️ Máximo de 8 fornecedores!', '#8B3A3A');
+        return;
     }
+    const novoId = proximoIdFornecedor++;
+    fornecedores.push({ id: novoId, nome: '', contato: '', telefone: '', obs: '', frete: 0 });
+    renderizarTabela();
+    mostrarMensagem('➕ Fornecedor adicionado!', '#7A816E');
+    mostrarToast('➕ Fornecedor adicionado!', 'info');
+}
 
-    function limparPaginaSilencioso() {
-        editandoId = null;
-        document.getElementById('nomeCotacao').value = '';
-        document.getElementById('usoCotacao').value = '';
-        document.getElementById('observacao').value = '';
-        fornecedorAprovadoId = null;
-        localStorage.removeItem('fornecedorAprovado_' + CHAVE_STORAGE);
-        inicializarFornecedoresPadrao();
-        renderizarTabela();
+function removerFornecedor(id) {
+    if (fornecedores.length <= 1) {
+        mostrarMensagem('⚠️ Mantenha pelo menos 1 fornecedor!', '#8B3A3A');
+        return;
     }
+    if (!confirm('Remover este fornecedor?')) return;
+    const index = fornecedores.findIndex(f => f.id === id);
+    if (index === -1) return;
+    fornecedores.splice(index, 1);
+    if (fornecedorAprovadoId === id) fornecedorAprovadoId = null;
+    renderizarTabela();
+    mostrarMensagem('🗑️ Fornecedor removido!', '#5A614E');
+}
 
-    window.limparPagina = function() {
-        if (!confirm('Deseja limpar todos os campos para iniciar uma nova cotação?')) return;
-        limparPaginaSilencioso();
-        mostrarMensagem('🧹 Página limpa para nova cotação!', '#5A614E');
-        mostrarToast('🧹 Nova cotação iniciada!', 'info');
-    };
-
-    // ===== DUPLICAR COTAÇÃO =====
-    window.duplicarCotacao = function(id) {
-        const cotoes = JSON.parse(localStorage.getItem(CHAVE_STORAGE) || '[]');
-        const original = cotoes.find(c => c.id === id);
-        if (!original) {
-            mostrarMensagem('❌ Cotação não encontrada!', '#8B3A3A');
-            return;
-        }
-        document.getElementById('nomeCotacao').value = original.nome || '';
-        document.getElementById('usoCotacao').value = original.uso || '';
-        document.getElementById('observacao').value = original.observacao || '';
-        editandoId = null;
-        fornecedores = original.fornecedores.map(f => ({ id: f.id, nome: f.nome || '', contato: f.contato || '', telefone: f.telefone || '', obs: f.obs || '', frete: f.frete || 0 }));
-        proximoIdFornecedor = Math.max(...fornecedores.map(f => f.id), 0) + 1;
-        const numForns = fornecedores.length;
-        VALORES_PADRAO.pagamento = original.pagamento || Array(numForns).fill('À VISTA');
-        while (VALORES_PADRAO.pagamento.length < numForns) VALORES_PADRAO.pagamento.push('À VISTA');
-        VALORES_PADRAO.entrega = original.entrega || Array(numForns).fill('IMEDIATO');
-        while (VALORES_PADRAO.entrega.length < numForns) VALORES_PADRAO.entrega.push('IMEDIATO');
-        VALORES_PADRAO.responsavel = original.responsavel || Array(numForns).fill('EDNALDO');
-        while (VALORES_PADRAO.responsavel.length < numForns) VALORES_PADRAO.responsavel.push('EDNALDO');
-        if (original.fornecedorAprovado) {
-            const f = fornecedores.find(item => item.id === original.fornecedorAprovado.id);
-            if (f) {
-                fornecedorAprovadoId = f.id;
-                localStorage.setItem('fornecedorAprovado_' + CHAVE_STORAGE, JSON.stringify({ id: f.id, nome: original.fornecedorAprovado.nome }));
-            }
-        } else { fornecedorAprovadoId = null; localStorage.removeItem('fornecedorAprovado_' + CHAVE_STORAGE); }
-        renderizarTabela();
-        const rows = document.querySelectorAll('.item-row');
-        original.itens.forEach((item, idx) => {
-            if (idx < rows.length) {
-                const row = rows[idx];
-                row.querySelector('.item-desc').value = item.desc || '';
-                row.querySelector('.item-qtd').value = item.qtd || '1';
-                fornecedores.forEach(f => {
-                    const totalInput = row.querySelector(`.f${f.id}-total`);
-                    if (totalInput) {
-                        const valor = item.valores[f.id] || 'R$ 0,00';
-                        const valorNum = textoParaNumero(valor);
-                        totalInput.value = valorNum > 0 ? formatarMoedaInput(valorNum) : '';
-                    }
-                });
-            }
-        });
-        setTimeout(() => {
-            fornecedores.forEach((f, idx) => {
-                const freteInput = document.getElementById(`freteF${f.id}`);
-                if (freteInput && f.frete > 0) freteInput.value = formatarMoedaInput(f.frete);
-                const pInput = document.getElementById(`p${f.id}`); if (pInput) pInput.value = VALORES_PADRAO.pagamento[idx] || 'À VISTA';
-                const eInput = document.getElementById(`e${f.id}`); if (eInput) eInput.value = VALORES_PADRAO.entrega[idx] || 'IMEDIATO';
-                const rInput = document.getElementById(`r${f.id}`); if (rInput) rInput.value = VALORES_PADRAO.responsavel[idx] || 'EDNALDO';
-                const obsInput = document.getElementById(`obsF${f.id}`);
-                if (obsInput) {
-                    const fornecedorData = original.fornecedores.find(fd => fd.id === f.id);
-                    obsInput.value = fornecedorData?.obs || '';
-                    if (obsInput.value.trim() !== '') {
-                        obsInput.classList.remove('obs-vazia');
-                        obsInput.classList.add('obs-preenchida');
-                        if (!obsInput.parentElement.querySelector('.obs-alerta-icon')) {
-                            const icon = document.createElement('span');
-                            icon.className = 'obs-alerta-icon';
-                            icon.innerHTML = '⚠️';
-                            obsInput.parentElement.appendChild(icon);
-                        }
-                    } else {
-                        obsInput.classList.remove('obs-preenchida');
-                        obsInput.classList.add('obs-vazia');
-                        const icon = obsInput.parentElement.querySelector('.obs-alerta-icon');
-                        if (icon) icon.remove();
-                    }
-                }
-            });
-            if (fornecedorAprovadoId !== null) {
-                document.querySelectorAll('.fornecedor-header').forEach((th, index) => {
-                    const fId = fornecedores[index]?.id;
-                    const btn = th.querySelector('.btn-aprovar-fornecedor');
-                    if (btn && fId === fornecedorAprovadoId) {
-                        th.classList.add('fornecedor-aprovado-manual', 'fornecedor-aprovado-destaque');
-                        btn.classList.add('aprovado');
-                        btn.innerHTML = '<i class="fas fa-star"></i> Aprovado ✓';
-                    }
-                });
-            }
-            atualizarTotais();
-            mostrarMensagem('📋 Cotação duplicada! Edite e salve como nova.', '#7A816E');
-            mostrarToast('📋 Cotação duplicada com sucesso!', 'info');
-        }, 200);
-        document.getElementById('listaCotoes').style.display = 'none';
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-    };
-
-    // ===== EXIBIR LISTA DE COTAÇÕES =====
-    function exibirListaCotoes() {
-        const cotoes = JSON.parse(localStorage.getItem(CHAVE_STORAGE) || '[]');
-        const container = document.getElementById('conteudoLista');
-        if (!container) return;
-        if (cotoes.length === 0) {
-            container.innerHTML = `<div class="lista-vazia"><i class="fas fa-inbox"></i> Nenhuma cotação registrada ainda.</div>`;
-        } else {
-            let html = '';
-            cotoes.slice().reverse().forEach(c => {
-                const totalItens = c.itens ? c.itens.length : 0;
-                const melhorValor = c.melhor?.valor || 'R$ 0,00';
-                const fornecedorNome = c.melhor?.fornecedor || 'N/A';
-                const temObs = c.fornecedores ? c.fornecedores.some(f => f.obs && f.obs.trim() !== '') : false;
-                const aprovadoManual = c.fornecedorAprovado ? true : false;
-                const nomeAprovado = c.fornecedorAprovado?.nome || '';
-                html += `
-                    <div class="protocolo-item">
-                        <div class="head">
-                            <strong>📄 Cotação #${c.id}</strong>
-                            <small>👤 ${c.nome || 'Sem nome'}</small>
-                            <span style="background:var(--border-color); padding:0.1rem 0.6rem; border-radius:40px; font-size:0.6rem; font-weight:500; color:var(--text-secondary);">${totalItens} item(ns)</span>
-                            <span style="background:var(--verde-claro); padding:0.1rem 0.6rem; border-radius:40px; font-size:0.6rem; font-weight:600; color:var(--preto);">🏆 ${melhorValor}</span>
-                            ${aprovadoManual ? `<span style="background:var(--verde-claro); padding:0.1rem 0.6rem; border-radius:40px; font-size:0.6rem; font-weight:700; color:var(--preto); border:1px solid var(--preto);">⭐ ${nomeAprovado}</span>` : ''}
-                            ${temObs ? '<span style="background:#FFB300; padding:0.1rem 0.6rem; border-radius:40px; font-size:0.6rem; font-weight:600; color:#E65100;">⚠️ Obs.</span>' : ''}
-                        </div>
-                        <div class="detalhes">📋 ${c.uso || 'Sem uso'} • 📅 ${c.data || 'Sem data'} ${c.hora || ''} ${c.fornecedores ? ' • ' + c.fornecedores.filter(f => f.nome).map(f => f.nome).join(' | ') : ''}</div>
-                        <div class="acoes">
-                            <button class="btn btn-outline" onclick="carregarCotacao(${c.id})"><i class="fas fa-edit"></i> Editar</button>
-                            <button class="btn btn-outline" onclick="duplicarCotacao(${c.id})" style="border-color:#3498DB;"><i class="fas fa-copy"></i> Duplicar</button>
-                            <button class="btn btn-outline" onclick="excluirCotacao(${c.id})" style="color:var(--danger);"><i class="fas fa-trash-alt"></i></button>
-                        </div>
-                        <div class="meta">💾 Salvo em: ${c.dataSalvamento || c.dataEdicao || 'data desconhecida'}</div>
-                    </div>
-                `;
-            });
-            container.innerHTML = html;
-        }
-        const listaEl = document.getElementById('listaCotoes');
-        if (listaEl) listaEl.style.display = 'block';
-    }
-
-    // ===== CARREGAR COTAÇÃO PARA EDIÇÃO =====
-    window.carregarCotacao = function(id) {
-        const cotoes = JSON.parse(localStorage.getItem(CHAVE_STORAGE) || '[]');
-        const c = cotoes.find(item => item.id === id);
-        if (!c) { mostrarMensagem('❌ Cotação não encontrada!', '#8B3A3A'); return; }
-        document.getElementById('nomeCotacao').value = c.nome || '';
-        document.getElementById('usoCotacao').value = c.uso || '';
-        document.getElementById('observacao').value = c.observacao || '';
-        editandoId = id;
-        fornecedores = c.fornecedores.map(f => ({ id: f.id, nome: f.nome || '', contato: f.contato || '', telefone: f.telefone || '', obs: f.obs || '', frete: f.frete || 0 }));
-        proximoIdFornecedor = Math.max(...fornecedores.map(f => f.id), 0) + 1;
-        const numForns = fornecedores.length;
-        VALORES_PADRAO.pagamento = c.pagamento || Array(numForns).fill('À VISTA');
-        while (VALORES_PADRAO.pagamento.length < numForns) VALORES_PADRAO.pagamento.push('À VISTA');
-        VALORES_PADRAO.entrega = c.entrega || Array(numForns).fill('IMEDIATO');
-        while (VALORES_PADRAO.entrega.length < numForns) VALORES_PADRAO.entrega.push('IMEDIATO');
-        VALORES_PADRAO.responsavel = c.responsavel || Array(numForns).fill('EDNALDO');
-        while (VALORES_PADRAO.responsavel.length < numForns) VALORES_PADRAO.responsavel.push('EDNALDO');
-        if (c.fornecedorAprovado) {
-            const f = fornecedores.find(item => item.id === c.fornecedorAprovado.id);
-            if (f) {
-                fornecedorAprovadoId = f.id;
-                localStorage.setItem('fornecedorAprovado_' + CHAVE_STORAGE, JSON.stringify({ id: f.id, nome: c.fornecedorAprovado.nome }));
-            }
-        } else { fornecedorAprovadoId = null; localStorage.removeItem('fornecedorAprovado_' + CHAVE_STORAGE); }
-        renderizarTabela();
-        const rows = document.querySelectorAll('.item-row');
-        c.itens.forEach((item, idx) => {
-            if (idx < rows.length) {
-                const row = rows[idx];
-                row.querySelector('.item-desc').value = item.desc || '';
-                row.querySelector('.item-qtd').value = item.qtd || '1';
-                fornecedores.forEach(f => {
-                    const totalInput = row.querySelector(`.f${f.id}-total`);
-                    if (totalInput) {
-                        const valor = item.valores[f.id] || 'R$ 0,00';
-                        const valorNum = textoParaNumero(valor);
-                        totalInput.value = valorNum > 0 ? formatarMoedaInput(valorNum) : '';
-                    }
-                });
-            }
-        });
-        setTimeout(() => {
-            fornecedores.forEach((f, idx) => {
-                const freteInput = document.getElementById(`freteF${f.id}`);
-                if (freteInput && f.frete > 0) freteInput.value = formatarMoedaInput(f.frete);
-                const pInput = document.getElementById(`p${f.id}`); if (pInput) pInput.value = VALORES_PADRAO.pagamento[idx] || 'À VISTA';
-                const eInput = document.getElementById(`e${f.id}`); if (eInput) eInput.value = VALORES_PADRAO.entrega[idx] || 'IMEDIATO';
-                const rInput = document.getElementById(`r${f.id}`); if (rInput) rInput.value = VALORES_PADRAO.responsavel[idx] || 'EDNALDO';
-                const obsInput = document.getElementById(`obsF${f.id}`);
-                if (obsInput) {
-                    const fornecedorData = c.fornecedores.find(fd => fd.id === f.id);
-                    obsInput.value = fornecedorData?.obs || '';
-                    if (obsInput.value.trim() !== '') {
-                        obsInput.classList.remove('obs-vazia');
-                        obsInput.classList.add('obs-preenchida');
-                        if (!obsInput.parentElement.querySelector('.obs-alerta-icon')) {
-                            const icon = document.createElement('span');
-                            icon.className = 'obs-alerta-icon';
-                            icon.innerHTML = '⚠️';
-                            obsInput.parentElement.appendChild(icon);
-                        }
-                    } else {
-                        obsInput.classList.remove('obs-preenchida');
-                        obsInput.classList.add('obs-vazia');
-                        const icon = obsInput.parentElement.querySelector('.obs-alerta-icon');
-                        if (icon) icon.remove();
-                    }
-                }
-            });
-            if (fornecedorAprovadoId !== null) {
-                document.querySelectorAll('.fornecedor-header').forEach((th, index) => {
-                    const fId = fornecedores[index]?.id;
-                    const btn = th.querySelector('.btn-aprovar-fornecedor');
-                    if (btn && fId === fornecedorAprovadoId) {
-                        th.classList.add('fornecedor-aprovado-manual', 'fornecedor-aprovado-destaque');
-                        btn.classList.add('aprovado');
-                        btn.innerHTML = '<i class="fas fa-star"></i> Aprovado ✓';
-                    }
-                });
-            }
-            atualizarTotais();
-            mostrarMensagem('📝 Cotação carregada para edição', '#7A816E');
-            mostrarToast('✏️ Cotação carregada', 'info');
-        }, 200);
-        document.getElementById('listaCotoes').style.display = 'none';
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-    };
-
-    window.excluirCotacao = function(id) {
-        if (!confirm('⚠️ Tem certeza que deseja excluir esta cotação?')) return;
-        let cotoes = JSON.parse(localStorage.getItem(CHAVE_STORAGE) || '[]');
-        cotoes = cotoes.filter(c => c.id !== id);
-        localStorage.setItem(CHAVE_STORAGE, JSON.stringify(cotoes));
-        exibirListaCotoes();
-        mostrarMensagem('🗑️ Cotação excluída!', '#8B3A3A');
-        mostrarToast('🗑️ Cotação excluída!', 'danger');
-    };
-
-    // ===== GERAR RELATÓRIO PDF =====
-    function gerarRelatorioPDF(filtro = 'geral', dataRef = null) {
-        try {
-            const cotoes = JSON.parse(localStorage.getItem(CHAVE_STORAGE) || '[]');
-            if (cotoes.length === 0) { mostrarMensagem('⚠️ Nenhuma cotação registrada!', '#8B3A3A'); return; }
-            let dataReferencia = dataRef ? new Date(dataRef) : new Date();
-            let dadosFiltrados = [], tituloRelatorio = '', periodoDescricao = '';
-            const ano = dataReferencia.getFullYear(), mes = dataReferencia.getMonth(), dia = dataReferencia.getDate();
-            switch(filtro) {
-                case 'dia':
-                    dadosFiltrados = cotoes.filter(c => { if (!c.dataSalvamento) return false; const data = new Date(c.dataSalvamento.split('/').reverse().join('/')); return data.getDate() === dia && data.getMonth() === mes && data.getFullYear() === ano; });
-                    tituloRelatorio = `RELATÓRIO DIÁRIO - ${dataReferencia.toLocaleDateString('pt-BR')}`;
-                    periodoDescricao = `Dia: ${dataReferencia.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}`;
-                    break;
-                case 'mes':
-                    dadosFiltrados = cotoes.filter(c => { if (!c.dataSalvamento) return false; const data = new Date(c.dataSalvamento.split('/').reverse().join('/')); return data.getMonth() === mes && data.getFullYear() === ano; });
-                    tituloRelatorio = `RELATÓRIO MENSAL - ${dataReferencia.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}`;
-                    periodoDescricao = `Mês: ${dataReferencia.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}`;
-                    break;
-                case 'ano':
-                    dadosFiltrados = cotoes.filter(c => { if (!c.dataSalvamento) return false; const data = new Date(c.dataSalvamento.split('/').reverse().join('/')); return data.getFullYear() === ano; });
-                    tituloRelatorio = `RELATÓRIO ANUAL - ${ano}`;
-                    periodoDescricao = `Ano: ${ano}`;
-                    break;
-                default:
-                    dadosFiltrados = cotoes;
-                    tituloRelatorio = 'RELATÓRIO GERAL DE COTAÇÕES';
-                    periodoDescricao = 'Todos os registros';
-                    break;
-            }
-            if (dadosFiltrados.length === 0) { mostrarMensagem(`⚠️ Nenhuma cotação para ${filtro}!`, '#8B3A3A'); return; }
-            const relatorioHTML = gerarHTMLRelatorioCotoes(dadosFiltrados, tituloRelatorio, periodoDescricao, filtro);
-            const janelaPDF = window.open('', '_blank', 'width=900,height=700');
-            if (!janelaPDF) { mostrarMensagem('⚠️ Permita pop-ups!', '#8B3A3A'); return; }
-            janelaPDF.document.write(relatorioHTML);
-            janelaPDF.document.close();
-            setTimeout(() => janelaPDF.print(), 500);
-            mostrarMensagem(`📄 Relatório ${filtro} gerado! (${dadosFiltrados.length} registros)`, '#7A816E');
-        } catch (error) { mostrarMensagem('❌ Erro ao gerar relatório!', '#8B3A3A'); }
-    }
-
-    function gerarHTMLRelatorioCotoes(dados, titulo, periodo, filtro) {
-        let totalCotoes = dados.length, totalFornecedores = new Set(), totalItens = 0;
-        dados.forEach(c => { if (c.fornecedores) c.fornecedores.forEach(f => totalFornecedores.add(f.nome || 'Não informado')); if (c.itens) totalItens += c.itens.length; });
-        let itensHTML = '';
-        dados.slice().reverse().forEach((c, index) => {
-            const melhorValor = c.melhor?.valor || 'R$ 0,00';
-            const melhorFornecedor = c.melhor?.fornecedor || 'N/A';
-            const aprovadoManual = c.fornecedorAprovado ? true : false;
-            const nomeAprovado = c.fornecedorAprovado?.nome || '';
-            itensHTML += `
-                <div style="page-break-inside: avoid; margin-bottom: 25px; border-bottom: 2px solid #ddd; padding-bottom: 15px;">
-                    <div style="font-weight: bold; color: #2c3e50; font-size: 16px; margin-bottom: 5px;">
-                        #${index + 1} - ${c.nome || 'Sem nome'}
-                        <span style="font-weight: normal; color: #7f8c8d; font-size: 13px; margin-left: 10px;">${c.data || ''} ${c.hora || ''}</span>
-                        ${aprovadoManual ? '<span style="background:#C1CE83; color:#191D1B; font-size:11px; padding:0 8px; border-radius:10px; margin-left:8px; font-weight:700;">⭐ ESCOLHA MANUAL</span>' : ''}
-                    </div>
-                    <div style="margin: 5px 0; font-size: 13px;"><strong>Uso:</strong> ${c.uso || 'Não informado'}</div>
-                    <div style="margin: 5px 0; font-size: 13px;"><strong>Itens:</strong> ${c.itens && c.itens.length > 0 ? c.itens.map(i => `${i.qtd || '?'}x ${i.desc || 'sem descrição'}`).join('; ') : 'Nenhum item'}</div>
-                    <div style="margin: 5px 0; font-size: 13px; background: #f8f9fa; padding: 5px 10px; border-radius: 4px;">
-                        <strong>Fornecedores:</strong> ${c.fornecedores ? c.fornecedores.filter(f => f.nome).map(f => `${f.nome}${f.frete > 0 ? ` (🚚 ${formatarMoeda(f.frete)} frete)` : ''}${f.obs ? ' ⚠️' : ''}${aprovadoManual && nomeAprovado === f.nome ? ' ⭐' : ''}`).join(' | ') : 'Nenhum'}
-                    </div>
-                    <div style="margin: 5px 0; font-size: 13px; color: #27ae60; font-weight: bold;">${aprovadoManual ? `⭐ ESCOLHA MANUAL: ${nomeAprovado} - ${melhorValor}` : `🏆 Melhor Proposta: ${melhorValor} - ${melhorFornecedor}`}</div>
-                    ${c.observacao ? `<div style="margin: 5px 0; font-size: 12px; color: #7f8c8d; font-style: italic;">📝 ${c.observacao}</div>` : ''}
-                    <div style="font-size: 11px; color: #95a5a6; margin-top: 5px;">Salvo em: ${c.dataSalvamento || c.dataEdicao || 'Data desconhecida'}</div>
+function adicionarItem() {
+    const tbody = document.getElementById('corpoTabela');
+    const rows = tbody.querySelectorAll('.item-row');
+    const num = rows.length + 1;
+    const addRow = tbody.querySelector('.add-item-row');
+    const tr = document.createElement('tr');
+    tr.className = 'item-row';
+    let html = `
+        <td class="label-cell"><span class="drag-handle"><i class="fas fa-grip-vertical"></i></span> ${num}</td>
+        <td><input type="text" class="text-left item-desc" placeholder="Descreva o material" style="font-size:0.7rem; width:100%;" /></td>
+        <td><input type="text" class="item-qtd" value="1" style="text-align:center; font-size:0.7rem;" /></td>
+    `;
+    fornecedores.forEach(f => {
+        html += `
+            <td>
+                <div class="campo-moeda">
+                    <span class="simbolo-moeda">R$</span>
+                    <input type="text" class="currency currency-und f${f.id}-und" value="" placeholder="0,00" style="font-size:0.65rem;" />
                 </div>
-            `;
-        });
-        return `
-            <!DOCTYPE html>
-            <html>
-            <head><meta charset="UTF-8"><title>${titulo} - TaguáLife</title>
-            <style>
-                body { font-family: Arial, sans-serif; margin: 40px; color: #2c3e50; }
-                .header { text-align: center; border-bottom: 3px solid #C1CE83; padding-bottom: 20px; margin-bottom: 30px; }
-                .header h1 { color: #191D1B; font-size: 24px; margin: 0; }
-                .header h2 { color: #7A816E; font-size: 18px; font-weight: normal; margin: 5px 0; }
-                .header .periodo { color: #7f8c8d; font-size: 14px; margin-top: 5px; }
-                .resumo { background: #f8f9fa; padding: 15px; border-radius: 5px; margin: 20px 0; border-left: 4px solid #C1CE83; }
-                .resumo table { width: 100%; font-size: 13px; }
-                .resumo td { padding: 5px 10px; }
-                .resumo .label { font-weight: bold; color: #7A816E; width: 150px; }
-                .itens { margin-top: 30px; }
-                .itens .titulo { font-size: 18px; font-weight: bold; color: #191D1B; border-bottom: 2px solid #C1CE83; padding-bottom: 10px; margin-bottom: 15px; }
-                .footer { margin-top: 40px; text-align: center; color: #95a5a6; font-size: 11px; border-top: 2px solid #ecf0f1; padding-top: 20px; }
-            </style>
-            </head>
-            <body>
-                <div class="header"><h1>🏢 TaguáLife Center</h1><h2>${titulo}</h2><div class="periodo">${periodo}</div><div style="font-size:12px;color:#7f8c8d;margin-top:5px;">Gerado em: ${new Date().toLocaleString('pt-BR')}</div></div>
-                <div class="resumo">
-                    <table>
-                        <tr><td class="label">📊 Total de Cotações:</td><td><strong>${totalCotoes}</strong></td><td class="label">📦 Total de Itens:</td><td><strong>${totalItens}</strong></td></tr>
-                        <tr><td class="label">🏢 Fornecedores:</td><td><strong>${totalFornecedores.size}</strong></td><td class="label">📅 Período:</td><td><strong>${filtro.toUpperCase()}</strong></td></tr>
-                    </table>
+                <div class="campo-moeda">
+                    <span class="simbolo-moeda">R$</span>
+                    <input type="text" class="currency currency-total f${f.id}-total" value="" placeholder="0,00" style="font-size:0.7rem;" />
                 </div>
-                <div class="itens"><div class="titulo">📋 Detalhamento das Cotações</div>${itensHTML}</div>
-                <div class="footer"><p>Documento gerado pelo Sistema TaguáLife • ${new Date().toLocaleString('pt-BR')}</p></div>
-            </body>
-            </html>
+            </td>
         `;
+    });
+    html += `<td><span class="remove-item" onclick="removerItem(this)"><i class="fas fa-times-circle"></i></span></td>`;
+    tr.innerHTML = html;
+    tbody.insertBefore(tr, addRow);
+    configurarEventos();
+    initSortable();
+    atualizarTotais();
+    mostrarMensagem('📋 Item adicionado!', '#7A816E');
+}
+
+function removerItem(element) {
+    const row = element.closest('.item-row');
+    const tbody = document.getElementById('corpoTabela');
+    if (tbody.querySelectorAll('.item-row').length <= 1) {
+        mostrarMensagem('⚠️ Mantenha pelo menos um item!', '#8B3A3A');
+        return;
+    }
+    if (confirm('Remover este item?')) {
+        row.remove();
+        tbody.querySelectorAll('.item-row').forEach((row, index) => {
+            const labelCell = row.querySelector('.label-cell');
+            if (labelCell) {
+                labelCell.innerHTML = `<span class="drag-handle"><i class="fas fa-grip-vertical"></i></span> ${index + 1}`;
+            }
+        });
+        atualizarTotais();
+        mostrarMensagem('🗑️ Item removido!', '#5A614E');
+    }
+}
+
+function limparPagina() {
+    if (!confirm('Deseja limpar todos os campos para iniciar uma nova cotação?')) return;
+    editandoId = null;
+    document.getElementById('nomeCotacao').value = '';
+    document.getElementById('usoCotacao').value = '';
+    document.getElementById('observacao').value = '';
+    fornecedorAprovadoId = null;
+    inicializarFornecedoresPadrao();
+    renderizarTabela();
+    mostrarMensagem('🧹 Página limpa para nova cotação!', '#5A614E');
+    mostrarToast('🧹 Nova cotação iniciada!', 'info');
+}
+
+function aprovarFornecedor(id) {
+    const f = fornecedores.find(item => item.id === id);
+    if (!f) {
+        mostrarMensagem('⚠️ Fornecedor não encontrado!', '#8B3A3A');
+        return;
+    }
+    const index = fornecedores.indexOf(f);
+    const nomeInput = document.getElementById(`f${index}Nome`);
+    const nome = nomeInput ? nomeInput.value.trim() : f.nome || '';
+    if (!nome) {
+        mostrarMensagem('⚠️ Informe o nome do fornecedor!', '#8B3A3A');
+        return;
     }
 
-    // ===== EXPORTAR CSV (SURPRESA!) =====
-    function exportarCSV() {
-        const cotoes = JSON.parse(localStorage.getItem(CHAVE_STORAGE) || '[]');
-        if (cotoes.length === 0) {
-            mostrarMensagem('⚠️ Nenhuma cotação para exportar!', '#8B3A3A');
+    if (fornecedorAprovadoId === id) {
+        fornecedorAprovadoId = null;
+        document.querySelectorAll('.fornecedor-header').forEach(th => {
+            th.classList.remove('fornecedor-aprovado-destaque');
+            const btn = th.querySelector('.btn-aprovar-fornecedor');
+            if (btn) {
+                btn.classList.remove('aprovado');
+                btn.innerHTML = '<i class="fas fa-check-circle"></i> Aprovar';
+            }
+        });
+        mostrarMensagem(`👤 Fornecedor "${nome}" desaprovado`, '#5A614E');
+        mostrarToast('👤 Desaprovado!', 'info');
+    } else {
+        // Remover aprovação anterior
+        document.querySelectorAll('.fornecedor-header').forEach(th => {
+            th.classList.remove('fornecedor-aprovado-destaque');
+            const btn = th.querySelector('.btn-aprovar-fornecedor');
+            if (btn) {
+                btn.classList.remove('aprovado');
+                btn.innerHTML = '<i class="fas fa-check-circle"></i> Aprovar';
+            }
+        });
+        fornecedorAprovadoId = id;
+        document.querySelectorAll('.fornecedor-header').forEach((th, idx) => {
+            const fId = fornecedores[idx]?.id;
+            const btn = th.querySelector('.btn-aprovar-fornecedor');
+            if (btn && fId === id) {
+                th.classList.add('fornecedor-aprovado-destaque');
+                btn.classList.add('aprovado');
+                btn.innerHTML = '<i class="fas fa-star"></i> Aprovado ✓';
+            }
+        });
+        mostrarMensagem(`⭐ "${nome}" aprovado!`, '#7A816E');
+        mostrarToast(`⭐ "${nome}" aprovado!`, 'success');
+    }
+    atualizarTotais();
+}
+
+// ============================================================
+// FUNÇÕES DE ATUALIZAÇÃO DE TOTAIS E GRÁFICO
+// ============================================================
+
+function atualizarTotais() {
+    const rows = document.querySelectorAll('.item-row');
+    const totais = {}, qtdItens = {}, fletes = {};
+    
+    fornecedores.forEach(f => {
+        totais[f.id] = 0;
+        qtdItens[f.id] = 0;
+        const freteInput = document.getElementById(`freteF${f.id}`);
+        fletes[f.id] = freteInput ? textoParaNumero(freteInput.value) : 0;
+    });
+
+    rows.forEach(row => {
+        fornecedores.forEach(f => {
+            const totalInput = row.querySelector(`.f${f.id}-total`);
+            if (totalInput && totalInput.value) {
+                const valor = textoParaNumero(totalInput.value);
+                if (!isNaN(valor) && valor > 0) {
+                    totais[f.id] += valor;
+                    qtdItens[f.id] += 1;
+                }
+            }
+        });
+    });
+
+    fornecedores.forEach(f => {
+        const el = document.getElementById(`totalF${f.id}`);
+        if (el) {
+            const total = totais[f.id] || 0;
+            const frete = fletes[f.id] || 0;
+            el.textContent = formatarMoeda(total + frete);
+        }
+    });
+
+    document.getElementById('statusItens').textContent = rows.length + ' item(ns)';
+
+    // Destacar melhores preços
+    destacarMelhoresPrecos();
+
+    // Atualizar melhor proposta
+    atualizarMelhorProposta();
+
+    // Atualizar gráfico
+    const labels = [], valores = [];
+    fornecedores.forEach(f => {
+        const nomeInput = document.getElementById(`f${fornecedores.indexOf(f)}Nome`);
+        labels.push(nomeInput ? nomeInput.value || `Fornecedor ${fornecedores.indexOf(f) + 1}` : `Fornecedor ${fornecedores.indexOf(f) + 1}`);
+        const el = document.getElementById(`totalF${f.id}`);
+        valores.push(el ? parseFloat(el.textContent.replace('R$ ', '').replace('.', '').replace(',', '.')) || 0 : 0);
+    });
+    atualizarGrafico(labels, valores);
+}
+
+function destacarMelhoresPrecos() {
+    const rows = document.querySelectorAll('.item-row');
+    document.querySelectorAll('.melhor-preco-item').forEach(el => el.classList.remove('melhor-preco-item'));
+    document.querySelectorAll('.melhor-preco-badge').forEach(el => el.remove());
+    document.querySelectorAll('.melhor-preco-header-badge').forEach(el => el.remove());
+
+    rows.forEach(row => {
+        let menorPreco = Infinity;
+        fornecedores.forEach(f => {
+            const totalInput = row.querySelector(`.f${f.id}-total`);
+            if (totalInput && totalInput.value) {
+                const valor = textoParaNumero(totalInput.value);
+                if (valor > 0 && valor < menorPreco) menorPreco = valor;
+            }
+        });
+
+        if (menorPreco !== Infinity) {
+            fornecedores.forEach(f => {
+                const totalInput = row.querySelector(`.f${f.id}-total`);
+                if (totalInput && totalInput.value) {
+                    const valor = textoParaNumero(totalInput.value);
+                    if (valor > 0 && Math.abs(valor - menorPreco) < 0.01) {
+                        const cell = totalInput.closest('td');
+                        if (cell) {
+                            cell.classList.add('melhor-preco-item');
+                            const badge = document.createElement('span');
+                            badge.className = 'melhor-preco-badge';
+                            badge.innerHTML = '<i class="fas fa-arrow-down"></i> MENOR PREÇO';
+                            cell.appendChild(badge);
+                        }
+                    }
+                }
+            });
+        }
+    });
+}
+
+function atualizarMelhorProposta() {
+    const melhorValorEl = document.getElementById('melhorValor');
+    const melhorFornecedorEl = document.getElementById('melhorFornecedor');
+    const melhorDetalhesEl = document.getElementById('melhorDetalhes');
+
+    if (fornecedorAprovadoId !== null) {
+        const f = fornecedores.find(item => item.id === fornecedorAprovadoId);
+        if (f) {
+            const nomeInput = document.getElementById(`f${fornecedores.indexOf(f)}Nome`);
+            const nome = nomeInput ? nomeInput.value.trim() : f.nome || 'Fornecedor';
+            const el = document.getElementById(`totalF${f.id}`);
+            const valor = el ? parseFloat(el.textContent.replace('R$ ', '').replace('.', '').replace(',', '.')) || 0 : 0;
+            melhorValorEl.textContent = formatarMoeda(valor);
+            melhorFornecedorEl.innerHTML = `<i class="fas fa-star" style="color:#C1CE83;"></i> ⭐ ${nome} (ESCOLHIDO)`;
+            melhorFornecedorEl.style.background = '#C1CE83';
+            melhorFornecedorEl.style.padding = '0.1rem 0.5rem';
+            melhorFornecedorEl.style.borderRadius = '4px';
+            melhorFornecedorEl.style.display = 'inline-block';
+            melhorDetalhesEl.textContent = '✅ APROVADO MANUALMENTE';
             return;
         }
-        let csv = '\uFEFF'; // BOM para UTF-8 no Excel
-        csv += 'ID;Data;Hora;Nome;Uso;Fornecedores;Total Itens;Melhor Valor;Melhor Fornecedor;Observação\n';
-        cotoes.forEach(c => {
-            const fornecedoresStr = c.fornecedores ? c.fornecedores.filter(f => f.nome).map(f => f.nome).join('|') : '';
-            const itensCount = c.itens ? c.itens.length : 0;
-            const melhorValor = c.melhor?.valor || 'R$ 0,00';
-            const melhorFornecedor = c.melhor?.fornecedor || 'N/A';
-            const obs = (c.observacao || '').replace(/;/g, ',').replace(/\n/g, ' ');
-            csv += `${c.id};${c.data || ''};${c.hora || ''};${c.nome || ''};${c.uso || ''};${fornecedoresStr};${itensCount};${melhorValor};${melhorFornecedor};${obs}\n`;
-        });
-        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-        const link = document.createElement('a');
-        link.href = URL.createObjectURL(blob);
-        const dataAtual = new Date().toLocaleDateString('pt-BR').replace(/\//g, '-');
-        link.download = `cotoes_${dataAtual}.csv`;
-        link.click();
-        URL.revokeObjectURL(link.href);
-        mostrarMensagem(`📊 CSV exportado com ${cotoes.length} registros!`, '#27AE60');
-        mostrarToast('📊 CSV exportado com sucesso!', 'success');
     }
 
-    // ===== INICIALIZAÇÃO =====
-    function init() {
-        carregarTema();
-        carregarFornecedoresEstoque();
-        inicializarFornecedoresPadrao();
-        renderizarTabela();
-        document.getElementById('btnVerSalvos').addEventListener('click', function(e) {
+    let melhores = [];
+    const totalItens = document.querySelectorAll('.item-row').length;
+
+    fornecedores.forEach(f => {
+        let total = 0, qtd = 0;
+        document.querySelectorAll('.item-row').forEach(row => {
+            const totalInput = row.querySelector(`.f${f.id}-total`);
+            if (totalInput && totalInput.value) {
+                const valor = textoParaNumero(totalInput.value);
+                if (valor > 0) { total += valor; qtd++; }
+            }
+        });
+        if (qtd > 0) {
+            const freteInput = document.getElementById(`freteF${f.id}`);
+            const frete = freteInput ? textoParaNumero(freteInput.value) : 0;
+            const nomeInput = document.getElementById(`f${fornecedores.indexOf(f)}Nome`);
+            melhores.push({
+                id: f.id,
+                nome: nomeInput ? nomeInput.value.trim() : f.nome || 'Fornecedor',
+                total: total + frete,
+                qtd: qtd,
+                totalItens: totalItens
+            });
+        }
+    });
+
+    if (melhores.length === 0) {
+        melhorValorEl.textContent = 'R$ 0,00';
+        melhorFornecedorEl.innerHTML = '<i class="fas fa-tag"></i> Nenhum fornecedor';
+        melhorDetalhesEl.textContent = '';
+        melhorFornecedorEl.style.background = '';
+        melhorFornecedorEl.style.padding = '';
+        melhorFornecedorEl.style.display = '';
+        return;
+    }
+
+    melhores.sort((a, b) => {
+        if (a.qtd !== b.qtd) return b.qtd - a.qtd;
+        return a.total - b.total;
+    });
+
+    const melhor = melhores[0];
+    melhorValorEl.textContent = formatarMoeda(melhor.total);
+    melhorFornecedorEl.innerHTML = `<i class="fas fa-tag"></i> ${melhor.nome} (${melhor.qtd}/${melhor.totalItens} itens) 🏆`;
+    melhorFornecedorEl.style.background = '';
+    melhorFornecedorEl.style.padding = '';
+    melhorFornecedorEl.style.display = '';
+    melhorDetalhesEl.textContent = `📦 ${melhor.qtd} itens cotados`;
+}
+
+function atualizarGrafico(labels, valores) {
+    const ctx = document.getElementById('graficoComparativo');
+    if (!ctx) return;
+    if (window.graficoChart) window.graficoChart.destroy();
+
+    const temDados = valores.some(v => v > 0);
+    const isRadar = tipoGrafico === 'radar';
+
+    window.graficoChart = new Chart(ctx, {
+        type: isRadar ? 'radar' : 'bar',
+        data: {
+            labels: labels.length > 0 ? labels : ['Sem dados'],
+            datasets: [{
+                label: 'Total (R$)',
+                data: labels.length > 0 ? valores : [0],
+                backgroundColor: isRadar ? 'rgba(193, 206, 131, 0.2)' : '#C1CE83',
+                borderColor: '#191D1B',
+                borderWidth: isRadar ? 2 : 1,
+                pointBackgroundColor: '#C1CE83',
+                pointBorderColor: '#191D1B',
+                pointRadius: isRadar ? 4 : 0,
+                ...(isRadar ? {} : { borderRadius: 4 })
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: isRadar ? {
+                r: {
+                    beginAtZero: true,
+                    ticks: { font: { size: 8 } },
+                    pointLabels: { font: { size: 8 } }
+                }
+            } : {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        font: { size: 9 },
+                        callback: function(value) { return 'R$ ' + value.toFixed(2); }
+                    }
+                },
+                x: {
+                    ticks: { font: { size: 8 } }
+                }
+            }
+        }
+    });
+}
+
+function toggleGrafico() {
+    tipoGrafico = tipoGrafico === 'bar' ? 'radar' : 'bar';
+    mostrarToast('📊 Gráfico: ' + (tipoGrafico === 'bar' ? 'Barras' : 'Radar'), 'info');
+    atualizarTotais();
+}
+
+// ============================================================
+// INICIALIZAÇÃO
+// ============================================================
+
+function init() {
+    carregarTema();
+    inicializarFornecedoresPadrao();
+    renderizarTabela();
+
+    // Botão Salvar
+    document.getElementById('btnSalvar').addEventListener('click', function(e) {
+        e.preventDefault();
+        salvarCotacaoSupabase(false);
+    });
+
+    // Botão Concluir
+    document.getElementById('btnConcluir').addEventListener('click', function(e) {
+        e.preventDefault();
+        salvarCotacaoSupabase(true);
+    });
+
+    // Ctrl+S
+    document.addEventListener('keydown', function(e) {
+        if (e.ctrlKey && e.key === 's') {
             e.preventDefault();
-            const el = document.getElementById('listaCotoes');
-            if (el.style.display === 'none') exibirListaCotoes();
-            else el.style.display = 'none';
-        });
-        document.getElementById('btnSalvar').addEventListener('click', function(e) { e.preventDefault(); salvarCotacao(false); });
-        document.getElementById('btnConcluir').addEventListener('click', function(e) { e.preventDefault(); salvarCotacao(true); });
-        document.addEventListener('keydown', function(e) { if (e.ctrlKey && e.key === 's') { e.preventDefault(); salvarCotacao(false); } });
-        console.log('🚀 Mapa de Cotação - Destaque de Melhores Preços por Item!');
-        console.log('📊 Exportação CSV disponível!');
-        mostrarMensagem('🟢 Valores em verde = melhor preço do item!', '#191D1B');
-        mostrarToast('🟢 Destaque de melhores preços ativado!', 'success');
-    }
+            salvarCotacaoSupabase(false);
+        }
+    });
 
-    window.toggleTheme = toggleTheme;
-    window.logout = logout;
-    window.adicionarFornecedor = adicionarFornecedor;
-    window.removerFornecedor = removerFornecedor;
-    window.adicionarItem = adicionarItem;
-    window.removerItem = removerItem;
-    window.limparPagina = limparPagina;
-    window.carregarCotacao = carregarCotacao;
-    window.duplicarCotacao = duplicarCotacao;
-    window.excluirCotacao = excluirCotacao;
-    window.gerarRelatorioPDF = gerarRelatorioPDF;
-    window.carregarItensEstoque = carregarItensEstoque;
-    window.mostrarMensagem = mostrarMensagem;
-    window.salvarFornecedorDaCotacao = salvarFornecedorDaCotacao;
-    window.toggleGraficoComparativo = toggleGraficoComparativo;
-    window.aprovarFornecedorManual = aprovarFornecedorManual;
-    window.exportarCSV = exportarCSV;
+    mostrarMensagem('🟢 Sistema conectado ao Supabase!', '#2E7D32');
+    mostrarToast('🟢 Conectado ao Supabase!', 'success');
+}
 
-    init();
-})();
+// Iniciar
+init();
 </script>
 </body>
 </html>
