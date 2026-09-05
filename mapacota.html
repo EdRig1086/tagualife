@@ -1044,10 +1044,10 @@
 
 <script>
 // ============================================================
-// CONFIGURAÇÃO DO SUPABASE - SUBSTITUA PELOS SEUS DADOS!
+// CONFIGURAÇÃO DO SUPABASE - JÁ CONFIGURADO!
 // ============================================================
-const SUPABASE_URL = 'https://SEU_PROJETO.supabase.co';  // ← SUBSTITUA
-const SUPABASE_KEY = 'SUA_ANON_KEY';                     // ← SUBSTITUA
+const SUPABASE_URL = 'https://frlecudymdpnrsilavbj.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_Uv-GZdW4peH3IZTIwiNYXg_IrYytpn4';
 const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // ============================================================
@@ -1171,7 +1171,9 @@ function mostrarMensagem(texto, cor = '#191D1B') {
     feedback._timeout = setTimeout(() => { feedback.innerHTML = ''; }, 4000);
 }
 
-// ===== FUNÇÕES DO SUPABASE =====
+// ============================================================
+// FUNÇÕES DO SUPABASE
+// ============================================================
 
 async function salvarCotacaoSupabase(concluir = false) {
     try {
@@ -1468,7 +1470,9 @@ async function toggleListaSalvos() {
     }
 }
 
-// ===== FUNÇÕES DE RENDERIZAÇÃO =====
+// ============================================================
+// FUNÇÕES DE RENDERIZAÇÃO
+// ============================================================
 
 function inicializarFornecedoresPadrao() {
     fornecedores = [
@@ -1749,7 +1753,9 @@ function initSortable() {
     });
 }
 
-// ===== FUNÇÕES DE MANIPULAÇÃO =====
+// ============================================================
+// FUNÇÕES DE MANIPULAÇÃO
+// ============================================================
 
 function adicionarFornecedor() {
     if (fornecedores.length >= 8) {
@@ -1896,7 +1902,9 @@ function aprovarFornecedor(id) {
     atualizarTotais();
 }
 
-// ===== FUNÇÕES DE ATUALIZAÇÃO =====
+// ============================================================
+// FUNÇÕES DE ATUALIZAÇÃO
+// ============================================================
 
 function atualizarTotais() {
     const rows = document.querySelectorAll('.item-row');
@@ -2112,7 +2120,9 @@ function toggleGrafico() {
     atualizarTotais();
 }
 
-// ===== INICIALIZAÇÃO =====
+// ============================================================
+// INICIALIZAÇÃO
+// ============================================================
 
 function init() {
     carregarTema();
