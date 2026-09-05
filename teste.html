@@ -1,196 +1,22 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html>
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Teste Cotação</title>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <style>
-        body { font-family: Arial; padding: 20px; background: #f5f5f5; }
-        .container { max-width: 800px; margin: 0 auto; background: white; padding: 20px; border-radius: 10px; }
-        .btn { padding: 10px 20px; margin: 5px; border: none; border-radius: 5px; cursor: pointer; }
-        .btn-primary { background: #2E7D32; color: white; }
-        .btn-success { background: #7A816E; color: white; }
-        .btn-danger { background: #8B3A3A; color: white; }
-        .feedback { margin-top: 10px; padding: 10px; border-radius: 5px; }
-        .success { background: #d4edda; color: #155724; }
-        .error { background: #f8d7da; color: #721c24; }
-        input { padding: 8px; margin: 5px; border: 1px solid #ddd; border-radius: 5px; width: 200px; }
-        .row { margin: 10px 0; }
-    </style>
+    <title>Teste Mínimo</title>
 </head>
 <body>
+    <h1>Teste JavaScript</h1>
+    <button onclick="testar()">Clique aqui</button>
+    <p id="resultado"></p>
 
-<div class="container">
-    <h1>🏢 Teste de Conexão</h1>
-    
-    <div class="row">
-        <label>NOME:</label>
-        <input type="text" id="nome" value="Teste Cotação" />
-    </div>
-    <div class="row">
-        <label>USO:</label>
-        <input type="text" id="uso" value="Teste" />
-    </div>
-    
-    <div class="row">
-        <button class="btn btn-primary" onclick="testarConexao()">🔌 Testar Conexão</button>
-        <button class="btn btn-success" onclick="salvarTeste()">💾 Salvar Teste</button>
-        <button class="btn btn-success" onclick="listarTestes()">📋 Listar</button>
-        <button class="btn btn-danger" onclick="limparTudo()">🗑️ Limpar</button>
-    </div>
-    
-    <div id="feedback" class="feedback"></div>
-    <div id="resultados" style="margin-top: 20px;"></div>
-</div>
-
-<script>
-// ============================================================
-// CONFIGURAÇÃO DO SUPABASE - JÁ CONFIGURADO!
-// ============================================================
-const SUPABASE_URL = 'https://frlecudymdpnrsilavbj.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_Uv-GZdW4peH3IZTIwiNYXg_IrYytpn4';
-const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-console.log('✅ Supabase configurado!');
-console.log('URL:', SUPABASE_URL);
-console.log('Key:', SUPABASE_KEY.substring(0, 20) + '...');
-
-// ===== FEEDBACK =====
-function mostrarFeedback(mensagem, tipo = 'success') {
-    const el = document.getElementById('feedback');
-    el.textContent = mensagem;
-    el.className = 'feedback ' + tipo;
-    console.log(mensagem);
-}
-
-// ===== TESTAR CONEXÃO =====
-async function testarConexao() {
-    try {
-        mostrarFeedback('🔄 Testando conexão...', 'success');
-        
-        // Testar se a tabela existe
-        const { data, error } = await supabase
-            .from('cotacoes')
-            .select('count', { count: 'exact', head: true });
-        
-        if (error) throw error;
-        
-        mostrarFeedback('✅ Conexão OK! Tabela "cotacoes" existe!', 'success');
-        console.log('✅ Teste concluído com sucesso!');
-        
-    } catch (error) {
-        console.error('❌ Erro:', error);
-        mostrarFeedback('❌ Erro: ' + error.message, 'error');
-    }
-}
-
-// ===== SALVAR TESTE =====
-async function salvarTeste() {
-    try {
-        const nome = document.getElementById('nome').value || 'Teste';
-        const uso = document.getElementById('uso').value || 'Teste';
-        
-        mostrarFeedback('🔄 Salvando...', 'success');
-        
-        const dados = {
-            nome: nome,
-            uso: uso,
-            observacao: 'Teste manual ' + new Date().toLocaleString(),
-            status: 'rascunho',
-            melhor_valor: 0
-        };
-        
-        const { data, error } = await supabase
-            .from('cotacoes')
-            .insert([dados])
-            .select();
-        
-        if (error) throw error;
-        
-        mostrarFeedback('✅ Salvo com sucesso! ID: ' + data[0].id, 'success');
-        console.log('✅ Dados salvos:', data);
-        
-        // Atualizar lista
-        await listarTestes();
-        
-    } catch (error) {
-        console.error('❌ Erro ao salvar:', error);
-        mostrarFeedback('❌ Erro: ' + error.message, 'error');
-    }
-}
-
-// ===== LISTAR TESTES =====
-async function listarTestes() {
-    try {
-        mostrarFeedback('🔄 Carregando...', 'success');
-        
-        const { data, error } = await supabase
-            .from('cotacoes')
-            .select('*')
-            .order('criado_em', { ascending: false })
-            .limit(10);
-        
-        if (error) throw error;
-        
-        const container = document.getElementById('resultados');
-        
-        if (data.length === 0) {
-            container.innerHTML = '<p>📭 Nenhum registro encontrado.</p>';
-            mostrarFeedback('📭 Nenhum registro', 'success');
-        } else {
-            let html = '<h3>📋 Últimos Registros:</h3><ul style="list-style:none; padding:0;">';
-            data.forEach(item => {
-                const dataCriacao = item.criado_em ? new Date(item.criado_em).toLocaleString('pt-BR') : 'Sem data';
-                html += `
-                    <li style="background:#f9f9f9; padding:10px; margin:5px 0; border-radius:5px; border-left: 4px solid #2E7D32;">
-                        <strong>${item.nome || 'Sem nome'}</strong> - ${item.uso || 'Sem uso'}
-                        <br><small>📅 ${dataCriacao} | ID: ${item.id.substring(0, 8)}</small>
-                        <br><small>Status: ${item.status || 'rascunho'}</small>
-                    </li>
-                `;
-            });
-            html += '</ul>';
-            container.innerHTML = html;
-            mostrarFeedback(`✅ ${data.length} registros carregados!`, 'success');
+    <script>
+        function testar() {
+            document.getElementById('resultado').innerHTML = '✅ JavaScript está funcionando!';
+            console.log('✅ JavaScript funcionou!');
         }
         
-        console.log('✅ Dados carregados:', data);
-        
-    } catch (error) {
-        console.error('❌ Erro ao listar:', error);
-        mostrarFeedback('❌ Erro: ' + error.message, 'error');
-        document.getElementById('resultados').innerHTML = `<p style="color:red;">❌ ${error.message}</p>`;
-    }
-}
-
-// ===== LIMPAR TUDO =====
-async function limparTudo() {
-    if (!confirm('⚠️ Tem certeza que quer excluir TODOS os registros?')) return;
-    
-    try {
-        mostrarFeedback('🔄 Excluindo todos...', 'success');
-        
-        const { error } = await supabase
-            .from('cotacoes')
-            .delete()
-            .neq('id', '00000000-0000-0000-0000-000000000000');
-        
-        if (error) throw error;
-        
-        mostrarFeedback('✅ Todos os registros foram excluídos!', 'success');
-        document.getElementById('resultados').innerHTML = '<p>📭 Nenhum registro.</p>';
-        
-    } catch (error) {
-        console.error('❌ Erro ao excluir:', error);
-        mostrarFeedback('❌ Erro: ' + error.message, 'error');
-    }
-}
-
-// ===== CARREGAR AO ABRIR =====
-console.log('🚀 Página de teste carregada!');
-console.log('💡 Clique em "Testar Conexão" para verificar.');
-mostrarFeedback('🟢 Clique em "Testar Conexão" para começar!', 'success');
-</script>
+        console.log('✅ Página carregada!');
+        alert('✅ A página carregou! Clique em OK para continuar.');
+    </script>
 </body>
 </html>
