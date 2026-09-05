@@ -5,593 +5,160 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>TaguáLife Center · Cadastro de Estoque</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800;14..32,900&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="auth.js"></script>
     <style>
         :root {
-            --verde-claro: #C1CE83;
-            --verde-oliva: #7A816E;
-            --branco: #FBFBF7;
-            --preto: #191D1B;
-            --primary: #191D1B;
-            --primary-light: #3A4A3A;
-            --secondary: #7A816E;
-            --gold: #C1CE83;
-            --gold-light: #D8E0B0;
-            --success: #7A816E;
-            --danger: #8B3A3A;
-            --warning: #C1A83C;
-            --gray-50: #FBFBF7;
-            --gray-100: #F0F2EA;
-            --gray-200: #D8DCCE;
-            --gray-300: #B8BEA8;
-            --gray-400: #9AA08E;
-            --gray-500: #7A816E;
-            --gray-600: #5A614E;
-            --gray-700: #3A4132;
-            --gray-800: #191D1B;
-            --gray-900: #0D0F0E;
-            --shadow: 0 4px 24px rgba(25, 29, 27, 0.08);
-            --shadow-hover: 0 6px 32px rgba(25, 29, 27, 0.15);
-            --font-primary: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            --bg-body: #E8EBE0;
-            --bg-card: var(--branco);
-            --text-primary: var(--preto);
-            --text-secondary: var(--verde-oliva);
-            --border-color: var(--gray-200);
-            --input-bg: transparent;
-            --input-border: var(--gray-300);
-            --radius: 16px;
-            --radius-sm: 10px;
+            --verde-claro: #C1CE83; --verde-oliva: #7A816E; --branco: #FBFBF7; --preto: #191D1B;
+            --danger: #8B3A3A; --success: #7A816E; --warning: #C1A83C;
+            --gray-50: #FBFBF7; --gray-100: #F0F2EA; --gray-200: #D8DCCE; --gray-300: #B8BEA8;
+            --gray-400: #9AA08E; --shadow: 0 4px 24px rgba(25,29,27,0.08);
+            --font-primary: 'Inter', sans-serif; --bg-body: #E8EBE0; --bg-card: #FBFBF7;
+            --text-primary: #191D1B; --text-secondary: #7A816E; --border-color: #D8DCCE;
+            --input-bg: transparent; --input-border: #B8BEA8;
         }
-
         body.dark-mode {
-            --bg-body: #1a1a1a;
-            --bg-card: #2a2a2a;
-            --text-primary: #e8e8e8;
-            --text-secondary: #b0b8a8;
-            --border-color: #444;
-            --input-bg: #333;
-            --input-border: #555;
-            --gray-50: #2a2a2a;
-            --gray-100: #333;
-            --gray-200: #444;
-            --gray-300: #555;
-            --gray-400: #666;
-            --gray-500: #777;
-            --preto: #e8e8e8;
-            --branco: #2a2a2a;
-            --shadow: 0 4px 24px rgba(0,0,0,0.3);
-            --shadow-hover: 0 6px 32px rgba(0,0,0,0.4);
+            --bg-body: #1a1a1a; --bg-card: #2a2a2a; --text-primary: #e8e8e8; --text-secondary: #b0b8a8;
+            --border-color: #444; --input-bg: #333; --input-border: #555;
+            --gray-50: #2a2a2a; --gray-100: #333; --gray-200: #444; --gray-300: #555;
+            --preto: #e8e8e8; --branco: #2a2a2a;
         }
-
-        body.dark-mode .app-topbar,
-        body.dark-mode .nav-menu,
-        body.dark-mode .card-estoque,
-        body.dark-mode .modal-content {
-            background: var(--bg-card);
-            border-color: var(--border-color);
-        }
-
         * { margin: 0; padding: 0; box-sizing: border-box; }
-
         body {
-            font-family: var(--font-primary);
-            font-weight: 400;
-            background: var(--bg-body);
-            min-height: 100vh;
-            padding: 1rem;
-            display: flex;
-            justify-content: center;
-            align-items: flex-start;
-            color: var(--text-primary);
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
-            transition: background 0.3s, color 0.3s;
+            font-family: var(--font-primary); background: var(--bg-body); min-height: 100vh;
+            padding: 1rem; display: flex; justify-content: center; align-items: flex-start;
+            color: var(--text-primary); transition: background 0.3s, color 0.3s;
         }
-
         .app-container { max-width: 1100px; width: 100%; }
-
         .app-topbar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 0.6rem;
-            flex-wrap: wrap;
-            gap: 0.3rem;
-            background: var(--bg-card);
-            padding: 0.4rem 1rem;
-            border-radius: 10px;
-            box-shadow: var(--shadow);
-            border: 1px solid var(--border-color);
-            transition: background 0.3s, border-color 0.3s;
+            display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.6rem;
+            flex-wrap: wrap; gap: 0.3rem; background: var(--bg-card); padding: 0.4rem 1rem;
+            border-radius: 10px; box-shadow: var(--shadow); border: 1px solid var(--border-color);
         }
-
-        .logo-area {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            text-decoration: none;
-            color: inherit;
-        }
-
+        .logo-area { display: flex; align-items: center; gap: 0.5rem; text-decoration: none; color: inherit; }
         .logo-icon {
-            width: 40px;
-            height: 40px;
-            background: var(--preto);
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: var(--verde-claro);
-            font-weight: 800;
-            font-size: 0.7rem;
-            flex-direction: column;
-            line-height: 1;
-            padding: 0.2rem;
-            transition: background 0.3s;
+            width: 40px; height: 40px; background: #191D1B; border-radius: 10px;
+            display: flex; align-items: center; justify-content: center; color: var(--verde-claro);
+            font-weight: 800; font-size: 0.7rem; flex-direction: column; line-height: 1; padding: 0.2rem;
         }
-
-        .logo-icon small { font-size: 0.3rem; color: var(--branco); font-weight: 400; letter-spacing: 0.5px; margin-top: 1px; }
-        .logo-text { display: flex; flex-direction: column; line-height: 1.1; }
-        .logo-text .title { font-size: 1.2rem; font-weight: 800; color: var(--text-primary); letter-spacing: -0.5px; display: flex; align-items: baseline; gap: 0.1rem; }
-        .logo-text .title .tagua { color: var(--text-primary); }
-        .logo-text .title .life { color: var(--verde-claro); font-weight: 800; }
-        .logo-text .slogan { font-size: 0.4rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1.5px; font-weight: 500; margin-top: 1px; }
-
-        .app-topbar .badge { background: var(--verde-claro); padding: 0.2rem 0.7rem; border-radius: 40px; font-size: 0.55rem; font-weight: 600; color: var(--preto); border: 1px solid var(--verde-oliva); }
-
+        .logo-icon small { font-size: 0.3rem; color: #FBFBF7; }
+        .logo-text .title { font-size: 1.2rem; font-weight: 800; }
+        .logo-text .title .life { color: var(--verde-claro); }
+        .logo-text .slogan { font-size: 0.4rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1.5px; }
+        .badge { background: var(--verde-claro); padding: 0.2rem 0.7rem; border-radius: 40px; font-size: 0.55rem; font-weight: 600; color: #191D1B; border: 1px solid var(--verde-oliva); }
         .user-info {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            font-size: 0.7rem;
-            color: var(--text-secondary);
-            background: var(--gray-50);
-            padding: 0.2rem 0.7rem;
-            border-radius: 40px;
-            border: 1px solid var(--border-color);
+            display: flex; align-items: center; gap: 0.5rem; font-size: 0.7rem; color: var(--text-secondary);
+            background: var(--gray-50); padding: 0.2rem 0.7rem; border-radius: 40px; border: 1px solid var(--border-color);
         }
         .user-info strong { color: var(--text-primary); }
-
         .clock-display {
-            display: flex;
-            align-items: center;
-            gap: 0.4rem;
-            background: var(--preto);
-            padding: 0.2rem 0.8rem;
-            border-radius: 40px;
-            border: 1px solid var(--verde-claro);
-            font-size: 0.8rem;
-            color: var(--branco);
-            letter-spacing: 1px;
-            transition: background 0.3s;
+            display: flex; align-items: center; gap: 0.4rem; background: #191D1B; padding: 0.2rem 0.8rem;
+            border-radius: 40px; border: 1px solid var(--verde-claro); font-size: 0.8rem; color: #FBFBF7;
         }
         .clock-display i { color: var(--verde-claro); font-size: 0.7rem; }
-        .clock-display .clock-separator { color: var(--verde-claro); animation: blink 1s step-end infinite; }
-        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
-        .clock-display .clock-seconds { color: var(--verde-claro); font-size: 0.7rem; }
-        .clock-display .clock-date { color: var(--verde-oliva); font-size: 0.6rem; font-weight: 400; border-left: 1px solid var(--verde-oliva); padding-left: 0.5rem; }
-
         .nav-menu {
-            display: flex;
-            gap: 0.2rem;
-            flex-wrap: wrap;
-            background: var(--bg-card);
-            padding: 0.2rem 0.6rem;
-            border-radius: 8px;
-            border: 1px solid var(--border-color);
-            margin-bottom: 0.6rem;
-            box-shadow: 0 1px 4px rgba(25, 29, 27, 0.04);
-            transition: background 0.3s, border-color 0.3s;
+            display: flex; gap: 0.2rem; flex-wrap: wrap; background: var(--bg-card); padding: 0.2rem 0.6rem;
+            border-radius: 8px; border: 1px solid var(--border-color); margin-bottom: 0.6rem;
         }
         .nav-menu .nav-item {
-            padding: 0.25rem 0.8rem;
-            border-radius: 40px;
-            font-size: 0.65rem;
-            font-weight: 500;
-            color: var(--text-secondary);
-            text-decoration: none;
-            transition: 0.2s;
-            border: 1px solid transparent;
-            cursor: pointer;
+            padding: 0.25rem 0.8rem; border-radius: 40px; font-size: 0.65rem; font-weight: 500;
+            color: var(--text-secondary); text-decoration: none; transition: 0.2s; border: 1px solid transparent; cursor: pointer;
+            background: transparent; font-family: inherit;
         }
         .nav-menu .nav-item:hover { background: var(--gray-50); color: var(--text-primary); }
-        .nav-menu .nav-item.active { background: var(--preto); color: var(--branco); border-color: var(--preto); }
-        .nav-menu .nav-item i { margin-right: 0.2rem; }
-
-        .btn-theme {
-            background: var(--gray-200);
-            color: var(--preto);
-            border: none;
-            padding: 0.25rem 0.8rem;
-            border-radius: 40px;
-            font-size: 0.65rem;
-            font-weight: 500;
-            cursor: pointer;
-            transition: 0.2s;
-            font-family: inherit;
-        }
-        .btn-theme:hover { background: var(--gray-300); }
-
+        .nav-menu .nav-item.active { background: #191D1B; color: #FBFBF7; }
         .card-estoque {
-            background: var(--bg-card);
-            border-radius: 12px;
-            box-shadow: var(--shadow);
-            overflow: hidden;
-            border: 1px solid var(--border-color);
-            transition: background 0.3s, border-color 0.3s, box-shadow 0.3s;
+            background: var(--bg-card); border-radius: 12px; box-shadow: var(--shadow);
+            overflow: hidden; border: 1px solid var(--border-color);
         }
-
         .card-header {
-            background: var(--verde-claro);
-            padding: 0.4rem 1.2rem;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            flex-wrap: wrap;
-            gap: 0.4rem;
+            background: var(--verde-claro); padding: 0.4rem 1.2rem; display: flex;
+            align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.4rem;
             border-bottom: 3px solid var(--verde-oliva);
         }
-        .card-header .left { display: flex; align-items: center; gap: 0.5rem; color: var(--preto); }
-        .card-header .left i { font-size: 1.1rem; color: var(--preto); }
-        .card-header .left h2 { font-size: 1rem; font-weight: 600; letter-spacing: -0.3px; color: var(--preto); }
-        .card-header .right { display: flex; align-items: center; gap: 0.6rem; color: var(--preto); font-size: 0.7rem; }
-        .card-header .right i { margin-right: 0.15rem; color: var(--preto); }
-
+        .card-header .left { display: flex; align-items: center; gap: 0.5rem; color: #191D1B; }
+        .card-header .left h2 { font-size: 1rem; font-weight: 600; color: #191D1B; }
+        .card-header .right { display: flex; gap: 0.6rem; color: #191D1B; font-size: 0.7rem; }
         .card-body { padding: 1.2rem 1.5rem 1.5rem; }
-
         .form-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
-            gap: 0.8rem;
-            background: var(--gray-50);
-            padding: 1rem 1.2rem;
-            border-radius: 8px;
-            border: 1px solid var(--border-color);
-            margin-bottom: 1.2rem;
+            display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.8rem;
+            background: var(--gray-50); padding: 1rem 1.2rem; border-radius: 8px;
+            border: 1px solid var(--border-color); margin-bottom: 1.2rem;
         }
         @media (max-width: 900px) { .form-grid { grid-template-columns: 1fr 1fr; } }
         @media (max-width: 500px) { .form-grid { grid-template-columns: 1fr; } }
-
-        .campo {
-            display: flex;
-            flex-direction: column;
-            gap: 0.1rem;
-        }
-        .campo label {
-            font-weight: 600;
-            font-size: 0.6rem;
-            color: var(--text-secondary);
-            text-transform: uppercase;
-            letter-spacing: 0.4px;
-        }
+        .campo { display: flex; flex-direction: column; gap: 0.1rem; }
+        .campo label { font-weight: 600; font-size: 0.6rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.4px; }
         .campo label i { color: var(--verde-oliva); margin-right: 0.2rem; }
         .campo input, .campo select {
-            border: none;
-            border-bottom: 2px solid var(--input-border);
-            background: var(--input-bg);
-            padding: 0.3rem 0.2rem;
-            font-size: 0.8rem;
-            font-weight: 500;
-            color: var(--text-primary);
-            outline: none;
-            transition: 0.2s;
-            font-family: inherit;
+            border: none; border-bottom: 2px solid var(--input-border); background: var(--input-bg);
+            padding: 0.3rem 0.2rem; font-size: 0.8rem; font-weight: 500; color: var(--text-primary);
+            outline: none; font-family: inherit;
         }
         .campo input:focus, .campo select:focus { border-bottom-color: var(--verde-claro); }
-        .campo select { cursor: pointer; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%237A816E' d='M6 8L1 3h10z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 0.3rem center; padding-right: 1.5rem; }
-
+        .campo select { cursor: pointer; }
         .btn-salvar-item button {
-            width: 100%;
-            padding: 0.3rem 1rem;
-            border: none;
-            border-radius: 40px;
-            font-weight: 600;
-            font-size: 0.75rem;
-            background: var(--preto);
-            color: var(--branco);
-            cursor: pointer;
-            transition: 0.2s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.3rem;
-            margin-top: 0.1rem;
-            font-family: inherit;
+            width: 100%; padding: 0.3rem 1rem; border: none; border-radius: 40px; font-weight: 600;
+            font-size: 0.75rem; background: #191D1B; color: #FBFBF7; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; gap: 0.3rem; font-family: inherit;
         }
-        .btn-salvar-item button:hover { background: #2A3A2A; transform: translateY(-1px); }
-
-        .campo .input-status {
-            font-size: 0.5rem;
-            font-weight: 600;
-            margin-top: 0.1rem;
-            min-height: 14px;
-        }
-        .campo .input-status.ok { color: var(--verde-oliva); }
-        .campo .input-status.erro { color: var(--danger); }
-
-        .busca-bar {
-            display: flex;
-            gap: 0.6rem;
-            margin-bottom: 1rem;
-            flex-wrap: wrap;
-            align-items: center;
-        }
+        .btn-salvar-item button:hover { background: #2A3A2A; }
+        .btn-salvar-item button:disabled { opacity: 0.6; cursor: not-allowed; }
+        .busca-bar { display: flex; gap: 0.6rem; margin-bottom: 1rem; flex-wrap: wrap; align-items: center; }
         .busca-bar input {
-            flex: 1;
-            min-width: 150px;
-            padding: 0.4rem 1rem;
-            border: 1px solid var(--border-color);
-            border-radius: 40px;
-            font-size: 0.75rem;
-            outline: none;
-            transition: 0.2s;
-            font-family: inherit;
-            background: var(--input-bg);
-            color: var(--text-primary);
+            flex: 1; min-width: 150px; padding: 0.4rem 1rem; border: 1px solid var(--border-color);
+            border-radius: 40px; font-size: 0.75rem; outline: none; background: var(--input-bg);
+            color: var(--text-primary); font-family: inherit;
         }
-        .busca-bar input:focus { border-color: var(--verde-claro); }
         .busca-bar select {
-            padding: 0.4rem 1rem;
-            border: 1px solid var(--border-color);
-            border-radius: 40px;
-            font-size: 0.75rem;
-            outline: none;
-            font-family: inherit;
-            background: var(--input-bg);
-            color: var(--text-primary);
-            cursor: pointer;
+            padding: 0.4rem 1rem; border: 1px solid var(--border-color); border-radius: 40px;
+            font-size: 0.75rem; background: var(--input-bg); color: var(--text-primary); font-family: inherit;
         }
-        .busca-bar select:focus { border-color: var(--verde-claro); }
-
-        .btn-limpar-filtro {
-            padding: 0.4rem 1rem;
-            border: 1px solid var(--border-color);
-            border-radius: 40px;
-            background: transparent;
-            color: var(--text-secondary);
-            cursor: pointer;
-            transition: 0.2s;
-            font-size: 0.7rem;
-            font-family: inherit;
+        .btn-limpar-filtro, .btn-voltar, .btn-outline {
+            padding: 0.4rem 1rem; border: 1px solid var(--border-color); border-radius: 40px;
+            font-size: 0.7rem; font-family: inherit; cursor: pointer; text-decoration: none;
+            display: inline-flex; align-items: center; gap: 0.3rem; background: transparent; color: var(--text-secondary);
         }
-        .btn-limpar-filtro:hover { background: var(--gray-50); }
-
-        .btn-voltar {
-            padding: 0.4rem 1rem;
-            border: 1px solid var(--border-color);
-            border-radius: 40px;
-            background: var(--preto);
-            color: var(--branco);
-            cursor: pointer;
-            transition: 0.2s;
-            font-size: 0.7rem;
-            font-family: inherit;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.3rem;
-        }
-        .btn-voltar:hover { background: #2A3A2A; }
-
-        .tabela-wrapper {
-            overflow-x: auto;
-            border-radius: 8px;
-            border: 1px solid var(--border-color);
-            max-height: 400px;
-            overflow-y: auto;
-        }
-
-        .tabela-items {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 0.75rem;
-        }
+        .btn-voltar { background: #191D1B; color: #FBFBF7; }
+        .tabela-wrapper { overflow-x: auto; border-radius: 8px; border: 1px solid var(--border-color); max-height: 420px; overflow-y: auto; }
+        .tabela-items { width: 100%; border-collapse: collapse; font-size: 0.75rem; }
         .tabela-items thead { background: var(--gray-100); position: sticky; top: 0; z-index: 10; }
         .tabela-items th {
-            padding: 0.4rem 0.6rem;
-            text-align: left;
-            font-weight: 600;
-            font-size: 0.6rem;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            color: var(--text-secondary);
+            padding: 0.4rem 0.6rem; text-align: left; font-weight: 600; font-size: 0.6rem;
+            text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-secondary);
             border-bottom: 2px solid var(--border-color);
         }
-        .tabela-items td {
-            padding: 0.3rem 0.6rem;
-            border-bottom: 1px solid var(--border-color);
-            vertical-align: middle;
-        }
-        .tabela-items tr:last-child td { border-bottom: none; }
+        .tabela-items td { padding: 0.3rem 0.6rem; border-bottom: 1px solid var(--border-color); vertical-align: middle; }
         .tabela-items tr:hover { background: var(--gray-50); }
-
-        .tabela-items .categoria-badge {
-            display: inline-block;
-            padding: 0.1rem 0.5rem;
-            border-radius: 40px;
-            font-size: 0.55rem;
-            font-weight: 600;
-            background: var(--verde-claro);
-            color: var(--preto);
+        .categoria-badge {
+            display: inline-block; padding: 0.1rem 0.5rem; border-radius: 40px;
+            font-size: 0.55rem; font-weight: 600; background: var(--verde-claro); color: #191D1B;
         }
-
-        .tabela-items .estoque-baixo {
-            background: #FFF3E0 !important;
-            border-left: 3px solid #FF6F00;
-        }
-        .tabela-items .estoque-baixo td:first-child { border-left: 3px solid #FF6F00; padding-left: 8px; }
-
-        .tabela-items .acoes { display: flex; gap: 0.2rem; }
-        .tabela-items .acoes button {
-            border: none;
-            background: transparent;
-            padding: 0.15rem 0.3rem;
-            cursor: pointer;
-            border-radius: 4px;
-            transition: 0.2s;
-            font-size: 0.75rem;
-        }
-        .tabela-items .acoes .btn-editar { color: var(--verde-oliva); }
-        .tabela-items .acoes .btn-editar:hover { background: var(--gray-200); }
-        .tabela-items .acoes .btn-excluir { color: var(--danger); }
-        .tabela-items .acoes .btn-excluir:hover { background: #fee; }
-
+        .estoque-baixo { background: #FFF3E0 !important; }
+        .acoes { display: flex; gap: 0.2rem; }
+        .acoes button { border: none; background: transparent; padding: 0.15rem 0.3rem; cursor: pointer; border-radius: 4px; font-size: 0.75rem; }
+        .btn-editar { color: var(--verde-oliva); }
+        .btn-excluir { color: var(--danger); }
         .totalizador {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0.6rem 0;
-            border-top: 2px solid var(--border-color);
-            margin-top: 0.8rem;
-            flex-wrap: wrap;
-            gap: 0.3rem;
+            display: flex; justify-content: space-between; align-items: center; padding: 0.6rem 0;
+            border-top: 2px solid var(--border-color); margin-top: 0.8rem; flex-wrap: wrap; gap: 0.3rem;
+            font-size: 0.75rem; color: var(--text-secondary);
         }
-        .totalizador span { font-size: 0.75rem; color: var(--text-secondary); }
         .totalizador strong { color: var(--text-primary); }
-
-        .protocolos-salvos {
-            margin-top: 1.5rem;
-            border-top: 2px solid var(--border-color);
-            padding-top: 1.2rem;
-        }
-        .protocolos-salvos .titulo {
-            font-size: 0.9rem;
-            font-weight: 600;
-            color: var(--text-primary);
-            margin-bottom: 0.8rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-        .protocolos-salvos .titulo i { color: var(--verde-claro); }
-
-        .protocolo-item {
-            background: var(--gray-50);
-            padding: 0.6rem 1rem;
-            border-radius: 8px;
-            margin-bottom: 0.6rem;
-            border: 1px solid var(--border-color);
-            transition: 0.15s;
-        }
-        .protocolo-item:hover { border-color: var(--verde-oliva); box-shadow: var(--shadow); }
-        .protocolo-item .head {
-            display: flex;
-            flex-wrap: wrap;
-            align-items: center;
-            gap: 0.3rem 0.8rem;
-            margin-bottom: 0.15rem;
-        }
-        .protocolo-item .head strong { color: var(--text-primary); font-size: 0.8rem; }
-        .protocolo-item .head small { color: var(--text-secondary); font-size: 0.65rem; }
-        .protocolo-item .detalhes { color: var(--text-secondary); font-size: 0.7rem; margin-bottom: 0.2rem; }
-        .protocolo-item .acoes { display: flex; gap: 0.3rem; margin-top: 0.2rem; }
-        .protocolo-item .acoes .btn { padding: 0.1rem 0.6rem; font-size: 0.6rem; }
-        .protocolo-item .meta { color: var(--gray-400); font-size: 0.6rem; margin-top: 0.1rem; }
-
-        .lista-vazia { text-align: center; color: var(--text-secondary); padding: 1.5rem 1rem; }
-        .lista-vazia i { font-size: 1.5rem; display: block; margin-bottom: 0.3rem; color: var(--gray-300); }
-
-        #feedback {
-            margin-top: 0.5rem;
-            text-align: right;
-            min-height: 1.5rem;
-            font-size: 0.65rem;
-        }
-
-        #toastGlobal {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            padding: 12px 24px;
-            border-radius: 8px;
-            font-weight: 500;
-            font-size: 13px;
-            transform: translateY(100px);
-            opacity: 0;
-            transition: 0.4s;
-            z-index: 9999;
-            max-width: 400px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
-            cursor: default;
-        }
-        #toastGlobal.show { transform: translateY(0); opacity: 1; }
-
-        .btn-relatorio-dia { background: #2C3E50; color: white; }
-        .btn-relatorio-dia:hover { background: #1A252F; transform: translateY(-2px); }
-        .btn-relatorio-mes { background: #3498DB; color: white; }
-        .btn-relatorio-mes:hover { background: #2176A1; transform: translateY(-2px); }
-        .btn-relatorio-ano { background: #27AE60; color: white; }
-        .btn-relatorio-ano:hover { background: #1A7A42; transform: translateY(-2px); }
-        .btn-relatorio-geral { background: #8E44AD; color: white; }
-        .btn-relatorio-geral:hover { background: #6C3483; transform: translateY(-2px); }
-
-        .btn-exportar { background: #2C3E50; color: white; }
-        .btn-exportar:hover { background: #1A252F; transform: translateY(-2px); }
-        .btn-importar { background: #27AE60; color: white; }
-        .btn-importar:hover { background: #1A7A42; transform: translateY(-2px); }
-        .btn-backup { background: #F39C12; color: white; }
-        .btn-backup:hover { background: #D68910; transform: translateY(-2px); }
-
-        .btn {
-            border: none;
-            padding: 0.3rem 1rem;
-            border-radius: 40px;
-            font-weight: 500;
-            font-size: 0.65rem;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.3rem;
-            cursor: pointer;
-            transition: all 0.2s;
-            font-family: inherit;
-            border: 1px solid transparent;
-            text-decoration: none;
-        }
-        .btn i { font-size: 0.65rem; }
-        .btn-outline { background: transparent; border-color: var(--gray-300); color: var(--text-secondary); }
-        .btn-outline:hover { background: var(--gray-50); }
-        .btn-primary { background: var(--preto); color: var(--branco); box-shadow: 0 2px 12px rgba(25, 29, 27, 0.2); }
-        .btn-primary:hover { background: #2A3A2A; transform: translateY(-2px); }
-        .btn-success { background: var(--verde-oliva); color: var(--branco); }
-        .btn-success:hover { background: #5A614E; transform: translateY(-2px); }
-        .btn-secondary { background: var(--gray-200); color: var(--preto); }
-        .btn-secondary:hover { background: var(--gray-300); }
-
         .aviso-permissao {
-            background: #FFF3E0;
-            border: 1px solid #FFB74D;
-            color: #E65100;
-            padding: 0.6rem 1rem;
-            border-radius: 8px;
-            font-size: 0.75rem;
-            margin-bottom: 1rem;
-            display: none;
+            background: #FFF3E0; border: 1px solid #FFB74D; color: #E65100;
+            padding: 0.6rem 1rem; border-radius: 8px; font-size: 0.75rem; margin-bottom: 1rem; display: none;
         }
         .aviso-permissao.show { display: block; }
-
-        @media (max-width: 768px) {
-            .app-topbar { flex-direction: column; align-items: stretch; }
-            .clock-display { justify-content: center; font-size: 0.7rem; }
-            .nav-menu { justify-content: center; }
-            .nav-menu .nav-item { font-size: 0.55rem; padding: 0.2rem 0.5rem; }
-            .card-body { padding: 1rem; }
-            .form-grid { padding: 0.8rem; }
-            .busca-bar { flex-direction: column; }
-            .busca-bar input { width: 100%; }
+        #feedback { margin-top: 0.5rem; text-align: right; min-height: 1.5rem; font-size: 0.65rem; }
+        #toastGlobal {
+            position: fixed; bottom: 20px; right: 20px; padding: 12px 24px; border-radius: 8px;
+            font-weight: 500; font-size: 13px; transform: translateY(100px); opacity: 0;
+            transition: 0.4s; z-index: 9999; max-width: 400px; color: white;
         }
-        @media (max-width: 480px) {
-            .form-grid { grid-template-columns: 1fr; }
-        }
-
-        @media print {
-            .app-topbar, .botoes, .nav-menu, #feedback, .protocolos-salvos { display: none !important; }
-            .card-estoque { box-shadow: none; border: 1px solid #ddd; }
-            .card-header { background: #C1CE83 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-        }
+        #toastGlobal.show { transform: translateY(0); opacity: 1; }
+        .loading-overlay { text-align: center; padding: 2rem; color: var(--text-secondary); font-size: 0.85rem; }
     </style>
 </head>
 <body>
@@ -606,10 +173,8 @@
         </a>
         <div class="clock-display">
             <i class="fas fa-clock"></i>
-            <span id="clockHours">00</span><span class="clock-separator">:</span>
-            <span id="clockMinutes">00</span><span class="clock-separator">:</span>
-            <span id="clockSeconds" class="clock-seconds">00</span>
-            <span class="clock-date" id="clockDate">00/00/0000</span>
+            <span id="clockHours">00</span>:<span id="clockMinutes">00</span>:<span id="clockSeconds">00</span>
+            <span style="border-left:1px solid #7A816E; padding-left:0.5rem; font-size:0.6rem; color:#7A816E;" id="clockDate"></span>
         </div>
         <div class="user-info">
             <i class="fas fa-user"></i>
@@ -628,10 +193,10 @@
         <a class="nav-item" href="fornecedor.html"><i class="fas fa-handshake"></i> Fornecedores</a>
         <a class="nav-item" href="recebido.html"><i class="fas fa-clipboard-check"></i> Recebido</a>
         <a class="nav-item" href="backup_automatico.html"><i class="fas fa-database"></i> Backup</a>
-        <button class="nav-item btn-theme" onclick="toggleTheme()" style="margin-left:auto;">
+        <button class="nav-item" onclick="toggleTheme()" style="margin-left:auto;">
             <i class="fas fa-moon" id="themeIcon"></i> <span id="themeLabel">Tema</span>
         </button>
-        <button class="nav-item" onclick="logout()" style="background:#8B3A3A; color:white; border-color:#8B3A3A;">
+        <button class="nav-item" onclick="logout()" style="background:#8B3A3A; color:white;">
             <i class="fas fa-sign-out-alt"></i> Sair
         </button>
     </div>
@@ -640,7 +205,7 @@
         <div class="card-header">
             <div class="left">
                 <i class="fas fa-boxes"></i>
-                <h2>Cadastro de Itens</h2>
+                <h2>Cadastro de Itens · Supabase</h2>
             </div>
             <div class="right">
                 <span><i class="far fa-calendar-alt"></i> <span id="dataAtual"></span></span>
@@ -650,15 +215,13 @@
 
         <div class="card-body">
             <div class="aviso-permissao" id="avisoPermissao">
-                <i class="fas fa-lock"></i> Seu perfil tem acesso apenas para <strong>visualização</strong>. Você não pode cadastrar, editar ou excluir itens.
+                <i class="fas fa-lock"></i> Seu perfil tem acesso apenas para <strong>visualização</strong>.
             </div>
 
-            <!-- FORMULÁRIO - só aparece se puder cadastrar/editar -->
             <div class="form-grid" id="formCadastro" data-perm="cadastrar">
                 <div class="campo">
                     <label><i class="fas fa-tag"></i> ITEM</label>
-                    <input type="text" id="itemNome" placeholder="Nome do item" data-validar="nome" />
-                    <span class="input-status" id="statusNome"></span>
+                    <input type="text" id="itemNome" placeholder="Nome do item" />
                 </div>
                 <div class="campo">
                     <label><i class="fas fa-align-left"></i> DESCRIÇÃO</label>
@@ -691,12 +254,17 @@
                         <option value="5" selected>5 unidades</option>
                         <option value="10">10 unidades</option>
                         <option value="15">15 unidades</option>
-                        <option value="custom">Personalizado</option>
                     </select>
                 </div>
-                <div class="campo" id="limiteCustom" style="display:none;">
-                    <label>LIMITE PERSONALIZADO</label>
-                    <input type="number" id="itemLimiteCustom" value="5" min="1" />
+                <div class="campo">
+                    <label><i class="fas fa-ruler"></i> UNIDADE</label>
+                    <select id="itemUnidade">
+                        <option value="UN">UN</option>
+                        <option value="CX">CX</option>
+                        <option value="KG">KG</option>
+                        <option value="LT">LT</option>
+                        <option value="MT">MT</option>
+                    </select>
                 </div>
                 <div class="campo btn-salvar-item">
                     <button id="btnSalvarItem" data-perm="cadastrar"><i class="fas fa-save"></i> Salvar</button>
@@ -721,30 +289,25 @@
                     <option value="normal">✅ Estoque normal</option>
                 </select>
                 <button class="btn-limpar-filtro" id="btnLimparFiltro"><i class="fas fa-times"></i> Limpar</button>
-                <button class="btn btn-secondary" id="btnVerSalvosEstoque"><i class="fas fa-folder-open"></i> Ver salvos</button>
+                <button class="btn-outline" id="btnRecarregar"><i class="fas fa-sync"></i> Atualizar</button>
                 <a href="index.html" class="btn-voltar"><i class="fas fa-arrow-left"></i> Voltar</a>
             </div>
 
             <div class="tabela-wrapper">
-                <table class="tabela-items" id="tabelaEstoque">
+                <table class="tabela-items">
                     <thead>
                         <tr>
-                            <th style="cursor:pointer;" onclick="ordenarTabela('id')"># <i class="fas fa-sort"></i></th>
-                            <th style="cursor:pointer;" onclick="ordenarTabela('nome')">Item <i class="fas fa-sort"></i></th>
+                            <th>#</th>
+                            <th>Item</th>
                             <th>Descrição</th>
                             <th>Fabricante</th>
-                            <th style="cursor:pointer;" onclick="ordenarTabela('quantidade')">Qtd <i class="fas fa-sort"></i></th>
+                            <th>Qtd</th>
                             <th>Categoria</th>
                             <th>Ações</th>
                         </tr>
                     </thead>
                     <tbody id="corpoTabela">
-                        <tr>
-                            <td colspan="7" style="text-align:center; padding:2rem; color:var(--gray-400);">
-                                <i class="fas fa-inbox" style="font-size:1.5rem; display:block; margin-bottom:0.3rem;"></i>
-                                Nenhum item cadastrado.
-                            </td>
-                        </tr>
+                        <tr><td colspan="7" class="loading-overlay"><i class="fas fa-spinner fa-spin"></i> Carregando do Supabase...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -754,302 +317,162 @@
                 <span>Categorias: <strong id="totalPorCategoria">0</strong></span>
                 <span>⚠️ Baixo estoque: <strong id="totalBaixoEstoque">0</strong></span>
             </div>
-
-            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 2px solid var(--border-color); display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center;">
-                <span style="font-weight: 600; font-size: 0.7rem; color: var(--text-secondary);">
-                    <i class="fas fa-file-pdf"></i> RELATÓRIOS:
-                </span>
-                <button class="btn btn-relatorio-dia" onclick="gerarRelatorioPDF('dia')">
-                    <i class="fas fa-calendar-day"></i> Dia
-                </button>
-                <button class="btn btn-relatorio-mes" onclick="gerarRelatorioPDF('mes')">
-                    <i class="fas fa-calendar-alt"></i> Mês
-                </button>
-                <button class="btn btn-relatorio-ano" onclick="gerarRelatorioPDF('ano')">
-                    <i class="fas fa-calendar-year"></i> Ano
-                </button>
-                <button class="btn btn-relatorio-geral" onclick="gerarRelatorioPDF('geral')">
-                    <i class="fas fa-file-pdf"></i> Geral
-                </button>
-                
-                <span style="font-weight: 600; font-size: 0.7rem; color: var(--text-secondary); margin-left: 0.5rem;">
-                    <i class="fas fa-file-export"></i> EXPORTAR:
-                </span>
-                <button class="btn btn-exportar" onclick="exportarCSV()">
-                    <i class="fas fa-file-excel"></i> CSV
-                </button>
-                <button class="btn btn-importar" data-perm="cadastrar" onclick="document.getElementById('importCSV').click()">
-                    <i class="fas fa-file-import"></i> Importar
-                </button>
-                <input type="file" accept=".csv" onchange="importarCSV(event)" style="display:none;" id="importCSV" />
-                
-                <button class="btn btn-backup" data-perm="cadastrar" onclick="backupEstoque()">
-                    <i class="fas fa-database"></i> Backup
-                </button>
-                <button class="btn btn-backup" data-perm="excluir" onclick="document.getElementById('restoreBackup').click()" style="background:#8E44AD;">
-                    <i class="fas fa-undo"></i> Restaurar
-                </button>
-                <input type="file" accept=".json" onchange="restaurarBackup(event)" style="display:none;" id="restoreBackup" />
-            </div>
-
             <div id="feedback"></div>
         </div>
-    </div>
-
-    <div id="listaEstoque" class="protocolos-salvos" style="display: none;">
-        <div class="titulo"><i class="fas fa-archive"></i> Itens Cadastrados</div>
-        <div id="conteudoListaEstoque"></div>
     </div>
 </div>
 
 <div id="toastGlobal"></div>
 
 <script>
-    // ============================================
-    // TOAST
-    // ============================================
-    function mostrarToast(mensagem, tipo = 'success') {
+    const SUPABASE_URL = 'https://frlecudymdpnrsilavbj.supabase.co';
+    const SUPABASE_ANON_KEY = 'sb_publishable_Uv-GZdW4peH3IZTIwiNYXg_IrYytpn4';
+    const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    let itensCache = [];
+    let editandoId = null;
+
+    function mostrarToast(msg, tipo = 'success') {
         const toast = document.getElementById('toastGlobal');
-        const cores = {
-            info: '#3498DB',
-            success: '#7A816E',
-            warning: '#C1A83C',
-            danger: '#8B3A3A'
-        };
-        toast.textContent = mensagem;
+        const cores = { success: '#7A816E', danger: '#8B3A3A', warning: '#C1A83C', info: '#3498DB' };
+        toast.textContent = msg;
         toast.style.background = cores[tipo] || '#191D1B';
-        toast.style.color = 'white';
         toast.classList.add('show');
-        clearTimeout(toast._timeout);
-        toast._timeout = setTimeout(() => toast.classList.remove('show'), 4000);
+        clearTimeout(toast._t);
+        toast._t = setTimeout(() => toast.classList.remove('show'), 3500);
     }
 
-    // ============================================
-    // TEMA
-    // ============================================
+    function mostrarMensagem(texto, cor = '#191D1B') {
+        const el = document.getElementById('feedback');
+        el.innerHTML = '<span style="background:' + cor + ';color:white;padding:0.2rem 1.2rem;border-radius:40px;display:inline-block;font-size:0.65rem;">' + texto + '</span>';
+        clearTimeout(el._t);
+        el._t = setTimeout(() => el.innerHTML = '', 4000);
+    }
+
     function toggleTheme() {
-        const body = document.body;
-        body.classList.toggle('dark-mode');
-        const isDark = body.classList.contains('dark-mode');
+        document.body.classList.toggle('dark-mode');
+        const isDark = document.body.classList.contains('dark-mode');
         localStorage.setItem('tema_TaguáLife', isDark ? 'dark' : 'light');
-        const icon = document.getElementById('themeIcon');
-        const label = document.getElementById('themeLabel');
-        if (isDark) { icon.className = 'fas fa-sun'; label.textContent = 'Claro'; } 
-        else { icon.className = 'fas fa-moon'; label.textContent = 'Tema'; }
+        document.getElementById('themeIcon').className = isDark ? 'fas fa-sun' : 'fas fa-moon';
+        document.getElementById('themeLabel').textContent = isDark ? 'Claro' : 'Tema';
     }
 
     function carregarTema() {
-        const theme = localStorage.getItem('tema_TaguáLife');
-        if (theme === 'dark') {
+        if (localStorage.getItem('tema_TaguáLife') === 'dark') {
             document.body.classList.add('dark-mode');
             document.getElementById('themeIcon').className = 'fas fa-sun';
             document.getElementById('themeLabel').textContent = 'Claro';
         }
     }
 
-    // ============================================
-    // RELÓGIO
-    // ============================================
-    function getHorarioBrasilia() {
-        const agora = new Date();
-        const data = agora.toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' });
-        const hora = agora.toLocaleTimeString('pt-BR', { timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit' });
-        const horaCompleta = agora.toLocaleTimeString('pt-BR', { timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit', second: '2-digit' });
-        return { data, hora, horaCompleta };
-    }
-
     function atualizarRelogio() {
-        const horario = getHorarioBrasilia();
-        document.getElementById('clockHours').textContent = horario.hora.split(':')[0] || '00';
-        document.getElementById('clockMinutes').textContent = horario.hora.split(':')[1] || '00';
-        document.getElementById('clockSeconds').textContent = horario.horaCompleta.split(':')[2] || '00';
-        document.getElementById('clockDate').textContent = horario.data;
-        document.getElementById('dataAtual').textContent = horario.data;
-        document.getElementById('horaAtual').textContent = horario.hora;
+        const agora = new Date();
+        const opts = { timeZone: 'America/Sao_Paulo' };
+        const hora = agora.toLocaleTimeString('pt-BR', Object.assign({}, opts, { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
+        const data = agora.toLocaleDateString('pt-BR', opts);
+        const parts = hora.split(':');
+        document.getElementById('clockHours').textContent = parts[0];
+        document.getElementById('clockMinutes').textContent = parts[1];
+        document.getElementById('clockSeconds').textContent = parts[2];
+        document.getElementById('clockDate').textContent = data;
+        document.getElementById('dataAtual').textContent = data;
+        document.getElementById('horaAtual').textContent = parts[0] + ':' + parts[1];
     }
 
-    // ============================================
-    // FEEDBACK
-    // ============================================
-    function mostrarMensagem(texto, cor = '#191D1B') {
-        const feedback = document.getElementById('feedback');
-        feedback.innerHTML = `<span style="background:${cor}; color:white; padding:0.2rem 1.2rem; border-radius:40px; display:inline-block; font-size:0.65rem;">${texto}</span>`;
-        clearTimeout(feedback._timeout);
-        feedback._timeout = setTimeout(() => { feedback.innerHTML = ''; }, 4000);
-    }
+    async function carregarEstoque() {
+        const corpo = document.getElementById('corpoTabela');
+        corpo.innerHTML = '<tr><td colspan="7" class="loading-overlay"><i class="fas fa-spinner fa-spin"></i> Carregando...</td></tr>';
 
-    // ============================================
-    // VARIÁVEIS
-    // ============================================
-    let editandoId = null;
-    let paginaAtual = 1;
-    const ITENS_POR_PAGINA = 15;
-    let ordemAtual = { campo: 'nome', direcao: 'asc' };
+        try {
+            const { data, error } = await sb
+                .from('estoque')
+                .select('*')
+                .order('nome', { ascending: true });
 
-    // ============================================
-    // ORDENAÇÃO
-    // ============================================
-    function ordenarTabela(campo) {
-        if (ordemAtual.campo === campo) {
-            ordemAtual.direcao = ordemAtual.direcao === 'asc' ? 'desc' : 'asc';
-        } else {
-            ordemAtual.campo = campo;
-            ordemAtual.direcao = 'asc';
+            if (error) {
+                console.error(error);
+                corpo.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:2rem;color:#8B3A3A;">Erro: ' + error.message + '<br><small>Verifique as policies RLS da tabela estoque</small></td></tr>';
+                return;
+            }
+
+            itensCache = data || [];
+            renderizarTabela();
+            mostrarToast('📦 ' + itensCache.length + ' itens carregados', 'info');
+        } catch (err) {
+            console.error(err);
+            corpo.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:2rem;color:#8B3A3A;">Erro de conexão</td></tr>';
         }
-        renderizarTabela();
     }
 
-    // ============================================
-    // RENDERIZAR TABELA COM PAGINAÇÃO + PERMISSÕES
-    // ============================================
     function renderizarTabela() {
-        const itens = JSON.parse(localStorage.getItem('estoqueTaguaLife') || '[]');
-        const busca = document.getElementById('buscaInput').value.toLowerCase().trim();
+        const busca = (document.getElementById('buscaInput').value || '').toLowerCase().trim();
         const categoria = document.getElementById('filtroCategoria').value;
         const filtroEstoque = document.getElementById('filtroEstoque').value;
-        
-        let filtrados = itens.filter(item => {
-            const matchBusca = (item.nome || '').toLowerCase().includes(busca) ||
-                              (item.descricao || '').toLowerCase().includes(busca) ||
-                              (item.fabricante || '').toLowerCase().includes(busca);
-            const matchCategoria = categoria === '' || item.categoria === categoria;
-            const matchEstoque = filtroEstoque === '' || 
-                (filtroEstoque === 'baixo' && (item.quantidade || 0) < (item.limite || 5)) ||
-                (filtroEstoque === 'normal' && (item.quantidade || 0) >= (item.limite || 5));
-            return matchBusca && matchCategoria && matchEstoque;
-        });
-        
-        filtrados.sort((a, b) => {
-            let valA = a[ordemAtual.campo] || '';
-            let valB = b[ordemAtual.campo] || '';
-            if (ordemAtual.campo === 'quantidade' || ordemAtual.campo === 'id') {
-                valA = parseInt(valA) || 0;
-                valB = parseInt(valB) || 0;
-            } else {
-                valA = String(valA).toLowerCase();
-                valB = String(valB).toLowerCase();
-            }
-            if (valA < valB) return ordemAtual.direcao === 'asc' ? -1 : 1;
-            if (valA > valB) return ordemAtual.direcao === 'asc' ? 1 : -1;
-            return 0;
-        });
-        
-        const totalItens = filtrados.length;
-        const totalPaginas = Math.ceil(totalItens / ITENS_POR_PAGINA);
-        if (paginaAtual > totalPaginas) paginaAtual = Math.max(1, totalPaginas);
-        
-        const inicio = (paginaAtual - 1) * ITENS_POR_PAGINA;
-        const fim = Math.min(inicio + ITENS_POR_PAGINA, totalItens);
-        const paginaItens = filtrados.slice(inicio, fim);
-        
-        const corpo = document.getElementById('corpoTabela');
-        const podeEdit = typeof podeEditar === 'function' ? podeEditar() : true;
-        const podeDel = typeof podeExcluir === 'function' ? podeExcluir() : true;
 
-        if (paginaItens.length === 0) {
-            corpo.innerHTML = `<tr><td colspan="7" style="text-align:center; padding:2rem; color:var(--gray-400);">
-                <i class="fas fa-inbox" style="font-size:1.5rem; display:block; margin-bottom:0.3rem;"></i>Nenhum item encontrado.</td></tr>`;
+        let filtrados = itensCache.filter(function(item) {
+            const matchBusca = (item.nome || '').toLowerCase().includes(busca) ||
+                (item.descricao || '').toLowerCase().includes(busca) ||
+                (item.fabricante || '').toLowerCase().includes(busca);
+            const matchCat = !categoria || item.categoria === categoria;
+            const limite = item.limite_alerta != null ? item.limite_alerta : 5;
+            const qtd = item.quantidade != null ? item.quantidade : 0;
+            const matchEst = !filtroEstoque ||
+                (filtroEstoque === 'baixo' && qtd < limite) ||
+                (filtroEstoque === 'normal' && qtd >= limite);
+            return matchBusca && matchCat && matchEst;
+        });
+
+        const corpo = document.getElementById('corpoTabela');
+        const podeEdit = typeof podeEditar === 'function' ? podeEditar() : false;
+        const podeDel = typeof podeExcluir === 'function' ? podeExcluir() : false;
+
+        if (filtrados.length === 0) {
+            corpo.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--gray-400);"><i class="fas fa-inbox" style="font-size:1.5rem;display:block;margin-bottom:0.3rem;"></i>Nenhum item encontrado.</td></tr>';
         } else {
             let html = '';
-            paginaItens.forEach((item, index) => {
-                const limite = item.limite || 5;
-                const isBaixo = item.quantidade < limite;
+            filtrados.forEach(function(item, index) {
+                const limite = item.limite_alerta != null ? item.limite_alerta : 5;
+                const qtd = item.quantidade != null ? item.quantidade : 0;
+                const isBaixo = qtd < limite;
                 let botoes = '';
-                if (podeEdit) {
-                    botoes += `<button class="btn-editar" data-perm="editar" onclick="editarItem(${item.id})" title="Editar"><i class="fas fa-edit"></i></button>`;
-                }
-                if (podeDel) {
-                    botoes += `<button class="btn-excluir" data-perm="excluir" onclick="excluirItemEstoque(${item.id})" title="Excluir"><i class="fas fa-trash-alt"></i></button>`;
-                }
-                if (!botoes) botoes = '<span style="font-size:0.6rem; color:var(--gray-400);">—</span>';
+                if (podeEdit) botoes += '<button class="btn-editar" onclick="editarItem(\'' + item.id + '\')" title="Editar"><i class="fas fa-edit"></i></button>';
+                if (podeDel) botoes += '<button class="btn-excluir" onclick="excluirItem(\'' + item.id + '\')" title="Excluir"><i class="fas fa-trash-alt"></i></button>';
+                if (!botoes) botoes = '<span style="font-size:0.6rem;color:var(--gray-400);">—</span>';
 
-                html += `<tr class="${isBaixo ? 'estoque-baixo' : ''}" data-item-id="${item.id}">
-                    <td>${inicio + index + 1}</td>
-                    <td><strong>${item.nome || 'Sem nome'}</strong></td>
-                    <td>${item.descricao || '-'}</td>
-                    <td>${item.fabricante || '-'}</td>
-                    <td style="text-align:center; font-weight:600; ${isBaixo ? 'color:#E65100;' : ''}">${item.quantidade}</td>
-                    <td><span class="categoria-badge">${item.categoria || 'Outros'}</span></td>
-                    <td><div class="acoes">${botoes}</div></td>
-                </tr>`;
+                html += '<tr class="' + (isBaixo ? 'estoque-baixo' : '') + '">' +
+                    '<td>' + (index + 1) + '</td>' +
+                    '<td><strong>' + (item.nome || '—') + '</strong></td>' +
+                    '<td>' + (item.descricao || '—') + '</td>' +
+                    '<td>' + (item.fabricante || '—') + '</td>' +
+                    '<td style="text-align:center;font-weight:600;' + (isBaixo ? 'color:#E65100;' : '') + '">' + qtd + ' ' + (item.unidade || 'UN') + '</td>' +
+                    '<td><span class="categoria-badge">' + (item.categoria || 'Outros') + '</span></td>' +
+                    '<td><div class="acoes">' + botoes + '</div></td></tr>';
             });
             corpo.innerHTML = html;
-            
-            let pagHtml = '<tr><td colspan="7" style="padding:8px; text-align:center; background:var(--gray-50);">';
-            pagHtml += `<button class="btn btn-outline" onclick="paginaAnterior()" ${paginaAtual <= 1 ? 'disabled' : ''}><i class="fas fa-chevron-left"></i></button>`;
-            pagHtml += `<span style="margin:0 10px; font-weight:600;">Página ${paginaAtual} de ${totalPaginas || 1}</span>`;
-            pagHtml += `<button class="btn btn-outline" onclick="proximaPagina()" ${paginaAtual >= totalPaginas ? 'disabled' : ''}><i class="fas fa-chevron-right"></i></button>`;
-            pagHtml += ` <span style="margin-left:15px; font-size:0.65rem; color:var(--text-secondary);">Total: ${totalItens} itens</span>`;
-            pagHtml += '</td></tr>';
-            corpo.innerHTML += pagHtml;
         }
 
-        document.getElementById('totalItens').textContent = itens.length;
-        const categorias = {};
-        itens.forEach(item => { if (item.categoria) categorias[item.categoria] = (categorias[item.categoria] || 0) + 1; });
-        document.getElementById('totalPorCategoria').textContent = Object.keys(categorias).length + ' categorias';
-        
-        const baixoEstoque = itens.filter(item => (item.quantidade || 0) < (item.limite || 5)).length;
-        document.getElementById('totalBaixoEstoque').textContent = baixoEstoque;
-        document.getElementById('totalBaixoEstoque').style.color = baixoEstoque > 0 ? '#E65100' : '';
+        document.getElementById('totalItens').textContent = itensCache.length;
+        const cats = {};
+        itensCache.forEach(function(i) { if (i.categoria) cats[i.categoria] = 1; });
+        document.getElementById('totalPorCategoria').textContent = Object.keys(cats).length;
+        const baixo = itensCache.filter(function(i) {
+            return (i.quantidade != null ? i.quantidade : 0) < (i.limite_alerta != null ? i.limite_alerta : 5);
+        }).length;
+        document.getElementById('totalBaixoEstoque').textContent = baixo;
+        document.getElementById('totalBaixoEstoque').style.color = baixo > 0 ? '#E65100' : '';
     }
 
-    function paginaAnterior() {
-        if (paginaAtual > 1) { paginaAtual--; renderizarTabela(); }
-    }
-
-    function proximaPagina() {
-        const itens = JSON.parse(localStorage.getItem('estoqueTaguaLife') || '[]');
-        const totalPaginas = Math.ceil(itens.length / ITENS_POR_PAGINA);
-        if (paginaAtual < totalPaginas) { paginaAtual++; renderizarTabela(); }
-    }
-
-    // ============================================
-    // VALIDAÇÃO
-    // ============================================
-    document.getElementById('itemNome').addEventListener('input', function() {
-        const status = document.getElementById('statusNome');
-        if (this.value.trim().length < 2) {
-            status.textContent = '⚠️ Mínimo 2 caracteres';
-            status.className = 'input-status erro';
+    async function salvarItem() {
+        if (editandoId) {
+            if (typeof podeEditar === 'function' && !podeEditar()) {
+                mostrarToast('⛔ Sem permissão para editar', 'danger');
+                return;
+            }
         } else {
-            status.textContent = '✅ OK';
-            status.className = 'input-status ok';
-        }
-    });
-
-    document.getElementById('itemLimite').addEventListener('change', function() {
-        const customDiv = document.getElementById('limiteCustom');
-        customDiv.style.display = this.value === 'custom' ? 'block' : 'none';
-    });
-
-    // ============================================
-    // LIMPAR FORMULÁRIO
-    // ============================================
-    function limparFormulario() {
-        document.getElementById('itemNome').value = '';
-        document.getElementById('itemDescricao').value = '';
-        document.getElementById('itemFabricante').value = '';
-        document.getElementById('itemQuantidade').value = '';
-        document.getElementById('itemCategoria').value = 'Elétrico';
-        document.getElementById('itemLimite').value = '5';
-        document.getElementById('limiteCustom').style.display = 'none';
-        document.getElementById('statusNome').textContent = '';
-        editandoId = null;
-        document.getElementById('btnSalvarItem').innerHTML = '<i class="fas fa-save"></i> Salvar';
-    }
-
-    // ============================================
-    // SALVAR ITEM (COM PERMISSÃO)
-    // ============================================
-    function salvarItem() {
-        if (typeof podeCadastrar === 'function' && !podeCadastrar() && !editandoId) {
-            mostrarToast('⛔ Você não tem permissão para cadastrar.', 'danger');
-            return;
-        }
-        if (editandoId && typeof podeEditar === 'function' && !podeEditar()) {
-            mostrarToast('⛔ Você não tem permissão para editar.', 'danger');
-            return;
+            if (typeof podeCadastrar === 'function' && !podeCadastrar()) {
+                mostrarToast('⛔ Sem permissão para cadastrar', 'danger');
+                return;
+            }
         }
 
         const nome = document.getElementById('itemNome').value.trim();
@@ -1057,418 +480,130 @@
         const fabricante = document.getElementById('itemFabricante').value.trim();
         const quantidade = parseInt(document.getElementById('itemQuantidade').value) || 0;
         const categoria = document.getElementById('itemCategoria').value;
-        let limite = parseInt(document.getElementById('itemLimite').value);
-        if (isNaN(limite) || document.getElementById('itemLimite').value === 'custom') {
-            limite = parseInt(document.getElementById('itemLimiteCustom').value) || 5;
-        }
+        const limite_alerta = parseInt(document.getElementById('itemLimite').value) || 5;
+        const unidade = document.getElementById('itemUnidade').value || 'UN';
 
-        if (!nome) {
-            mostrarMensagem('⚠️ Informe o nome do item!', '#8B3A3A');
+        if (!nome || nome.length < 2) {
+            mostrarMensagem('⚠️ Informe o nome do item (mín. 2 caracteres)', '#8B3A3A');
             document.getElementById('itemNome').focus();
             return;
         }
-        if (nome.length < 2) {
-            mostrarMensagem('⚠️ Nome deve ter pelo menos 2 caracteres!', '#8B3A3A');
-            return;
-        }
 
-        let itens = JSON.parse(localStorage.getItem('estoqueTaguaLife') || '[]');
+        const btn = document.getElementById('btnSalvarItem');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Salvando...';
 
-        if (editandoId) {
-            const index = itens.findIndex(item => item.id === editandoId);
-            if (index !== -1) {
-                itens[index] = { ...itens[index], nome, descricao, fabricante, quantidade, categoria, limite };
-                mostrarMensagem('✅ Item atualizado!', '#7A816E');
-                mostrarToast('✅ Item "' + nome + '" atualizado!', 'success');
+        try {
+            if (editandoId) {
+                const { error } = await sb
+                    .from('estoque')
+                    .update({
+                        nome: nome,
+                        descricao: descricao,
+                        fabricante: fabricante,
+                        quantidade: quantidade,
+                        categoria: categoria,
+                        limite_alerta: limite_alerta,
+                        unidade: unidade,
+                        atualizado_em: new Date().toISOString()
+                    })
+                    .eq('id', editandoId);
+
+                if (error) throw error;
+                mostrarMensagem('✅ Item atualizado no banco!', '#7A816E');
+                mostrarToast('✅ Atualizado: ' + nome, 'success');
+            } else {
+                const { error } = await sb
+                    .from('estoque')
+                    .insert({
+                        nome: nome,
+                        descricao: descricao,
+                        fabricante: fabricante,
+                        quantidade: quantidade,
+                        categoria: categoria,
+                        limite_alerta: limite_alerta,
+                        unidade: unidade
+                    });
+
+                if (error) throw error;
+                mostrarMensagem('✅ Item salvo no Supabase!', '#7A816E');
+                mostrarToast('✅ Cadastrado: ' + nome, 'success');
             }
-            editandoId = null;
-            document.getElementById('btnSalvarItem').innerHTML = '<i class="fas fa-save"></i> Salvar';
-        } else {
-            const novoItem = {
-                id: Date.now(),
-                nome, descricao, fabricante, quantidade, categoria, limite,
-                dataCadastro: new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })
-            };
-            itens.push(novoItem);
-            mostrarMensagem('✅ Item cadastrado!', '#7A816E');
-            mostrarToast('✅ Item "' + nome + '" cadastrado!', 'success');
-        }
 
-        localStorage.setItem('estoqueTaguaLife', JSON.stringify(itens));
-        renderizarTabela();
-        limparFormulario();
-
-        if (document.getElementById('listaEstoque') && document.getElementById('listaEstoque').style.display !== 'none') {
-            exibirListaEstoque();
+            limparFormulario();
+            await carregarEstoque();
+        } catch (err) {
+            console.error(err);
+            mostrarMensagem('❌ Erro: ' + (err.message || 'falha ao salvar'), '#8B3A3A');
+            mostrarToast('❌ Erro ao salvar no banco', 'danger');
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = editandoId
+                ? '<i class="fas fa-pen"></i> Atualizar'
+                : '<i class="fas fa-save"></i> Salvar';
         }
     }
 
-    // ============================================
-    // EXIBIR LISTA
-    // ============================================
-    function exibirListaEstoque() {
-        const itens = JSON.parse(localStorage.getItem('estoqueTaguaLife') || '[]');
-        const container = document.getElementById('conteudoListaEstoque');
-        if (!container) return;
-
-        const podeEdit = typeof podeEditar === 'function' ? podeEditar() : true;
-        const podeDel = typeof podeExcluir === 'function' ? podeExcluir() : true;
-
-        if (itens.length === 0) {
-            container.innerHTML = `<div class="lista-vazia"><i class="fas fa-inbox"></i> Nenhum item cadastrado ainda.</div>`;
-        } else {
-            let html = '';
-            itens.slice().reverse().forEach(item => {
-                const limite = item.limite || 5;
-                const isBaixo = item.quantidade < limite;
-                let acoes = '';
-                if (podeEdit) acoes += `<button class="btn btn-outline" data-perm="editar" onclick="editarItem(${item.id})"><i class="fas fa-edit"></i> Editar</button>`;
-                if (podeDel) acoes += `<button class="btn btn-outline" data-perm="excluir" onclick="excluirItemEstoque(${item.id})" style="color:var(--danger);"><i class="fas fa-trash-alt"></i></button>`;
-
-                html += `
-                    <div class="protocolo-item" ${isBaixo ? 'style="border-left:4px solid #FF6F00;"' : ''}>
-                        <div class="head">
-                            <strong>📦 ${item.nome || 'Sem nome'}</strong>
-                            <small>🏷️ ${item.categoria || 'Sem categoria'}</small>
-                            <span style="background:${isBaixo ? '#FF6F00' : 'var(--gray-200)'}; padding:0.1rem 0.6rem; border-radius:40px; font-size:0.6rem; font-weight:500; color:${isBaixo ? 'white' : 'var(--text-secondary)'};">
-                                ${item.quantidade || 0} unid. ${isBaixo ? '⚠️' : ''}
-                            </span>
-                        </div>
-                        <div class="detalhes">${item.descricao || ''} ${item.fabricante ? '• ' + item.fabricante : ''}</div>
-                        <div class="acoes">${acoes}</div>
-                        <div class="meta">💾 Cadastrado em: ${item.dataCadastro || 'data desconhecida'}</div>
-                    </div>`;
-            });
-            container.innerHTML = html;
-        }
-        document.getElementById('listaEstoque').style.display = 'block';
+    function limparFormulario() {
+        document.getElementById('itemNome').value = '';
+        document.getElementById('itemDescricao').value = '';
+        document.getElementById('itemFabricante').value = '';
+        document.getElementById('itemQuantidade').value = '';
+        document.getElementById('itemCategoria').value = 'Elétrico';
+        document.getElementById('itemLimite').value = '5';
+        document.getElementById('itemUnidade').value = 'UN';
+        editandoId = null;
+        document.getElementById('btnSalvarItem').innerHTML = '<i class="fas fa-save"></i> Salvar';
     }
 
-    // ============================================
-    // EXCLUIR (COM PERMISSÃO)
-    // ============================================
-    window.excluirItemEstoque = function(id) {
-        if (typeof podeExcluir === 'function' && !podeExcluir()) {
-            mostrarToast('⛔ Apenas o Administrador pode excluir itens.', 'danger');
-            return;
-        }
-        if (!confirm('⚠️ Tem certeza que deseja excluir este item?')) return;
-
-        let itens = JSON.parse(localStorage.getItem('estoqueTaguaLife') || '[]');
-        const item = itens.find(i => i.id === id);
-        itens = itens.filter(i => i.id !== id);
-        localStorage.setItem('estoqueTaguaLife', JSON.stringify(itens));
-
-        exibirListaEstoque();
-        renderizarTabela();
-        mostrarMensagem('🗑️ Item excluído com sucesso!', '#8B3A3A');
-        if (item) mostrarToast('🗑️ Item "' + item.nome + '" excluído!', 'danger');
-    };
-
-    // ============================================
-    // EDITAR (COM PERMISSÃO)
-    // ============================================
     window.editarItem = function(id) {
         if (typeof podeEditar === 'function' && !podeEditar()) {
-            mostrarToast('⛔ Você não tem permissão para editar.', 'danger');
+            mostrarToast('⛔ Sem permissão para editar', 'danger');
             return;
         }
-
-        const itens = JSON.parse(localStorage.getItem('estoqueTaguaLife') || '[]');
-        const item = itens.find(i => i.id === id);
+        const item = itensCache.find(function(i) { return i.id === id; });
         if (!item) return;
-        
+
         document.getElementById('itemNome').value = item.nome || '';
         document.getElementById('itemDescricao').value = item.descricao || '';
         document.getElementById('itemFabricante').value = item.fabricante || '';
-        document.getElementById('itemQuantidade').value = item.quantidade || 0;
+        document.getElementById('itemQuantidade').value = item.quantidade != null ? item.quantidade : 0;
         document.getElementById('itemCategoria').value = item.categoria || 'Outros';
-        const limite = item.limite || 5;
-        if ([3, 5, 10, 15].includes(limite)) {
-            document.getElementById('itemLimite').value = String(limite);
-            document.getElementById('limiteCustom').style.display = 'none';
-        } else {
-            document.getElementById('itemLimite').value = 'custom';
-            document.getElementById('limiteCustom').style.display = 'block';
-            document.getElementById('itemLimiteCustom').value = limite;
-        }
-        document.getElementById('statusNome').textContent = '✅ OK';
-        document.getElementById('statusNome').className = 'input-status ok';
+        document.getElementById('itemLimite').value = String(item.limite_alerta != null ? item.limite_alerta : 5);
+        document.getElementById('itemUnidade').value = item.unidade || 'UN';
         editandoId = id;
         document.getElementById('btnSalvarItem').innerHTML = '<i class="fas fa-pen"></i> Atualizar';
         document.getElementById('itemNome').focus();
         window.scrollTo({ top: 0, behavior: 'smooth' });
-        document.getElementById('listaEstoque').style.display = 'none';
         mostrarToast('✏️ Editando: ' + item.nome, 'info');
     };
 
-    // ============================================
-    // EXPORTAR / IMPORTAR / BACKUP
-    // ============================================
-    function exportarCSV() {
-        const itens = JSON.parse(localStorage.getItem('estoqueTaguaLife') || '[]');
-        if (itens.length === 0) {
-            mostrarMensagem('⚠️ Nenhum item para exportar!', '#8B3A3A');
-            return;
-        }
-        const cabecalho = 'Nome,Descrição,Fabricante,Quantidade,Categoria,Limite,DataCadastro\n';
-        const linhas = itens.map(item => 
-            `"${item.nome || ''}","${item.descricao || ''}","${item.fabricante || ''}",${item.quantidade || 0},"${item.categoria || 'Outros'}",${item.limite || 5},"${item.dataCadastro || ''}"`
-        ).join('\n');
-        const blob = new Blob([cabecalho + linhas], { type: 'text/csv;charset=utf-8;' });
-        const link = document.createElement('a');
-        link.href = URL.createObjectURL(blob);
-        link.download = `estoque_${new Date().toISOString().slice(0,10)}.csv`;
-        link.click();
-        mostrarMensagem('📊 CSV exportado!', '#7A816E');
-        mostrarToast('📊 CSV exportado!', 'success');
-    }
-
-    function importarCSV(event) {
-        if (typeof podeCadastrar === 'function' && !podeCadastrar()) {
-            mostrarToast('⛔ Sem permissão para importar.', 'danger');
-            return;
-        }
-        const file = event.target.files[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            try {
-                const linhas = e.target.result.split('\n').filter(l => l.trim());
-                if (linhas.length < 2) {
-                    mostrarMensagem('⚠️ Arquivo inválido!', '#8B3A3A');
-                    return;
-                }
-                const itensImportados = [];
-                for (let i = 1; i < linhas.length; i++) {
-                    const dados = linhas[i].split(',').map(d => d.replace(/"/g, '').trim());
-                    if (dados.length >= 3) {
-                        itensImportados.push({
-                            id: Date.now() + Math.random(),
-                            nome: dados[0] || 'Item sem nome',
-                            descricao: dados[1] || '',
-                            fabricante: dados[2] || '',
-                            quantidade: parseInt(dados[3]) || 0,
-                            categoria: dados[4] || 'Outros',
-                            limite: parseInt(dados[5]) || 5,
-                            dataCadastro: dados[6] || new Date().toLocaleString('pt-BR')
-                        });
-                    }
-                }
-                if (itensImportados.length === 0) {
-                    mostrarMensagem('⚠️ Nenhum item válido!', '#8B3A3A');
-                    return;
-                }
-                let estoque = JSON.parse(localStorage.getItem('estoqueTaguaLife') || '[]');
-                estoque = estoque.concat(itensImportados);
-                localStorage.setItem('estoqueTaguaLife', JSON.stringify(estoque));
-                renderizarTabela();
-                mostrarMensagem(`✅ ${itensImportados.length} itens importados!`, '#7A816E');
-                mostrarToast(`✅ ${itensImportados.length} itens importados!`, 'success');
-            } catch(err) {
-                mostrarMensagem('❌ Erro: ' + err.message, '#8B3A3A');
-            }
-        };
-        reader.readAsText(file);
-        event.target.value = '';
-    }
-
-    function backupEstoque() {
-        const dados = {
-            itens: JSON.parse(localStorage.getItem('estoqueTaguaLife') || '[]'),
-            data: new Date().toISOString(),
-            versao: '1.0'
-        };
-        if (dados.itens.length === 0) {
-            mostrarMensagem('⚠️ Nenhum item para backup!', '#8B3A3A');
-            return;
-        }
-        const blob = new Blob([JSON.stringify(dados, null, 2)], { type: 'application/json' });
-        const link = document.createElement('a');
-        link.href = URL.createObjectURL(blob);
-        link.download = `backup_estoque_${new Date().toISOString().slice(0,10)}.json`;
-        link.click();
-        mostrarMensagem('💾 Backup criado!', '#7A816E');
-        mostrarToast('💾 Backup criado!', 'success');
-    }
-
-    function restaurarBackup(event) {
+    window.excluirItem = async function(id) {
         if (typeof podeExcluir === 'function' && !podeExcluir()) {
-            mostrarToast('⛔ Apenas Administrador pode restaurar backup.', 'danger');
+            mostrarToast('⛔ Apenas Administrador pode excluir', 'danger');
             return;
         }
-        const file = event.target.files[0];
-        if (!file) return;
-        if (!confirm('⚠️ Isso substituirá todos os dados atuais. Continuar?')) {
-            event.target.value = '';
-            return;
-        }
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            try {
-                const dados = JSON.parse(e.target.result);
-                if (dados.itens && Array.isArray(dados.itens)) {
-                    localStorage.setItem('estoqueTaguaLife', JSON.stringify(dados.itens));
-                    renderizarTabela();
-                    mostrarMensagem(`✅ Backup restaurado! ${dados.itens.length} itens.`, '#7A816E');
-                    mostrarToast(`✅ ${dados.itens.length} itens restaurados!`, 'success');
-                } else {
-                    mostrarMensagem('❌ Arquivo inválido!', '#8B3A3A');
-                }
-            } catch(err) {
-                mostrarMensagem('❌ Erro: ' + err.message, '#8B3A3A');
-            }
-        };
-        reader.readAsText(file);
-        event.target.value = '';
-    }
+        if (!confirm('⚠️ Excluir este item permanentemente do banco?')) return;
 
-    // ============================================
-    // RELATÓRIOS PDF (mantidos iguais)
-    // ============================================
-    function gerarRelatorioPDF(filtro = 'geral', dataRef = null) {
         try {
-            const itens = JSON.parse(localStorage.getItem('estoqueTaguaLife') || '[]');
-            if (itens.length === 0) {
-                mostrarMensagem('⚠️ Nenhum item para gerar relatório!', '#8B3A3A');
-                return;
-            }
-            let dataReferencia = dataRef ? new Date(dataRef) : new Date();
-            let dadosFiltrados = [];
-            let tituloRelatorio = '';
-            let periodoDescricao = '';
-            const ano = dataReferencia.getFullYear();
-            const mes = dataReferencia.getMonth();
-            const dia = dataReferencia.getDate();
-
-            switch(filtro) {
-                case 'dia':
-                    dadosFiltrados = itens.filter(item => {
-                        if (!item.dataCadastro) return false;
-                        const data = new Date(item.dataCadastro.split('/').reverse().join('/'));
-                        return data.getDate() === dia && data.getMonth() === mes && data.getFullYear() === ano;
-                    });
-                    tituloRelatorio = `RELATÓRIO DIÁRIO - ${dataReferencia.toLocaleDateString('pt-BR')}`;
-                    periodoDescricao = `Dia: ${dataReferencia.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}`;
-                    break;
-                case 'mes':
-                    dadosFiltrados = itens.filter(item => {
-                        if (!item.dataCadastro) return false;
-                        const data = new Date(item.dataCadastro.split('/').reverse().join('/'));
-                        return data.getMonth() === mes && data.getFullYear() === ano;
-                    });
-                    tituloRelatorio = `RELATÓRIO MENSAL - ${dataReferencia.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}`;
-                    periodoDescricao = `Mês: ${dataReferencia.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}`;
-                    break;
-                case 'ano':
-                    dadosFiltrados = itens.filter(item => {
-                        if (!item.dataCadastro) return false;
-                        const data = new Date(item.dataCadastro.split('/').reverse().join('/'));
-                        return data.getFullYear() === ano;
-                    });
-                    tituloRelatorio = `RELATÓRIO ANUAL - ${ano}`;
-                    periodoDescricao = `Ano: ${ano}`;
-                    break;
-                default:
-                    dadosFiltrados = itens;
-                    tituloRelatorio = 'RELATÓRIO GERAL DE ESTOQUE';
-                    periodoDescricao = 'Todos os registros';
-            }
-
-            if (dadosFiltrados.length === 0) {
-                mostrarMensagem(`⚠️ Nenhum item encontrado para ${filtro}!`, '#8B3A3A');
-                return;
-            }
-
-            const relatorioHTML = gerarHTMLRelatorioEstoque(dadosFiltrados, tituloRelatorio, periodoDescricao, filtro);
-            const janelaPDF = window.open('', '_blank', 'width=900,height=700');
-            if (!janelaPDF) {
-                mostrarMensagem('⚠️ Permita pop-ups para gerar o PDF!', '#8B3A3A');
-                return;
-            }
-            janelaPDF.document.write(relatorioHTML);
-            janelaPDF.document.close();
-            setTimeout(() => janelaPDF.print(), 500);
-            mostrarMensagem(`📄 Relatório ${filtro} gerado! (${dadosFiltrados.length} itens)`, '#7A816E');
-        } catch (error) {
-            mostrarMensagem('❌ Erro ao gerar relatório!', '#8B3A3A');
+            const { error } = await sb.from('estoque').delete().eq('id', id);
+            if (error) throw error;
+            mostrarMensagem('🗑️ Item excluído do banco!', '#8B3A3A');
+            mostrarToast('🗑️ Excluído', 'danger');
+            await carregarEstoque();
+        } catch (err) {
+            console.error(err);
+            mostrarToast('❌ Erro ao excluir: ' + err.message, 'danger');
         }
-    }
+    };
 
-    function gerarHTMLRelatorioEstoque(dados, titulo, periodo, filtro) {
-        let totalItens = dados.length;
-        let totalQuantidade = 0;
-        let categorias = {};
-        let baixoEstoque = 0;
-        dados.forEach(item => {
-            totalQuantidade += item.quantidade || 0;
-            if (item.categoria) categorias[item.categoria] = (categorias[item.categoria] || 0) + 1;
-            if ((item.quantidade || 0) < (item.limite || 5)) baixoEstoque++;
-        });
-        let itensHTML = '';
-        dados.sort((a, b) => (a.nome || '').localeCompare(b.nome || ''));
-        dados.forEach((item, index) => {
-            const limite = item.limite || 5;
-            const isBaixo = (item.quantidade || 0) < limite;
-            itensHTML += `
-                <div style="page-break-inside: avoid; margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 8px; ${isBaixo ? 'border-left:4px solid #FF6F00; padding-left:8px;' : ''}">
-                    <div style="font-size:12px;">
-                        <strong>${index + 1}. ${item.nome || 'Sem nome'}</strong>
-                        ${isBaixo ? '<span style="color:#E65100; font-weight:bold;"> ⚠️ BAIXO ESTOQUE</span>' : ''}
-                        <span style="float:right; font-weight:600;">${item.quantidade || 0} unid.</span>
-                    </div>
-                    <div style="font-size:11px; color:#666;">
-                        ${item.descricao || ''} ${item.fabricante ? '• ' + item.fabricante : ''}
-                        <span style="float:right; background:#C1CE83; padding:0 8px; border-radius:10px; font-size:10px;">${item.categoria || 'Outros'}</span>
-                    </div>
-                    <div style="font-size:9px; color:#999; margin-top:2px;">Cadastrado: ${item.dataCadastro || 'data desconhecida'} • Limite: ${limite}</div>
-                </div>`;
-        });
-        let catHtml = Object.entries(categorias).sort((a, b) => b[1] - a[1]).map(([cat, qtd]) => 
-            `<tr><td>${cat}</td><td style="text-align:center;">${qtd}</td></tr>`
-        ).join('');
-        return `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${titulo} - TaguáLife</title>
-            <style>
-                body { font-family: Arial, sans-serif; margin: 30px; color: #2c3e50; }
-                .header { text-align: center; border-bottom: 3px solid #C1CE83; padding-bottom: 15px; margin-bottom: 20px; }
-                .header h1 { font-size: 20px; margin: 0; }
-                .header h2 { font-size: 16px; font-weight: normal; color: #7A816E; margin: 5px 0; }
-                .resumo { background: #f8f9fa; padding: 10px 15px; border-radius: 5px; margin: 15px 0; border-left: 4px solid #C1CE83; }
-                .resumo table { width: 100%; font-size: 12px; }
-                .resumo td { padding: 3px 8px; }
-                .resumo .label { font-weight: bold; color: #7A816E; width: 120px; }
-                .itens .titulo { font-size: 16px; font-weight: bold; border-bottom: 2px solid #C1CE83; padding-bottom: 8px; margin-bottom: 10px; }
-                .categorias { margin-top: 15px; background: #f8f9fa; padding: 10px 15px; border-radius: 5px; }
-                .categorias table { width: 100%; font-size: 12px; border-collapse: collapse; }
-                .categorias th { background: #C1CE83; padding: 5px 10px; text-align: left; }
-                .categorias td { padding: 3px 10px; border-bottom: 1px solid #eee; }
-                .footer { text-align: center; margin-top: 30px; font-size: 10px; color: #999; border-top: 1px solid #ddd; padding-top: 10px; }
-            </style></head><body>
-            <div class="header"><h1>🏢 TaguáLife Center</h1><h2>${titulo}</h2>
-            <div style="font-size:12px; color:#7f8c8d;">${periodo}</div>
-            <div style="font-size:10px; color:#999; margin-top:3px;">Gerado em: ${new Date().toLocaleString('pt-BR')}</div></div>
-            <div class="resumo"><table>
-                <tr><td class="label">📦 Total de Itens:</td><td><strong>${totalItens}</strong></td>
-                <td class="label">📊 Quantidade Total:</td><td><strong>${totalQuantidade}</strong></td></tr>
-                <tr><td class="label">📂 Categorias:</td><td><strong>${Object.keys(categorias).length}</strong></td>
-                <td class="label">⚠️ Baixo Estoque:</td><td><strong style="color:#E65100;">${baixoEstoque}</strong></td></tr>
-            </table></div>
-            <div class="itens"><div class="titulo">📋 Lista de Itens</div>${itensHTML}</div>
-            <div class="categorias"><div style="font-weight:bold; margin-bottom:8px;">📂 Distribuição por Categoria</div>
-            <table><tr><th>Categoria</th><th style="text-align:center;">Quantidade</th></tr>${catHtml}</table></div>
-            <div class="footer">Documento gerado pelo Sistema TaguáLife • ${new Date().toLocaleString('pt-BR')}</div>
-            </body></html>`;
-    }
-
-    // ============================================
-    // EVENTOS + PERMISSÕES
-    // ============================================
     document.addEventListener('DOMContentLoaded', function() {
-        // auth.js já protege a página e aplica data-perm
-        // Mostra aviso se for só visualização
+        carregarTema();
+        atualizarRelogio();
+        setInterval(atualizarRelogio, 1000);
+
         if (typeof podeCadastrar === 'function' && !podeCadastrar()) {
-            const aviso = document.getElementById('avisoPermissao');
-            if (aviso) aviso.classList.add('show');
+            document.getElementById('avisoPermissao').classList.add('show');
         }
 
         document.getElementById('btnSalvarItem').addEventListener('click', function(e) {
@@ -1480,56 +615,19 @@
             document.getElementById('buscaInput').value = '';
             document.getElementById('filtroCategoria').value = '';
             document.getElementById('filtroEstoque').value = '';
-            paginaAtual = 1;
             renderizarTabela();
         });
 
-        document.getElementById('buscaInput').addEventListener('input', function() {
-            paginaAtual = 1;
-            renderizarTabela();
-        });
-        document.getElementById('filtroCategoria').addEventListener('change', function() {
-            paginaAtual = 1;
-            renderizarTabela();
-        });
-        document.getElementById('filtroEstoque').addEventListener('change', function() {
-            paginaAtual = 1;
-            renderizarTabela();
-        });
+        document.getElementById('buscaInput').addEventListener('input', renderizarTabela);
+        document.getElementById('filtroCategoria').addEventListener('change', renderizarTabela);
+        document.getElementById('filtroEstoque').addEventListener('change', renderizarTabela);
+        document.getElementById('btnRecarregar').addEventListener('click', carregarEstoque);
 
-        document.getElementById('btnVerSalvosEstoque').addEventListener('click', function(e) {
-            e.preventDefault();
-            const el = document.getElementById('listaEstoque');
-            if (el.style.display === 'none') exibirListaEstoque();
-            else el.style.display = 'none';
-        });
-
-        document.getElementById('itemNome').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') { e.preventDefault(); document.getElementById('itemDescricao').focus(); }
-        });
-        document.getElementById('itemDescricao').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') { e.preventDefault(); document.getElementById('itemFabricante').focus(); }
-        });
-        document.getElementById('itemFabricante').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') { e.preventDefault(); document.getElementById('itemQuantidade').focus(); }
-        });
         document.getElementById('itemQuantidade').addEventListener('keypress', function(e) {
             if (e.key === 'Enter') { e.preventDefault(); salvarItem(); }
         });
 
-        document.addEventListener('keydown', function(e) {
-            if (e.ctrlKey && e.key === 's') {
-                e.preventDefault();
-                salvarItem();
-            }
-        });
-
-        carregarTema();
-        atualizarRelogio();
-        setInterval(atualizarRelogio, 1000);
-        renderizarTabela();
-        mostrarMensagem('📋 Sistema de cadastro de itens', '#191D1B');
-        mostrarToast('📋 Estoque carregado!', 'info');
+        carregarEstoque();
     });
 </script>
 </body>
