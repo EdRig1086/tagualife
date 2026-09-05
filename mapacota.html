@@ -14,6 +14,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
     <style>
+        /* ===== ESTILOS COMPLETOS ===== */
         :root {
             --verde-claro: #C1CE83;
             --verde-oliva: #7A816E;
@@ -1436,6 +1437,7 @@ function inicializarFornecedoresPadrao() {
 }
 
 function renderizarTabela() {
+    console.log('🔄 Renderizando tabela...');
     const thead = document.getElementById('headerFornecedores');
     const tbody = document.getElementById('corpoTabela');
     
@@ -1510,21 +1512,24 @@ function renderizarTabela() {
     `;
     tbody.appendChild(trAdd);
 
-    // Linha de FRETE
+    // Linha de FRETE - CORRIGIDA
     const trFrete = document.createElement('tr');
     trFrete.className = 'frete-row';
-    trFrete.innerHTML = `
+    let freteHtml = `
         <td colspan="3" class="label-cell-left" style="font-size:0.6rem; font-weight:700; color:var(--verde-oliva);">🚚 FRETE</td>
-        ${fornecedores.map(f => `
+    `;
+    fornecedores.forEach(f => {
+        freteHtml += `
             <td>
                 <div class="campo-moeda">
                     <span class="simbolo-moeda">R$</span>
                     <input type="text" id="freteF${f.id}" value="${f.frete > 0 ? formatarMoedaInput(f.frete) : ''}" placeholder="0,00" style="font-weight:600; font-size:0.7rem; text-align:right; padding-right:0.3rem; color:var(--text-primary);" class="frete-input currency" />
                 </div>
             </td>
-        `).join('')}
-        <td></td>
-    `;
+        `;
+    });
+    freteHtml += `<td></td>`;
+    trFrete.innerHTML = freteHtml;
     tbody.appendChild(trFrete);
 
     const trTotal = document.createElement('tr');
@@ -1605,12 +1610,12 @@ function renderizarTabela() {
     `;
     tbody.appendChild(trObsGeral);
 
-    // CONFIGURAR EVENTOS
-    configurarEventos();
-    initSortable();
-    
-    // Forçar atualização dos totais
-    setTimeout(() => atualizarTotais(), 300);
+    // CONFIGURAR EVENTOS - COM ATRASO PARA GARANTIR QUE OS ELEMENTOS EXISTEM
+    setTimeout(() => {
+        configurarEventos();
+        initSortable();
+        atualizarTotais();
+    }, 200);
 }
 
 function adicionarLinhaItemPadrao() {
@@ -1644,14 +1649,13 @@ function adicionarLinhaItemPadrao() {
 function configurarEventos() {
     console.log('⚙️ Configurando eventos...');
     
-    // Eventos para campos UND (valor unitário)
+    // ===== EVENTOS PARA CAMPOS UND (valor unitário) =====
     document.querySelectorAll('.currency-und').forEach(input => {
-        // Remove listeners antigos clonando
+        // Remove listeners antigos
         const newInput = input.cloneNode(true);
         input.parentNode.replaceChild(newInput, input);
         
         newInput.addEventListener('input', function(e) {
-            console.log('📝 UND input:', this.value);
             mascaraMoedaSimplificada(this);
             
             const row = this.closest('.item-row');
@@ -1669,8 +1673,7 @@ function configurarEventos() {
                         if (!isNaN(undValor) && undValor > 0 && !isNaN(qtd) && qtd > 0) {
                             const total = qtd * undValor;
                             totalInput.value = formatarMoedaInput(total);
-                            console.log(`🧮 ${qtd} x ${undValor} = ${total}`);
-                        } else if (undValor === 0) {
+                        } else if (undValor === 0 || isNaN(undValor)) {
                             totalInput.value = '';
                         }
                     }
@@ -1690,7 +1693,7 @@ function configurarEventos() {
         });
     });
 
-    // Eventos para campos TOTAL (apenas para permitir edição manual)
+    // ===== EVENTOS PARA CAMPOS TOTAL =====
     document.querySelectorAll('.currency-total').forEach(input => {
         const newInput = input.cloneNode(true);
         input.parentNode.replaceChild(newInput, input);
@@ -1711,13 +1714,12 @@ function configurarEventos() {
         });
     });
 
-    // Eventos para quantidade
+    // ===== EVENTOS PARA QUANTIDADE =====
     document.querySelectorAll('.item-qtd').forEach(input => {
         const newInput = input.cloneNode(true);
         input.parentNode.replaceChild(newInput, input);
         
         newInput.addEventListener('input', function() {
-            console.log('📝 QTD input:', this.value);
             const row = this.closest('.item-row');
             if (row) {
                 const qtd = parseFloat(this.value?.replace(',', '.') || 1);
@@ -1733,7 +1735,6 @@ function configurarEventos() {
                                 if (totalInput) {
                                     const total = qtd * undValor;
                                     totalInput.value = formatarMoedaInput(total);
-                                    console.log(`🧮 ${qtd} x ${undValor} = ${total}`);
                                 }
                             }
                         }
@@ -1744,15 +1745,18 @@ function configurarEventos() {
         });
     });
 
-    // Eventos para frete
+    // ===== EVENTOS PARA FRETE - CORRIGIDO =====
     document.querySelectorAll('.frete-input').forEach(input => {
+        console.log('📝 Configurando frete:', input.id);
+        
         const newInput = input.cloneNode(true);
         input.parentNode.replaceChild(newInput, input);
         
         newInput.addEventListener('input', function() {
-            console.log('📝 Frete input:', this.value);
+            console.log('📝 Frete digitado:', this.value);
             mascaraMoedaSimplificada(this);
-            atualizarTotais();
+            // Forçar atualização dos totais
+            setTimeout(() => atualizarTotais(), 50);
         });
         
         newInput.addEventListener('blur', function() {
@@ -1763,6 +1767,13 @@ function configurarEventos() {
             } else {
                 this.value = '';
             }
+            setTimeout(() => atualizarTotais(), 50);
+        });
+        
+        // Adicionar evento change também
+        newInput.addEventListener('change', function() {
+            console.log('📝 Frete alterado:', this.value);
+            setTimeout(() => atualizarTotais(), 50);
         });
     });
 
@@ -1849,9 +1860,12 @@ function adicionarItem() {
     tbody.insertBefore(tr, addRow);
     
     // Configurar eventos para o novo item
-    configurarEventos();
-    initSortable();
-    atualizarTotais();
+    setTimeout(() => {
+        configurarEventos();
+        initSortable();
+        atualizarTotais();
+    }, 100);
+    
     mostrarMensagem('📋 Item adicionado!', '#7A816E');
 }
 
@@ -1953,7 +1967,13 @@ function atualizarTotais() {
         totais[f.id] = 0;
         qtdItens[f.id] = 0;
         const freteInput = document.getElementById(`freteF${f.id}`);
-        fletes[f.id] = freteInput ? textoParaNumero(freteInput.value) : 0;
+        if (freteInput) {
+            const valor = textoParaNumero(freteInput.value);
+            fletes[f.id] = valor || 0;
+            console.log(`📊 Frete F${f.id}: ${fletes[f.id]}`);
+        } else {
+            fletes[f.id] = 0;
+        }
     });
 
     rows.forEach(row => {
@@ -1976,6 +1996,7 @@ function atualizarTotais() {
             const frete = fletes[f.id] || 0;
             const totalComFrete = total + frete;
             el.textContent = formatarMoeda(totalComFrete);
+            console.log(`📊 Total F${f.id}: ${total} + frete ${frete} = ${totalComFrete}`);
         }
     });
 
@@ -2199,7 +2220,7 @@ function init() {
     mostrarToast('🟢 Conectado ao Supabase!', 'success');
     
     // Forçar atualização dos totais após carregar
-    setTimeout(() => atualizarTotais(), 500);
+    setTimeout(() => atualizarTotais(), 600);
 }
 
 init();
