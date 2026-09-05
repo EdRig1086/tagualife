@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>TaguáLife Center · Mapa de Cotação</title>
     
-    <!-- Bibliotecas -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -1151,7 +1150,7 @@ async function salvarCotacaoSupabase(concluir = false) {
             return;
         }
 
-        // Coletar fornecedores
+        // Coletar fornecedores com todos os campos
         const fornecedoresData = [];
         fornecedores.forEach((f, index) => {
             const nomeInput = document.getElementById(`f${index}Nome`);
@@ -1511,6 +1510,7 @@ function renderizarTabela() {
     `;
     tbody.appendChild(trAdd);
 
+    // Linha de FRETE
     const trFrete = document.createElement('tr');
     trFrete.className = 'frete-row';
     trFrete.innerHTML = `
@@ -1579,25 +1579,27 @@ function renderizarTabela() {
     `;
     tbody.appendChild(trResp);
 
+    // OBSERVAÇÕES DO FORNECEDOR
     const trObsInd = document.createElement('tr');
     trObsInd.className = 'obs-individual-row';
     trObsInd.innerHTML = `
         <td colspan="3" class="obs-label" style="font-size:0.55rem; color:var(--verde-oliva);">OBS. FORNECEDOR:</td>
         ${fornecedores.map(f => `
             <td class="obs-input">
-                <input type="text" id="obsF${f.id}" value="${f.obs || ''}" placeholder="Obs. Fornecedor" style="font-size:0.6rem;" />
+                <input type="text" id="obsF${f.id}" value="${f.obs || ''}" placeholder="Obs. Fornecedor" style="font-size:0.6rem; width:100%;" />
             </td>
         `).join('')}
         <td></td>
     `;
     tbody.appendChild(trObsInd);
 
+    // OBSERVAÇÕES GERAIS
     const trObsGeral = document.createElement('tr');
     trObsGeral.className = 'obs-row';
     trObsGeral.innerHTML = `
         <td colspan="3" class="obs-label">OBSERVAÇÕES GERAIS:</td>
         <td colspan="${fornecedores.length}" class="obs-input">
-            <input type="text" id="observacao" placeholder="Digite aqui suas anotações gerais..." />
+            <input type="text" id="observacao" placeholder="Digite aqui suas anotações gerais..." style="width:100%;" />
         </td>
         <td></td>
     `;
@@ -1637,6 +1639,7 @@ function adicionarLinhaItemPadrao() {
 }
 
 function configurarEventos() {
+    // Eventos para campos de moeda (UND e TOTAL)
     document.querySelectorAll('.currency-und, .currency-total, .frete-input').forEach(input => {
         input.addEventListener('input', function() {
             mascaraMoedaSimplificada(this);
@@ -1647,6 +1650,8 @@ function configurarEventos() {
                 const totalInput = row.querySelector(`.${this.className.split(' ')[2]}-total`);
                 if (totalInput && !isNaN(undValor) && undValor > 0) {
                     totalInput.value = formatarMoedaInput(qtd * undValor);
+                } else if (totalInput && undValor === 0) {
+                    totalInput.value = '';
                 }
             }
             atualizarTotais();
@@ -1660,29 +1665,37 @@ function configurarEventos() {
         });
     });
 
+    // Eventos para quantidade
     document.querySelectorAll('.item-qtd').forEach(input => {
         input.addEventListener('input', function() {
             const row = this.closest('.item-row');
             if (row) {
                 const qtd = parseFloat(this.value?.replace(',', '.') || 1);
-                row.querySelectorAll('.currency-und').forEach(undInput => {
-                    const undValor = textoParaNumero(undInput.value);
-                    if (undValor > 0) {
-                        const classe = undInput.className.split(' ')[2];
-                        const totalInput = row.querySelector(`.${classe}-total`);
-                        if (totalInput) {
-                            totalInput.value = formatarMoedaInput(qtd * undValor);
+                if (!isNaN(qtd) && qtd > 0) {
+                    row.querySelectorAll('.currency-und').forEach(undInput => {
+                        const undValor = textoParaNumero(undInput.value);
+                        if (undValor > 0) {
+                            const classe = undInput.className.split(' ')[2];
+                            const totalInput = row.querySelector(`.${classe}-total`);
+                            if (totalInput) {
+                                totalInput.value = formatarMoedaInput(qtd * undValor);
+                            }
                         }
-                    }
-                });
+                    });
+                }
             }
             atualizarTotais();
         });
     });
 
+    // Eventos para frete
     document.querySelectorAll('.frete-input').forEach(input => {
-        input.addEventListener('change', () => setTimeout(atualizarTotais, 100));
-        input.addEventListener('input', () => setTimeout(atualizarTotais, 100));
+        input.addEventListener('input', function() {
+            atualizarTotais();
+        });
+        input.addEventListener('change', function() {
+            atualizarTotais();
+        });
     });
 }
 
@@ -1859,6 +1872,8 @@ function aprovarFornecedor(id) {
 // ============================================================
 
 function atualizarTotais() {
+    console.log('🔄 Atualizando totais...');
+    
     const rows = document.querySelectorAll('.item-row');
     const totais = {}, qtdItens = {}, fletes = {};
     
@@ -1867,6 +1882,7 @@ function atualizarTotais() {
         qtdItens[f.id] = 0;
         const freteInput = document.getElementById(`freteF${f.id}`);
         fletes[f.id] = freteInput ? textoParaNumero(freteInput.value) : 0;
+        console.log(`📊 Frete F${f.id}:`, fletes[f.id]);
     });
 
     rows.forEach(row => {
@@ -1887,7 +1903,9 @@ function atualizarTotais() {
         if (el) {
             const total = totais[f.id] || 0;
             const frete = fletes[f.id] || 0;
-            el.textContent = formatarMoeda(total + frete);
+            const totalComFrete = total + frete;
+            el.textContent = formatarMoeda(totalComFrete);
+            console.log(`📊 Total F${f.id}: ${total} + frete ${frete} = ${totalComFrete}`);
         }
     });
 
@@ -1917,7 +1935,6 @@ function destacarMelhoresPrecos() {
 
     rows.forEach(row => {
         let menorPreco = Infinity;
-        let fornecedorMenor = null;
         
         fornecedores.forEach(f => {
             const totalInput = row.querySelector(`.f${f.id}-total`);
@@ -1925,7 +1942,6 @@ function destacarMelhoresPrecos() {
                 const valor = textoParaNumero(totalInput.value);
                 if (valor > 0 && valor < menorPreco) {
                     menorPreco = valor;
-                    fornecedorMenor = f.id;
                 }
             }
         });
@@ -2111,6 +2127,9 @@ function init() {
 
     mostrarMensagem('🟢 Sistema conectado ao Supabase!', '#2E7D32');
     mostrarToast('🟢 Conectado ao Supabase!', 'success');
+    
+    // Forçar atualização dos totais após carregar
+    setTimeout(() => atualizarTotais(), 500);
 }
 
 init();
