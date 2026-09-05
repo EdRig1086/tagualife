@@ -1605,9 +1605,12 @@ function renderizarTabela() {
     `;
     tbody.appendChild(trObsGeral);
 
+    // CONFIGURAR EVENTOS
     configurarEventos();
     initSortable();
-    setTimeout(() => atualizarTotais(), 100);
+    
+    // Forçar atualização dos totais
+    setTimeout(() => atualizarTotais(), 300);
 }
 
 function adicionarLinhaItemPadrao() {
@@ -1639,35 +1642,82 @@ function adicionarLinhaItemPadrao() {
 }
 
 function configurarEventos() {
-    // Eventos para campos de moeda (UND e TOTAL)
-    document.querySelectorAll('.currency-und, .currency-total, .frete-input').forEach(input => {
-        input.addEventListener('input', function() {
+    console.log('⚙️ Configurando eventos...');
+    
+    // Eventos para campos UND (valor unitário)
+    document.querySelectorAll('.currency-und').forEach(input => {
+        // Remove listeners antigos clonando
+        const newInput = input.cloneNode(true);
+        input.parentNode.replaceChild(newInput, input);
+        
+        newInput.addEventListener('input', function(e) {
+            console.log('📝 UND input:', this.value);
             mascaraMoedaSimplificada(this);
+            
             const row = this.closest('.item-row');
-            if (row && this.classList.contains('currency-und')) {
+            if (row) {
                 const qtd = parseFloat(row.querySelector('.item-qtd')?.value?.replace(',', '.') || 1);
                 const undValor = textoParaNumero(this.value);
-                const totalInput = row.querySelector(`.${this.className.split(' ')[2]}-total`);
-                if (totalInput && !isNaN(undValor) && undValor > 0) {
-                    totalInput.value = formatarMoedaInput(qtd * undValor);
-                } else if (totalInput && undValor === 0) {
-                    totalInput.value = '';
+                
+                // Encontrar o campo TOTAL correspondente
+                const classes = this.className.split(' ');
+                const fClass = classes.find(c => c.startsWith('f') && c.endsWith('-und'));
+                if (fClass) {
+                    const totalClass = fClass.replace('-und', '-total');
+                    const totalInput = row.querySelector(`.${totalClass}`);
+                    if (totalInput) {
+                        if (!isNaN(undValor) && undValor > 0 && !isNaN(qtd) && qtd > 0) {
+                            const total = qtd * undValor;
+                            totalInput.value = formatarMoedaInput(total);
+                            console.log(`🧮 ${qtd} x ${undValor} = ${total}`);
+                        } else if (undValor === 0) {
+                            totalInput.value = '';
+                        }
+                    }
                 }
             }
             atualizarTotais();
         });
-
-        input.addEventListener('blur', function() {
+        
+        newInput.addEventListener('blur', function() {
             if (this.value === '') return;
             const valor = textoParaNumero(this.value);
-            if (valor > 0) this.value = formatarMoedaInput(valor);
-            else this.value = '';
+            if (valor > 0) {
+                this.value = formatarMoedaInput(valor);
+            } else {
+                this.value = '';
+            }
+        });
+    });
+
+    // Eventos para campos TOTAL (apenas para permitir edição manual)
+    document.querySelectorAll('.currency-total').forEach(input => {
+        const newInput = input.cloneNode(true);
+        input.parentNode.replaceChild(newInput, input);
+        
+        newInput.addEventListener('input', function() {
+            mascaraMoedaSimplificada(this);
+            atualizarTotais();
+        });
+        
+        newInput.addEventListener('blur', function() {
+            if (this.value === '') return;
+            const valor = textoParaNumero(this.value);
+            if (valor > 0) {
+                this.value = formatarMoedaInput(valor);
+            } else {
+                this.value = '';
+            }
         });
     });
 
     // Eventos para quantidade
     document.querySelectorAll('.item-qtd').forEach(input => {
-        input.addEventListener('input', function() {
+        const newInput = input.cloneNode(true);
+        input.parentNode.replaceChild(newInput, input);
+        
+        newInput.addEventListener('input', function() {
+            console.log('📝 QTD input:', this.value);
             const row = this.closest('.item-row');
             if (row) {
                 const qtd = parseFloat(this.value?.replace(',', '.') || 1);
@@ -1675,10 +1725,16 @@ function configurarEventos() {
                     row.querySelectorAll('.currency-und').forEach(undInput => {
                         const undValor = textoParaNumero(undInput.value);
                         if (undValor > 0) {
-                            const classe = undInput.className.split(' ')[2];
-                            const totalInput = row.querySelector(`.${classe}-total`);
-                            if (totalInput) {
-                                totalInput.value = formatarMoedaInput(qtd * undValor);
+                            const classes = undInput.className.split(' ');
+                            const fClass = classes.find(c => c.startsWith('f') && c.endsWith('-und'));
+                            if (fClass) {
+                                const totalClass = fClass.replace('-und', '-total');
+                                const totalInput = row.querySelector(`.${totalClass}`);
+                                if (totalInput) {
+                                    const total = qtd * undValor;
+                                    totalInput.value = formatarMoedaInput(total);
+                                    console.log(`🧮 ${qtd} x ${undValor} = ${total}`);
+                                }
                             }
                         }
                     });
@@ -1690,13 +1746,27 @@ function configurarEventos() {
 
     // Eventos para frete
     document.querySelectorAll('.frete-input').forEach(input => {
-        input.addEventListener('input', function() {
+        const newInput = input.cloneNode(true);
+        input.parentNode.replaceChild(newInput, input);
+        
+        newInput.addEventListener('input', function() {
+            console.log('📝 Frete input:', this.value);
+            mascaraMoedaSimplificada(this);
             atualizarTotais();
         });
-        input.addEventListener('change', function() {
-            atualizarTotais();
+        
+        newInput.addEventListener('blur', function() {
+            if (this.value === '') return;
+            const valor = textoParaNumero(this.value);
+            if (valor > 0) {
+                this.value = formatarMoedaInput(valor);
+            } else {
+                this.value = '';
+            }
         });
     });
+
+    console.log('✅ Eventos configurados!');
 }
 
 function initSortable() {
@@ -1777,6 +1847,8 @@ function adicionarItem() {
     html += `<td><span class="remove-item" onclick="removerItem(this)"><i class="fas fa-times-circle"></i></span></td>`;
     tr.innerHTML = html;
     tbody.insertBefore(tr, addRow);
+    
+    // Configurar eventos para o novo item
     configurarEventos();
     initSortable();
     atualizarTotais();
@@ -1882,7 +1954,6 @@ function atualizarTotais() {
         qtdItens[f.id] = 0;
         const freteInput = document.getElementById(`freteF${f.id}`);
         fletes[f.id] = freteInput ? textoParaNumero(freteInput.value) : 0;
-        console.log(`📊 Frete F${f.id}:`, fletes[f.id]);
     });
 
     rows.forEach(row => {
@@ -1905,7 +1976,6 @@ function atualizarTotais() {
             const frete = fletes[f.id] || 0;
             const totalComFrete = total + frete;
             el.textContent = formatarMoeda(totalComFrete);
-            console.log(`📊 Total F${f.id}: ${total} + frete ${frete} = ${totalComFrete}`);
         }
     });
 
