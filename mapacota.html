@@ -993,7 +993,7 @@
 // ============================================================
 const SUPABASE_URL = 'https://frlecudymdpnrsilavbj.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_Uv-GZdW4peH3IZTIwiNYXg_IrYytpn4';
-const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 console.log('✅ Supabase configurado!');
 
@@ -1131,18 +1131,21 @@ async function salvarCotacaoSupabase(concluir = false) {
             return;
         }
 
-        // Coletar itens
+        // Coletar itens (qtd, unitário e total por fornecedor)
         const itens = [];
         document.querySelectorAll('.item-row').forEach(row => {
             const desc = row.querySelector('.item-desc')?.value || '';
-            const qtd = parseInt(row.querySelector('.item-qtd')?.value) || 1;
+            const qtd = parseFloat((row.querySelector('.item-qtd')?.value || '1').replace(',', '.')) || 1;
             if (desc) {
                 const precos = {};
+                const unitarios = {};
                 fornecedores.forEach(f => {
                     const totalInput = row.querySelector(`.f${f.id}-total`);
+                    const undInput = row.querySelector(`.f${f.id}-und`);
                     precos[f.id] = totalInput ? textoParaNumero(totalInput.value) : 0;
+                    unitarios[f.id] = undInput ? textoParaNumero(undInput.value) : 0;
                 });
-                itens.push({ descricao: desc, quantidade: qtd, precos });
+                itens.push({ descricao: desc, quantidade: qtd, precos, unitarios });
             }
         });
 
@@ -1161,11 +1164,13 @@ async function salvarCotacaoSupabase(concluir = false) {
             const freteInput = document.getElementById(`freteF${f.id}`);
             
             fornecedoresData.push({
+                id: f.id,
                 nome: nomeInput ? nomeInput.value.trim() : f.nome || '',
                 contato: contatoInput ? contatoInput.value.trim() : '',
                 telefone: telefoneInput ? telefoneInput.value.trim() : '',
                 obs: obsInput ? obsInput.value.trim() : '',
-                frete: freteInput ? textoParaNumero(freteInput.value) : 0
+                frete: freteInput ? textoParaNumero(freteInput.value) : 0,
+                aprovado: fornecedorAprovadoId === f.id
             });
         });
 
@@ -1205,8 +1210,14 @@ async function salvarCotacaoSupabase(concluir = false) {
                 quantidade: item.quantidade
             })),
             precos: itens.map(item => {
-                const obj = { descricao: item.descricao };
+                const obj = {
+                    descricao: item.descricao,
+                    quantidade: item.quantidade
+                };
                 fornecedores.forEach(f => {
+                    obj[`fornecedor_${f.id}_total`] = item.precos[f.id] || 0;
+                    obj[`fornecedor_${f.id}_und`] = (item.unitarios && item.unitarios[f.id]) || 0;
+                    // compatibilidade com versão antiga
                     obj[`fornecedor_${f.id}`] = item.precos[f.id] || 0;
                 });
                 return obj;
@@ -1221,7 +1232,7 @@ async function salvarCotacaoSupabase(concluir = false) {
         console.log('📦 Salvando cotação:', cotacao);
 
         if (editandoId) {
-            const { error } = await supabaseClient
+            const { error } = await sb
                 .from('cotacoes')
                 .update(cotacao)
                 .eq('id', editandoId);
@@ -1231,7 +1242,7 @@ async function salvarCotacaoSupabase(concluir = false) {
             mostrarToast('✅ Cotação atualizada!', 'success');
             editandoId = null;
         } else {
-            const { data, error } = await supabaseClient
+            const { data, error } = await sb
                 .from('cotacoes')
                 .insert([cotacao])
                 .select();
@@ -1264,7 +1275,7 @@ async function carregarListaSalvos() {
     if (!container) return;
 
     try {
-        const { data, error } = await supabaseClient
+        const { data, error } = await sb
             .from('cotacoes')
             .select('*')
             .order('criado_em', { ascending: false });
@@ -1311,7 +1322,7 @@ async function carregarListaSalvos() {
 
 async function carregarCotacaoParaEdicao(id) {
     try {
-        const { data, error } = await supabaseClient
+        const { data, error } = await sb
             .from('cotacoes')
             .select('*')
             .eq('id', id)
@@ -1326,57 +1337,71 @@ async function carregarCotacaoParaEdicao(id) {
         document.getElementById('nomeCotacao').value = data.nome || '';
         document.getElementById('usoCotacao').value = data.uso || '';
         document.getElementById('observacao').value = data.observacao || '';
+        editandoId = id;
+        fornecedorAprovadoId = null;
 
         if (data.fornecedores && data.fornecedores.length > 0) {
             fornecedores = data.fornecedores.map((f, index) => ({
-                id: index + 1,
+                id: f.id || (index + 1),
                 nome: f.nome || '',
                 contato: f.contato || '',
                 telefone: f.telefone || '',
                 obs: f.obs || '',
                 frete: f.frete || 0
             }));
-            proximoIdFornecedor = fornecedores.length + 1;
-            editandoId = id;
+            proximoIdFornecedor = Math.max(...fornecedores.map(f => f.id)) + 1;
+            const aprovado = data.fornecedores.find(f => f.aprovado);
+            if (aprovado) fornecedorAprovadoId = aprovado.id || null;
             renderizarTabela();
 
-            if (data.itens && data.itens.length > 0) {
+            // garantir quantidade de linhas de itens
+            const qtdItens = (data.itens && data.itens.length) ? data.itens.length : 0;
+            while (document.querySelectorAll('.item-row').length < qtdItens) {
+                adicionarItem();
+            }
+
+            setTimeout(() => {
                 const rows = document.querySelectorAll('.item-row');
-                data.itens.forEach((item, idx) => {
-                    if (idx < rows.length) {
-                        const row = rows[idx];
-                        row.querySelector('.item-desc').value = item.descricao || '';
-                        row.querySelector('.item-qtd').value = item.quantidade || 1;
-                    }
+                (data.itens || []).forEach((item, idx) => {
+                    if (idx >= rows.length) return;
+                    const row = rows[idx];
+                    const desc = row.querySelector('.item-desc');
+                    const qtd = row.querySelector('.item-qtd');
+                    if (desc) desc.value = item.descricao || '';
+                    if (qtd) qtd.value = item.quantidade || 1;
                 });
 
-                if (data.precos) {
-                    data.precos.forEach((preco, idx) => {
-                        if (idx < rows.length) {
-                            const row = rows[idx];
-                            fornecedores.forEach(f => {
-                                const totalInput = row.querySelector(`.f${f.id}-total`);
-                                if (totalInput) {
-                                    const valor = preco[`fornecedor_${f.id}`] || 0;
-                                    if (valor > 0) {
-                                        totalInput.value = formatarMoedaInput(valor);
-                                    }
-                                }
-                            });
-                        }
+                (data.precos || []).forEach((preco, idx) => {
+                    if (idx >= rows.length) return;
+                    const row = rows[idx];
+                    fornecedores.forEach(f => {
+                        const totalInput = row.querySelector(`.f${f.id}-total`);
+                        const undInput = row.querySelector(`.f${f.id}-und`);
+                        const totalVal = preco[`fornecedor_${f.id}_total`] ?? preco[`fornecedor_${f.id}`] ?? 0;
+                        const undVal = preco[`fornecedor_${f.id}_und`] ?? 0;
+                        if (totalInput && totalVal > 0) totalInput.value = formatarMoedaInput(totalVal);
+                        if (undInput && undVal > 0) undInput.value = formatarMoedaInput(undVal);
                     });
-                }
+                });
 
-                setTimeout(() => {
-                    data.fornecedores.forEach((f, idx) => {
-                        const freteInput = document.getElementById(`freteF${idx + 1}`);
-                        if (freteInput && f.frete > 0) {
-                            freteInput.value = formatarMoedaInput(f.frete);
-                        }
-                    });
-                    atualizarTotais();
-                }, 200);
-            }
+                // frete e dados do fornecedor na tela
+                data.fornecedores.forEach((f, idx) => {
+                    const fid = f.id || (idx + 1);
+                    const freteInput = document.getElementById(`freteF${fid}`);
+                    if (freteInput && f.frete > 0) freteInput.value = formatarMoedaInput(f.frete);
+                    const nomeInput = document.getElementById(`f${idx}Nome`);
+                    if (nomeInput) nomeInput.value = f.nome || '';
+                    const contatoInput = document.getElementById(`f${idx}Contato`);
+                    if (contatoInput) contatoInput.value = f.contato || '';
+                    const telefoneInput = document.getElementById(`f${idx}Telefone`);
+                    if (telefoneInput) telefoneInput.value = f.telefone || '';
+                    const obsInput = document.getElementById(`obsF${fid}`);
+                    if (obsInput) obsInput.value = f.obs || '';
+                });
+
+                configurarEventos();
+                atualizarTotais();
+            }, 300);
         }
 
         mostrarMensagem('📝 Cotação carregada para edição', '#7A816E');
@@ -1394,7 +1419,7 @@ async function excluirCotacaoSupabase(id) {
     if (!confirm('⚠️ Tem certeza que deseja excluir esta cotação?')) return;
 
     try {
-        const { error } = await supabaseClient
+        const { error } = await sb
             .from('cotacoes')
             .delete()
             .eq('id', id);
