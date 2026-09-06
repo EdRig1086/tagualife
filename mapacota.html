@@ -1602,6 +1602,7 @@ function renderizarTabela() {
     tbody.appendChild(trMelhor);
 
     const trPag = document.createElement('tr');
+    trPag.className = 'meta-row';
     trPag.innerHTML = `
         <td class="label-cell-left" colspan="3" style="font-size:0.6rem;">CONDIÇÕES DE PAGAMENTO</td>
         ${fornecedores.map(f => `
@@ -1612,6 +1613,7 @@ function renderizarTabela() {
     tbody.appendChild(trPag);
 
     const trEntrega = document.createElement('tr');
+    trEntrega.className = 'meta-row';
     trEntrega.innerHTML = `
         <td class="label-cell-left" colspan="3" style="font-size:0.6rem;">PRAZO DE ENTREGA</td>
         ${fornecedores.map(f => `
@@ -1622,6 +1624,7 @@ function renderizarTabela() {
     tbody.appendChild(trEntrega);
 
     const trResp = document.createElement('tr');
+    trResp.className = 'meta-row';
     trResp.innerHTML = `
         <td class="label-cell-left" colspan="3" style="font-size:0.6rem;">RESPONSÁVEL</td>
         ${fornecedores.map(f => `
@@ -1831,7 +1834,9 @@ function initSortable() {
     window.sortableInstance = new Sortable(tbody, {
         handle: '.drag-handle',
         animation: 150,
-        filter: '.add-item-row, .frete-row, .total-row, #linhaMelhorOferta, .obs-row, .obs-individual-row',
+        // preventOnFilter:false é OBRIGATÓRIO para poder digitar em frete/obs
+        filter: '.add-item-row, .frete-row, .total-row, #linhaMelhorOferta, .obs-row, .obs-individual-row, .meta-row',
+        preventOnFilter: false,
         onEnd: function() {
             tbody.querySelectorAll('.item-row').forEach((row, index) => {
                 const labelCell = row.querySelector('.label-cell');
