@@ -568,6 +568,28 @@
         .campo-moeda input {
             padding-left: 22px !important;
             text-align: right !important;
+            pointer-events: auto !important;
+            z-index: 2;
+            position: relative;
+        }
+
+        .frete-row input,
+        .obs-row input,
+        .obs-individual-row input,
+        .frete-input {
+            pointer-events: auto !important;
+            user-select: text !important;
+            -webkit-user-select: text !important;
+            background: var(--input-bg) !important;
+            cursor: text !important;
+            z-index: 5 !important;
+            position: relative !important;
+        }
+
+        .frete-row td,
+        .obs-row td,
+        .obs-individual-row td {
+            pointer-events: auto !important;
         }
 
         .grafico-comparativo {
@@ -1548,7 +1570,7 @@ function renderizarTabela() {
             <td>
                 <div class="campo-moeda">
                     <span class="simbolo-moeda">R$</span>
-                    <input type="text" id="freteF${f.id}" value="${f.frete > 0 ? formatarMoedaInput(f.frete) : ''}" placeholder="0,00" style="font-weight:600; font-size:0.7rem; text-align:right; padding-right:0.3rem; color:var(--text-primary);" class="frete-input currency" />
+                    <input type="text" id="freteF${f.id}" value="${f.frete > 0 ? formatarMoedaInput(f.frete) : ''}" placeholder="0,00" style="font-weight:600; font-size:0.7rem; text-align:right; padding-right:0.3rem; color:var(--text-primary);" class="frete-input" inputmode="decimal" autocomplete="off" />
                 </div>
             </td>
         `;
@@ -1616,7 +1638,7 @@ function renderizarTabela() {
         <td colspan="3" class="obs-label" style="font-size:0.55rem; color:var(--verde-oliva);">OBS. FORNECEDOR:</td>
         ${fornecedores.map(f => `
             <td class="obs-input">
-                <input type="text" id="obsF${f.id}" value="${f.obs || ''}" placeholder="Obs. Fornecedor" style="font-size:0.6rem; width:100%;" />
+                <input type="text" id="obsF${f.id}" value="${f.obs || ''}" placeholder="Obs. Fornecedor" autocomplete="off" style="font-size:0.65rem; width:100%; pointer-events:auto; position:relative; z-index:5;" />
             </td>
         `).join('')}
         <td></td>
@@ -1629,7 +1651,7 @@ function renderizarTabela() {
     trObsGeral.innerHTML = `
         <td colspan="3" class="obs-label">OBSERVAÇÕES GERAIS:</td>
         <td colspan="${fornecedores.length}" class="obs-input">
-            <input type="text" id="observacao" placeholder="Digite aqui suas anotações gerais..." style="width:100%;" />
+            <textarea id="observacao" rows="2" placeholder="Digite aqui suas anotações gerais..." style="width:100%; min-height:36px; resize:vertical; border:none; border-bottom:2px solid var(--input-border); background:var(--input-bg); color:var(--text-primary); font-family:inherit; font-size:0.75rem; padding:0.3rem; outline:none;"></textarea>
         </td>
         <td></td>
     `;
@@ -1770,36 +1792,34 @@ function configurarEventos() {
         });
     });
 
-    // ===== EVENTOS PARA FRETE - CORRIGIDO =====
+    // ===== EVENTOS PARA FRETE (sem cloneNode para não perder foco) =====
     document.querySelectorAll('.frete-input').forEach(input => {
-        console.log('📝 Configurando frete:', input.id);
-        
-        const newInput = input.cloneNode(true);
-        input.parentNode.replaceChild(newInput, input);
-        
-        newInput.addEventListener('input', function() {
-            console.log('📝 Frete digitado:', this.value);
+        if (input.dataset.bound === '1') return;
+        input.dataset.bound = '1';
+
+        input.addEventListener('input', function() {
             mascaraMoedaSimplificada(this);
-            // Forçar atualização dos totais
-            setTimeout(() => atualizarTotais(), 50);
+            atualizarTotais();
         });
-        
-        newInput.addEventListener('blur', function() {
-            if (this.value === '') return;
-            const valor = textoParaNumero(this.value);
-            if (valor > 0) {
-                this.value = formatarMoedaInput(valor);
-            } else {
-                this.value = '';
+
+        input.addEventListener('blur', function() {
+            if (this.value === '') {
+                atualizarTotais();
+                return;
             }
-            setTimeout(() => atualizarTotais(), 50);
+            const valor = textoParaNumero(this.value);
+            this.value = valor > 0 ? formatarMoedaInput(valor) : '';
+            atualizarTotais();
         });
-        
-        // Adicionar evento change também
-        newInput.addEventListener('change', function() {
-            console.log('📝 Frete alterado:', this.value);
-            setTimeout(() => atualizarTotais(), 50);
-        });
+    });
+
+    // Observações: garantir digitação
+    document.querySelectorAll('.obs-individual-row input, #observacao').forEach(input => {
+        if (input.dataset.bound === '1') return;
+        input.dataset.bound = '1';
+        input.removeAttribute('readonly');
+        input.removeAttribute('disabled');
+        input.style.pointerEvents = 'auto';
     });
 
     console.log('✅ Eventos configurados!');
