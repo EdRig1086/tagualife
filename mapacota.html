@@ -12,6 +12,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="auth.js"></script>
     
     <style>
         /* ===== ESTILOS COMPLETOS ===== */
@@ -887,14 +888,20 @@
 
     <!-- MENU -->
     <div class="nav-menu">
-        <a class="nav-item" href="#"><i class="fas fa-home"></i> Dashboard</a>
-        <a class="nav-item" href="#"><i class="fas fa-boxes"></i> Estoque</a>
-        <a class="nav-item" href="#"><i class="fas fa-arrow-right"></i> Saída</a>
-        <a class="nav-item active" href="#"><i class="fas fa-file-invoice"></i> Cotação</a>
-        <a class="nav-item" href="#"><i class="fas fa-check-circle"></i> Aprovadas</a>
-        <a class="nav-item" href="#"><i class="fas fa-handshake"></i> Fornecedores</a>
+        <a class="nav-item" href="index.html"><i class="fas fa-home"></i> Dashboard</a>
+        <a class="nav-item" href="estoque.html"><i class="fas fa-boxes"></i> Estoque</a>
+        <a class="nav-item" href="saida.html"><i class="fas fa-arrow-right"></i> Saída</a>
+        <a class="nav-item active" href="mapacota.html"><i class="fas fa-file-invoice"></i> Cotação</a>
+        <a class="nav-item" href="cotacoes_aprovadas.html"><i class="fas fa-check-circle"></i> Aprovadas</a>
+        <a class="nav-item" href="orcamento.html"><i class="fas fa-file-pdf"></i> Orçamento</a>
+        <a class="nav-item" href="fornecedor.html"><i class="fas fa-handshake"></i> Fornecedores</a>
+        <a class="nav-item" href="recebido.html"><i class="fas fa-clipboard-check"></i> Recebido</a>
+        <a class="nav-item" href="backup_automatico.html"><i class="fas fa-database"></i> Backup</a>
         <button class="nav-item btn-theme" onclick="toggleTheme()" style="margin-left:auto;">
             <i class="fas fa-moon" id="themeIcon"></i> <span id="themeLabel">Tema</span>
+        </button>
+        <button class="nav-item" onclick="logout()" style="background:#8B3A3A; color:white; border-color:#8B3A3A;">
+            <i class="fas fa-sign-out-alt"></i> Sair
         </button>
     </div>
 
