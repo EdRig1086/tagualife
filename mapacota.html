@@ -1197,7 +1197,9 @@ async function salvarCotacaoSupabase(concluir = false) {
         });
 
         // OBSERVAÇÕES GERAIS
-        const observacaoGeral = document.getElementById('observacao')?.value || '';
+        const obsEl = document.getElementById('observacao');
+        const observacaoGeral = obsEl ? (obsEl.value || '').trim() : '';
+        console.log('📝 Observação geral capturada:', observacaoGeral);
 
         // Calcular totais
         const totais = {};
@@ -1358,9 +1360,9 @@ async function carregarCotacaoParaEdicao(id) {
 
         document.getElementById('nomeCotacao').value = data.nome || '';
         document.getElementById('usoCotacao').value = data.uso || '';
-        document.getElementById('observacao').value = data.observacao || '';
         editandoId = id;
         fornecedorAprovadoId = null;
+        window._obsParaRestaurar = data.observacao || '';
 
         if (data.fornecedores && data.fornecedores.length > 0) {
             fornecedores = data.fornecedores.map((f, index) => ({
@@ -1421,9 +1423,18 @@ async function carregarCotacaoParaEdicao(id) {
                     if (obsInput) obsInput.value = f.obs || '';
                 });
 
+                if (window._obsParaRestaurar != null) {
+                    const obsEl = document.getElementById('observacao');
+                    if (obsEl) obsEl.value = window._obsParaRestaurar;
+                    window._obsParaRestaurar = null;
+                }
                 configurarEventos();
                 atualizarTotais();
             }, 300);
+        } else if (window._obsParaRestaurar != null) {
+            const obsEl = document.getElementById('observacao');
+            if (obsEl) obsEl.value = window._obsParaRestaurar;
+            window._obsParaRestaurar = null;
         }
 
         mostrarMensagem('📝 Cotação carregada para edição', '#7A816E');
@@ -1484,6 +1495,20 @@ function inicializarFornecedoresPadrao() {
 }
 
 function renderizarTabela() {
+    // Preservar campos que ficam fora do estado JS
+    const _obsGeral = document.getElementById('observacao')?.value || '';
+    const _nomeCot = document.getElementById('nomeCotacao')?.value || '';
+    const _usoCot = document.getElementById('usoCotacao')?.value || '';
+    // sincronizar obs dos fornecedores a partir da tela
+    fornecedores.forEach((f, index) => {
+        const obsInput = document.getElementById('obsF' + f.id);
+        if (obsInput) f.obs = obsInput.value || '';
+        const freteInput = document.getElementById('freteF' + f.id);
+        if (freteInput) f.frete = textoParaNumero(freteInput.value);
+        const nomeInput = document.getElementById('f' + index + 'Nome');
+        if (nomeInput) f.nome = nomeInput.value || f.nome || '';
+    });
+
     console.log('🔄 Renderizando tabela...');
     const thead = document.getElementById('headerFornecedores');
     const tbody = document.getElementById('corpoTabela');
@@ -1662,6 +1687,11 @@ function renderizarTabela() {
 
     // CONFIGURAR EVENTOS - COM ATRASO PARA GARANTIR QUE OS ELEMENTOS EXISTEM
     setTimeout(() => {
+        const obsEl = document.getElementById('observacao');
+        if (obsEl && typeof _obsGeral !== 'undefined') obsEl.value = _obsGeral;
+        if (document.getElementById('nomeCotacao') && typeof _nomeCot !== 'undefined') {
+            // nome/uso ficam fora da tabela; só garantimos se precisarem
+        }
         configurarEventos();
         initSortable();
         atualizarTotais();
