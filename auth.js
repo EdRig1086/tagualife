@@ -78,7 +78,7 @@ function logout() {
     if (!confirm('Deseja realmente sair do sistema?')) return;
     localStorage.removeItem('tagualife_sessao');
     sessionStorage.clear();
-    // replace: não deixa voltar com o botão Voltar do navegador
+    // replace: não deixa voltar com o botão Voltar
     window.location.replace('login.html');
 }
 
@@ -106,30 +106,36 @@ function aplicarPermissoesNaTela() {
     });
 }
 
-// Proteção ao carregar + ao voltar pelo histórico/cache do navegador
-function iniciarSeguranca() {
-    const path = (window.location.pathname || '').toLowerCase();
-    if (path.includes('login.html')) return;
-
-    protegerPagina();
-    mostrarUsuarioLogado();
-    aplicarPermissoesNaTela();
-
-    // bfcache / botão Voltar
-    window.addEventListener('pageshow', function (event) {
-        if (event.persisted || !estaLogado()) {
-            if (!estaLogado()) {
-                window.location.replace('login.html');
-            }
-        }
-    });
-
-    // Se a sessão sumir em outra aba
-    window.addEventListener('storage', function (e) {
-        if (e.key === 'tagualife_sessao' && !e.newValue) {
+// Checagem imediata (antes do DOM) — barra o acesso sem login
+(function checagemImediata() {
+    try {
+        const path = (window.location.pathname || '').toLowerCase();
+        if (path.includes('login.html')) return;
+        if (!localStorage.getItem('tagualife_sessao')) {
             window.location.replace('login.html');
         }
-    });
-}
+    } catch (e) {}
+})();
 
 document.addEventListener('DOMContentLoaded', iniciarSeguranca);
+
+// Botão Voltar / cache
+window.addEventListener('pageshow', function (event) {
+    try {
+        const path = (window.location.pathname || '').toLowerCase();
+        if (path.includes('login.html')) return;
+        if (!estaLogado()) {
+            window.location.replace('login.html');
+        }
+    } catch (e) {}
+});
+
+// Sair em outra aba → esta também vai para o login
+window.addEventListener('storage', function (e) {
+    if (e.key === 'tagualife_sessao' && !e.newValue) {
+        const path = (window.location.pathname || '').toLowerCase();
+        if (!path.includes('login.html')) {
+            window.location.replace('login.html');
+        }
+    }
+});
