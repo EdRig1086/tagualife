@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate" />
-<script src="auth.js"></script>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>TaguáLife Center · Saída de Material</title>
+    <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+    <script src="auth.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -902,10 +904,11 @@
     // LOGOUT
     // ============================================
     function logout() {
-        if (confirm('Deseja realmente sair do sistema?')) {
-            localStorage.removeItem('tagualife_sessao');
-            window.location.href = 'login.html';
-        }
+        if (!confirm('Deseja realmente sair do sistema?')) return;
+        localStorage.removeItem('tagualife_sessao');
+        sessionStorage.clear();
+        window.location.replace('login.html');
+    }
     }
 
     // ============================================
@@ -1826,6 +1829,15 @@
     // INICIALIZAÇÃO
     // ============================================
     document.addEventListener('DOMContentLoaded', function() {
+        // Segurança: sem login → login.html
+        if (typeof protegerPagina === 'function') {
+            if (!protegerPagina()) return;
+        } else if (!localStorage.getItem('tagualife_sessao')) {
+            window.location.replace('login.html');
+            return;
+        }
+        if (typeof mostrarUsuarioLogado === 'function') mostrarUsuarioLogado();
+
         const horario = getHorarioBrasilia();
         document.getElementById('dataSaida').value = horario.data;
         document.getElementById('horasSaida').value = horario.hora;
@@ -1909,6 +1921,13 @@
             mostrarToast('📋 Saída de Material carregada!', 'info');
         }, 500);
     });
+
+// Extra: bloqueia voltar sem sessão
+window.addEventListener('pageshow', function(e) {
+    if (!localStorage.getItem('tagualife_sessao')) {
+        window.location.replace('login.html');
+    }
+});
 </script>
 </body>
 </html>
