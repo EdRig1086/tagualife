@@ -864,6 +864,185 @@
             .card-body { padding: 1rem; }
             .campo-moeda input { padding-left: 16px !important; font-size: 0.6rem !important; }
         }
+
+        /* ===== IMPRESSÃO A4 HORIZONTAL ===== */
+        @page {
+            size: A4 landscape;
+            margin: 8mm;
+        }
+
+        @media print {
+            html, body {
+                width: 100% !important;
+                height: auto !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                background: #fff !important;
+                color: #000 !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+
+            body {
+                display: block !important;
+                padding: 0 !important;
+            }
+
+            .app-container {
+                max-width: 100% !important;
+                width: 100% !important;
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+
+            /* Esconde navegação e controles */
+            .app-topbar,
+            .nav-menu,
+            .btn-theme,
+            .botoes,
+            .btn,
+            button,
+            #listaCotoes,
+            #feedback,
+            #toastGlobal,
+            .grafico-comparativo,
+            .dica-digitacao,
+            .remove-item,
+            .btn-add-item,
+            .btn-fornecedor,
+            .btn-aprovar-fornecedor,
+            .drag-handle {
+                display: none !important;
+            }
+
+            .card-cotacao {
+                box-shadow: none !important;
+                border: 1px solid #333 !important;
+                border-radius: 0 !important;
+                overflow: visible !important;
+                page-break-inside: avoid;
+            }
+
+            .card-header {
+                background: #C1CE83 !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+                padding: 4px 10px !important;
+            }
+
+            .card-header h2 { font-size: 12pt !important; }
+            .card-header span { font-size: 8pt !important; }
+            .card-header .right { font-size: 8pt !important; }
+
+            .card-body {
+                padding: 6px 8px !important;
+            }
+
+            .info-condominio,
+            .objetivo,
+            .info-topo {
+                margin-bottom: 4px !important;
+                padding: 3px 6px !important;
+                font-size: 7pt !important;
+                border: 1px solid #ccc !important;
+                background: #f7f7f7 !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+
+            .info-topo .campo label { font-size: 6pt !important; }
+            .info-topo .campo input {
+                font-size: 9pt !important;
+                border-bottom: 1px solid #999 !important;
+                color: #000 !important;
+            }
+
+            /* Tabela compacta para caber no A4 landscape */
+            .tabela-cotacao {
+                width: 100% !important;
+                font-size: 7pt !important;
+                border-collapse: collapse !important;
+                page-break-inside: auto;
+            }
+
+            .tabela-cotacao th,
+            .tabela-cotacao td {
+                padding: 2px 3px !important;
+                border: 1px solid #444 !important;
+                color: #000 !important;
+            }
+
+            .tabela-cotacao th {
+                background: #7A816E !important;
+                color: #fff !important;
+                font-size: 6pt !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+
+            .tabela-cotacao .fornecedor-header {
+                background: #C1CE83 !important;
+                color: #000 !important;
+                font-size: 7pt !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+
+            .tabela-cotacao td input {
+                border: none !important;
+                background: transparent !important;
+                color: #000 !important;
+                font-size: 7pt !important;
+                padding: 0 !important;
+                min-width: 0 !important;
+            }
+
+            .tabela-cotacao .total-cell {
+                font-size: 8pt !important;
+                font-weight: 700 !important;
+                background: #fff !important;
+            }
+
+            .tabela-cotacao .best-cell {
+                background: #C1CE83 !important;
+                border: 2px solid #000 !important;
+                font-size: 9pt !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+
+            .tabela-cotacao .best-cell .melhor-valor {
+                font-size: 11pt !important;
+            }
+
+            .tabela-cotacao .best-cell .melhor-fornecedor-nome {
+                font-size: 8pt !important;
+            }
+
+            .tabela-cotacao .melhor-preco-badge {
+                font-size: 5pt !important;
+            }
+
+            .add-item-row {
+                display: none !important;
+            }
+
+            /* Evita quebras feias */
+            .item-row {
+                page-break-inside: avoid;
+            }
+
+            .protocolo-footer {
+                margin-top: 4px !important;
+                padding-top: 4px !important;
+                font-size: 7pt !important;
+                border-top: 1px solid #999 !important;
+            }
+
+            /* Remove URL e extras do navegador quando possível */
+            a[href]:after { content: none !important; }
+        }
+
     </style>
 </head>
 <body>
@@ -997,7 +1176,7 @@
                 <div class="botoes no-print">
                     <button class="btn btn-danger" onclick="limparPagina()"><i class="fas fa-broom"></i> Nova Cotação</button>
                     <button class="btn btn-secondary" onclick="toggleListaSalvos()"><i class="fas fa-folder-open"></i> Ver salvos</button>
-                    <button class="btn btn-success" onclick="window.print()"><i class="fas fa-print"></i> Imprimir</button>
+                    <button class="btn btn-success" onclick="imprimirCotacao()"><i class="fas fa-print"></i> Imprimir</button>
                     <button class="btn btn-primary" id="btnSalvar"><i class="fas fa-save"></i> Salvar</button>
                     <button class="btn btn-primary" id="btnConcluir" style="background:#2E7D32; color:white;"><i class="fas fa-check-circle"></i> Concluir</button>
                 </div>
@@ -2281,6 +2460,11 @@ function toggleGrafico() {
 // ============================================================
 // INICIALIZAÇÃO
 // ============================================================
+
+function imprimirCotacao() {
+    // Força layout de impressão A4 horizontal
+    window.print();
+}
 
 function init() {
     carregarTema();
