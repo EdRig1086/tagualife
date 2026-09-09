@@ -865,20 +865,21 @@
             .campo-moeda input { padding-left: 16px !important; font-size: 0.6rem !important; }
         }
 
-        /* ===== IMPRESSÃO A4 HORIZONTAL ===== */
+        /* ===== IMPRESSÃO A4 HORIZONTAL COMPACTA (estilo versão antiga) ===== */
         @page {
             size: A4 landscape;
-            margin: 8mm;
+            margin: 5mm;
         }
 
         @media print {
             html, body {
-                width: 100% !important;
-                height: auto !important;
+                width: 297mm !important;
+                height: 210mm !important;
                 margin: 0 !important;
                 padding: 0 !important;
                 background: #fff !important;
                 color: #000 !important;
+                font-size: 7pt !important;
                 -webkit-print-color-adjust: exact !important;
                 print-color-adjust: exact !important;
             }
@@ -895,7 +896,7 @@
                 padding: 0 !important;
             }
 
-            /* Esconde navegação e controles */
+            /* Esconde tudo que não é conteúdo da cotação */
             .app-topbar,
             .nav-menu,
             .btn-theme,
@@ -911,71 +912,98 @@
             .btn-add-item,
             .btn-fornecedor,
             .btn-aprovar-fornecedor,
-            .drag-handle {
+            .drag-handle,
+            .add-item-row {
                 display: none !important;
             }
 
             .card-cotacao {
                 box-shadow: none !important;
-                border: 1px solid #333 !important;
+                border: 1px solid #222 !important;
                 border-radius: 0 !important;
                 overflow: visible !important;
-                page-break-inside: avoid;
             }
 
             .card-header {
                 background: #C1CE83 !important;
+                padding: 2px 6px !important;
+                border-bottom: 2px solid #2E7D32 !important;
                 -webkit-print-color-adjust: exact !important;
                 print-color-adjust: exact !important;
-                padding: 4px 10px !important;
             }
 
-            .card-header h2 { font-size: 12pt !important; }
-            .card-header span { font-size: 8pt !important; }
-            .card-header .right { font-size: 8pt !important; }
+            .card-header .left i { font-size: 10pt !important; }
+            .card-header h2 { font-size: 9pt !important; margin: 0 !important; }
+            .card-header span { font-size: 6pt !important; }
+            .card-header .right { font-size: 6pt !important; gap: 4px !important; }
 
             .card-body {
-                padding: 6px 8px !important;
+                padding: 3px 5px !important;
             }
 
-            .info-condominio,
-            .objetivo,
-            .info-topo {
-                margin-bottom: 4px !important;
-                padding: 3px 6px !important;
-                font-size: 7pt !important;
+            .info-condominio {
+                margin-bottom: 2px !important;
+                padding: 1px 4px !important;
+                font-size: 5.5pt !important;
                 border: 1px solid #ccc !important;
-                background: #f7f7f7 !important;
+                background: #f5f5f5 !important;
                 -webkit-print-color-adjust: exact !important;
                 print-color-adjust: exact !important;
             }
 
-            .info-topo .campo label { font-size: 6pt !important; }
-            .info-topo .campo input {
-                font-size: 9pt !important;
-                border-bottom: 1px solid #999 !important;
-                color: #000 !important;
+            .objetivo {
+                margin-bottom: 2px !important;
+                padding: 1px 4px !important;
+                font-size: 5pt !important;
+                line-height: 1.15 !important;
+                border-left: 2px solid #C1CE83 !important;
+                border: 1px solid #ddd !important;
+                background: #fafafa !important;
             }
 
-            /* Tabela compacta para caber no A4 landscape */
+            .info-topo {
+                margin-bottom: 2px !important;
+                padding: 1px 4px !important;
+                font-size: 6pt !important;
+                gap: 8px !important;
+                border: 1px solid #ccc !important;
+                background: #f7f7f7 !important;
+            }
+
+            .info-topo .campo label {
+                font-size: 5pt !important;
+            }
+
+            .info-topo .campo input {
+                font-size: 7pt !important;
+                font-weight: 700 !important;
+                border-bottom: 1px solid #888 !important;
+                color: #000 !important;
+                padding: 0 !important;
+            }
+
+            /* TABELA BEM COMPACTA — mais itens na página */
             .tabela-cotacao {
                 width: 100% !important;
-                font-size: 7pt !important;
+                font-size: 6pt !important;
                 border-collapse: collapse !important;
-                page-break-inside: auto;
+                table-layout: fixed !important;
             }
 
             .tabela-cotacao th,
             .tabela-cotacao td {
-                padding: 2px 3px !important;
-                border: 1px solid #444 !important;
+                padding: 1px 2px !important;
+                border: 0.5pt solid #444 !important;
                 color: #000 !important;
+                line-height: 1.15 !important;
+                vertical-align: middle !important;
             }
 
             .tabela-cotacao th {
                 background: #7A816E !important;
                 color: #fff !important;
-                font-size: 6pt !important;
+                font-size: 5pt !important;
+                font-weight: 700 !important;
                 -webkit-print-color-adjust: exact !important;
                 print-color-adjust: exact !important;
             }
@@ -983,63 +1011,142 @@
             .tabela-cotacao .fornecedor-header {
                 background: #C1CE83 !important;
                 color: #000 !important;
-                font-size: 7pt !important;
+                font-size: 6pt !important;
+                font-weight: 800 !important;
                 -webkit-print-color-adjust: exact !important;
                 print-color-adjust: exact !important;
+            }
+
+            .tabela-cotacao .fornecedor-header input {
+                font-size: 6pt !important;
+                font-weight: 800 !important;
+                color: #000 !important;
+            }
+
+            .tabela-cotacao .sub-info {
+                font-size: 4.5pt !important;
+                padding: 0 1px !important;
+                background: #7A816E !important;
+                color: #fff !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+
+            .tabela-cotacao .label-cell,
+            .tabela-cotacao .label-cell-left {
+                font-size: 5.5pt !important;
+                padding: 1px 2px !important;
+                background: #f0f0f0 !important;
             }
 
             .tabela-cotacao td input {
                 border: none !important;
                 background: transparent !important;
                 color: #000 !important;
-                font-size: 7pt !important;
+                font-size: 6pt !important;
                 padding: 0 !important;
                 min-width: 0 !important;
+                width: 100% !important;
+            }
+
+            .tabela-cotacao td input.currency-und {
+                font-size: 5.5pt !important;
+                color: #333 !important;
+            }
+
+            .tabela-cotacao td input.currency-total {
+                font-size: 6pt !important;
+                font-weight: 700 !important;
+            }
+
+            .tabela-cotacao .item-row td {
+                height: 14px !important;
             }
 
             .tabela-cotacao .total-cell {
-                font-size: 8pt !important;
-                font-weight: 700 !important;
+                font-size: 7pt !important;
+                font-weight: 800 !important;
                 background: #fff !important;
+                padding: 2px !important;
             }
 
             .tabela-cotacao .best-cell {
                 background: #C1CE83 !important;
-                border: 2px solid #000 !important;
-                font-size: 9pt !important;
+                border: 1.5pt solid #000 !important;
+                font-size: 7pt !important;
+                padding: 2px !important;
                 -webkit-print-color-adjust: exact !important;
                 print-color-adjust: exact !important;
             }
 
             .tabela-cotacao .best-cell .melhor-valor {
-                font-size: 11pt !important;
+                font-size: 9pt !important;
+                font-weight: 900 !important;
             }
 
             .tabela-cotacao .best-cell .melhor-fornecedor-nome {
-                font-size: 8pt !important;
+                font-size: 6.5pt !important;
             }
 
-            .tabela-cotacao .melhor-preco-badge {
+            .tabela-cotacao .best-cell .melhor-detalhes {
                 font-size: 5pt !important;
             }
 
-            .add-item-row {
-                display: none !important;
+            .tabela-cotacao .melhor-preco-item {
+                background: #e8f5c8 !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
             }
 
-            /* Evita quebras feias */
+            .tabela-cotacao .melhor-preco-badge {
+                font-size: 4pt !important;
+                padding: 0 2px !important;
+                display: inline-block !important;
+            }
+
+            .campo-moeda .simbolo-moeda {
+                font-size: 4.5pt !important;
+                left: 1px !important;
+            }
+
+            .campo-moeda input {
+                padding-left: 12px !important;
+            }
+
+            /* Linhas de meta mais baixas */
+            .frete-row td,
+            .total-row td,
+            .meta-row td,
+            .obs-row td,
+            .obs-individual-row td {
+                padding: 1px 2px !important;
+                font-size: 5.5pt !important;
+            }
+
+            .obs-row input,
+            .obs-row textarea,
+            .obs-individual-row input {
+                font-size: 5.5pt !important;
+                min-height: 12px !important;
+                height: auto !important;
+            }
+
+            .protocolo-footer {
+                margin-top: 2px !important;
+                padding-top: 2px !important;
+                font-size: 5pt !important;
+                border-top: 0.5pt solid #999 !important;
+            }
+
+            .protocolo-footer .info {
+                font-size: 5pt !important;
+            }
+
+            /* Não forçar quebra por item — deixa o navegador encaixar */
             .item-row {
                 page-break-inside: avoid;
             }
 
-            .protocolo-footer {
-                margin-top: 4px !important;
-                padding-top: 4px !important;
-                font-size: 7pt !important;
-                border-top: 1px solid #999 !important;
-            }
-
-            /* Remove URL e extras do navegador quando possível */
             a[href]:after { content: none !important; }
         }
 
