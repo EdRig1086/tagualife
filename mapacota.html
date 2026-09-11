@@ -422,41 +422,45 @@
             font-size: 0.65rem;
         }
 
-        /* Larguras das colunas: ITEM e QTD menores, MATERIAL maior */
+        /* Larguras: ITEM e QTD bem estreitos, MATERIAL bem largo */
         .tabela-cotacao {
             table-layout: fixed;
         }
         .tabela-cotacao .col-item,
         .tabela-cotacao tbody tr.item-row td:nth-child(1),
         .tabela-cotacao tbody tr td.label-cell:first-child {
-            width: 34px !important;
-            max-width: 38px !important;
-            min-width: 28px !important;
-            padding-left: 0.15rem !important;
-            padding-right: 0.15rem !important;
+            width: 26px !important;
+            max-width: 28px !important;
+            min-width: 22px !important;
+            padding-left: 0.05rem !important;
+            padding-right: 0.05rem !important;
         }
         .tabela-cotacao .col-qtd,
         .tabela-cotacao tbody tr.item-row td:nth-child(3) {
-            width: 40px !important;
-            max-width: 46px !important;
-            min-width: 34px !important;
-            padding-left: 0.1rem !important;
-            padding-right: 0.1rem !important;
+            width: 32px !important;
+            max-width: 34px !important;
+            min-width: 28px !important;
+            padding-left: 0.05rem !important;
+            padding-right: 0.05rem !important;
         }
         .tabela-cotacao .col-qtd input,
         .tabela-cotacao .item-qtd {
-            max-width: 36px !important;
-            padding: 0.05rem 0.1rem !important;
+            max-width: 28px !important;
+            padding: 0.05rem 0 !important;
+            font-size: 0.65rem !important;
         }
         .tabela-cotacao .col-material,
         .tabela-cotacao tbody tr.item-row td:nth-child(2) {
-            width: 26% !important;
-            min-width: 160px !important;
+            width: 34% !important;
+            min-width: 220px !important;
             text-align: left !important;
         }
         .tabela-cotacao .col-material,
         .tabela-cotacao td .item-desc {
             text-align: left !important;
+        }
+        .tabela-cotacao td .item-desc {
+            font-size: 0.72rem !important;
         }
 
         .tabela-cotacao .total-cell {
@@ -1117,21 +1121,21 @@
                 background: #f0f0f0 !important;
             }
 
-            /* Print: ITEM e QTD estreitos, MATERIAL largo */
+            /* Print: ITEM e QTD bem estreitos, MATERIAL bem largo */
             .tabela-cotacao .col-item,
             .tabela-cotacao tbody tr.item-row td:nth-child(1) {
-                width: 22px !important;
-                max-width: 26px !important;
+                width: 16px !important;
+                max-width: 18px !important;
             }
             .tabela-cotacao .col-qtd,
             .tabela-cotacao tbody tr.item-row td:nth-child(3) {
-                width: 28px !important;
-                max-width: 32px !important;
+                width: 20px !important;
+                max-width: 22px !important;
             }
             .tabela-cotacao .col-material,
             .tabela-cotacao tbody tr.item-row td:nth-child(2) {
-                width: 30% !important;
-                min-width: 120px !important;
+                width: 36% !important;
+                min-width: 160px !important;
                 text-align: left !important;
             }
 
