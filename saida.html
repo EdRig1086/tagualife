@@ -1335,34 +1335,98 @@
         }
     }
 
+    function dataBRParaISO(dataBR) {
+        if (!dataBR) return null;
+        // já ISO?
+        if (/^\d{4}-\d{2}-\d{2}/.test(dataBR)) return dataBR.slice(0, 10);
+        const p = String(dataBR).split(/[\/\-]/);
+        if (p.length === 3) {
+            // dd/mm/yyyy
+            if (p[0].length <= 2) return `${p[2].padStart(4,'0')}-${p[1].padStart(2,'0')}-${p[0].padStart(2,'0')}`;
+            return `${p[0]}-${p[1].padStart(2,'0')}-${p[2].padStart(2,'0')}`;
+        }
+        return null;
+    }
+
+    function horaParaDB(hora) {
+        if (!hora) return null;
+        const h = String(hora).trim();
+        if (/^\d{2}:\d{2}:\d{2}/.test(h)) return h.slice(0, 8);
+        if (/^\d{2}:\d{2}/.test(h)) return h + ':00';
+        return null;
+    }
+
+    function dataISOParaBR(iso) {
+        if (!iso) return '';
+        const s = String(iso).slice(0, 10);
+        const p = s.split('-');
+        if (p.length === 3) return `${p[2]}/${p[1]}/${p[0]}`;
+        return String(iso);
+    }
+
     async function carregarSaidasDB() {
         if (!sb) {
             cacheSaidasDB = JSON.parse(localStorage.getItem('saidaMaterialTaguaLife') || '[]');
             return cacheSaidasDB;
         }
         try {
-            const { data, error } = await sb.from('saidas').select('*').order('criado_em', { ascending: false });
+            const { data, error } = await sb.from('saidas')
+                .select('*, saida_itens(*)')
+                .order('criado_em', { ascending: false });
             if (error) throw error;
-            // normaliza para formato da tela
-            cacheSaidasDB = (data || []).map(r => ({
-                id: r.id,
-                colaborador: r.colaborador || r.nome_colaborador || '',
-                dataSaida: r.data_saida || r.dataSaida || '',
-                horas: r.horas || r.hora_saida || '',
-                assinatura: r.assinatura || '',
-                almoxarife: r.almoxarife || '',
-                dataSalvamento: r.data_salvamento || r.criado_em || '',
-                itens: r.itens || [],
-                itensNaoCadastrados: r.itens_nao_cadastrados || [],
-                qtdNaoCadastrados: r.qtd_nao_cadastrados || 0,
-                itensBaixados: r.itens_baixados || []
-            }));
+
+            cacheSaidasDB = (data || []).map(r => {
+                const itensRel = r.saida_itens || [];
+                const itens = itensRel.length
+                    ? itensRel.map(i => ({
+                        item: i.descricao || i.item || i.nome || '',
+                        qtd: i.quantidade || i.qtd || 1,
+                        destino: i.destino || i.uso || '',
+                        cadastrado: i.cadastrado !== false
+                      }))
+                    : (r.itens || []);
+                const naoCad = itens.filter(i => i.cadastrado === false);
+                return {
+                    id: r.id,
+                    colaborador: r.colaborador || '',
+                    dataSaida: dataISOParaBR(r.data_saida) || r.data_saida || '',
+                    horas: (r.hora_saida || r.horas || '').toString().slice(0, 5),
+                    assinatura: r.assinatura || '',
+                    almoxarife: r.almoxarife || '',
+                    dataSalvamento: r.criado_em || '',
+                    observacao: r.observacao || '',
+                    itens: itens,
+                    itensNaoCadastrados: naoCad,
+                    qtdNaoCadastrados: naoCad.reduce((s, i) => s + (parseInt(i.qtd) || 0), 0),
+                    itensBaixados: itens.filter(i => i.cadastrado !== false)
+                };
+            });
             localStorage.setItem('saidaMaterialTaguaLife', JSON.stringify(cacheSaidasDB));
             return cacheSaidasDB;
         } catch (err) {
             console.warn('Saídas DB:', err);
-            cacheSaidasDB = JSON.parse(localStorage.getItem('saidaMaterialTaguaLife') || '[]');
-            return cacheSaidasDB;
+            // fallback sem join
+            try {
+                const { data, error } = await sb.from('saidas').select('*').order('criado_em', { ascending: false });
+                if (error) throw error;
+                cacheSaidasDB = (data || []).map(r => ({
+                    id: r.id,
+                    colaborador: r.colaborador || '',
+                    dataSaida: dataISOParaBR(r.data_saida) || '',
+                    horas: (r.hora_saida || '').toString().slice(0, 5),
+                    assinatura: r.assinatura || '',
+                    almoxarife: r.almoxarife || '',
+                    dataSalvamento: r.criado_em || '',
+                    itens: [],
+                    itensNaoCadastrados: [],
+                    qtdNaoCadastrados: 0,
+                    itensBaixados: []
+                }));
+                return cacheSaidasDB;
+            } catch (e2) {
+                cacheSaidasDB = JSON.parse(localStorage.getItem('saidaMaterialTaguaLife') || '[]');
+                return cacheSaidasDB;
+            }
         }
     }
 
@@ -2180,16 +2244,19 @@ function mostrarToast(mensagem, tipo = 'success') {
                 if (sb && idEdicao) {
                     await sb.from('saidas').update({
                         colaborador: dados.colaborador.trim(),
-                        data_saida: dados.dataSaida || '',
-                        horas: dados.horas || '',
-                        assinatura: dados.assinatura || '',
-                        almoxarife: dados.almoxarife || '',
-                        itens: dados.itens,
-                        itens_nao_cadastrados: itensNaoCadastrados,
-                        qtd_nao_cadastrados: qtdNaoCadastrados,
-                        itens_baixados: itensBaixados,
-                        data_salvamento: new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })
+                        data_saida: dataBRParaISO(dados.dataSaida),
+                        hora_saida: horaParaDB(dados.horas),
+                        assinatura: dados.assinatura || null,
+                        almoxarife: dados.almoxarife || null
                     }).eq('id', idEdicao);
+                    // recria itens
+                    await sb.from('saida_itens').delete().eq('saida_id', idEdicao);
+                    const linhas = (dados.itens || []).map(i => ({
+                        saida_id: idEdicao,
+                        descricao: i.item || '',
+                        quantidade: parseInt(i.qtd) || 1
+                    }));
+                    if (linhas.length) await sb.from('saida_itens').insert(linhas);
                 }
                 
                 let msgSucesso = '✅ Registro ATUALIZADO com sucesso!';
@@ -2233,19 +2300,17 @@ function mostrarToast(mensagem, tipo = 'success') {
                     }
                 }
 
-                // Salva saída no Supabase
+                // Salva saída no Supabase (schema real: saidas + saida_itens)
                 if (sb) {
                     const row = {
                         colaborador: novoProtocolo.colaborador,
-                        data_saida: novoProtocolo.dataSaida,
-                        horas: novoProtocolo.horas,
-                        assinatura: novoProtocolo.assinatura,
-                        almoxarife: novoProtocolo.almoxarife,
-                        data_salvamento: novoProtocolo.dataSalvamento,
-                        itens: novoProtocolo.itens,
-                        itens_nao_cadastrados: novoProtocolo.itensNaoCadastrados,
-                        qtd_nao_cadastrados: novoProtocolo.qtdNaoCadastrados,
-                        itens_baixados: novoProtocolo.itensBaixados
+                        data_saida: dataBRParaISO(novoProtocolo.dataSaida),
+                        hora_saida: horaParaDB(novoProtocolo.horas),
+                        assinatura: novoProtocolo.assinatura || null,
+                        almoxarife: novoProtocolo.almoxarife || null,
+                        observacao: (qtdNaoCadastrados > 0)
+                            ? (qtdNaoCadastrados + ' item(ns) não cadastrado(s)')
+                            : null
                     };
                     const { data: saved, error } = await sb.from('saidas').insert([row]).select();
                     if (error) {
@@ -2253,6 +2318,28 @@ function mostrarToast(mensagem, tipo = 'success') {
                         mostrarToast('⚠️ Salvo local; DB: ' + error.message, 'warning');
                     } else if (saved && saved[0]) {
                         novoProtocolo.id = saved[0].id;
+                        // itens na tabela saida_itens
+                        const linhas = (novoProtocolo.itens || []).map(i => ({
+                            saida_id: saved[0].id,
+                            descricao: i.item || '',
+                            quantidade: parseInt(i.qtd) || 1,
+                            destino: i.destino || null,
+                            cadastrado: i.cadastrado !== false
+                        }));
+                        if (linhas.length) {
+                            const { error: errItens } = await sb.from('saida_itens').insert(linhas);
+                            if (errItens) {
+                                // tenta sem colunas extras
+                                console.warn('saida_itens insert:', errItens);
+                                const simples = linhas.map(l => ({
+                                    saida_id: l.saida_id,
+                                    descricao: l.descricao,
+                                    quantidade: l.quantidade
+                                }));
+                                const { error: err2 } = await sb.from('saida_itens').insert(simples);
+                                if (err2) console.warn('saida_itens simples:', err2);
+                            }
+                        }
                         localStorage.setItem('saidaMaterialTaguaLife', JSON.stringify(protocolos));
                     }
                 }
