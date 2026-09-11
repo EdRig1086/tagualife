@@ -422,6 +422,43 @@
             font-size: 0.65rem;
         }
 
+        /* Larguras das colunas: ITEM e QTD menores, MATERIAL maior */
+        .tabela-cotacao {
+            table-layout: fixed;
+        }
+        .tabela-cotacao .col-item,
+        .tabela-cotacao tbody tr.item-row td:nth-child(1),
+        .tabela-cotacao tbody tr td.label-cell:first-child {
+            width: 34px !important;
+            max-width: 38px !important;
+            min-width: 28px !important;
+            padding-left: 0.15rem !important;
+            padding-right: 0.15rem !important;
+        }
+        .tabela-cotacao .col-qtd,
+        .tabela-cotacao tbody tr.item-row td:nth-child(3) {
+            width: 40px !important;
+            max-width: 46px !important;
+            min-width: 34px !important;
+            padding-left: 0.1rem !important;
+            padding-right: 0.1rem !important;
+        }
+        .tabela-cotacao .col-qtd input,
+        .tabela-cotacao .item-qtd {
+            max-width: 36px !important;
+            padding: 0.05rem 0.1rem !important;
+        }
+        .tabela-cotacao .col-material,
+        .tabela-cotacao tbody tr.item-row td:nth-child(2) {
+            width: 26% !important;
+            min-width: 160px !important;
+            text-align: left !important;
+        }
+        .tabela-cotacao .col-material,
+        .tabela-cotacao td .item-desc {
+            text-align: left !important;
+        }
+
         .tabela-cotacao .total-cell {
             font-weight: 700;
             color: var(--text-primary);
@@ -1078,6 +1115,24 @@
                 font-size: 5.5pt !important;
                 padding: 1px 2px !important;
                 background: #f0f0f0 !important;
+            }
+
+            /* Print: ITEM e QTD estreitos, MATERIAL largo */
+            .tabela-cotacao .col-item,
+            .tabela-cotacao tbody tr.item-row td:nth-child(1) {
+                width: 22px !important;
+                max-width: 26px !important;
+            }
+            .tabela-cotacao .col-qtd,
+            .tabela-cotacao tbody tr.item-row td:nth-child(3) {
+                width: 28px !important;
+                max-width: 32px !important;
+            }
+            .tabela-cotacao .col-material,
+            .tabela-cotacao tbody tr.item-row td:nth-child(2) {
+                width: 30% !important;
+                min-width: 120px !important;
+                text-align: left !important;
             }
 
             .tabela-cotacao td input {
@@ -1915,9 +1970,9 @@ function renderizarTabela() {
 
     const trHeader = document.createElement('tr');
     trHeader.innerHTML = `
-        <td class="label-cell" style="font-weight:700; font-size:0.55rem;">ITEM</td>
-        <td class="label-cell" style="font-weight:700; font-size:0.55rem; text-align:left; padding-left:0.6rem;">MATERIAL / SERVIÇO</td>
-        <td class="label-cell" style="font-weight:700; font-size:0.55rem;">QTD</td>
+        <td class="label-cell col-item" style="font-weight:700; font-size:0.55rem;">ITEM</td>
+        <td class="label-cell col-material" style="font-weight:700; font-size:0.55rem; text-align:left; padding-left:0.4rem;">MATERIAL / SERVIÇO</td>
+        <td class="label-cell col-qtd" style="font-weight:700; font-size:0.55rem;">QTD</td>
         ${fornecedores.map(() => `<td style="background:var(--bg-body);"></td>`).join('')}
         <td style="background:var(--bg-body);"></td>
     `;
