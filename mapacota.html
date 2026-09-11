@@ -319,7 +319,7 @@
         .tabela-cotacao {
             width: 100%;
             border-collapse: collapse;
-            font-size: 0.7rem;
+            font-size: 0.78rem;
             border: 1px solid var(--border-color);
             border-radius: 10px;
             overflow: hidden;
@@ -348,7 +348,7 @@
             background: var(--input-bg);
             width: 100%;
             text-align: center;
-            font-size: 0.7rem;
+            font-size: 0.78rem;
             font-weight: 500;
             color: var(--text-primary);
             outline: none;
@@ -378,7 +378,7 @@
         .tabela-cotacao td input.currency-und {
             text-align: right;
             padding-right: 0.3rem;
-            font-size: 0.65rem;
+            font-size: 0.72rem;
             color: var(--text-secondary);
         }
 
@@ -387,7 +387,7 @@
             padding-right: 0.3rem;
             font-weight: 700;
             color: var(--text-primary);
-            font-size: 0.7rem;
+            font-size: 0.78rem;
         }
 
         .tabela-cotacao td input.text-left {
@@ -410,7 +410,7 @@
             text-align: center;
             padding: 0.25rem 0.3rem;
             white-space: nowrap;
-            font-size: 0.65rem;
+            font-size: 0.72rem;
         }
 
         .tabela-cotacao .label-cell-left {
@@ -445,9 +445,9 @@
         }
         .tabela-cotacao .col-qtd input,
         .tabela-cotacao .item-qtd {
-            max-width: 28px !important;
+            max-width: 30px !important;
             padding: 0.05rem 0 !important;
-            font-size: 0.65rem !important;
+            font-size: 0.75rem !important;
         }
         .tabela-cotacao .col-material,
         .tabela-cotacao tbody tr.item-row td:nth-child(2) {
@@ -460,7 +460,8 @@
             text-align: left !important;
         }
         .tabela-cotacao td .item-desc {
-            font-size: 0.72rem !important;
+            font-size: 0.8rem !important;
+            font-weight: 500 !important;
         }
 
         .tabela-cotacao .total-cell {
@@ -1067,7 +1068,7 @@
             /* TABELA BEM COMPACTA — mais itens na página */
             .tabela-cotacao {
                 width: 100% !important;
-                font-size: 6pt !important;
+                font-size: 7pt !important;
                 border-collapse: collapse !important;
                 table-layout: fixed !important;
             }
@@ -1143,19 +1144,19 @@
                 border: none !important;
                 background: transparent !important;
                 color: #000 !important;
-                font-size: 6pt !important;
+                font-size: 7pt !important;
                 padding: 0 !important;
                 min-width: 0 !important;
                 width: 100% !important;
             }
 
             .tabela-cotacao td input.currency-und {
-                font-size: 5.5pt !important;
+                font-size: 6.5pt !important;
                 color: #333 !important;
             }
 
             .tabela-cotacao td input.currency-total {
-                font-size: 6pt !important;
+                font-size: 7pt !important;
                 font-weight: 700 !important;
             }
 
@@ -2113,15 +2114,15 @@ function adicionarLinhaItemPadrao() {
     tr.className = 'item-row';
     let html = `
         <td class="label-cell"><span class="drag-handle"><i class="fas fa-grip-vertical"></i></span> 1</td>
-        <td><input type="text" class="text-left item-desc" placeholder="Descreva o material" style="font-size:0.7rem; width:100%;" /></td>
-        <td><input type="text" class="item-qtd" value="1" style="text-align:center; font-size:0.7rem;" /></td>
+        <td><input type="text" class="text-left item-desc" placeholder="Descreva o material" style="font-size:0.8rem; width:100%;" /></td>
+        <td><input type="text" class="item-qtd" value="1" style="text-align:center; font-size:0.75rem;" /></td>
     `;
     fornecedores.forEach(f => {
         html += `
             <td>
                 <div class="campo-moeda">
                     <span class="simbolo-moeda">R$</span>
-                    <input type="text" class="currency currency-und f${f.id}-und" value="" placeholder="0,00" style="font-size:0.65rem;" />
+                    <input type="text" class="currency currency-und f${f.id}-und" value="" placeholder="0,00" style="font-size:0.72rem;" />
                 </div>
                 <div class="campo-moeda">
                     <span class="simbolo-moeda">R$</span>
@@ -2327,15 +2328,15 @@ function adicionarItem() {
     tr.className = 'item-row';
     let html = `
         <td class="label-cell"><span class="drag-handle"><i class="fas fa-grip-vertical"></i></span> ${num}</td>
-        <td><input type="text" class="text-left item-desc" placeholder="Descreva o material" style="font-size:0.7rem; width:100%;" /></td>
-        <td><input type="text" class="item-qtd" value="1" style="text-align:center; font-size:0.7rem;" /></td>
+        <td><input type="text" class="text-left item-desc" placeholder="Descreva o material" style="font-size:0.8rem; width:100%;" /></td>
+        <td><input type="text" class="item-qtd" value="1" style="text-align:center; font-size:0.75rem;" /></td>
     `;
     fornecedores.forEach(f => {
         html += `
             <td>
                 <div class="campo-moeda">
                     <span class="simbolo-moeda">R$</span>
-                    <input type="text" class="currency currency-und f${f.id}-und" value="" placeholder="0,00" style="font-size:0.65rem;" />
+                    <input type="text" class="currency currency-und f${f.id}-und" value="" placeholder="0,00" style="font-size:0.72rem;" />
                 </div>
                 <div class="campo-moeda">
                     <span class="simbolo-moeda">R$</span>
