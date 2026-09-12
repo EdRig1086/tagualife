@@ -1947,9 +1947,15 @@ function mostrarToast(mensagem, tipo = 'success') {
     // PARSE DE DATA - SALVAMENTO (uso interno)
     // ============================================
     function parseDataSalvamento(dataStr) {
-        if (!dataStr) return null;
+        if (dataStr == null || dataStr === '') return null;
         try {
-            const partes = dataStr.split(/[,\s]+/);
+            const s = String(dataStr);
+            // ISO
+            if (/^\d{4}-\d{2}-\d{2}/.test(s)) {
+                const p = s.slice(0, 10).split('-');
+                return new Date(parseInt(p[0]), parseInt(p[1]) - 1, parseInt(p[2]));
+            }
+            const partes = s.split(/[,\s]+/);
             if (partes.length >= 1) {
                 const dataPartes = partes[0].split('/');
                 if (dataPartes.length === 3) {
@@ -2994,7 +3000,8 @@ function mostrarToast(mensagem, tipo = 'success') {
             
             if (p.itensNaoCadastrados && p.itensNaoCadastrados.length > 0) {
                 p.itensNaoCadastrados.forEach(item => {
-                    const nomeItem = typeof item === 'string' ? item : item.nome;
+                    const nomeItem = typeof item === 'string' ? item : (item && item.nome);
+                    if (!nomeItem) return;
                     let qtdItem = 0;
                     
                     if (typeof item === 'object' && item.qtd) {
@@ -3112,7 +3119,7 @@ function mostrarToast(mensagem, tipo = 'success') {
                                 <td>Colaborador</td>
                                 <td style="text-align:center;">${d.saidas}</td>
                                 <td style="text-align:center;">${d.unidades}</td>
-                                <td>${Array.from(d.destinos).slice(0, 3).join(', ')}${d.destinos.size > 3 ? '...' : ''}</td>
+                                <td>${Array.from(d.destinos || []).slice(0, 3).join(', ')}${(d.destinos && d.destinos.size > 3) ? '...' : ''}</td>
                             </tr>
                         `).join('')}
                     </tbody>
