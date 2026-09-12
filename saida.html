@@ -1379,7 +1379,7 @@
                 const itensRel = r.saida_itens || [];
                 const itens = itensRel.length
                     ? itensRel.map(i => ({
-                        item: i.nome_do_item || i.descricao || i.item || i.nome || '',
+                        item: i.item_nome || i.descricao || i.item || i.nome || '',
                         qtd: i.quantidade || i.qtd || 1,
                         destino: i.destino || i.uso || '',
                         cadastrado: i.cadastrado !== false
@@ -2253,7 +2253,7 @@ function mostrarToast(mensagem, tipo = 'success') {
                     await sb.from('saida_itens').delete().eq('saida_id', idEdicao);
                     const linhas = (dados.itens || []).map(i => ({
                         saida_id: idEdicao,
-                        nome_do_item: i.item || '',
+                        item_nome: i.item || '',
                         quantidade: parseInt(i.qtd) || 1,
                         destino: i.destino || null
                     }));
@@ -2316,13 +2316,13 @@ function mostrarToast(mensagem, tipo = 'success') {
                     const { data: saved, error } = await sb.from('saidas').insert([row]).select();
                     if (error) {
                         console.warn('Supabase saidas insert:', error);
-                        mostrarToast('⚠️ Salvo local; DB: ' + error.message, 'warning');
+                        mostrarToast('⚠️ Saídas DB: ' + (error.message || JSON.stringify(error)), 'warning');
                     } else if (saved && saved[0]) {
                         novoProtocolo.id = saved[0].id;
                         // itens na tabela saida_itens
                         const linhas = (novoProtocolo.itens || []).map(i => ({
                             saida_id: saved[0].id,
-                            nome_do_item: i.item || '',
+                            item_nome: i.item || '',
                             quantidade: parseInt(i.qtd) || 1,
                             destino: i.destino || null,
                             cadastrado: i.cadastrado !== false
@@ -2334,7 +2334,7 @@ function mostrarToast(mensagem, tipo = 'success') {
                                 // sem cadastrado
                                 const mid = linhas.map(l => ({
                                     saida_id: l.saida_id,
-                                    nome_do_item: l.nome_do_item,
+                                    item_nome: l.item_nome,
                                     quantidade: l.quantidade,
                                     destino: l.destino
                                 }));
@@ -2344,7 +2344,7 @@ function mostrarToast(mensagem, tipo = 'success') {
                                 console.warn('saida_itens mid:', errItens);
                                 const simples = linhas.map(l => ({
                                     saida_id: l.saida_id,
-                                    nome_do_item: l.nome_do_item,
+                                    item_nome: l.item_nome,
                                     quantidade: l.quantidade
                                 }));
                                 const { error: err2 } = await sb.from('saida_itens').insert(simples);
