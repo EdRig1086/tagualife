@@ -1634,9 +1634,14 @@ function mostrarToast(mensagem, tipo = 'success') {
         localStorage.setItem('colaboradoresTaguaLife', JSON.stringify(colaboradores));
     }
 
+    window._colabEditIndex = null;
+
     window.abrirModalColaborador = function() {
+        window._colabEditIndex = null;
         document.getElementById('cadColabNome').value = '';
         document.getElementById('cadColabCargo').value = '';
+        const btn = document.querySelector('#modalColaborador .btn-primary');
+        if (btn) btn.innerHTML = '<i class="fas fa-save"></i> Cadastrar';
         renderizarListaColaboradores();
         abrirModal('modalColaborador');
     };
@@ -1651,8 +1656,31 @@ function mostrarToast(mensagem, tipo = 'success') {
         }
         
         const colaboradores = carregarColaboradores();
+
+        // EDIÇÃO
+        if (window._colabEditIndex !== null && window._colabEditIndex >= 0) {
+            const idx = window._colabEditIndex;
+            const nomeAntigo = colaboradores[idx].nome;
+            const conflito = colaboradores.some((c, i) => i !== idx && c.nome.toLowerCase() === nome.toLowerCase());
+            if (conflito) {
+                mostrarToast('⚠️ Já existe outro colaborador com esse nome!', 'warning');
+                return;
+            }
+            colaboradores[idx] = { nome, cargo };
+            salvarColaboradores(colaboradores);
+            window._colabEditIndex = null;
+            document.getElementById('cadColabNome').value = '';
+            document.getElementById('cadColabCargo').value = '';
+            const btn = document.querySelector('#modalColaborador .btn-primary');
+            if (btn) btn.innerHTML = '<i class="fas fa-save"></i> Cadastrar';
+            renderizarListaColaboradores();
+            carregarSelectColaboradores();
+            mostrarToast('✅ Colaborador atualizado!', 'success');
+            return;
+        }
+
+        // NOVO
         const existe = colaboradores.some(c => c.nome.toLowerCase() === nome.toLowerCase());
-        
         if (existe) {
             mostrarToast('⚠️ Este colaborador já está cadastrado!', 'warning');
             return;
@@ -1670,6 +1698,19 @@ function mostrarToast(mensagem, tipo = 'success') {
         mostrarToast('✅ Colaborador cadastrado com sucesso!', 'success');
     };
 
+    window.editarColaborador = function(index) {
+        const colaboradores = carregarColaboradores();
+        const c = colaboradores[index];
+        if (!c) return;
+        window._colabEditIndex = index;
+        document.getElementById('cadColabNome').value = c.nome || '';
+        document.getElementById('cadColabCargo').value = c.cargo || '';
+        const btn = document.querySelector('#modalColaborador .btn-primary');
+        if (btn) btn.innerHTML = '<i class="fas fa-edit"></i> Salvar alteração';
+        document.getElementById('cadColabNome').focus();
+        mostrarToast('✏️ Editando: ' + c.nome, 'info');
+    };
+
     function renderizarListaColaboradores() {
         const colaboradores = carregarColaboradores();
         const container = document.getElementById('listaColaboradoresModal');
@@ -1683,11 +1724,16 @@ function mostrarToast(mensagem, tipo = 'success') {
             <div class="item-lista">
                 <div class="info">
                     <strong>${c.nome}</strong>
-                    <small>${c.cargo}</small>
+                    <small>${c.cargo || 'Colaborador'}</small>
                 </div>
-                <button class="btn-remover" onclick="removerColaborador(${index})" title="Remover">
-                    <i class="fas fa-trash-alt"></i>
-                </button>
+                <div style="display:flex; gap:0.3rem;">
+                    <button class="btn-remover" onclick="editarColaborador(${index})" title="Editar" style="background:#3498DB; color:white;">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="btn-remover" onclick="removerColaborador(${index})" title="Remover">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
+                </div>
             </div>
         `).join('');
     }
@@ -1918,15 +1964,22 @@ function mostrarToast(mensagem, tipo = 'success') {
     // PARSE DA DATA DE SAÍDA (prioritária nos relatórios)
     // ============================================
     function parseDataSaida(p) {
-        // ✅ Usa primeiro a dataSaida (data real da saída)
-        if (p.dataSaida) {
-            const partes = p.dataSaida.split('/');
-            if (partes.length === 3) {
-                return new Date(parseInt(partes[2]), parseInt(partes[1]) - 1, parseInt(partes[0]));
+        if (p && p.dataSaida) {
+            const s = String(p.dataSaida).trim();
+            // dd/mm/yyyy
+            if (s.includes('/')) {
+                const partes = s.split('/');
+                if (partes.length === 3) {
+                    return new Date(parseInt(partes[2]), parseInt(partes[1]) - 1, parseInt(partes[0]));
+                }
+            }
+            // yyyy-mm-dd
+            if (/^\d{4}-\d{2}-\d{2}/.test(s)) {
+                const partes = s.slice(0, 10).split('-');
+                return new Date(parseInt(partes[0]), parseInt(partes[1]) - 1, parseInt(partes[2]));
             }
         }
-        // Fallback: usa dataSalvamento se não tiver dataSaida
-        return parseDataSalvamento(p.dataSalvamento);
+        return parseDataSalvamento(p && p.dataSalvamento);
     }
 
     // ============================================
@@ -2873,7 +2926,7 @@ function mostrarToast(mensagem, tipo = 'success') {
                 const escolhido = prompt(`👤 Digite o nome do colaborador:\n\n${nomes}`);
                 if (!escolhido) return;
                 
-                const dadosFiltrados = protocolos.filter(p => p.colaborador.toLowerCase() === escolhido.toLowerCase());
+                const dadosFiltrados = protocolos.filter(p => (p.colaborador || '').toLowerCase().trim() === escolhido.toLowerCase().trim());
                 
                 if (dadosFiltrados.length === 0) {
                     mostrarToast(`⚠️ Nenhuma saída para "${escolhido}"`, 'warning');
@@ -2891,13 +2944,19 @@ function mostrarToast(mensagem, tipo = 'success') {
 
         } catch (error) {
             console.error('Erro ao gerar relatório:', error);
-            mostrarToast('❌ Erro ao gerar relatório!', 'danger');
+            mostrarToast('❌ Erro relatório: ' + (error && error.message ? error.message : error), 'danger');
         }
     }
 
     function renderizarRelatorioModal(dados, titulo, subtitulo, filtro, agora) {
         const container = document.getElementById('relatorioConteudo');
-        const dataGeracao = agora.toLocaleString('pt-BR');
+        if (!container) {
+            console.error('relatorioConteudo não encontrado');
+            mostrarToast('❌ Modal de relatório não encontrado na página', 'danger');
+            return;
+        }
+        const dataGeracao = (agora || new Date()).toLocaleString('pt-BR');
+        dados = (dados || []).map(p => ({ ...p, itens: Array.isArray(p.itens) ? p.itens : [] }));
         
         let totalItensUnidades = 0;
         let colaboradores = {};
@@ -2940,7 +2999,7 @@ function mostrarToast(mensagem, tipo = 'success') {
                     
                     if (typeof item === 'object' && item.qtd) {
                         qtdItem = item.qtd;
-                    } else {
+                    } else if (Array.isArray(p.itens)) {
                         p.itens.forEach(i => {
                             if (!i.cadastrado && i.item === nomeItem) {
                                 qtdItem += parseInt(i.qtd) || 0;
@@ -3020,9 +3079,9 @@ function mostrarToast(mensagem, tipo = 'success') {
                         ${temNaoCadastrado ? `<span class="badge-nao-cadastrado">${qtdNaoCad} unid. não cadastrada(s)</span>` : ''}
                     </div>
                     <div class="itens">
-                        ${p.itens.map(i => 
-                            `${i.qtd || '?'}x ${i.item || 'sem descrição'} (${i.destino || 'sem destino'})${!i.cadastrado ? ' <span class="badge-nao-cadastrado">Não cadastrado</span>' : ''}`
-                        ).join(' • ')}
+                        ${(Array.isArray(p.itens) ? p.itens : []).map(i => 
+                            `${i.qtd || '?'}x ${i.item || 'sem descrição'} (${i.destino || 'sem destino'})${i.cadastrado === false ? ' <span class="badge-nao-cadastrado">Não cadastrado</span>' : ''}`
+                        ).join(' • ') || 'Sem itens'}
                     </div>
                     <div class="rodape">Ass: ${p.assinatura || 'N/I'} • Almox: ${p.almoxarife || 'N/I'}</div>
                 </div>
@@ -3209,6 +3268,20 @@ function mostrarToast(mensagem, tipo = 'success') {
         // Carrega estoque e saídas do Supabase
         await carregarEstoqueDB();
         await carregarSaidasDB();
+        // Importa nomes de colaboradores a partir das saídas do banco
+        try {
+            const cols = carregarColaboradores();
+            const nomes = new Set(cols.map(c => (c.nome || '').toLowerCase().trim()));
+            (cacheSaidasDB || []).forEach(s => {
+                const n = (s.colaborador || '').trim();
+                if (n && !nomes.has(n.toLowerCase())) {
+                    cols.push({ nome: n, cargo: 'Colaborador' });
+                    nomes.add(n.toLowerCase());
+                }
+            });
+            salvarColaboradores(cols);
+        } catch (e) { console.warn(e); }
+        carregarSelectColaboradores();
         await atualizarPainel();
         await exibirListaProtocolos();
 
