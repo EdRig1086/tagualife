@@ -1370,16 +1370,34 @@
             return cacheSaidasDB;
         }
         try {
-            const { data, error } = await sb.from('saidas')
+            let data = null;
+            let error = null;
+            // tenta join
+            ({ data, error } = await sb.from('saidas')
                 .select('*, saida_itens(*)')
-                .order('criado_em', { ascending: false });
-            if (error) throw error;
+                .order('criado_em', { ascending: false }));
+            if (error) {
+                console.warn('join saida_itens falhou, busca separada', error.message);
+                ({ data, error } = await sb.from('saidas').select('*').order('criado_em', { ascending: false }));
+                if (error) throw error;
+                // busca itens de todas as saídas
+                const ids = (data || []).map(r => r.id);
+                let itensMap = {};
+                if (ids.length) {
+                    const { data: todosItens } = await sb.from('saida_itens').select('*').in('saida_id', ids);
+                    (todosItens || []).forEach(i => {
+                        if (!itensMap[i.saida_id]) itensMap[i.saida_id] = [];
+                        itensMap[i.saida_id].push(i);
+                    });
+                }
+                data = (data || []).map(r => ({ ...r, saida_itens: itensMap[r.id] || [] }));
+            }
 
             cacheSaidasDB = (data || []).map(r => {
                 const itensRel = r.saida_itens || [];
                 const itens = itensRel.length
                     ? itensRel.map(i => ({
-                        item: i.item_nome || i.descricao || i.item || i.nome || '',
+                        item: i.item_nome || i.nome_do_item || i.descricao || i.item || i.nome || '',
                         qtd: i.quantidade || i.qtd || 1,
                         destino: i.destino || i.uso || '',
                         cadastrado: i.cadastrado !== false
@@ -2392,12 +2410,8 @@ function mostrarToast(mensagem, tipo = 'success') {
                 mostrarToast(msgSucesso, 'success');
             }
             
-            const listaEl = document.getElementById('listaProtocolos');
-            if (listaEl && listaEl.style.display !== 'none') {
-                exibirListaProtocolos();
-            }
-            
-            atualizarPainel();
+            await atualizarPainel();
+            await exibirListaProtocolos();
             limparCamposSilencioso();
             
             return true;
@@ -2410,8 +2424,8 @@ function mostrarToast(mensagem, tipo = 'success') {
         }
     }
 
-    function exibirListaProtocolos() {
-        const protocolos = JSON.parse(localStorage.getItem('saidaMaterialTaguaLife') || '[]');
+    async function exibirListaProtocolos() {
+        const protocolos = await carregarSaidasDB();
         const container = document.getElementById('conteudoLista');
         const filtroFunc = document.getElementById('filtroHistoricoFuncionario')?.value || '';
         const filtroMat = document.getElementById('filtroHistoricoMaterial')?.value || '';
@@ -2672,7 +2686,7 @@ function mostrarToast(mensagem, tipo = 'success') {
     // ============================================
     async function gerarRelatorioPDF(filtro = 'geral') {
         try {
-            const protocolos = JSON.parse(localStorage.getItem('saidaMaterialTaguaLife') || '[]');
+            const protocolos = await carregarSaidasDB();
             
             if (protocolos.length === 0) {
                 mostrarToast('⚠️ Nenhum registro encontrado!', 'warning');
@@ -3136,9 +3150,9 @@ function mostrarToast(mensagem, tipo = 'success') {
         setTimeout(() => janela.print(), 500);
     }
 
-    function exportarExcel() {
+    async function exportarExcel() {
         try {
-            const protocolos = JSON.parse(localStorage.getItem('saidaMaterialTaguaLife') || '[]');
+            const protocolos = await carregarSaidasDB();
             
             if (protocolos.length === 0) {
                 mostrarToast('⚠️ Nenhum registro!', 'warning');
@@ -3179,6 +3193,8 @@ function mostrarToast(mensagem, tipo = 'success') {
         // Carrega estoque e saídas do Supabase
         await carregarEstoqueDB();
         await carregarSaidasDB();
+        await atualizarPainel();
+        await exibirListaProtocolos();
 
         if (!localStorage.getItem('estoqueTaguaLife')) {
             const estoqueInicial = [
