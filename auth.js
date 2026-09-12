@@ -78,7 +78,6 @@ function logout() {
     if (!confirm('Deseja realmente sair do sistema?')) return;
     localStorage.removeItem('tagualife_sessao');
     sessionStorage.clear();
-    // replace: não deixa voltar com o botão Voltar
     window.location.replace('login.html');
 }
 
@@ -106,7 +105,14 @@ function aplicarPermissoesNaTela() {
     });
 }
 
-// Checagem imediata (antes do DOM) — barra o acesso sem login
+function iniciarSeguranca() {
+    const path = (window.location.pathname || '').toLowerCase();
+    if (path.includes('login.html')) return;
+    if (!protegerPagina()) return;
+    mostrarUsuarioLogado();
+    aplicarPermissoesNaTela();
+}
+
 (function checagemImediata() {
     try {
         const path = (window.location.pathname || '').toLowerCase();
@@ -119,23 +125,17 @@ function aplicarPermissoesNaTela() {
 
 document.addEventListener('DOMContentLoaded', iniciarSeguranca);
 
-// Botão Voltar / cache
-window.addEventListener('pageshow', function (event) {
+window.addEventListener('pageshow', function () {
     try {
         const path = (window.location.pathname || '').toLowerCase();
         if (path.includes('login.html')) return;
-        if (!estaLogado()) {
-            window.location.replace('login.html');
-        }
+        if (!estaLogado()) window.location.replace('login.html');
     } catch (e) {}
 });
 
-// Sair em outra aba → esta também vai para o login
 window.addEventListener('storage', function (e) {
     if (e.key === 'tagualife_sessao' && !e.newValue) {
         const path = (window.location.pathname || '').toLowerCase();
-        if (!path.includes('login.html')) {
-            window.location.replace('login.html');
-        }
+        if (!path.includes('login.html')) window.location.replace('login.html');
     }
 });
