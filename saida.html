@@ -1883,15 +1883,14 @@ function mostrarToast(mensagem, tipo = 'success') {
     }
 
     function contarUnidadesNaoCadastradas(p) {
+        if (!p) return 0;
         if (typeof p.qtdNaoCadastrados === 'number' && p.qtdNaoCadastrados > 0) {
             return p.qtdNaoCadastrados;
         }
-        if (p.itensNaoCadastrados && p.itensNaoCadastrados.length > 0) {
+        if (p.itensNaoCadastrados && p.itensNaoCadastrados.length > 0 && Array.isArray(p.itens)) {
             let total = 0;
             p.itens.forEach(i => {
-                if (!i.cadastrado) {
-                    total += parseInt(i.qtd) || 0;
-                }
+                if (!i.cadastrado) total += parseInt(i.qtd) || 0;
             });
             return total;
         }
@@ -2190,7 +2189,7 @@ function mostrarToast(mensagem, tipo = 'success') {
             let protocoloAntigo = null;
             
             if (idEdicao) {
-                protocoloAntigo = protocolos.find(p => p.id === idEdicao);
+                protocoloAntigo = protocolos.find(p => String(p.id) === String(idEdicao));
                 
                 if (protocoloAntigo) {
                     protocoloAntigo.itens.forEach(item => {
@@ -2481,13 +2480,13 @@ function mostrarToast(mensagem, tipo = 'success') {
                             ).join(' | ')}
                         </div>
                         <div class="acoes">
-                            <button class="btn btn-outline" onclick="carregarProtocolo(${p.id})">
+                            <button class="btn btn-outline" onclick="carregarProtocolo('${p.id}')">
                                 <i class="fas fa-edit"></i> Editar
                             </button>
-                            <button class="btn btn-outline" onclick="estornarProtocolo(${p.id})" style="color:var(--warning);">
+                            <button class="btn btn-outline" onclick="estornarProtocolo('${p.id}')" style="color:var(--warning);">
                                 <i class="fas fa-undo-alt"></i> Estornar
                             </button>
-                            <button class="btn btn-outline" onclick="excluirProtocolo(${p.id})" style="color:var(--danger);">
+                            <button class="btn btn-outline" onclick="excluirProtocolo('${p.id}')" style="color:var(--danger);">
                                 <i class="fas fa-trash-alt"></i>
                             </button>
                         </div>
@@ -2502,9 +2501,9 @@ function mostrarToast(mensagem, tipo = 'success') {
         document.getElementById('listaProtocolos').scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 
-    window.carregarProtocolo = function(id) {
-        const protocolos = JSON.parse(localStorage.getItem('saidaMaterialTaguaLife') || '[]');
-        const p = protocolos.find(item => item.id === id);
+    window.carregarProtocolo = async function(id) {
+        const protocolos = await carregarSaidasDB();
+        const p = protocolos.find(item => String(item.id) === String(id));
         
         if (!p) {
             mostrarToast('❌ Registro não encontrado!', 'danger');
@@ -2606,40 +2605,54 @@ function mostrarToast(mensagem, tipo = 'success') {
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
-    window.estornarProtocolo = function(id) {
+    window.estornarProtocolo = async function(id) {
         if (!confirm('⚠️ Tem certeza que deseja ESTORNAR esta saída?\n\nOs itens voltarão ao estoque e a saída sairá dos relatórios.')) return;
         
-        const protocolos = JSON.parse(localStorage.getItem('saidaMaterialTaguaLife') || '[]');
-        const p = protocolos.find(item => item.id === id);
-        
-        if (!p) return;
-        
-        const estoque = JSON.parse(localStorage.getItem('estoqueTaguaLife') || '[]');
-        p.itens.forEach(item => {
-            const itemEstoque = estoque.find(i => i.nome.toLowerCase() === item.item.toLowerCase());
-            if (itemEstoque && item.cadastrado) {
-                itemEstoque.quantidade += parseInt(item.qtd) || 0;
+        const protocolos = await carregarSaidasDB();
+        const p = protocolos.find(item => String(item.id) === String(id));
+        if (!p) {
+            mostrarToast('❌ Registro não encontrado!', 'danger');
+            return;
+        }
+
+        // Devolve estoque
+        await devolverEstoqueDB((p.itens || []).filter(i => i.cadastrado !== false).map(i => ({
+            nome: i.item, qtd: i.qtd
+        })));
+
+        if (sb) {
+            await sb.from('saida_itens').delete().eq('saida_id', id);
+            const { error } = await sb.from('saidas').delete().eq('id', id);
+            if (error) {
+                mostrarToast('❌ Erro ao estornar: ' + error.message, 'danger');
+                return;
             }
-        });
-        localStorage.setItem('estoqueTaguaLife', JSON.stringify(estoque));
-        
-        const novosProtocolos = protocolos.filter(p => p.id !== id);
-        localStorage.setItem('saidaMaterialTaguaLife', JSON.stringify(novosProtocolos));
-        
-        exibirListaProtocolos();
-        atualizarPainel();
+        }
+
+        cacheSaidasDB = (cacheSaidasDB || []).filter(x => String(x.id) !== String(id));
+        localStorage.setItem('saidaMaterialTaguaLife', JSON.stringify(cacheSaidasDB));
+        await exibirListaProtocolos();
+        await atualizarPainel();
+        await carregarSelectItens();
         mostrarToast('↩️ Saída estornada!', 'warning');
     };
 
-    window.excluirProtocolo = function(id) {
+    window.excluirProtocolo = async function(id) {
         if (!confirm('⚠️ Tem certeza que deseja excluir permanentemente este registro?')) return;
         
-        let protocolos = JSON.parse(localStorage.getItem('saidaMaterialTaguaLife') || '[]');
-        protocolos = protocolos.filter(p => p.id !== id);
-        localStorage.setItem('saidaMaterialTaguaLife', JSON.stringify(protocolos));
-        
-        exibirListaProtocolos();
-        atualizarPainel();
+        if (sb) {
+            await sb.from('saida_itens').delete().eq('saida_id', id);
+            const { error } = await sb.from('saidas').delete().eq('id', id);
+            if (error) {
+                mostrarToast('❌ Erro ao excluir: ' + error.message, 'danger');
+                return;
+            }
+        }
+
+        cacheSaidasDB = (cacheSaidasDB || []).filter(x => String(x.id) !== String(id));
+        localStorage.setItem('saidaMaterialTaguaLife', JSON.stringify(cacheSaidasDB));
+        await exibirListaProtocolos();
+        await atualizarPainel();
         mostrarToast('🗑️ Registro excluído!', 'danger');
     };
 
@@ -2686,7 +2699,10 @@ function mostrarToast(mensagem, tipo = 'success') {
     // ============================================
     async function gerarRelatorioPDF(filtro = 'geral') {
         try {
-            const protocolos = await carregarSaidasDB();
+            const protocolos = (await carregarSaidasDB()).map(p => ({
+                ...p,
+                itens: Array.isArray(p.itens) ? p.itens : []
+            }));
             
             if (protocolos.length === 0) {
                 mostrarToast('⚠️ Nenhum registro encontrado!', 'warning');
