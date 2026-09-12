@@ -1379,7 +1379,7 @@
                 const itensRel = r.saida_itens || [];
                 const itens = itensRel.length
                     ? itensRel.map(i => ({
-                        item: i.descricao || i.item || i.nome || '',
+                        item: i.nome_do_item || i.descricao || i.item || i.nome || '',
                         qtd: i.quantidade || i.qtd || 1,
                         destino: i.destino || i.uso || '',
                         cadastrado: i.cadastrado !== false
@@ -2253,8 +2253,9 @@ function mostrarToast(mensagem, tipo = 'success') {
                     await sb.from('saida_itens').delete().eq('saida_id', idEdicao);
                     const linhas = (dados.itens || []).map(i => ({
                         saida_id: idEdicao,
-                        descricao: i.item || '',
-                        quantidade: parseInt(i.qtd) || 1
+                        nome_do_item: i.item || '',
+                        quantidade: parseInt(i.qtd) || 1,
+                        destino: i.destino || null
                     }));
                     if (linhas.length) await sb.from('saida_itens').insert(linhas);
                 }
@@ -2321,19 +2322,29 @@ function mostrarToast(mensagem, tipo = 'success') {
                         // itens na tabela saida_itens
                         const linhas = (novoProtocolo.itens || []).map(i => ({
                             saida_id: saved[0].id,
-                            descricao: i.item || '',
+                            nome_do_item: i.item || '',
                             quantidade: parseInt(i.qtd) || 1,
                             destino: i.destino || null,
                             cadastrado: i.cadastrado !== false
                         }));
                         if (linhas.length) {
-                            const { error: errItens } = await sb.from('saida_itens').insert(linhas);
+                            let { error: errItens } = await sb.from('saida_itens').insert(linhas);
                             if (errItens) {
-                                // tenta sem colunas extras
                                 console.warn('saida_itens insert:', errItens);
+                                // sem cadastrado
+                                const mid = linhas.map(l => ({
+                                    saida_id: l.saida_id,
+                                    nome_do_item: l.nome_do_item,
+                                    quantidade: l.quantidade,
+                                    destino: l.destino
+                                }));
+                                ({ error: errItens } = await sb.from('saida_itens').insert(mid));
+                            }
+                            if (errItens) {
+                                console.warn('saida_itens mid:', errItens);
                                 const simples = linhas.map(l => ({
                                     saida_id: l.saida_id,
-                                    descricao: l.descricao,
+                                    nome_do_item: l.nome_do_item,
                                     quantidade: l.quantidade
                                 }));
                                 const { error: err2 } = await sb.from('saida_itens').insert(simples);
