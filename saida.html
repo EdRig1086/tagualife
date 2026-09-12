@@ -2302,59 +2302,85 @@ function mostrarToast(mensagem, tipo = 'success') {
                 }
 
                 // Salva saída no Supabase (schema real: saidas + saida_itens)
-                if (sb) {
-                    const row = {
-                        colaborador: novoProtocolo.colaborador,
-                        data_saida: dataBRParaISO(novoProtocolo.dataSaida),
-                        hora_saida: horaParaDB(novoProtocolo.horas),
-                        assinatura: novoProtocolo.assinatura || null,
-                        almoxarife: novoProtocolo.almoxarife || null,
-                        observacao: (qtdNaoCadastrados > 0)
-                            ? (qtdNaoCadastrados + ' item(ns) não cadastrado(s)')
-                            : null
-                    };
-                    const { data: saved, error } = await sb.from('saidas').insert([row]).select();
-                    if (error) {
-                        console.warn('Supabase saidas insert:', error);
-                        mostrarToast('⚠️ Saídas DB: ' + (error.message || JSON.stringify(error)), 'warning');
-                    } else if (saved && saved[0]) {
-                        novoProtocolo.id = saved[0].id;
-                        // itens na tabela saida_itens
-                        const linhas = (novoProtocolo.itens || []).map(i => ({
-                            saida_id: saved[0].id,
-                            item_nome: i.item || '',
-                            quantidade: parseInt(i.qtd) || 1,
-                            destino: i.destino || null,
-                            cadastrado: i.cadastrado !== false
-                        }));
-                        if (linhas.length) {
-                            let { error: errItens } = await sb.from('saida_itens').insert(linhas);
-                            if (errItens) {
-                                console.warn('saida_itens insert:', errItens);
-                                // sem cadastrado
-                                const mid = linhas.map(l => ({
-                                    saida_id: l.saida_id,
-                                    item_nome: l.item_nome,
-                                    quantidade: l.quantidade,
-                                    destino: l.destino
-                                }));
-                                ({ error: errItens } = await sb.from('saida_itens').insert(mid));
+                if (!sb) {
+                    mostrarToast('⚠️ Supabase não conectado — só local', 'warning');
+                } else {
+                    try {
+                        const row = {
+                            colaborador: novoProtocolo.colaborador,
+                            data_saida: dataBRParaISO(novoProtocolo.dataSaida),
+                            hora_saida: horaParaDB(novoProtocolo.horas),
+                            assinatura: novoProtocolo.assinatura || null,
+                            almoxarife: novoProtocolo.almoxarife || null,
+                            observacao: (qtdNaoCadastrados > 0)
+                                ? (qtdNaoCadastrados + ' item(ns) não cadastrado(s)')
+                                : null
+                        };
+                        console.log('➡️ Insert saidas', row);
+                        const { data: saved, error } = await sb.from('saidas').insert([row]).select();
+                        if (error) {
+                            console.error('❌ saidas', error);
+                            mostrarToast('❌ Banco saidas: ' + error.message, 'danger');
+                        } else if (saved && saved[0]) {
+                            novoProtocolo.id = saved[0].id;
+                            console.log('✅ saidas id', saved[0].id);
+
+                            const base = (novoProtocolo.itens || []).map(i => ({
+                                saida_id: saved[0].id,
+                                quantidade: parseInt(i.qtd) || 1,
+                                destino: i.destino || null,
+                                cadastrado: i.cadastrado !== false,
+                                item_nome: i.item || '',
+                                nome_do_item: i.item || ''
+                            }));
+
+                            // tenta item_nome
+                            let payload = base.map(({saida_id, quantidade, destino, cadastrado, item_nome}) =>
+                                ({ saida_id, quantidade, destino, cadastrado, item_nome }));
+                            let res = await sb.from('saida_itens').insert(payload);
+                            if (res.error) {
+                                console.warn('tentativa item_nome:', res.error.message);
+                                // tenta nome_do_item
+                                payload = base.map(({saida_id, quantidade, destino, cadastrado, nome_do_item}) =>
+                                    ({ saida_id, quantidade, destino, cadastrado, nome_do_item }));
+                                res = await sb.from('saida_itens').insert(payload);
                             }
-                            if (errItens) {
-                                console.warn('saida_itens mid:', errItens);
-                                const simples = linhas.map(l => ({
-                                    saida_id: l.saida_id,
-                                    item_nome: l.item_nome,
-                                    quantidade: l.quantidade
-                                }));
-                                const { error: err2 } = await sb.from('saida_itens').insert(simples);
-                                if (err2) console.warn('saida_itens simples:', err2);
+                            if (res.error) {
+                                console.warn('tentativa com cadastrado falhou:', res.error.message);
+                                payload = base.map(({saida_id, quantidade, destino, item_nome}) =>
+                                    ({ saida_id, quantidade, destino, item_nome }));
+                                res = await sb.from('saida_itens').insert(payload);
                             }
+                            if (res.error) {
+                                payload = base.map(({saida_id, quantidade, destino, nome_do_item}) =>
+                                    ({ saida_id, quantidade, destino, nome_do_item }));
+                                res = await sb.from('saida_itens').insert(payload);
+                            }
+                            if (res.error) {
+                                payload = base.map(({saida_id, quantidade, item_nome}) =>
+                                    ({ saida_id, quantidade, item_nome }));
+                                res = await sb.from('saida_itens').insert(payload);
+                            }
+                            if (res.error) {
+                                payload = base.map(({saida_id, quantidade, nome_do_item}) =>
+                                    ({ saida_id, quantidade, nome_do_item }));
+                                res = await sb.from('saida_itens').insert(payload);
+                            }
+                            if (res.error) {
+                                console.error('❌ saida_itens', res.error);
+                                mostrarToast('❌ Itens DB: ' + res.error.message, 'danger');
+                            } else {
+                                console.log('✅ saida_itens ok');
+                                mostrarToast('☁️ Gravado no banco de dados!', 'success');
+                            }
+                            localStorage.setItem('saidaMaterialTaguaLife', JSON.stringify(protocolos));
                         }
-                        localStorage.setItem('saidaMaterialTaguaLife', JSON.stringify(protocolos));
+                    } catch (eDB) {
+                        console.error(eDB);
+                        mostrarToast('❌ Erro DB: ' + eDB.message, 'danger');
                     }
                 }
-                
+
                 let msgSucesso = '✅ Saída registrada com sucesso!';
                 if (itensBaixados.length > 0) {
                     msgSucesso += ` (${itensBaixados.length} baixado(s))`;
