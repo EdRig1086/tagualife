@@ -224,10 +224,58 @@
         .tabela-relatorio td { padding: 0.35rem 0.6rem; border-bottom: 1px solid var(--border-color); }
         .tabela-relatorio tr.baixo { background: #FFF3E0; }
         @media print {
+            @page { size: A4 landscape; margin: 8mm; }
+            html, body {
+                background: #fff !important;
+                color: #000 !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                height: auto !important;
+                overflow: visible !important;
+            }
             body * { visibility: hidden !important; }
-            #relatorioConteudo, #relatorioConteudo * { visibility: visible !important; }
-            #relatorioConteudo { position: absolute; left: 0; top: 0; width: 100%; }
+            .modal-overlay.ativo,
+            .modal-overlay.ativo *,
+            #relatorioConteudo,
+            #relatorioConteudo * {
+                visibility: visible !important;
+            }
+            .modal-overlay.ativo {
+                position: static !important;
+                display: block !important;
+                background: none !important;
+                inset: auto !important;
+                padding: 0 !important;
+            }
+            .modal-overlay.ativo .modal-box {
+                box-shadow: none !important;
+                border: none !important;
+                max-width: 100% !important;
+                max-height: none !important;
+                width: 100% !important;
+                overflow: visible !important;
+                border-radius: 0 !important;
+            }
             .modal-head, .modal-foot { display: none !important; }
+            .modal-body { padding: 0 !important; }
+            #relatorioConteudo {
+                position: relative !important;
+                left: auto !important;
+                top: auto !important;
+                width: 100% !important;
+            }
+            .tabela-relatorio { font-size: 9px !important; }
+            .tabela-relatorio th, .tabela-relatorio td {
+                padding: 2px 4px !important;
+                border: 1px solid #999 !important;
+            }
+            .tabela-relatorio thead { background: #555 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .tabela-relatorio thead th { color: #fff !important; }
+            .tabela-relatorio tr.baixo { background: #f5e6c8 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .relatorio-cabecalho h1 { font-size: 16px !important; margin: 4px 0 !important; }
+            .relatorio-resumo { font-size: 10px !important; margin: 6px 0 !important; padding: 6px !important; }
+            .titulo-secao { font-size: 11px !important; margin: 8px 0 4px !important; }
+            .app-container, .nav-menu, .app-topbar, #toastGlobal { display: none !important; }
         }
 
     </style>
@@ -887,7 +935,58 @@
     function fecharModalRelatorio() {
         document.getElementById('modalRelatorio').classList.remove('ativo');
     }
-    function imprimirRelatorioEstoque() { window.print(); }
+    function imprimirRelatorioEstoque() {
+        const conteudo = document.getElementById('relatorioConteudo');
+        if (!conteudo || !conteudo.innerHTML.trim()) {
+            mostrarToast('⚠️ Abra um relatório antes de imprimir', 'warning');
+            return;
+        }
+        const win = window.open('', '_blank', 'width=1100,height=700');
+        if (!win) {
+            // fallback: print da página atual
+            window.print();
+            return;
+        }
+        const estilos = `
+  @page { size: A4 landscape; margin: 8mm; }
+  * { box-sizing: border-box; }
+  body { font-family: Arial, Helvetica, sans-serif; color: #111; margin: 0; padding: 8px; font-size: 11px; }
+  .relatorio-cabecalho .empresa, .relatorio-cabecalho .geracao { font-size: 10px; color: #555; }
+  .relatorio-cabecalho h1 { font-size: 18px; margin: 6px 0 2px; }
+  .relatorio-cabecalho .periodo { font-size: 12px; color: #444; margin-bottom: 8px; }
+  .relatorio-resumo {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 4px 20px;
+    border: 1px solid #ccc; padding: 8px 12px; margin: 8px 0 12px; font-size: 11px;
+  }
+  .relatorio-resumo .item { display: flex; justify-content: space-between; }
+  .relatorio-resumo .val { font-weight: 700; }
+  .relatorio-resumo .val.laranja { color: #c45a00; }
+  .secao-relatorio { margin-top: 12px; page-break-inside: avoid; }
+  .titulo-secao {
+    font-size: 12px; font-weight: 700; border-bottom: 2px solid #7A816E;
+    padding-bottom: 3px; margin-bottom: 6px;
+  }
+  table.tabela-relatorio { width: 100%; border-collapse: collapse; font-size: 10px; }
+  table.tabela-relatorio th {
+    background: #555; color: #fff; padding: 4px 5px; text-align: left;
+    font-size: 9px; text-transform: uppercase;
+  }
+  table.tabela-relatorio td { padding: 3px 5px; border: 1px solid #bbb; }
+  table.tabela-relatorio tr.baixo { background: #f5e6c8; }
+  @media print { body { padding: 0; } }
+`;
+        win.document.open();
+        win.document.write('<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8">');
+        win.document.write('<title>Relatório Estoque · TaguáLife</title>');
+        win.document.write('<style>' + estilos + '</style></head><body>');
+        win.document.write(conteudo.innerHTML);
+        win.document.write('</body></html>');
+        win.document.close();
+        setTimeout(function() {
+            try { win.focus(); win.print(); } catch (e) { console.warn(e); }
+        }, 300);
+    }
+
     function exportarCSVEstoque() {
         const lista = ultimoRelatorioDados.length ? ultimoRelatorioDados : itensCache;
         if (!lista.length) { mostrarToast('⚠️ Sem dados', 'warning'); return; }
