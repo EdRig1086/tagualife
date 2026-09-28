@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TaguáLife Center · Usuários</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="auth.js"></script>
+    <style>
+        :root {
+            --verde-claro: #C1CE83; --verde-oliva: #7A816E; --branco: #FBFBF7; --preto: #191D1B;
+            --danger: #8B3A3A; --success: #7A816E; --warning: #C1A83C;
+            --bg-body: #E8EBE0; --bg-card: #FBFBF7; --text-primary: #191D1B;
+            --text-secondary: #7A816E; --border-color: #D8DCCE; --shadow: 0 4px 24px rgba(25,29,27,0.08);
+        }
+        body.dark-mode {
+            --bg-body: #1a1a1a; --bg-card: #2a2a2a; --text-primary: #e8e8e8;
+            --text-secondary: #b0b8a8; --border-color: #444; --preto: #e8e8e8; --branco: #2a2a2a;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', sans-serif; background: var(--bg-body); min-height: 100vh;
+            padding: 1rem; color: var(--text-primary);
+        }
+        .app-container { max-width: 1000px; margin: 0 auto; }
+        .app-topbar {
+            display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.4rem;
+            background: var(--bg-card); padding: 0.5rem 1rem; border-radius: 10px;
+            border: 1px solid var(--border-color); margin-bottom: 0.6rem; box-shadow: var(--shadow);
+        }
+        .logo-area { display: flex; align-items: center; gap: 0.5rem; text-decoration: none; color: inherit; }
+        .logo-icon {
+            width: 40px; height: 40px; background: #191D1B; border-radius: 10px; color: var(--verde-claro);
+            display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.7rem;
+            flex-direction: column; line-height: 1;
+        }
+        .logo-icon small { font-size: 0.3rem; color: #FBFBF7; }
+        .title { font-size: 1.15rem; font-weight: 800; }
+        .title .life { color: var(--verde-claro); }
+        .user-info {
+            font-size: 0.7rem; color: var(--text-secondary); background: var(--bg-body);
+            padding: 0.25rem 0.7rem; border-radius: 40px; border: 1px solid var(--border-color);
+        }
+        .user-info strong { color: var(--text-primary); }
+        .nav-menu {
+            display: flex; gap: 0.2rem; flex-wrap: wrap; background: var(--bg-card); padding: 0.25rem 0.6rem;
+            border-radius: 8px; border: 1px solid var(--border-color); margin-bottom: 0.8rem;
+        }
+        .nav-menu a, .nav-menu button {
+            padding: 0.25rem 0.75rem; border-radius: 40px; font-size: 0.65rem; font-weight: 500;
+            color: var(--text-secondary); text-decoration: none; border: none; background: transparent;
+            cursor: pointer; font-family: inherit;
+        }
+        .nav-menu a:hover, .nav-menu button:hover { background: var(--bg-body); color: var(--text-primary); }
+        .nav-menu a.active { background: #191D1B; color: #FBFBF7; }
+        .card {
+            background: var(--bg-card); border-radius: 12px; border: 1px solid var(--border-color);
+            box-shadow: var(--shadow); overflow: hidden;
+        }
+        .card-header {
+            background: var(--verde-claro); padding: 0.5rem 1.2rem; color: #191D1B;
+            display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.4rem;
+            border-bottom: 3px solid var(--verde-oliva);
+        }
+        .card-header h2 { font-size: 1rem; font-weight: 600; }
+        .card-body { padding: 1.2rem; }
+        .aviso {
+            background: #E3F2FD; border: 1px solid #90CAF9; color: #1565C0;
+            padding: 0.7rem 1rem; border-radius: 8px; font-size: 0.75rem; margin-bottom: 1rem;
+        }
+        .aviso.bloqueado {
+            background: #FFEBEE; border-color: #EF9A9A; color: #C62828;
+        }
+        table { width: 100%; border-collapse: collapse; font-size: 0.78rem; }
+        th {
+            text-align: left; padding: 0.45rem 0.6rem; font-size: 0.6rem; text-transform: uppercase;
+            color: var(--text-secondary); border-bottom: 2px solid var(--border-color); background: #F0F2EA;
+        }
+        body.dark-mode th { background: #333; }
+        td { padding: 0.45rem 0.6rem; border-bottom: 1px solid var(--border-color); vertical-align: middle; }
+        tr:hover { background: rgba(193,206,131,0.12); }
+        select.cargo-select {
+            padding: 0.25rem 0.5rem; border-radius: 6px; border: 1px solid var(--border-color);
+            font-size: 0.72rem; font-family: inherit; background: var(--bg-card); color: var(--text-primary);
+            min-width: 130px;
+        }
+        .badge {
+            display: inline-block; padding: 0.1rem 0.45rem; border-radius: 40px; font-size: 0.6rem; font-weight: 600;
+        }
+        .badge.ok { background: #C8E6C9; color: #2E7D32; }
+        .badge.off { background: #FFCDD2; color: #C62828; }
+        .btn-sm {
+            padding: 0.25rem 0.55rem; border-radius: 6px; border: 1px solid var(--border-color);
+            font-size: 0.68rem; cursor: pointer; background: transparent; font-family: inherit; color: var(--text-primary);
+        }
+        .btn-sm.danger { color: var(--danger); border-color: var(--danger); }
+        .btn-sm.primary { background: #191D1B; color: #fff; border-color: #191D1B; }
+        #toast {
+            position: fixed; bottom: 20px; right: 20px; padding: 12px 20px; border-radius: 8px;
+            color: #fff; font-size: 0.8rem; opacity: 0; transform: translateY(40px); transition: 0.3s; z-index: 99;
+        }
+        #toast.show { opacity: 1; transform: translateY(0); }
+    </style>
+</head>
+<body>
+<div class="app-container">
+    <div class="app-topbar">
+        <a href="index.html" class="logo-area">
+            <div class="logo-icon">T<small>LIFE</small></div>
+            <div class="title">Taguá<span class="life">Life</span></div>
+        </a>
+        <div class="user-info">
+            <strong id="usuarioLogado">—</strong> · <span id="cargoLogado">—</span>
+        </div>
+    </div>
+    <div class="nav-menu">
+        <a href="index.html"><i class="fas fa-home"></i> Dashboard</a>
+        <a href="estoque.html"><i class="fas fa-boxes"></i> Estoque</a>
+        <a href="saida.html"><i class="fas fa-arrow-right"></i> Saída</a>
+        <a href="mapacota.html"><i class="fas fa-file-invoice"></i> Cotação</a>
+        <a href="fornecedor.html"><i class="fas fa-handshake"></i> Fornecedores</a>
+        <a class="active" href="usuarios.html"><i class="fas fa-users-cog"></i> Usuários</a>
+        <button onclick="logout()" style="margin-left:auto;background:#8B3A3A;color:#fff;border-radius:40px;padding:0.25rem 0.8rem;">
+            <i class="fas fa-sign-out-alt"></i> Sair
+        </button>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h2><i class="fas fa-users-cog"></i> Gerenciar usuários e permissões</h2>
+            <button class="btn-sm primary" onclick="carregarUsuarios()"><i class="fas fa-sync"></i> Atualizar</button>
+        </div>
+        <div class="card-body">
+            <div id="avisoAcesso" class="aviso">
+                <i class="fas fa-shield-alt"></i>
+                Apenas o <strong>Administrador</strong> pode alterar o perfil (cargo) dos usuários.
+                Quem se cadastra no login entra como <strong>Usuário</strong> até você liberar.
+            </div>
+            <div style="overflow-x:auto;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Nome</th>
+                            <th>E-mail</th>
+                            <th>Perfil (cargo)</th>
+                            <th>Status</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="corpoUsuarios">
+                        <tr><td colspan="5" style="text-align:center;padding:1.5rem;color:var(--text-secondary);">Carregando...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+<div id="toast"></div>
+<script>
+    const SUPABASE_URL = 'https://frlecudymdpnrsilavbj.supabase.co';
+    const SUPABASE_KEY = 'sb_publishable_Uv-GZdW4peH3IZTIwiNYXg_IrYytpn4';
+    const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    const CARGOS = [
+        'Administrador', 'Síndico', 'Síndica', 'Almoxarife',
+        'Manutenção', 'Porteiro', 'Zelador', 'Usuário'
+    ];
+
+    function toast(msg, cor) {
+        const el = document.getElementById('toast');
+        el.textContent = msg;
+        el.style.background = cor || '#191D1B';
+        el.classList.add('show');
+        clearTimeout(el._t);
+        el._t = setTimeout(() => el.classList.remove('show'), 3200);
+    }
+
+    function ehAdmin() {
+        if (typeof podeGerenciarUsuarios === 'function') return podeGerenciarUsuarios();
+        const s = JSON.parse(localStorage.getItem('tagualife_sessao') || 'null');
+        return s && s.cargo === 'Administrador';
+    }
+
+    async function carregarUsuarios() {
+        const corpo = document.getElementById('corpoUsuarios');
+        corpo.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:1.5rem;">Carregando...</td></tr>';
+        try {
+            const { data, error } = await sb.from('usuarios')
+                .select('id,nome,email,cargo,ativo,criado_em')
+                .order('nome');
+            if (error) throw error;
+            const lista = data || [];
+            const admin = ehAdmin();
+            if (!lista.length) {
+                corpo.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:1.5rem;">Nenhum usuário</td></tr>';
+                return;
+            }
+            corpo.innerHTML = lista.map(u => {
+                const cargoOpts = CARGOS.map(c =>
+                    `<option value="${c}" ${c === (u.cargo || 'Usuário') ? 'selected' : ''}>${c}</option>`
+                ).join('');
+                const ativo = u.ativo !== false;
+                return `<tr>
+                    <td><strong>${u.nome || '—'}</strong></td>
+                    <td>${u.email || '—'}</td>
+                    <td>
+                        <select class="cargo-select" ${admin ? '' : 'disabled'}
+                            onchange="alterarCargo('${u.id}', this.value)">
+                            ${cargoOpts}
+                        </select>
+                    </td>
+                    <td>
+                        <span class="badge ${ativo ? 'ok' : 'off'}">${ativo ? 'Ativo' : 'Inativo'}</span>
+                    </td>
+                    <td>
+                        ${admin ? `
+                        <button class="btn-sm" onclick="toggleAtivo('${u.id}', ${ativo})">
+                            ${ativo ? 'Desativar' : 'Ativar'}
+                        </button>` : '—'}
+                    </td>
+                </tr>`;
+            }).join('');
+        } catch (e) {
+            console.error(e);
+            corpo.innerHTML = `<tr><td colspan="5" style="color:#8B3A3A;padding:1rem;">Erro: ${e.message}</td></tr>`;
+        }
+    }
+
+    window.alterarCargo = async function(id, cargo) {
+        if (!ehAdmin()) {
+            toast('⛔ Só Administrador pode alterar perfil', '#8B3A3A');
+            carregarUsuarios();
+            return;
+        }
+        try {
+            const { error } = await sb.from('usuarios')
+                .update({ cargo: cargo, atualizado_em: new Date().toISOString() })
+                .eq('id', id);
+            if (error) throw error;
+            toast('✅ Perfil atualizado: ' + cargo, '#7A816E');
+        } catch (e) {
+            toast('❌ ' + e.message, '#8B3A3A');
+            carregarUsuarios();
+        }
+    };
+
+    window.toggleAtivo = async function(id, ativoAtual) {
+        if (!ehAdmin()) return;
+        const novo = !ativoAtual;
+        if (!confirm(novo ? 'Ativar este usuário?' : 'Desativar este usuário?')) return;
+        try {
+            const { error } = await sb.from('usuarios')
+                .update({ ativo: novo, atualizado_em: new Date().toISOString() })
+                .eq('id', id);
+            if (error) throw error;
+            toast(novo ? '✅ Usuário ativado' : '⚠️ Usuário desativado', novo ? '#7A816E' : '#C1A83C');
+            carregarUsuarios();
+        } catch (e) {
+            toast('❌ ' + e.message, '#8B3A3A');
+        }
+    };
+
+    document.addEventListener('DOMContentLoaded', function() {
+        if (typeof protegerPagina === 'function' && !protegerPagina()) return;
+        if (typeof mostrarUsuarioLogado === 'function') mostrarUsuarioLogado();
+
+        if (!ehAdmin()) {
+            const aviso = document.getElementById('avisoAcesso');
+            aviso.className = 'aviso bloqueado';
+            aviso.innerHTML = '<i class="fas fa-lock"></i> Você pode <strong>visualizar</strong> a lista, mas só o <strong>Administrador</strong> altera perfis.';
+        }
+        carregarUsuarios();
+    });
+</script>
+</body>
+</html>
