@@ -1,9 +1,8 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate" />
-<script src="auth.js"></script>
     <meta charset="UTF-8" />
+    <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>TaguáLife Center · Cadastro de Estoque</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
@@ -161,6 +160,76 @@
         }
         #toastGlobal.show { transform: translateY(0); opacity: 1; }
         .loading-overlay { text-align: center; padding: 2rem; color: var(--text-secondary); font-size: 0.85rem; }
+    
+        .btn-relatorio {
+            padding: 0.4rem 0.9rem; border: 1px solid var(--verde-oliva); border-radius: 40px;
+            font-size: 0.7rem; font-family: inherit; cursor: pointer;
+            display: inline-flex; align-items: center; gap: 0.3rem;
+            background: var(--verde-oliva); color: #fff;
+        }
+        .btn-relatorio:hover { background: #5A614E; }
+        .relatorios-bar {
+            display: flex; gap: 0.4rem; flex-wrap: wrap; margin-bottom: 1rem;
+            padding: 0.6rem 0.8rem; background: var(--gray-50); border-radius: 8px;
+            border: 1px solid var(--border-color); align-items: center;
+        }
+        .relatorios-bar .lbl {
+            font-size: 0.65rem; font-weight: 700; color: var(--text-secondary);
+            text-transform: uppercase; letter-spacing: 0.4px; margin-right: 0.3rem;
+        }
+        .modal-overlay {
+            display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.45);
+            z-index: 10000; align-items: center; justify-content: center; padding: 1rem;
+        }
+        .modal-overlay.ativo { display: flex; }
+        .modal-box {
+            background: var(--bg-card); border-radius: 12px; width: 100%; max-width: 900px;
+            max-height: 90vh; overflow: auto; border: 1px solid var(--border-color);
+            box-shadow: var(--shadow);
+        }
+        .modal-box .modal-head {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 0.8rem 1.2rem; border-bottom: 2px solid var(--verde-claro); background: var(--gray-50);
+        }
+        .modal-box .modal-head h3 { font-size: 0.95rem; }
+        .modal-box .modal-body { padding: 1rem 1.2rem 1.4rem; }
+        .modal-box .modal-foot {
+            padding: 0.7rem 1.2rem; border-top: 1px solid var(--border-color);
+            display: flex; gap: 0.4rem; justify-content: flex-end; flex-wrap: wrap;
+        }
+        .relatorio-cabecalho { margin-bottom: 1rem; }
+        .relatorio-cabecalho .empresa, .relatorio-cabecalho .geracao { font-size: 0.7rem; color: var(--text-secondary); }
+        .relatorio-cabecalho h1 { font-size: 1.3rem; font-weight: 800; }
+        .relatorio-cabecalho .periodo { font-size: 0.8rem; color: var(--text-secondary); }
+        .relatorio-resumo {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 0.4rem 1.5rem;
+            background: var(--gray-50); padding: 0.8rem 1rem; border-radius: 8px;
+            margin: 0.8rem 0; border-left: 4px solid var(--verde-claro); font-size: 0.8rem;
+        }
+        .relatorio-resumo .item { display: flex; justify-content: space-between; padding: 0.2rem 0; }
+        .relatorio-resumo .lbl { color: var(--text-secondary); }
+        .relatorio-resumo .val { font-weight: 700; }
+        .relatorio-resumo .val.laranja { color: #E65100; }
+        .secao-relatorio { margin-top: 1rem; }
+        .titulo-secao {
+            font-size: 0.85rem; font-weight: 700; padding-bottom: 0.35rem;
+            border-bottom: 2px solid var(--verde-claro); margin-bottom: 0.6rem;
+        }
+        .tabela-relatorio { width: 100%; border-collapse: collapse; font-size: 0.75rem; }
+        .tabela-relatorio thead { background: var(--verde-oliva); }
+        .tabela-relatorio th {
+            padding: 0.4rem 0.6rem; text-align: left; color: #fff;
+            font-weight: 600; font-size: 0.65rem; text-transform: uppercase;
+        }
+        .tabela-relatorio td { padding: 0.35rem 0.6rem; border-bottom: 1px solid var(--border-color); }
+        .tabela-relatorio tr.baixo { background: #FFF3E0; }
+        @media print {
+            body * { visibility: hidden !important; }
+            #relatorioConteudo, #relatorioConteudo * { visibility: visible !important; }
+            #relatorioConteudo { position: absolute; left: 0; top: 0; width: 100%; }
+            .modal-head, .modal-foot { display: none !important; }
+        }
+
     </style>
 </head>
 <body>
@@ -273,6 +342,23 @@
                 </div>
             </div>
 
+            
+            <div class="relatorios-bar">
+                <span class="lbl"><i class="fas fa-chart-bar"></i> Relatórios (banco):</span>
+                <button type="button" class="btn-relatorio" onclick="gerarRelatorioEstoque('geral')">
+                    <i class="fas fa-list"></i> Inventário geral
+                </button>
+                <button type="button" class="btn-relatorio" onclick="gerarRelatorioEstoque('categoria')">
+                    <i class="fas fa-th-list"></i> Por categoria
+                </button>
+                <button type="button" class="btn-relatorio" onclick="gerarRelatorioEstoque('baixo')" style="background:#C1A83C;border-color:#C1A83C;">
+                    <i class="fas fa-exclamation-triangle"></i> Baixa de estoque
+                </button>
+                <button type="button" class="btn-relatorio" onclick="gerarRelatorioEstoque('categoria_escolhida')">
+                    <i class="fas fa-filter"></i> Categoria específica
+                </button>
+            </div>
+
             <div class="busca-bar">
                 <input type="text" id="buscaInput" placeholder="🔍 Buscar..." />
                 <select id="filtroCategoria">
@@ -320,6 +406,22 @@
                 <span>⚠️ Baixo estoque: <strong id="totalBaixoEstoque">0</strong></span>
             </div>
             <div id="feedback"></div>
+        </div>
+    </div>
+</div>
+
+
+<div class="modal-overlay" id="modalRelatorio">
+    <div class="modal-box">
+        <div class="modal-head">
+            <h3><i class="fas fa-file-alt"></i> Relatório de Estoque</h3>
+            <button type="button" class="btn-outline" onclick="fecharModalRelatorio()"><i class="fas fa-times"></i> Fechar</button>
+        </div>
+        <div class="modal-body"><div id="relatorioConteudo"></div></div>
+        <div class="modal-foot">
+            <button type="button" class="btn-outline" onclick="fecharModalRelatorio()"><i class="fas fa-times"></i> Fechar</button>
+            <button type="button" class="btn-relatorio" onclick="imprimirRelatorioEstoque()"><i class="fas fa-print"></i> Imprimir</button>
+            <button type="button" class="btn-outline" onclick="exportarCSVEstoque()"><i class="fas fa-file-excel"></i> CSV</button>
         </div>
     </div>
 </div>
@@ -598,6 +700,212 @@
             mostrarToast('❌ Erro ao excluir: ' + err.message, 'danger');
         }
     };
+
+    
+    let ultimoRelatorioDados = [];
+
+    function isBaixo(item) {
+        const limite = item.limite_alerta != null ? item.limite_alerta : 5;
+        const qtd = item.quantidade != null ? item.quantidade : 0;
+        return qtd < limite;
+    }
+
+    async function gerarRelatorioEstoque(tipo) {
+        try {
+            const { data, error } = await sb.from('estoque').select('*').order('nome');
+            if (error) throw error;
+            itensCache = data || [];
+            renderizarTabela();
+
+            let lista = itensCache.slice();
+            let titulo = 'INVENTÁRIO GERAL DE ESTOQUE';
+            let subtitulo = 'Todos os itens cadastrados no banco';
+
+            if (tipo === 'baixo') {
+                lista = lista.filter(isBaixo);
+                titulo = 'RELATÓRIO DE BAIXA DE ESTOQUE';
+                subtitulo = 'Itens abaixo do limite de alerta';
+            } else if (tipo === 'categoria') {
+                titulo = 'RELATÓRIO POR CATEGORIA';
+                subtitulo = 'Estoque agrupado por categoria';
+            } else if (tipo === 'categoria_escolhida') {
+                const cats = [...new Set(itensCache.map(i => i.categoria || 'Outros'))].sort();
+                const escolhida = prompt('Digite a categoria:\\n\\n' + cats.join(', '));
+                if (!escolhida) return;
+                const catNorm = escolhida.trim().toLowerCase();
+                lista = lista.filter(i => (i.categoria || 'Outros').toLowerCase() === catNorm);
+                if (!lista.length) {
+                    mostrarToast('⚠️ Nenhum item na categoria "' + escolhida + '"', 'warning');
+                    return;
+                }
+                titulo = 'RELATÓRIO — CATEGORIA: ' + escolhida.toUpperCase();
+                subtitulo = lista.length + ' item(ns)';
+            }
+
+            if (!lista.length && tipo === 'baixo') {
+                mostrarToast('✅ Nenhum item em baixa de estoque!', 'success');
+                return;
+            }
+            if (!lista.length) {
+                mostrarToast('⚠️ Nenhum item para o relatório', 'warning');
+                return;
+            }
+
+            ultimoRelatorioDados = lista;
+            renderizarRelatorioModal(lista, titulo, subtitulo, tipo);
+            document.getElementById('modalRelatorio').classList.add('ativo');
+        } catch (err) {
+            console.error(err);
+            mostrarToast('❌ Erro relatório: ' + (err.message || err), 'danger');
+        }
+    }
+
+    function renderizarRelatorioModal(lista, titulo, subtitulo, tipo) {
+        const container = document.getElementById('relatorioConteudo');
+        if (!container) return;
+        const agora = new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
+        const totalUnidades = lista.reduce((s, i) => s + (parseInt(i.quantidade) || 0), 0);
+        const baixo = lista.filter(isBaixo).length;
+
+        const porCat = {};
+        lista.forEach(i => {
+            const c = i.categoria || 'Outros';
+            if (!porCat[c]) porCat[c] = { itens: 0, unidades: 0, baixo: 0 };
+            porCat[c].itens += 1;
+            porCat[c].unidades += parseInt(i.quantidade) || 0;
+            if (isBaixo(i)) porCat[c].baixo += 1;
+        });
+        const catsOrdenadas = Object.entries(porCat).sort((a, b) => a[0].localeCompare(b[0]));
+
+        let html = `
+            <div class="relatorio-cabecalho">
+                <div class="empresa">Condomínio TaguáLife · Life Conceito em Gestão Condominial</div>
+                <div class="geracao">Documento gerado em ${agora} · Fonte: banco Supabase</div>
+                <h1>${titulo}</h1>
+                <div class="periodo">${subtitulo}</div>
+            </div>
+            <div class="relatorio-resumo">
+                <div class="item"><span class="lbl">Total de itens:</span><span class="val">${lista.length}</span></div>
+                <div class="item"><span class="lbl">Unidades totais:</span><span class="val">${totalUnidades}</span></div>
+                <div class="item"><span class="lbl">Categorias:</span><span class="val">${Object.keys(porCat).length}</span></div>
+                <div class="item"><span class="lbl">Baixo estoque:</span><span class="val ${baixo > 0 ? 'laranja' : ''}">${baixo}</span></div>
+            </div>
+            <div class="secao-relatorio">
+                <div class="titulo-secao"><i class="fas fa-th-list"></i> Resumo por categoria</div>
+                <table class="tabela-relatorio">
+                    <thead>
+                        <tr>
+                            <th>Categoria</th>
+                            <th style="text-align:center;">Itens</th>
+                            <th style="text-align:center;">Unidades</th>
+                            <th style="text-align:center;">Baixo estoque</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${catsOrdenadas.map(([cat, d]) => `
+                            <tr>
+                                <td><strong>${cat}</strong></td>
+                                <td style="text-align:center;">${d.itens}</td>
+                                <td style="text-align:center;">${d.unidades}</td>
+                                <td style="text-align:center;${d.baixo ? 'color:#E65100;font-weight:700;' : ''}">${d.baixo}</td>
+                            </tr>`).join('')}
+                    </tbody>
+                </table>
+            </div>
+        `;
+
+        if (tipo === 'categoria') {
+            catsOrdenadas.forEach(([cat]) => {
+                const itensCat = lista.filter(i => (i.categoria || 'Outros') === cat)
+                    .sort((a, b) => (a.nome || '').localeCompare(b.nome || ''));
+                html += `
+                    <div class="secao-relatorio">
+                        <div class="titulo-secao">${cat} (${itensCat.length})</div>
+                        <table class="tabela-relatorio">
+                            <thead>
+                                <tr>
+                                    <th>#</th><th>Item</th><th>Fabricante</th>
+                                    <th style="text-align:center;">Qtd</th>
+                                    <th style="text-align:center;">Limite</th><th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${itensCat.map((item, idx) => {
+                                    const qtd = item.quantidade != null ? item.quantidade : 0;
+                                    const lim = item.limite_alerta != null ? item.limite_alerta : 5;
+                                    const bf = qtd < lim;
+                                    return `<tr class="${bf ? 'baixo' : ''}">
+                                        <td>${idx + 1}</td>
+                                        <td>${item.nome || '—'}</td>
+                                        <td>${item.fabricante || '—'}</td>
+                                        <td style="text-align:center;font-weight:600;">${qtd} ${item.unidade || 'UN'}</td>
+                                        <td style="text-align:center;">${lim}</td>
+                                        <td>${bf ? '⚠️ BAIXO' : 'OK'}</td>
+                                    </tr>`;
+                                }).join('')}
+                            </tbody>
+                        </table>
+                    </div>`;
+            });
+        } else {
+            const ordenada = lista.slice().sort((a, b) => (a.nome || '').localeCompare(b.nome || ''));
+            html += `
+                <div class="secao-relatorio">
+                    <div class="titulo-secao"><i class="fas fa-boxes"></i> Detalhamento dos itens</div>
+                    <table class="tabela-relatorio">
+                        <thead>
+                            <tr>
+                                <th>#</th><th>Item</th><th>Descrição</th><th>Fabricante</th>
+                                <th>Categoria</th>
+                                <th style="text-align:center;">Qtd</th>
+                                <th style="text-align:center;">Limite</th><th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${ordenada.map((item, idx) => {
+                                const qtd = item.quantidade != null ? item.quantidade : 0;
+                                const lim = item.limite_alerta != null ? item.limite_alerta : 5;
+                                const bf = qtd < lim;
+                                return `<tr class="${bf ? 'baixo' : ''}">
+                                    <td>${idx + 1}</td>
+                                    <td><strong>${item.nome || '—'}</strong></td>
+                                    <td>${item.descricao || '—'}</td>
+                                    <td>${item.fabricante || '—'}</td>
+                                    <td>${item.categoria || 'Outros'}</td>
+                                    <td style="text-align:center;font-weight:600;${bf ? 'color:#E65100;' : ''}">${qtd} ${item.unidade || 'UN'}</td>
+                                    <td style="text-align:center;">${lim}</td>
+                                    <td>${bf ? '⚠️ BAIXO' : 'OK'}</td>
+                                </tr>`;
+                            }).join('')}
+                        </tbody>
+                    </table>
+                </div>`;
+        }
+        container.innerHTML = html;
+    }
+
+    function fecharModalRelatorio() {
+        document.getElementById('modalRelatorio').classList.remove('ativo');
+    }
+    function imprimirRelatorioEstoque() { window.print(); }
+    function exportarCSVEstoque() {
+        const lista = ultimoRelatorioDados.length ? ultimoRelatorioDados : itensCache;
+        if (!lista.length) { mostrarToast('⚠️ Sem dados', 'warning'); return; }
+        let csv = 'Item;Descrição;Fabricante;Quantidade;Unidade;Categoria;Limite;Status\\n';
+        lista.forEach(i => {
+            const qtd = i.quantidade != null ? i.quantidade : 0;
+            const lim = i.limite_alerta != null ? i.limite_alerta : 5;
+            csv += `${i.nome||''};${i.descricao||''};${i.fabricante||''};${qtd};${i.unidade||'UN'};${i.categoria||''};${lim};${qtd<lim?'BAIXO':'OK'}\\n`;
+        });
+        const blob = new Blob(['\\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'estoque_tagualife_' + new Date().toISOString().slice(0,10) + '.csv';
+        a.click();
+        URL.revokeObjectURL(a.href);
+        mostrarToast('📊 CSV gerado!', 'success');
+    }
+
 
     document.addEventListener('DOMContentLoaded', function() {
         carregarTema();
