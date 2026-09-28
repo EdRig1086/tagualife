@@ -2203,6 +2203,19 @@ function mostrarToast(mensagem, tipo = 'success') {
     // SALVAR PROTOCOLO (com controle de edição)
     // ============================================
     async function salvarProtocolo() {
+        const editando = !!(window.protocoloEmEdicao || window.editandoSaidaId);
+        if (editando) {
+            if (typeof podeEditar === 'function' && !podeEditar()) {
+                mostrarToast('⛔ Sem permissão para alterar saídas', 'danger');
+                return false;
+            }
+        } else {
+            if (typeof podeCadastrar === 'function' && !podeCadastrar()) {
+                mostrarToast('⛔ Sem permissão para registrar saídas', 'danger');
+                return false;
+            }
+        }
+
         try {
             const dados = carregarDadosFormulario();
             
@@ -2539,15 +2552,17 @@ function mostrarToast(mensagem, tipo = 'success') {
                             ).join(' | ')}
                         </div>
                         <div class="acoes">
+                            ${(typeof podeEditar === 'function' && podeEditar()) ? `
                             <button class="btn btn-outline" onclick="carregarProtocolo('${p.id}')">
                                 <i class="fas fa-edit"></i> Editar
-                            </button>
+                            </button>` : ''}
+                            ${(typeof podeExcluir === 'function' && podeExcluir()) ? `
                             <button class="btn btn-outline" onclick="estornarProtocolo('${p.id}')" style="color:var(--warning);">
                                 <i class="fas fa-undo-alt"></i> Estornar
                             </button>
                             <button class="btn btn-outline" onclick="excluirProtocolo('${p.id}')" style="color:var(--danger);">
                                 <i class="fas fa-trash-alt"></i>
-                            </button>
+                            </button>` : ''}
                         </div>
                         <div class="meta">💾 Salvo em: ${p.dataSalvamento || 'data desconhecida'}${p.dataEdicao ? ' • ✏️ Editado em: ' + p.dataEdicao : ''}</div>
                     </div>
@@ -2561,6 +2576,10 @@ function mostrarToast(mensagem, tipo = 'success') {
     }
 
     window.carregarProtocolo = async function(id) {
+        if (typeof podeEditar === 'function' && !podeEditar()) {
+            mostrarToast('⛔ Sem permissão para editar saídas', 'danger');
+            return;
+        }
         const protocolos = await carregarSaidasDB();
         const p = protocolos.find(item => String(item.id) === String(id));
         
@@ -2665,6 +2684,10 @@ function mostrarToast(mensagem, tipo = 'success') {
     };
 
     window.estornarProtocolo = async function(id) {
+        if (typeof podeExcluir === 'function' && !podeExcluir()) {
+            mostrarToast('⛔ Sem permissão para estornar saídas', 'danger');
+            return;
+        }
         if (!confirm('⚠️ Tem certeza que deseja ESTORNAR esta saída?\n\nOs itens voltarão ao estoque e a saída sairá dos relatórios.')) return;
         
         const protocolos = await carregarSaidasDB();
@@ -2697,6 +2720,11 @@ function mostrarToast(mensagem, tipo = 'success') {
     };
 
     window.excluirProtocolo = async function(id) {
+        if (typeof podeExcluir === 'function' && !podeExcluir()) {
+            mostrarToast('⛔ Sem permissão para excluir saídas', 'danger');
+            return;
+        }
+
         if (!confirm('⚠️ Tem certeza que deseja excluir permanentemente este registro?')) return;
         
         if (sb) {
@@ -3271,6 +3299,32 @@ function mostrarToast(mensagem, tipo = 'success') {
             return;
         }
         if (typeof mostrarUsuarioLogado === 'function') mostrarUsuarioLogado();
+        if (typeof aplicarPermissoesNaTela === 'function') aplicarPermissoesNaTela();
+
+        // Usuário comum: só visualiza histórico — bloqueia formulário de saída
+        const soLeitura = (typeof podeCadastrar === 'function' && !podeCadastrar());
+        if (soLeitura) {
+            const formArea = document.querySelector('.card-saida, .form-saida, #formSaida') || document.getElementById('btnSalvar');
+            const btnSalvar = document.getElementById('btnSalvar');
+            if (btnSalvar) {
+                btnSalvar.disabled = true;
+                btnSalvar.style.opacity = '0.5';
+                btnSalvar.title = 'Sem permissão para registrar saídas';
+            }
+            ['btnAdicionarItem', 'btnLimpar'].forEach(function(id) {
+                const el = document.getElementById(id);
+                if (el) { el.disabled = true; el.style.opacity = '0.5'; }
+            });
+            // bloqueia inputs principais
+            document.querySelectorAll('#colaborador, #dataSaida, #assinatura, #itensBody input, #itensBody select, #itensBody textarea').forEach(function(el) {
+                el.disabled = true;
+            });
+            const aviso = document.createElement('div');
+            aviso.style.cssText = 'background:#FFF3E0;border:1px solid #FFB74D;color:#E65100;padding:0.6rem 1rem;border-radius:8px;font-size:0.75rem;margin-bottom:0.8rem;';
+            aviso.innerHTML = '<i class="fas fa-lock"></i> Seu perfil (<strong>Usuário</strong>) só pode <strong>visualizar</strong>. Cadastro, edição e exclusão de saídas são restritos.';
+            const cardBody = document.querySelector('.card-body');
+            if (cardBody) cardBody.insertBefore(aviso, cardBody.firstChild);
+        }
 
         // Carrega estoque e saídas do Supabase
         await carregarEstoqueDB();
