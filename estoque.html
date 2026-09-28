@@ -402,6 +402,9 @@
                 <button type="button" class="btn-relatorio" onclick="gerarRelatorioEstoque('baixo')" style="background:#C1A83C;border-color:#C1A83C;">
                     <i class="fas fa-exclamation-triangle"></i> Baixa de estoque
                 </button>
+                <button type="button" class="btn-relatorio" onclick="gerarRelatorioEstoque('baixo_categoria')" style="background:#C1A83C;border-color:#C1A83C;">
+                    <i class="fas fa-filter"></i> Baixa por categoria
+                </button>
                 <button type="button" class="btn-relatorio" onclick="gerarRelatorioEstoque('categoria_escolhida')">
                     <i class="fas fa-filter"></i> Categoria específica
                 </button>
@@ -772,7 +775,31 @@
             if (tipo === 'baixo') {
                 lista = lista.filter(isBaixo);
                 titulo = 'RELATÓRIO DE BAIXA DE ESTOQUE';
-                subtitulo = 'Itens abaixo do limite de alerta';
+                subtitulo = 'Itens abaixo do limite de alerta (todas as categorias)';
+            } else if (tipo === 'baixo_categoria') {
+                const catsBaixo = [...new Set(
+                    itensCache.filter(isBaixo).map(i => i.categoria || 'Outros')
+                )].sort();
+                if (!catsBaixo.length) {
+                    mostrarToast('✅ Nenhum item em baixa de estoque!', 'success');
+                    return;
+                }
+                const escolhida = prompt(
+                    'Baixa de estoque — digite a categoria:\n\n' +
+                    catsBaixo.join(', ') +
+                    '\n\n(Só aparecem categorias que têm item em baixa)'
+                );
+                if (!escolhida) return;
+                const catNorm = escolhida.trim().toLowerCase();
+                lista = lista.filter(i =>
+                    isBaixo(i) && (i.categoria || 'Outros').toLowerCase() === catNorm
+                );
+                if (!lista.length) {
+                    mostrarToast('⚠️ Nenhum item em baixa na categoria "' + escolhida + '"', 'warning');
+                    return;
+                }
+                titulo = 'BAIXA DE ESTOQUE — ' + escolhida.toUpperCase();
+                subtitulo = lista.length + ' item(ns) abaixo do limite na categoria ' + escolhida;
             } else if (tipo === 'categoria') {
                 titulo = 'RELATÓRIO POR CATEGORIA';
                 subtitulo = 'Estoque agrupado por categoria';
