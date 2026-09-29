@@ -1086,7 +1086,7 @@
             </div>
 
             <div style="text-align:center; margin:0.3rem 0 0.8rem;">
-                <button class="btn btn-cadastro" onclick="abrirModalItem()"><i class="fas fa-box"></i> Cadastrar Item no Estoque</button>
+                <button class="btn btn-cadastro" id="btnCadastrarItemEstoque" onclick="abrirModalItem()"><i class="fas fa-box"></i> Cadastrar Item no Estoque</button>
                 <span style="margin-left:0.5rem; font-size:0.6rem; color:var(--text-secondary);">
                     <i class="fas fa-info-circle"></i> Itens em <span style="color:#E65100; font-weight:600;">laranja</span> não estão cadastrados (mas podem ser salvos)
                 </span>
@@ -1657,8 +1657,12 @@ function mostrarToast(mensagem, tipo = 'success') {
         
         const colaboradores = carregarColaboradores();
 
-        // EDIÇÃO
+        // EDIÇÃO (só quem pode editar)
         if (window._colabEditIndex !== null && window._colabEditIndex >= 0) {
+            if (typeof podeEditar === 'function' && !podeEditar()) {
+                mostrarToast('⛔ Sem permissão para editar colaborador', 'danger');
+                return;
+            }
             const idx = window._colabEditIndex;
             const nomeAntigo = colaboradores[idx].nome;
             const conflito = colaboradores.some((c, i) => i !== idx && c.nome.toLowerCase() === nome.toLowerCase());
@@ -1720,25 +1724,31 @@ function mostrarToast(mensagem, tipo = 'success') {
             return;
         }
         
+        const podeGerirColab = (typeof podeEditar === 'function' && podeEditar());
         container.innerHTML = colaboradores.map((c, index) => `
             <div class="item-lista">
                 <div class="info">
                     <strong>${c.nome}</strong>
                     <small>${c.cargo || 'Colaborador'}</small>
                 </div>
-                <div style="display:flex; gap:0.3rem;">
+                ${podeGerirColab ? `<div style="display:flex; gap:0.3rem;">
                     <button class="btn-remover" onclick="editarColaborador(${index})" title="Editar" style="background:#3498DB; color:white;">
                         <i class="fas fa-edit"></i>
                     </button>
                     <button class="btn-remover" onclick="removerColaborador(${index})" title="Remover">
                         <i class="fas fa-trash-alt"></i>
                     </button>
-                </div>
+                </div>` : ''}
             </div>
         `).join('');
     }
 
     window.removerColaborador = function(index) {
+        if (typeof podeEditar === 'function' && !podeEditar()) {
+            mostrarToast('⛔ Sem permissão para remover colaborador', 'danger');
+            return;
+        }
+
         const colaboradores = carregarColaboradores();
         const nome = colaboradores[index].nome;
         
@@ -3303,10 +3313,16 @@ function mostrarToast(mensagem, tipo = 'success') {
         if (!podeAlt) {
             const aviso = document.createElement('div');
             aviso.style.cssText = 'background:#E3F2FD;border:1px solid #90CAF9;color:#1565C0;padding:0.6rem 1rem;border-radius:8px;font-size:0.75rem;margin-bottom:0.8rem;';
-            aviso.innerHTML = '<i class="fas fa-info-circle"></i> Seu perfil pode <strong>registrar saídas</strong>. Edição, estorno e exclusão ficam com Almoxarife/Administrador.';
+            aviso.innerHTML = '<i class="fas fa-info-circle"></i> Você pode <strong>selecionar/cadastrar colaborador</strong> e <strong>registrar saída</strong>. Não é permitido editar ou excluir saída já registrada.';
             const cardBody = document.querySelector('.card-body');
             if (cardBody) cardBody.insertBefore(aviso, cardBody.firstChild);
         }
+        // Cadastro de item no estoque: só quem tem permissão de cadastrar
+        if (typeof podeCadastrar === 'function' && !podeCadastrar()) {
+            const btnEst = document.getElementById('btnCadastrarItemEstoque');
+            if (btnEst) btnEst.style.display = 'none';
+        }
+
 
         // Carrega estoque e saídas do Supabase
         await carregarEstoqueDB();
