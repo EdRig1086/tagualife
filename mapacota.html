@@ -1551,6 +1551,13 @@ function mascaraMoedaSimplificada(input) {
 
 async function salvarCotacaoSupabase(concluir = false) {
     try {
+        // Usuário comum: pode REGISTRAR cotação nova; só Admin/quem tem permissão edita
+        if (editandoId) {
+            if (typeof podeEditar === 'function' && !podeEditar()) {
+                mostrarToast('⛔ Sem permissão para alterar cotação já registrada', 'danger');
+                return;
+            }
+        }
         const nome = document.getElementById('nomeCotacao').value.trim();
         const uso = document.getElementById('usoCotacao').value.trim();
         
@@ -1740,8 +1747,8 @@ async function carregarListaSalvos() {
                         </div>
                         <div class="detalhes">📋 ${c.uso || 'Sem uso'} • 📅 ${dataCriacao}</div>
                         <div class="acoes">
-                            <button class="btn btn-outline" onclick="carregarCotacaoParaEdicao('${c.id}')"><i class="fas fa-edit"></i> Editar</button>
-                            <button class="btn btn-outline" onclick="excluirCotacaoSupabase('${c.id}')" style="color:var(--danger);"><i class="fas fa-trash-alt"></i></button>
+                            ${(typeof podeEditar === 'function' && podeEditar()) ? `<button class="btn btn-outline" onclick="carregarCotacaoParaEdicao('${c.id}')"><i class="fas fa-edit"></i> Editar</button>` : ''}
+                            ${(typeof podeExcluir === 'function' && podeExcluir()) ? `<button class="btn btn-outline" onclick="excluirCotacaoSupabase('${c.id}')" style="color:var(--danger);"><i class="fas fa-trash-alt"></i></button>` : ''}
                         </div>
                     </div>
                 `;
@@ -1755,6 +1762,10 @@ async function carregarListaSalvos() {
 }
 
 async function carregarCotacaoParaEdicao(id) {
+    if (typeof podeEditar === 'function' && !podeEditar()) {
+        mostrarToast('⛔ Sem permissão para editar cotações', 'danger');
+        return;
+    }
     try {
         const { data, error } = await sb
             .from('cotacoes')
@@ -1859,6 +1870,10 @@ async function carregarCotacaoParaEdicao(id) {
 }
 
 async function excluirCotacaoSupabase(id) {
+    if (typeof podeExcluir === 'function' && !podeExcluir()) {
+        mostrarToast('⛔ Só Administrador pode excluir cotações', 'danger');
+        return;
+    }
     if (!confirm('⚠️ Tem certeza que deseja excluir esta cotação?')) return;
 
     try {
@@ -2690,9 +2705,24 @@ function imprimirCotacao() {
 }
 
 function init() {
+    if (typeof protegerPagina === 'function') {
+        if (!protegerPagina()) return;
+    }
+    if (typeof mostrarUsuarioLogado === 'function') mostrarUsuarioLogado();
+    if (typeof aplicarPermissoesNaTela === 'function') aplicarPermissoesNaTela();
+
     carregarTema();
     inicializarFornecedoresPadrao();
     renderizarTabela();
+
+    // Usuário comum: registra; não edita/exclui
+    if (typeof podeEditar === 'function' && !podeEditar()) {
+        const aviso = document.createElement('div');
+        aviso.style.cssText = 'background:#E3F2FD;border:1px solid #90CAF9;color:#1565C0;padding:0.6rem 1rem;border-radius:8px;font-size:0.75rem;margin:0.5rem 0 0.8rem;';
+        aviso.innerHTML = '<i class="fas fa-info-circle"></i> Seu perfil pode <strong>registrar cotação</strong>. Editar e excluir ficam com o <strong>Administrador</strong>.';
+        const header = document.querySelector('.card-header');
+        if (header && header.parentNode) header.parentNode.insertBefore(aviso, header.nextSibling);
+    }
 
     document.getElementById('btnSalvar').addEventListener('click', function(e) {
         e.preventDefault();
