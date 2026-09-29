@@ -485,6 +485,16 @@
     const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     let itensCache = [];
+
+    function ehAdministrador() {
+        if (typeof getCargo === 'function') return getCargo() === 'Administrador';
+        try {
+            const s = JSON.parse(localStorage.getItem('tagualife_sessao') || 'null');
+            return s && s.cargo === 'Administrador';
+        } catch (e) { return false; }
+    }
+
+
     let editandoId = null;
 
     function mostrarToast(msg, tipo = 'success') {
@@ -578,8 +588,8 @@
         });
 
         const corpo = document.getElementById('corpoTabela');
-        const podeEdit = typeof podeEditar === 'function' ? podeEditar() : false;
-        const podeDel = typeof podeExcluir === 'function' ? podeExcluir() : false;
+        const podeEdit = ehAdministrador();
+        const podeDel = ehAdministrador();
 
         if (filtrados.length === 0) {
             corpo.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--gray-400);"><i class="fas fa-inbox" style="font-size:1.5rem;display:block;margin-bottom:0.3rem;"></i>Nenhum item encontrado.</td></tr>';
@@ -618,14 +628,10 @@
     }
 
     async function salvarItem() {
+        // Usuário comum: só cadastra item NOVO. Atualizar/excluir = só Administrador
         if (editandoId) {
-            if (typeof podeEditar === 'function' && !podeEditar()) {
-                mostrarToast('⛔ Sem permissão para editar', 'danger');
-                return;
-            }
-        } else {
-            if (typeof podeCadastrar === 'function' && !podeCadastrar()) {
-                mostrarToast('⛔ Sem permissão para cadastrar', 'danger');
+            if (!ehAdministrador()) {
+                mostrarToast('⛔ Só Administrador pode atualizar itens', 'danger');
                 return;
             }
         }
@@ -712,8 +718,8 @@
     }
 
     window.editarItem = function(id) {
-        if (typeof podeEditar === 'function' && !podeEditar()) {
-            mostrarToast('⛔ Sem permissão para editar', 'danger');
+        if (!ehAdministrador()) {
+            mostrarToast('⛔ Só Administrador pode editar itens', 'danger');
             return;
         }
         const item = itensCache.find(function(i) { return i.id === id; });
@@ -734,8 +740,8 @@
     };
 
     window.excluirItem = async function(id) {
-        if (typeof podeExcluir === 'function' && !podeExcluir()) {
-            mostrarToast('⛔ Apenas Administrador pode excluir', 'danger');
+        if (!ehAdministrador()) {
+            mostrarToast('⛔ Só Administrador pode excluir itens', 'danger');
             return;
         }
         if (!confirm('⚠️ Excluir este item permanentemente do banco?')) return;
@@ -1057,8 +1063,16 @@
         atualizarRelogio();
         setInterval(atualizarRelogio, 1000);
 
-        if (typeof podeCadastrar === 'function' && !podeCadastrar()) {
-            document.getElementById('avisoPermissao').classList.add('show');
+        // Usuário comum pode cadastrar; só admin edita/exclui
+        if (!ehAdministrador()) {
+            const aviso = document.getElementById('avisoPermissao');
+            if (aviso) {
+                aviso.innerHTML = '<i class="fas fa-info-circle"></i> Seu perfil pode <strong>cadastrar itens</strong>. Atualizar e excluir ficam com o <strong>Administrador</strong>.';
+                aviso.classList.add('show');
+                aviso.style.background = '#E3F2FD';
+                aviso.style.borderColor = '#90CAF9';
+                aviso.style.color = '#1565C0';
+            }
         }
 
         document.getElementById('btnSalvarItem').addEventListener('click', function(e) {
