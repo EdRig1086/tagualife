@@ -2204,17 +2204,14 @@ function mostrarToast(mensagem, tipo = 'success') {
     // ============================================
     async function salvarProtocolo() {
         const editando = !!(window.protocoloEmEdicao || window.editandoSaidaId);
+        // Usuário comum: pode REGISTRAR saída nova; não pode alterar registro existente
         if (editando) {
             if (typeof podeEditar === 'function' && !podeEditar()) {
                 mostrarToast('⛔ Sem permissão para alterar saídas', 'danger');
                 return false;
             }
-        } else {
-            if (typeof podeCadastrar === 'function' && !podeCadastrar()) {
-                mostrarToast('⛔ Sem permissão para registrar saídas', 'danger');
-                return false;
-            }
         }
+        // novo registro: qualquer logado pode (Usuário só registra)
 
         try {
             const dados = carregarDadosFormulario();
@@ -3301,27 +3298,12 @@ function mostrarToast(mensagem, tipo = 'success') {
         if (typeof mostrarUsuarioLogado === 'function') mostrarUsuarioLogado();
         if (typeof aplicarPermissoesNaTela === 'function') aplicarPermissoesNaTela();
 
-        // Usuário comum: só visualiza histórico — bloqueia formulário de saída
-        const soLeitura = (typeof podeCadastrar === 'function' && !podeCadastrar());
-        if (soLeitura) {
-            const formArea = document.querySelector('.card-saida, .form-saida, #formSaida') || document.getElementById('btnSalvar');
-            const btnSalvar = document.getElementById('btnSalvar');
-            if (btnSalvar) {
-                btnSalvar.disabled = true;
-                btnSalvar.style.opacity = '0.5';
-                btnSalvar.title = 'Sem permissão para registrar saídas';
-            }
-            ['btnAdicionarItem', 'btnLimpar'].forEach(function(id) {
-                const el = document.getElementById(id);
-                if (el) { el.disabled = true; el.style.opacity = '0.5'; }
-            });
-            // bloqueia inputs principais
-            document.querySelectorAll('#colaborador, #dataSaida, #assinatura, #itensBody input, #itensBody select, #itensBody textarea').forEach(function(el) {
-                el.disabled = true;
-            });
+        // Usuário comum: pode REGISTRAR saída, mas não edita/exclui/estorna
+        const podeAlt = (typeof podeEditar === 'function' && podeEditar());
+        if (!podeAlt) {
             const aviso = document.createElement('div');
-            aviso.style.cssText = 'background:#FFF3E0;border:1px solid #FFB74D;color:#E65100;padding:0.6rem 1rem;border-radius:8px;font-size:0.75rem;margin-bottom:0.8rem;';
-            aviso.innerHTML = '<i class="fas fa-lock"></i> Seu perfil (<strong>Usuário</strong>) só pode <strong>visualizar</strong>. Cadastro, edição e exclusão de saídas são restritos.';
+            aviso.style.cssText = 'background:#E3F2FD;border:1px solid #90CAF9;color:#1565C0;padding:0.6rem 1rem;border-radius:8px;font-size:0.75rem;margin-bottom:0.8rem;';
+            aviso.innerHTML = '<i class="fas fa-info-circle"></i> Seu perfil pode <strong>registrar saídas</strong>. Edição, estorno e exclusão ficam com Almoxarife/Administrador.';
             const cardBody = document.querySelector('.card-body');
             if (cardBody) cardBody.insertBefore(aviso, cardBody.firstChild);
         }
