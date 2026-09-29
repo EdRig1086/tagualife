@@ -240,30 +240,45 @@
             return;
         }
         try {
-            const { error } = await sb.from('usuarios')
+            const { data, error } = await sb.from('usuarios')
                 .update({ cargo: cargo, atualizado_em: new Date().toISOString() })
-                .eq('id', id);
+                .eq('id', id)
+                .select('id,cargo');
             if (error) throw error;
+            if (!data || !data.length) {
+                toast('❌ Bloqueado pelo banco (RLS). Crie policy UPDATE em usuarios.', '#8B3A3A');
+                carregarUsuarios();
+                return;
+            }
             toast('✅ Perfil atualizado: ' + cargo, '#7A816E');
         } catch (e) {
-            toast('❌ ' + e.message, '#8B3A3A');
+            toast('❌ ' + (e.message || e), '#8B3A3A');
             carregarUsuarios();
         }
     };
 
     window.toggleAtivo = async function(id, ativoAtual) {
-        if (!ehAdmin()) return;
+        if (!ehAdmin()) {
+            toast('⛔ Só Administrador pode desativar', '#8B3A3A');
+            return;
+        }
         const novo = !ativoAtual;
         if (!confirm(novo ? 'Ativar este usuário?' : 'Desativar este usuário?')) return;
         try {
-            const { error } = await sb.from('usuarios')
+            const { data, error } = await sb.from('usuarios')
                 .update({ ativo: novo, atualizado_em: new Date().toISOString() })
-                .eq('id', id);
+                .eq('id', id)
+                .select('id,ativo');
             if (error) throw error;
+            if (!data || !data.length) {
+                toast('❌ Bloqueado pelo banco (RLS). Crie policy UPDATE na tabela usuarios.', '#8B3A3A');
+                console.error('UPDATE usuarios retornou 0 linhas — RLS policy ausente ou restritiva');
+                return;
+            }
             toast(novo ? '✅ Usuário ativado' : '⚠️ Usuário desativado', novo ? '#7A816E' : '#C1A83C');
             carregarUsuarios();
         } catch (e) {
-            toast('❌ ' + e.message, '#8B3A3A');
+            toast('❌ ' + (e.message || e), '#8B3A3A');
         }
     };
 
