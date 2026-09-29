@@ -223,6 +223,9 @@
                         ${admin ? `
                         <button class="btn-sm" onclick="toggleAtivo('${u.id}', ${ativo})">
                             ${ativo ? 'Desativar' : 'Ativar'}
+                        </button>
+                        <button class="btn-sm danger" onclick="excluirUsuario('${u.id}', '${(u.nome || '').replace(/'/g, "\'")}')">
+                            Excluir
                         </button>` : '—'}
                     </td>
                 </tr>`;
@@ -282,7 +285,37 @@
         }
     };
 
-    document.addEventListener('DOMContentLoaded', function() {
+    
+    window.excluirUsuario = async function(id, nome) {
+        if (!ehAdmin()) {
+            toast('⛔ Só Administrador pode excluir', '#8B3A3A');
+            return;
+        }
+        const sessao = JSON.parse(localStorage.getItem('tagualife_sessao') || 'null');
+        if (sessao && String(sessao.id) === String(id)) {
+            toast('⛔ Você não pode excluir a própria conta', '#8B3A3A');
+            return;
+        }
+        if (!confirm('⚠️ Excluir permanentemente o usuário "' + (nome || '') + '"?\n\nEsta ação não pode ser desfeita.')) return;
+        if (!confirm('Confirma a exclusão definitiva?')) return;
+        try {
+            const { data, error } = await sb.from('usuarios')
+                .delete()
+                .eq('id', id)
+                .select('id');
+            if (error) throw error;
+            if (!data || !data.length) {
+                toast('❌ Bloqueado pelo banco (RLS). Verifique policy DELETE em usuarios.', '#8B3A3A');
+                return;
+            }
+            toast('🗑️ Usuário excluído', '#8B3A3A');
+            carregarUsuarios();
+        } catch (e) {
+            toast('❌ ' + (e.message || e), '#8B3A3A');
+        }
+    };
+
+document.addEventListener('DOMContentLoaded', function() {
         if (typeof protegerPagina === 'function' && !protegerPagina()) return;
         if (typeof mostrarUsuarioLogado === 'function') mostrarUsuarioLogado();
 
