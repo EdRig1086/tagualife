@@ -1490,11 +1490,44 @@
         }
     }
 
-    async function baixarEstoqueDB(itensBaixados) {
+
+    async function registrarMovimentacaoEstoque(lista) {
+        // lista: [{ estoque_id, item_nome, tipo, quantidade, quantidade_antes, quantidade_depois, referencia, colaborador, observacao }]
+        if (!sb || !lista || !lista.length) return;
+        let usuario = '';
+        try {
+            const s = JSON.parse(localStorage.getItem('tagualife_sessao') || 'null');
+            if (s) usuario = s.nome || s.email || '';
+        } catch (e) {}
+        const rows = lista.map(m => ({
+            estoque_id: m.estoque_id || null,
+            item_nome: m.item_nome || m.nome || '',
+            tipo: m.tipo || 'ajuste',
+            quantidade: parseInt(m.quantidade) || 0,
+            quantidade_antes: m.quantidade_antes != null ? parseInt(m.quantidade_antes) : null,
+            quantidade_depois: m.quantidade_depois != null ? parseInt(m.quantidade_depois) : null,
+            referencia: m.referencia || null,
+            usuario: usuario || null,
+            colaborador: m.colaborador || null,
+            observacao: m.observacao || null
+        })).filter(r => r.item_nome && r.quantidade);
+        if (!rows.length) return;
+        try {
+            const { error } = await sb.from('estoque_movimentacoes').insert(rows);
+            if (error) console.warn('movimentacao:', error);
+        } catch (e) {
+            console.warn('movimentacao:', e);
+        }
+    }
+
+    async function baixarEstoqueDB(itensBaixados, meta) {
         // itensBaixados: [{ id?, nome, item, qtd }]
+        // meta: { colaborador, referencia, observacao }
         if (!itensBaixados || !itensBaixados.length) return;
+        meta = meta || {};
         await carregarEstoqueDB();
         let ok = 0, falhas = [];
+        const movs = [];
         for (const item of itensBaixados) {
             const nome = (item.nome || item.item || '').toString().trim().toLowerCase();
             const qtd = parseInt(item.qtd || item.quantidade || 0) || 0;
@@ -1502,7 +1535,6 @@
             let reg = cacheEstoqueDB.find(e => (e.nome || '').toString().trim().toLowerCase() === nome);
             if (!reg && item.id) reg = cacheEstoqueDB.find(e => String(e.id) === String(item.id));
             if (!reg) {
-                // tenta busca parcial
                 reg = cacheEstoqueDB.find(e => (e.nome || '').toString().trim().toLowerCase().includes(nome) || nome.includes((e.nome || '').toString().trim().toLowerCase()));
             }
             if (!reg) {
@@ -1510,7 +1542,8 @@
                 console.warn('Item não encontrado no estoque DB:', nome);
                 continue;
             }
-            const novaQtd = Math.max(0, (parseInt(reg.quantidade) || 0) - qtd);
+            const antes = parseInt(reg.quantidade) || 0;
+            const novaQtd = Math.max(0, antes - qtd);
             if (sb && reg.id && !String(reg.id).startsWith('local-')) {
                 const { error } = await sb.from('estoque').update({
                     quantidade: novaQtd,
@@ -1525,30 +1558,57 @@
                 }
             }
             reg.quantidade = novaQtd;
+            movs.push({
+                estoque_id: reg.id && !String(reg.id).startsWith('local-') ? reg.id : null,
+                item_nome: reg.nome,
+                tipo: 'saida',
+                quantidade: qtd,
+                quantidade_antes: antes,
+                quantidade_depois: novaQtd,
+                referencia: meta.referencia || null,
+                colaborador: meta.colaborador || null,
+                observacao: meta.observacao || null
+            });
         }
         localStorage.setItem('estoqueTaguaLife', JSON.stringify(cacheEstoqueDB.map(e => ({
             id: e.id, nome: e.nome, quantidade: e.quantidade, categoria: e.categoria, limite_alerta: e.limite_alerta
         }))));
+        await registrarMovimentacaoEstoque(movs);
         if (ok > 0) mostrarToast('📦 ' + ok + ' item(ns) baixado(s) no estoque', 'success');
         if (falhas.length) console.warn('Falhas na baixa:', falhas);
     }
 
-    async function devolverEstoqueDB(itensBaixados) {
+    async function devolverEstoqueDB(itensBaixados, meta) {
         if (!itensBaixados || !itensBaixados.length) return;
+        meta = meta || {};
         await carregarEstoqueDB();
+        const movs = [];
         for (const item of itensBaixados) {
             const nome = (item.nome || item.item || '').toString().trim().toLowerCase();
             const qtd = parseInt(item.qtd || item.quantidade || 0) || 0;
             if (!nome || qtd <= 0) continue;
             let reg = cacheEstoqueDB.find(e => (e.nome || '').toLowerCase() === nome);
             if (!reg) continue;
-            const novaQtd = (parseInt(reg.quantidade) || 0) + qtd;
+            const antes = parseInt(reg.quantidade) || 0;
+            const novaQtd = antes + qtd;
             if (sb && reg.id && !String(reg.id).startsWith('local-')) {
                 await sb.from('estoque').update({ quantidade: novaQtd, atualizado_em: new Date().toISOString() }).eq('id', reg.id);
             }
             reg.quantidade = novaQtd;
+            movs.push({
+                estoque_id: reg.id && !String(reg.id).startsWith('local-') ? reg.id : null,
+                item_nome: reg.nome,
+                tipo: 'estorno',
+                quantidade: qtd,
+                quantidade_antes: antes,
+                quantidade_depois: novaQtd,
+                referencia: meta.referencia || null,
+                colaborador: meta.colaborador || null,
+                observacao: meta.observacao || 'Estorno de saída'
+            });
         }
         localStorage.setItem('estoqueTaguaLife', JSON.stringify(cacheEstoqueDB));
+        await registrarMovimentacaoEstoque(movs);
     }
 
 
@@ -2399,7 +2459,7 @@ function mostrarToast(mensagem, tipo = 'success') {
 
             // BAIXA REAL NO SUPABASE (estoque)
             if (itensBaixados.length > 0) {
-                await baixarEstoqueDB(itensBaixados);
+                await baixarEstoqueDB(itensBaixados, { colaborador: (dados && dados.colaborador) || '', observacao: 'Saída de material' });
                 console.log('📦 Estoque baixado no banco:', itensBaixados);
             }
             
@@ -2868,7 +2928,7 @@ function mostrarToast(mensagem, tipo = 'success') {
         // Devolve estoque
         await devolverEstoqueDB((p.itens || []).filter(i => i.cadastrado !== false).map(i => ({
             nome: i.item, qtd: i.qtd
-        })));
+        })), { colaborador: p.colaborador || '', referencia: p.id ? String(p.id) : null, observacao: 'Estorno de saída' });
 
         if (sb) {
             await sb.from('saida_itens').delete().eq('saida_id', id);
