@@ -370,6 +370,10 @@
                             style="padding:0.35rem 0.55rem; border-radius:8px; border:1px solid var(--border-color); background:var(--bg-body); color:var(--text-primary); cursor:pointer; font-size:0.7rem; white-space:nowrap;">
                             <i class="fas fa-plus"></i> Nova
                         </button>
+                        <button type="button" id="btnGerenciarCategorias" title="Gerenciar categorias (Admin)"
+                            style="display:none; padding:0.35rem 0.55rem; border-radius:8px; border:1px solid var(--border-color); background:#191D1B; color:#FBFBF7; cursor:pointer; font-size:0.7rem; white-space:nowrap;">
+                            <i class="fas fa-cog"></i>
+                        </button>
                     </div>
                     <input type="text" id="itemCategoriaNova" placeholder="Nome da nova categoria..." maxlength="40"
                         style="display:none; margin-top:0.35rem; width:100%; padding:0.4rem 0.6rem; border-radius:8px; border:1px solid var(--verde-oliva); font-size:0.8rem; font-family:inherit; background:var(--input-bg); color:var(--text-primary);" />
@@ -485,6 +489,27 @@
     </div>
 </div>
 
+
+<div class="modal-overlay" id="modalCategorias">
+    <div class="modal-box" style="max-width:480px;">
+        <div class="modal-head">
+            <h3><i class="fas fa-th-list"></i> Gerenciar categorias</h3>
+            <button type="button" class="btn-outline" onclick="fecharModalCategorias()" style="padding:0.25rem 0.6rem;font-size:0.7rem;">✕ Fechar</button>
+        </div>
+        <div class="modal-body" style="padding:1rem;">
+            <p style="font-size:0.72rem;color:var(--text-secondary);margin-bottom:0.7rem;">
+                Só <strong>Administrador</strong> pode editar ou excluir. Ao excluir, itens do estoque com essa categoria passam para <strong>Outros</strong>.
+            </p>
+            <div style="display:flex; gap:0.4rem; margin-bottom:0.8rem;">
+                <input type="text" id="catNovaNome" placeholder="Nova categoria..." maxlength="40"
+                    style="flex:1; padding:0.4rem 0.6rem; border-radius:8px; border:1px solid var(--border-color); font-size:0.8rem; font-family:inherit; background:var(--input-bg); color:var(--text-primary);" />
+                <button type="button" class="btn-relatorio" id="btnAddCatModal" style="padding:0.4rem 0.8rem;"><i class="fas fa-plus"></i> Add</button>
+            </div>
+            <div id="listaCategoriasAdmin" style="max-height:320px; overflow-y:auto;"></div>
+        </div>
+    </div>
+</div>
+
 <div id="toastGlobal"></div>
 
 <script>
@@ -513,7 +538,10 @@
         } catch (e) { return []; }
     }
 
+    let categoriasDB = []; // [{id, nome}] do Supabase
+
     async function carregarCategoriasDB() {
+        categoriasDB = [];
         const set = {};
         CATEGORIAS_PADRAO.forEach(c => { set[c] = true; });
         carregarCategoriasSalvas().forEach(c => { set[c] = true; });
@@ -522,8 +550,9 @@
         });
         try {
             if (sb) {
-                const { data, error } = await sb.from('categorias').select('nome').order('nome');
+                const { data, error } = await sb.from('categorias').select('id,nome').order('nome');
                 if (!error && data) {
+                    categoriasDB = data.filter(r => r.nome);
                     data.forEach(r => { if (r.nome) set[r.nome] = true; });
                 }
             }
@@ -603,6 +632,114 @@
             if (atualF) selFiltro.value = atualF;
         }
     }
+
+
+    function fecharModalCategorias() {
+        const m = document.getElementById('modalCategorias');
+        if (m) m.classList.remove('ativo');
+    }
+
+    async function abrirModalCategorias() {
+        if (!ehAdministrador()) {
+            mostrarToast('⛔ Só Administrador gerencia categorias', 'danger');
+            return;
+        }
+        await carregarCategoriasDB();
+        renderizarListaCategoriasAdmin();
+        const m = document.getElementById('modalCategorias');
+        if (m) m.classList.add('ativo');
+    }
+
+    function renderizarListaCategoriasAdmin() {
+        const box = document.getElementById('listaCategoriasAdmin');
+        if (!box) return;
+        const nomes = listarTodasCategorias();
+        if (!nomes.length) {
+            box.innerHTML = '<p style="font-size:0.75rem;color:var(--text-secondary);">Nenhuma categoria</p>';
+            return;
+        }
+        box.innerHTML = nomes.map(function(nome) {
+            const row = categoriasDB.find(c => (c.nome || '').toLowerCase() === nome.toLowerCase());
+            const id = row ? row.id : '';
+            const esc = nome.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+            return '<div style="display:flex;align-items:center;gap:0.4rem;padding:0.4rem 0.3rem;border-bottom:1px solid var(--border-color);">' +
+                '<span style="flex:1;font-size:0.8rem;font-weight:600;">' + nome + '</span>' +
+                '<button type="button" class="btn-outline" style="padding:0.15rem 0.45rem;font-size:0.65rem;" onclick="editarCategoriaAdmin(\'' + esc + '\', \'' + id + '\')"><i class="fas fa-edit"></i></button>' +
+                '<button type="button" class="btn-outline" style="padding:0.15rem 0.45rem;font-size:0.65rem;color:#8B3A3A;border-color:#8B3A3A;" onclick="excluirCategoriaAdmin(\'' + esc + '\', \'' + id + '\')"><i class="fas fa-trash-alt"></i></button>' +
+                '</div>';
+        }).join('');
+    }
+
+    window.editarCategoriaAdmin = async function(nomeAntigo, id) {
+        if (!ehAdministrador()) return;
+        const novo = prompt('Novo nome da categoria:', nomeAntigo);
+        if (novo == null) return;
+        const n = novo.trim();
+        if (!n || n.length < 2) {
+            mostrarToast('⚠️ Nome inválido', 'warning');
+            return;
+        }
+        if (n.toLowerCase() === (nomeAntigo || '').toLowerCase()) return;
+
+        try {
+            if (sb) {
+                if (id) {
+                    const { error } = await sb.from('categorias').update({ nome: n }).eq('id', id);
+                    if (error) throw error;
+                } else {
+                    const { error } = await sb.from('categorias').insert({ nome: n });
+                    if (error && !String(error.message || '').includes('duplicate')) throw error;
+                }
+                // atualiza itens do estoque com o nome antigo
+                const { error: e2 } = await sb.from('estoque').update({ categoria: n }).eq('categoria', nomeAntigo);
+                if (e2) console.warn('update itens', e2);
+            }
+            // localStorage
+            const lista = carregarCategoriasSalvas().filter(c => c.toLowerCase() !== nomeAntigo.toLowerCase());
+            if (!lista.some(c => c.toLowerCase() === n.toLowerCase())) lista.push(n);
+            localStorage.setItem(CHAVE_CATS, JSON.stringify(lista));
+
+            await carregarEstoque();
+            await carregarCategoriasDB();
+            atualizarSelectsCategoria(n);
+            renderizarListaCategoriasAdmin();
+            mostrarToast('✅ Categoria renomeada para "' + n + '"', 'success');
+        } catch (e) {
+            mostrarToast('❌ ' + (e.message || e), 'danger');
+        }
+    };
+
+    window.excluirCategoriaAdmin = async function(nome, id) {
+        if (!ehAdministrador()) return;
+        if (nome === 'Outros') {
+            mostrarToast('⚠️ A categoria "Outros" não pode ser excluída', 'warning');
+            return;
+        }
+        if (!confirm('Excluir a categoria "' + nome + '"?\n\nItens com essa categoria passarão para "Outros".')) return;
+
+        try {
+            if (sb) {
+                // move itens
+                await sb.from('estoque').update({ categoria: 'Outros' }).eq('categoria', nome);
+                if (id) {
+                    const { error } = await sb.from('categorias').delete().eq('id', id);
+                    if (error) throw error;
+                } else {
+                    await sb.from('categorias').delete().eq('nome', nome);
+                }
+            }
+            const lista = carregarCategoriasSalvas().filter(c => c.toLowerCase() !== nome.toLowerCase());
+            localStorage.setItem(CHAVE_CATS, JSON.stringify(lista));
+
+            await carregarEstoque();
+            await carregarCategoriasDB();
+            atualizarSelectsCategoria();
+            renderizarListaCategoriasAdmin();
+            mostrarToast('🗑️ Categoria removida', 'success');
+        } catch (e) {
+            mostrarToast('❌ ' + (e.message || e), 'danger');
+        }
+    };
 
     function abrirCadastroCategoria() {
         const input = document.getElementById('itemCategoriaNova');
@@ -1302,6 +1439,25 @@ table.tabela-relatorio tr.baixo td { border-bottom-color: #FFE0B2; }
         });
         const btnNovaCat = document.getElementById('btnNovaCategoria');
         if (btnNovaCat) btnNovaCat.addEventListener('click', abrirCadastroCategoria);
+        const btnGerCat = document.getElementById('btnGerenciarCategorias');
+        if (btnGerCat) {
+            if (ehAdministrador()) btnGerCat.style.display = '';
+            btnGerCat.addEventListener('click', abrirModalCategorias);
+        }
+        const btnAddCatModal = document.getElementById('btnAddCatModal');
+        if (btnAddCatModal) {
+            btnAddCatModal.addEventListener('click', async function() {
+                const inp = document.getElementById('catNovaNome');
+                const nome = (inp && inp.value || '').trim();
+                if (!nome) { mostrarToast('⚠️ Digite o nome', 'warning'); return; }
+                await salvarCategoriaNova(nome);
+                if (inp) inp.value = '';
+                await carregarCategoriasDB();
+                atualizarSelectsCategoria(nome);
+                renderizarListaCategoriasAdmin();
+                mostrarToast('✅ Categoria salva no banco', 'success');
+            });
+        }
         const inputNovaCat = document.getElementById('itemCategoriaNova');
         if (inputNovaCat) {
             inputNovaCat.addEventListener('keydown', function(e) {
