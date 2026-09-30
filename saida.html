@@ -3459,7 +3459,33 @@ function mostrarToast(mensagem, tipo = 'success') {
         }
     }
 
+    // Backup: inicia relógio assim que o script carrega
+    (function startClockNow() {
+        if (window.__taguaClockStarted) return;
+        function tick() {
+            try { if (typeof atualizarRelogio === 'function') atualizarRelogio(); } catch (e) {}
+        }
+        if (document.getElementById('clockHours')) {
+            window.__taguaClockStarted = true;
+            tick();
+            setInterval(tick, 1000);
+        } else {
+            document.addEventListener('DOMContentLoaded', function() {
+                if (window.__taguaClockStarted) return;
+                window.__taguaClockStarted = true;
+                tick();
+                setInterval(tick, 1000);
+            });
+        }
+    })();
+
     document.addEventListener('DOMContentLoaded', async function() {
+        // Relógio imediatamente (não espera banco)
+        try {
+            atualizarRelogio();
+            setInterval(atualizarRelogio, 1000);
+        } catch (e) { console.warn('relogio init', e); }
+
         if (typeof protegerPagina === 'function') {
             if (!protegerPagina()) return;
         } else if (!localStorage.getItem('tagualife_sessao')) {
