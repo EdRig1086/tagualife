@@ -356,15 +356,23 @@
                 </div>
                 <div class="campo">
                     <label><i class="fas fa-th-list"></i> CATEGORIA</label>
-                    <select id="itemCategoria">
-                        <option value="Elétrico">Elétrico</option>
-                        <option value="Hidráulico">Hidráulico</option>
-                        <option value="Ferragens">Ferragens</option>
-                        <option value="Manutenção">Manutenção</option>
-                        <option value="Higiene">Higiene</option>
-                        <option value="Automóvel">Automóvel</option>
-                        <option value="Outros">Outros</option>
-                    </select>
+                    <div style="display:flex; gap:0.3rem; align-items:stretch;">
+                        <select id="itemCategoria" style="flex:1;">
+                            <option value="Elétrico">Elétrico</option>
+                            <option value="Hidráulico">Hidráulico</option>
+                            <option value="Ferragens">Ferragens</option>
+                            <option value="Manutenção">Manutenção</option>
+                            <option value="Higiene">Higiene</option>
+                            <option value="Automóvel">Automóvel</option>
+                            <option value="Outros">Outros</option>
+                        </select>
+                        <button type="button" id="btnNovaCategoria" title="Cadastrar nova categoria"
+                            style="padding:0.35rem 0.55rem; border-radius:8px; border:1px solid var(--border-color); background:var(--bg-body); color:var(--text-primary); cursor:pointer; font-size:0.7rem; white-space:nowrap;">
+                            <i class="fas fa-plus"></i> Nova
+                        </button>
+                    </div>
+                    <input type="text" id="itemCategoriaNova" placeholder="Nome da nova categoria..." maxlength="40"
+                        style="display:none; margin-top:0.35rem; width:100%; padding:0.4rem 0.6rem; border-radius:8px; border:1px solid var(--verde-oliva); font-size:0.8rem; font-family:inherit; background:var(--input-bg); color:var(--text-primary);" />
                 </div>
                 <div class="campo">
                     <label><i class="fas fa-bell"></i> LIMITE ALERTA</label>
@@ -494,6 +502,141 @@
         } catch (e) { return false; }
     }
 
+    const CATEGORIAS_PADRAO = ['Elétrico', 'Hidráulico', 'Ferragens', 'Manutenção', 'Higiene', 'Automóvel', 'Outros'];
+    const CHAVE_CATS = 'estoqueCategoriasTaguaLife';
+    let categoriasCache = []; // do banco + padrão
+
+    function carregarCategoriasSalvas() {
+        try {
+            const arr = JSON.parse(localStorage.getItem(CHAVE_CATS) || '[]');
+            return Array.isArray(arr) ? arr.filter(Boolean) : [];
+        } catch (e) { return []; }
+    }
+
+    async function carregarCategoriasDB() {
+        const set = {};
+        CATEGORIAS_PADRAO.forEach(c => { set[c] = true; });
+        carregarCategoriasSalvas().forEach(c => { set[c] = true; });
+        (itensCache || []).forEach(i => {
+            if (i.categoria) set[i.categoria] = true;
+        });
+        try {
+            if (sb) {
+                const { data, error } = await sb.from('categorias').select('nome').order('nome');
+                if (!error && data) {
+                    data.forEach(r => { if (r.nome) set[r.nome] = true; });
+                }
+            }
+        } catch (e) {
+            console.warn('categorias DB:', e);
+        }
+        categoriasCache = Object.keys(set).sort(function(a, b) {
+            return a.localeCompare(b, 'pt-BR');
+        });
+        return categoriasCache;
+    }
+
+    async function salvarCategoriaNova(nome) {
+        const n = (nome || '').trim();
+        if (!n) return false;
+
+        // local (fallback / offline)
+        const lista = carregarCategoriasSalvas();
+        const existeLocal = lista.some(c => c.toLowerCase() === n.toLowerCase()) ||
+            CATEGORIAS_PADRAO.some(c => c.toLowerCase() === n.toLowerCase()) ||
+            categoriasCache.some(c => c.toLowerCase() === n.toLowerCase());
+        if (!existeLocal) {
+            lista.push(n);
+            localStorage.setItem(CHAVE_CATS, JSON.stringify(lista));
+        }
+
+        // banco Supabase
+        try {
+            if (sb) {
+                const { data: existe } = await sb.from('categorias')
+                    .select('id')
+                    .ilike('nome', n)
+                    .maybeSingle();
+                if (!existe) {
+                    const { error } = await sb.from('categorias').insert({ nome: n });
+                    if (error) {
+                        console.warn('Erro ao salvar categoria no banco:', error);
+                        // se tabela não existir, ainda vale local
+                    }
+                }
+            }
+        } catch (e) {
+            console.warn('salvarCategoriaNova DB:', e);
+        }
+
+        await carregarCategoriasDB();
+        return n;
+    }
+
+    function listarTodasCategorias() {
+        if (categoriasCache && categoriasCache.length) return categoriasCache.slice();
+        const set = {};
+        CATEGORIAS_PADRAO.forEach(c => { set[c] = true; });
+        carregarCategoriasSalvas().forEach(c => { set[c] = true; });
+        (itensCache || []).forEach(i => {
+            if (i.categoria) set[i.categoria] = true;
+        });
+        return Object.keys(set).sort(function(a, b) {
+            return a.localeCompare(b, 'pt-BR');
+        });
+    }
+
+    function atualizarSelectsCategoria(selecionada) {
+        const cats = listarTodasCategorias();
+        const selItem = document.getElementById('itemCategoria');
+        const selFiltro = document.getElementById('filtroCategoria');
+        if (selItem) {
+            const atual = selecionada || selItem.value;
+            selItem.innerHTML = cats.map(c => '<option value="' + c.replace(/"/g, '&quot;') + '">' + c + '</option>').join('');
+            if (atual && cats.some(c => c === atual)) selItem.value = atual;
+            else if (cats.length) selItem.value = cats[0];
+        }
+        if (selFiltro) {
+            const atualF = selFiltro.value;
+            selFiltro.innerHTML = '<option value="">Todas as categorias</option>' +
+                cats.map(c => '<option value="' + c.replace(/"/g, '&quot;') + '">' + c + '</option>').join('');
+            if (atualF) selFiltro.value = atualF;
+        }
+    }
+
+    function abrirCadastroCategoria() {
+        const input = document.getElementById('itemCategoriaNova');
+        if (!input) return;
+        if (input.style.display === 'none' || !input.style.display) {
+            input.style.display = 'block';
+            input.value = '';
+            input.focus();
+        } else {
+            input.style.display = 'none';
+        }
+    }
+
+    async function confirmarNovaCategoria() {
+        const input = document.getElementById('itemCategoriaNova');
+        if (!input) return;
+        const nome = (input.value || '').trim();
+        if (!nome) {
+            mostrarToast('⚠️ Digite o nome da categoria', 'warning');
+            return;
+        }
+        if (nome.length < 2) {
+            mostrarToast('⚠️ Nome muito curto', 'warning');
+            return;
+        }
+        const salva = await salvarCategoriaNova(nome);
+        atualizarSelectsCategoria(salva);
+        input.style.display = 'none';
+        input.value = '';
+        mostrarToast('✅ Categoria "' + salva + '" salva no banco', 'success');
+    }
+
+
+
 
     let editandoId = null;
 
@@ -561,7 +704,8 @@
             }
 
             itensCache = data || [];
-            renderizarTabela();
+            carregarCategoriasDB().then(function() { atualizarSelectsCategoria(); });
+        renderizarTabela();
             mostrarToast('📦 ' + itensCache.length + ' itens carregados', 'info');
         } catch (err) {
             console.error(err);
@@ -641,6 +785,7 @@
         const fabricante = document.getElementById('itemFabricante').value.trim();
         const quantidade = parseInt(document.getElementById('itemQuantidade').value) || 0;
         const categoria = document.getElementById('itemCategoria').value;
+        if (categoria) await salvarCategoriaNova(categoria);
         const limite_alerta = parseInt(document.getElementById('itemLimite').value) || 5;
         const unidade = document.getElementById('itemUnidade').value || 'UN';
 
@@ -1155,6 +1300,28 @@ table.tabela-relatorio tr.baixo td { border-bottom-color: #FFE0B2; }
             e.preventDefault();
             salvarItem();
         });
+        const btnNovaCat = document.getElementById('btnNovaCategoria');
+        if (btnNovaCat) btnNovaCat.addEventListener('click', abrirCadastroCategoria);
+        const inputNovaCat = document.getElementById('itemCategoriaNova');
+        if (inputNovaCat) {
+            inputNovaCat.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    confirmarNovaCategoria();
+                }
+                if (e.key === 'Escape') {
+                    inputNovaCat.style.display = 'none';
+                    inputNovaCat.value = '';
+                }
+            });
+            inputNovaCat.addEventListener('blur', function() {
+                // se digitou algo e saiu do campo, confirma
+                if (inputNovaCat.style.display !== 'none' && inputNovaCat.value.trim()) {
+                    confirmarNovaCategoria();
+                }
+            });
+        }
+        atualizarSelectsCategoria();
 
         document.getElementById('btnLimparFiltro').addEventListener('click', function() {
             document.getElementById('buscaInput').value = '';
