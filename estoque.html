@@ -556,6 +556,27 @@
     </div>
 </div>
 
+
+<div class="modal-overlay" id="modalEscolherCategoria">
+    <div class="modal-box" style="max-width:420px;">
+        <div class="modal-head">
+            <h3 id="modalCatTitulo"><i class="fas fa-filter"></i> Escolher categoria</h3>
+            <button type="button" class="btn-outline" onclick="fecharModalEscolherCategoria()" style="padding:0.25rem 0.6rem;font-size:0.7rem;">✕</button>
+        </div>
+        <div class="modal-body" style="padding:1rem;">
+            <p id="modalCatSub" style="font-size:0.75rem;color:var(--text-secondary);margin-bottom:0.6rem;"></p>
+            <label style="font-size:0.7rem;font-weight:600;display:block;margin-bottom:0.3rem;">Categoria</label>
+            <select id="selectCategoriaRelatorio" size="8"
+                style="width:100%;padding:0.4rem;border-radius:8px;border:1px solid var(--border-color);font-size:0.85rem;background:var(--bg-card);color:var(--text-primary);font-family:inherit;">
+            </select>
+            <div style="display:flex;gap:0.5rem;margin-top:0.9rem;justify-content:flex-end;">
+                <button type="button" class="btn-outline" onclick="fecharModalEscolherCategoria()" style="padding:0.4rem 0.8rem;">Cancelar</button>
+                <button type="button" class="btn-relatorio" id="btnConfirmarCatRelatorio" style="padding:0.4rem 0.9rem;"><i class="fas fa-check"></i> Confirmar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div id="toastGlobal"></div>
 
 <script>
@@ -1130,6 +1151,47 @@
         return qtd < limite;
     }
 
+
+    function fecharModalEscolherCategoria() {
+        const m = document.getElementById('modalEscolherCategoria');
+        if (m) m.classList.remove('ativo');
+        window._catRelatorioResolve = null;
+    }
+
+    function escolherCategoriaSelect(titulo, subtitulo, categorias) {
+        return new Promise(function(resolve) {
+            const m = document.getElementById('modalEscolherCategoria');
+            const sel = document.getElementById('selectCategoriaRelatorio');
+            const tit = document.getElementById('modalCatTitulo');
+            const sub = document.getElementById('modalCatSub');
+            if (!m || !sel) {
+                resolve(null);
+                return;
+            }
+            if (tit) tit.innerHTML = '<i class="fas fa-filter"></i> ' + (titulo || 'Escolher categoria');
+            if (sub) sub.textContent = subtitulo || '';
+            sel.innerHTML = (categorias || []).map(function(c) {
+                return '<option value="' + String(c).replace(/"/g, '&quot;') + '">' + c + '</option>';
+            }).join('');
+            if (sel.options.length) sel.selectedIndex = 0;
+            window._catRelatorioResolve = resolve;
+            m.classList.add('ativo');
+            const btn = document.getElementById('btnConfirmarCatRelatorio');
+            if (btn) {
+                btn.onclick = function() {
+                    const v = sel.value || null;
+                    fecharModalEscolherCategoria();
+                    resolve(v);
+                };
+            }
+            sel.ondblclick = function() {
+                const v = sel.value || null;
+                fecharModalEscolherCategoria();
+                resolve(v);
+            };
+        });
+    }
+
     async function gerarRelatorioEstoque(tipo) {
         try {
             const { data, error } = await sb.from('estoque').select('*').order('nome');
@@ -1153,10 +1215,10 @@
                     mostrarToast('✅ Nenhum item em baixa de estoque!', 'success');
                     return;
                 }
-                const escolhida = prompt(
-                    'Baixa de estoque — digite a categoria:\n\n' +
-                    catsBaixo.join(', ') +
-                    '\n\n(Só aparecem categorias que têm item em baixa)'
+                const escolhida = await escolherCategoriaSelect(
+                    'Baixa de estoque por categoria',
+                    'Só categorias que têm item em baixa. Clique e confirme.',
+                    catsBaixo
                 );
                 if (!escolhida) return;
                 const catNorm = escolhida.trim().toLowerCase();
@@ -1174,7 +1236,15 @@
                 subtitulo = 'Estoque agrupado por categoria';
             } else if (tipo === 'categoria_escolhida') {
                 const cats = [...new Set(itensCache.map(i => i.categoria || 'Outros'))].sort();
-                const escolhida = prompt('Digite a categoria:\\n\\n' + cats.join(', '));
+                if (!cats.length) {
+                    mostrarToast('⚠️ Nenhuma categoria no estoque', 'warning');
+                    return;
+                }
+                const escolhida = await escolherCategoriaSelect(
+                    'Relatório por categoria',
+                    'Selecione a categoria e clique em Confirmar.',
+                    cats
+                );
                 if (!escolhida) return;
                 const catNorm = escolhida.trim().toLowerCase();
                 lista = lista.filter(i => (i.categoria || 'Outros').toLowerCase() === catNorm);
