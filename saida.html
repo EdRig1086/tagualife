@@ -1449,29 +1449,46 @@
     }
 
     async function baixarEstoqueDB(itensBaixados) {
-        // itensBaixados: [{ id?, nome, qtd }]
+        // itensBaixados: [{ id?, nome, item, qtd }]
         if (!itensBaixados || !itensBaixados.length) return;
         await carregarEstoqueDB();
+        let ok = 0, falhas = [];
         for (const item of itensBaixados) {
             const nome = (item.nome || item.item || '').toString().trim().toLowerCase();
             const qtd = parseInt(item.qtd || item.quantidade || 0) || 0;
             if (!nome || qtd <= 0) continue;
-            let reg = cacheEstoqueDB.find(e => (e.nome || '').toLowerCase() === nome);
-            if (!reg && item.id) reg = cacheEstoqueDB.find(e => e.id === item.id);
-            if (!reg) continue;
+            let reg = cacheEstoqueDB.find(e => (e.nome || '').toString().trim().toLowerCase() === nome);
+            if (!reg && item.id) reg = cacheEstoqueDB.find(e => String(e.id) === String(item.id));
+            if (!reg) {
+                // tenta busca parcial
+                reg = cacheEstoqueDB.find(e => (e.nome || '').toString().trim().toLowerCase().includes(nome) || nome.includes((e.nome || '').toString().trim().toLowerCase()));
+            }
+            if (!reg) {
+                falhas.push(nome);
+                console.warn('Item não encontrado no estoque DB:', nome);
+                continue;
+            }
             const novaQtd = Math.max(0, (parseInt(reg.quantidade) || 0) - qtd);
             if (sb && reg.id && !String(reg.id).startsWith('local-')) {
                 const { error } = await sb.from('estoque').update({
                     quantidade: novaQtd,
                     atualizado_em: new Date().toISOString()
                 }).eq('id', reg.id);
-                if (error) console.warn('Erro baixa estoque', reg.nome, error);
+                if (error) {
+                    console.warn('Erro baixa estoque', reg.nome, error);
+                    falhas.push(reg.nome + ': ' + error.message);
+                } else {
+                    ok++;
+                    console.log('✅ Baixa DB:', reg.nome, '->', novaQtd);
+                }
             }
             reg.quantidade = novaQtd;
         }
         localStorage.setItem('estoqueTaguaLife', JSON.stringify(cacheEstoqueDB.map(e => ({
             id: e.id, nome: e.nome, quantidade: e.quantidade, categoria: e.categoria, limite_alerta: e.limite_alerta
         }))));
+        if (ok > 0) mostrarToast('📦 ' + ok + ' item(ns) baixado(s) no estoque', 'success');
+        if (falhas.length) console.warn('Falhas na baixa:', falhas);
     }
 
     async function devolverEstoqueDB(itensBaixados) {
@@ -2291,29 +2308,36 @@ function mostrarToast(mensagem, tipo = 'success') {
             dados.itens.forEach(item => {
                 const nomeItem = (item.item || '').trim();
                 const qtd = parseInt(item.qtd) || 0;
-                const itemEstoque = estoque.find(i => 
-                    i.nome.toLowerCase() === nomeItem.toLowerCase()
+                if (!nomeItem || qtd <= 0) return;
+
+                // Marca cadastrado se existir no cache do banco
+                const noBanco = (cacheEstoqueDB || []).find(i =>
+                    (i.nome || '').toLowerCase() === nomeItem.toLowerCase()
                 );
-                
-                if (itemEstoque) {
-                    if (qtd > 0) {
-                        itemEstoque.quantidade = Math.max(0, itemEstoque.quantidade - qtd);
-                        itensBaixados.push(nomeItem + ' (' + qtd + ' unid.)');
+                const noLocal = estoque.find(i =>
+                    (i.nome || '').toLowerCase() === nomeItem.toLowerCase()
+                );
+
+                if (noBanco || noLocal || item.cadastrado) {
+                    itensBaixados.push({ nome: nomeItem, item: nomeItem, qtd: qtd, id: (noBanco && noBanco.id) || null });
+                    if (noLocal) {
+                        noLocal.quantidade = Math.max(0, (parseInt(noLocal.quantidade) || 0) - qtd);
                     }
                 } else {
-                    if (nomeItem !== '') {
-                        const existente = itensNaoCadastrados.find(x => x.nome === nomeItem);
-                        if (existente) {
-                            existente.qtd += qtd;
-                        } else {
-                            itensNaoCadastrados.push({ nome: nomeItem, qtd: qtd });
-                        }
-                        qtdNaoCadastrados += qtd;
-                    }
+                    const existente = itensNaoCadastrados.find(x => x.nome === nomeItem);
+                    if (existente) existente.qtd += qtd;
+                    else itensNaoCadastrados.push({ nome: nomeItem, qtd: qtd });
+                    qtdNaoCadastrados += qtd;
                 }
             });
-            
+
             localStorage.setItem('estoqueTaguaLife', JSON.stringify(estoque));
+
+            // BAIXA REAL NO SUPABASE (estoque)
+            if (itensBaixados.length > 0) {
+                await baixarEstoqueDB(itensBaixados);
+                console.log('📦 Estoque baixado no banco:', itensBaixados);
+            }
             
             if (idEdicao && protocoloAntigo) {
                 // ATUALIZAR registro existente
@@ -2382,20 +2406,7 @@ function mostrarToast(mensagem, tipo = 'success') {
                 protocolos.push(novoProtocolo);
                 localStorage.setItem('saidaMaterialTaguaLife', JSON.stringify(protocolos));
 
-                // Sincroniza quantidades finais do estoque (já baixado localmente) para o Supabase
-                if (sb) {
-                    const estoqueAtual = JSON.parse(localStorage.getItem('estoqueTaguaLife') || '[]');
-                    for (const item of itensBaixados) {
-                        const nome = (item.item || item.nome || '').toLowerCase();
-                        const reg = estoqueAtual.find(e => (e.nome || '').toLowerCase() === nome);
-                        if (reg && reg.id && !String(reg.id).startsWith('local-')) {
-                            await sb.from('estoque').update({
-                                quantidade: reg.quantidade,
-                                atualizado_em: new Date().toISOString()
-                            }).eq('id', reg.id);
-                        }
-                    }
-                }
+                // Estoque já baixado via baixarEstoqueDB()
 
                 // Salva saída no Supabase (schema real: saidas + saida_itens)
                 if (!sb) {
