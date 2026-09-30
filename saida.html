@@ -527,7 +527,36 @@
         }
         .protocolos-salvos .titulo i { color: var(--verde-claro); }
 
+        
+        .btn-filtro-periodo {
+            padding: 0.2rem 0.65rem;
+            border-radius: 40px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-card);
+            color: var(--text-secondary);
+            font-size: 0.65rem;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: inherit;
+        }
+        .btn-filtro-periodo:hover { border-color: var(--verde-oliva); color: var(--text-primary); }
+        .btn-filtro-periodo.active {
+            background: #191D1B;
+            color: #FBFBF7;
+            border-color: #191D1B;
+        }
+        .hist-grupo-dia {
+            margin: 0.8rem 0 0.35rem;
+            padding: 0.3rem 0.6rem;
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            background: rgba(193,206,131,0.25);
+            border-radius: 6px;
+            border-left: 3px solid var(--verde-oliva);
+        }
         .protocolo-item {
+
             background: var(--gray-50); padding: 0.6rem 1rem;
             border-radius: 8px; margin-bottom: 0.6rem;
             border: 1px solid var(--border-color); transition: 0.15s;
@@ -1153,10 +1182,9 @@
     </div>
 
     <div id="listaProtocolos" class="protocolos-salvos" style="display: none;">
-        <div class="titulo">
-            <i class="fas fa-archive"></i> Histórico de Saídas
-            <span style="font-size:0.65rem; font-weight:400; color:var(--text-secondary); margin-left:auto; display:flex; gap:0.3rem; flex-wrap:wrap;">
-                <i class="fas fa-filter"></i>
+        <div class="titulo" style="flex-wrap:wrap; gap:0.4rem;">
+            <span><i class="fas fa-archive"></i> Histórico de Saídas</span>
+            <span style="font-size:0.65rem; font-weight:400; color:var(--text-secondary); margin-left:auto; display:flex; gap:0.3rem; flex-wrap:wrap; align-items:center;">
                 <select id="filtroHistoricoFuncionario" onchange="exibirListaProtocolos()" style="padding:0.15rem 0.5rem; border-radius:4px; border:1px solid var(--border-color); background:var(--input-bg); color:var(--text-primary); font-size:0.65rem;">
                     <option value="">Todos os funcionários</option>
                 </select>
@@ -1164,6 +1192,20 @@
                     <option value="">Todos os materiais</option>
                 </select>
             </span>
+        </div>
+        <div id="filtrosPeriodoHistorico" style="display:flex; flex-wrap:wrap; gap:0.35rem; align-items:center; padding:0.5rem 0.8rem; border-bottom:1px solid var(--border-color); background:var(--bg-body);">
+            <span style="font-size:0.65rem; font-weight:600; color:var(--text-secondary); margin-right:0.2rem;"><i class="fas fa-calendar-alt"></i> Período:</span>
+            <button type="button" class="btn-filtro-periodo active" data-periodo="dia" onclick="setFiltroPeriodoHistorico('dia')">Dia</button>
+            <button type="button" class="btn-filtro-periodo" data-periodo="mes" onclick="setFiltroPeriodoHistorico('mes')">Mês</button>
+            <button type="button" class="btn-filtro-periodo" data-periodo="ano" onclick="setFiltroPeriodoHistorico('ano')">Ano</button>
+            <button type="button" class="btn-filtro-periodo" data-periodo="geral" onclick="setFiltroPeriodoHistorico('geral')">Geral</button>
+            <button type="button" class="btn-filtro-periodo" data-periodo="periodo" onclick="setFiltroPeriodoHistorico('periodo')">Intervalo</button>
+            <span id="camposIntervaloHistorico" style="display:none; gap:0.3rem; align-items:center; flex-wrap:wrap;">
+                <input type="date" id="histDataIni" onchange="exibirListaProtocolos()" style="padding:0.15rem 0.4rem; border-radius:4px; border:1px solid var(--border-color); font-size:0.65rem; background:var(--input-bg); color:var(--text-primary);" />
+                <span style="font-size:0.65rem; color:var(--text-secondary);">até</span>
+                <input type="date" id="histDataFim" onchange="exibirListaProtocolos()" style="padding:0.15rem 0.4rem; border-radius:4px; border:1px solid var(--border-color); font-size:0.65rem; background:var(--input-bg); color:var(--text-primary);" />
+            </span>
+            <span id="resumoFiltroHistorico" style="margin-left:auto; font-size:0.65rem; color:var(--text-secondary);"></span>
         </div>
         <div id="conteudoLista"></div>
     </div>
@@ -2513,6 +2555,67 @@ function mostrarToast(mensagem, tipo = 'success') {
         }
     }
 
+    window._filtroPeriodoHistorico = window._filtroPeriodoHistorico || 'dia';
+
+    window.setFiltroPeriodoHistorico = function(periodo) {
+        window._filtroPeriodoHistorico = periodo || 'geral';
+        document.querySelectorAll('.btn-filtro-periodo').forEach(btn => {
+            btn.classList.toggle('active', btn.getAttribute('data-periodo') === window._filtroPeriodoHistorico);
+        });
+        const campos = document.getElementById('camposIntervaloHistorico');
+        if (campos) campos.style.display = (periodo === 'periodo') ? 'inline-flex' : 'none';
+        exibirListaProtocolos();
+    };
+
+    function parseDataHistorico(p) {
+        // retorna Date local a partir de dataSaida (dd/mm/yyyy ou yyyy-mm-dd)
+        const s = (p.dataSaida || p.data_saida || '').toString().trim();
+        if (!s) return null;
+        if (/^\d{4}-\d{2}-\d{2}/.test(s)) {
+            const [y,m,d] = s.substring(0,10).split('-').map(Number);
+            return new Date(y, m - 1, d);
+        }
+        const m = s.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+        if (m) return new Date(Number(m[3]), Number(m[2]) - 1, Number(m[1]));
+        const d = new Date(s);
+        return isNaN(d.getTime()) ? null : d;
+    }
+
+    function passaFiltroPeriodo(p) {
+        const periodo = window._filtroPeriodoHistorico || 'geral';
+        if (periodo === 'geral') return true;
+        const dt = parseDataHistorico(p);
+        if (!dt) return periodo === 'geral';
+        const hoje = new Date();
+        const y = dt.getFullYear(), m = dt.getMonth(), d = dt.getDate();
+        const hy = hoje.getFullYear(), hm = hoje.getMonth(), hd = hoje.getDate();
+        if (periodo === 'dia') return y === hy && m === hm && d === hd;
+        if (periodo === 'mes') return y === hy && m === hm;
+        if (periodo === 'ano') return y === hy;
+        if (periodo === 'periodo') {
+            const ini = document.getElementById('histDataIni')?.value;
+            const fim = document.getElementById('histDataFim')?.value;
+            if (!ini && !fim) return true;
+            const t = new Date(y, m, d).getTime();
+            if (ini) {
+                const [iy,im,id] = ini.split('-').map(Number);
+                if (t < new Date(iy, im - 1, id).getTime()) return false;
+            }
+            if (fim) {
+                const [fy,fm,fd] = fim.split('-').map(Number);
+                if (t > new Date(fy, fm - 1, fd).getTime()) return false;
+            }
+            return true;
+        }
+        return true;
+    }
+
+    function labelPeriodoAtivo() {
+        const p = window._filtroPeriodoHistorico || 'geral';
+        const map = { dia: 'Hoje', mes: 'Este mês', ano: 'Este ano', geral: 'Geral', periodo: 'Intervalo' };
+        return map[p] || 'Geral';
+    }
+
     async function exibirListaProtocolos() {
         const protocolos = await carregarSaidasDB();
         const container = document.getElementById('conteudoLista');
@@ -2536,17 +2639,42 @@ function mostrarToast(mensagem, tipo = 'success') {
         let filtrados = protocolos;
         if (filtroFunc) filtrados = filtrados.filter(p => p.colaborador === filtroFunc);
         if (filtroMat) filtrados = filtrados.filter(p => p.itens && p.itens.some(i => i.item === filtroMat));
+        filtrados = filtrados.filter(passaFiltroPeriodo);
+
+        // ordena do mais recente para o mais antigo
+        filtrados = filtrados.slice().sort((a, b) => {
+            const da = parseDataHistorico(a);
+            const db = parseDataHistorico(b);
+            const ta = da ? da.getTime() : 0;
+            const tb = db ? db.getTime() : 0;
+            if (tb !== ta) return tb - ta;
+            return String(b.dataSalvamento || '').localeCompare(String(a.dataSalvamento || ''));
+        });
+
+        const resumo = document.getElementById('resumoFiltroHistorico');
+        if (resumo) resumo.textContent = labelPeriodoAtivo() + ' · ' + filtrados.length + ' registro(s)';
         
         if (filtrados.length === 0) {
             container.innerHTML = `
                 <div class="lista-vazia">
                     <i class="fas fa-inbox"></i> 
-                    Nenhuma saída registrada${filtroFunc || filtroMat ? ' com os filtros aplicados' : ''}.
+                    Nenhuma saída neste filtro (${labelPeriodoAtivo()})${filtroFunc || filtroMat ? ' + filtros' : ''}.
                 </div>
             `;
         } else {
             let html = '';
-            filtrados.slice().reverse().forEach(p => {
+            let ultimoGrupo = '';
+            filtrados.forEach(p => {
+                const dt = parseDataHistorico(p);
+                let grupo = p.dataSaida || 'Sem data';
+                if (dt) {
+                    grupo = dt.toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' });
+                    grupo = grupo.charAt(0).toUpperCase() + grupo.slice(1);
+                }
+                if (grupo !== ultimoGrupo) {
+                    html += `<div class="hist-grupo-dia"><i class="fas fa-calendar-day"></i> ${grupo}</div>`;
+                    ultimoGrupo = grupo;
+                }
                 const unidadesNaoCadastradas = contarUnidadesNaoCadastradas(p);
                 const temNaoCadastrado = unidadesNaoCadastradas > 0;
                 const temBaixados = p.itensBaixados && p.itensBaixados.length > 0;
