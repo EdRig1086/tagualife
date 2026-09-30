@@ -662,16 +662,24 @@
             const row = categoriasDB.find(c => (c.nome || '').toLowerCase() === nome.toLowerCase());
             const id = row ? row.id : '';
             const esc = nome.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+            const isOutros = (nome || '').toLowerCase() === 'outros';
+            const acoes = isOutros
+                ? '<span style="font-size:0.65rem;color:var(--text-secondary);">protegida</span>'
+                : ('<button type="button" class="btn-outline" style="padding:0.15rem 0.45rem;font-size:0.65rem;" onclick="editarCategoriaAdmin(\'' + esc + '\', \'' + id + '\')"><i class="fas fa-edit"></i></button>' +
+                   '<button type="button" class="btn-outline" style="padding:0.15rem 0.45rem;font-size:0.65rem;color:#8B3A3A;border-color:#8B3A3A;" onclick="excluirCategoriaAdmin(\'' + esc + '\', \'' + id + '\')"><i class="fas fa-trash-alt"></i></button>');
             return '<div style="display:flex;align-items:center;gap:0.4rem;padding:0.4rem 0.3rem;border-bottom:1px solid var(--border-color);">' +
                 '<span style="flex:1;font-size:0.8rem;font-weight:600;">' + nome + '</span>' +
-                '<button type="button" class="btn-outline" style="padding:0.15rem 0.45rem;font-size:0.65rem;" onclick="editarCategoriaAdmin(\'' + esc + '\', \'' + id + '\')"><i class="fas fa-edit"></i></button>' +
-                '<button type="button" class="btn-outline" style="padding:0.15rem 0.45rem;font-size:0.65rem;color:#8B3A3A;border-color:#8B3A3A;" onclick="excluirCategoriaAdmin(\'' + esc + '\', \'' + id + '\')"><i class="fas fa-trash-alt"></i></button>' +
+                acoes +
                 '</div>';
         }).join('');
     }
 
     window.editarCategoriaAdmin = async function(nomeAntigo, id) {
         if (!ehAdministrador()) return;
+        if ((nomeAntigo || '').toLowerCase() === 'outros') {
+            mostrarToast('⚠️ A categoria "Outros" não pode ser editada nem excluída', 'warning');
+            return;
+        }
         const novo = prompt('Novo nome da categoria:', nomeAntigo);
         if (novo == null) return;
         const n = novo.trim();
