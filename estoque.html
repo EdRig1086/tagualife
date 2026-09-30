@@ -974,39 +974,96 @@
             mostrarToast('⚠️ Abra um relatório antes de imprimir', 'warning');
             return;
         }
-        const win = window.open('', '_blank', 'width=1100,height=700');
+        const win = window.open('', '_blank', 'width=1200,height=800');
         if (!win) {
-            // fallback: print da página atual
-            window.print();
+            mostrarToast('⚠️ Permita pop-ups para imprimir', 'warning');
             return;
         }
+        // Estilos iguais ao modal da tela (cores, tabelas, status BAIXO)
         const estilos = `
-  @page { size: A4 landscape; margin: 8mm; }
-  * { box-sizing: border-box; }
-  body { font-family: Arial, Helvetica, sans-serif; color: #111; margin: 0; padding: 8px; font-size: 11px; }
-  .relatorio-cabecalho .empresa, .relatorio-cabecalho .geracao { font-size: 10px; color: #555; }
-  .relatorio-cabecalho h1 { font-size: 18px; margin: 6px 0 2px; }
-  .relatorio-cabecalho .periodo { font-size: 12px; color: #444; margin-bottom: 8px; }
-  .relatorio-resumo {
-    display: grid; grid-template-columns: 1fr 1fr; gap: 4px 20px;
-    border: 1px solid #ccc; padding: 8px 12px; margin: 8px 0 12px; font-size: 11px;
-  }
-  .relatorio-resumo .item { display: flex; justify-content: space-between; }
-  .relatorio-resumo .val { font-weight: 700; }
-  .relatorio-resumo .val.laranja { color: #c45a00; }
-  .secao-relatorio { margin-top: 12px; page-break-inside: avoid; }
-  .titulo-secao {
-    font-size: 12px; font-weight: 700; border-bottom: 2px solid #7A816E;
-    padding-bottom: 3px; margin-bottom: 6px;
-  }
-  table.tabela-relatorio { width: 100%; border-collapse: collapse; font-size: 10px; }
-  table.tabela-relatorio th {
-    background: #555; color: #fff; padding: 4px 5px; text-align: left;
-    font-size: 9px; text-transform: uppercase;
-  }
-  table.tabela-relatorio td { padding: 3px 5px; border: 1px solid #bbb; }
-  table.tabela-relatorio tr.baixo { background: #f5e6c8; }
-  @media print { body { padding: 0; } }
+@page { size: A4 landscape; margin: 10mm; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: Inter, Arial, Helvetica, sans-serif;
+  color: #191D1B;
+  background: #fff;
+  padding: 12px 16px;
+  font-size: 11px;
+  line-height: 1.35;
+}
+.relatorio-cabecalho { margin-bottom: 10px; border-bottom: 2px solid #C1CE83; padding-bottom: 8px; }
+.relatorio-cabecalho .empresa { font-size: 10px; color: #7A816E; font-weight: 600; }
+.relatorio-cabecalho .geracao { font-size: 9px; color: #888; margin-top: 2px; }
+.relatorio-cabecalho h1 {
+  font-size: 16px; font-weight: 800; margin: 6px 0 2px; color: #191D1B;
+  letter-spacing: 0.02em;
+}
+.relatorio-cabecalho .periodo { font-size: 11px; color: #555; }
+.relatorio-resumo {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px 28px;
+  border: 1px solid #D8DCCE;
+  border-left: 4px solid #C1CE83;
+  background: #FBFBF7;
+  padding: 10px 14px;
+  margin: 10px 0 14px;
+  font-size: 11px;
+}
+.relatorio-resumo .item { display: flex; justify-content: space-between; gap: 12px; }
+.relatorio-resumo .lbl { color: #7A816E; }
+.relatorio-resumo .val { font-weight: 700; color: #191D1B; }
+.relatorio-resumo .val.laranja { color: #C45A00; }
+.secao-relatorio { margin-top: 14px; page-break-inside: auto; }
+.titulo-secao {
+  font-size: 12px;
+  font-weight: 700;
+  color: #191D1B;
+  border-bottom: 2px solid #7A816E;
+  padding-bottom: 4px;
+  margin-bottom: 6px;
+}
+table.tabela-relatorio {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 10px;
+  margin-bottom: 4px;
+}
+table.tabela-relatorio thead { background: #7A816E; }
+table.tabela-relatorio th {
+  background: #7A816E !important;
+  color: #fff !important;
+  padding: 5px 6px;
+  text-align: left;
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+table.tabela-relatorio td {
+  padding: 4px 6px;
+  border-bottom: 1px solid #D8DCCE;
+  vertical-align: top;
+}
+table.tabela-relatorio tr.baixo {
+  background: #FFF3E0 !important;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+table.tabela-relatorio tr.baixo td { border-bottom-color: #FFE0B2; }
+.badge-status, .status-baixo, span[style*="BAIXO"] {
+  font-weight: 700;
+  color: #C45A00;
+}
+/* limpa classes do modal que não importam na impressão */
+.modal-overlay, .modal-header, .modal-footer, .btn-relatorio, .btn-outline { display: none !important; }
+@media print {
+  body { padding: 0; }
+  .secao-relatorio { page-break-inside: avoid; }
+  table.tabela-relatorio { page-break-inside: auto; }
+  table.tabela-relatorio tr { page-break-inside: avoid; }
+}
 `;
         win.document.open();
         win.document.write('<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8">');
@@ -1016,8 +1073,14 @@
         win.document.write('</body></html>');
         win.document.close();
         setTimeout(function() {
-            try { win.focus(); win.print(); } catch (e) { console.warn(e); }
-        }, 300);
+            try {
+                win.focus();
+                win.print();
+            } catch (e) {
+                console.warn(e);
+                mostrarToast('❌ Erro ao abrir impressão', 'danger');
+            }
+        }, 350);
     }
 
     function exportarCSVEstoque() {
