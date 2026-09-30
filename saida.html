@@ -1551,6 +1551,54 @@
         localStorage.setItem('estoqueTaguaLife', JSON.stringify(cacheEstoqueDB));
     }
 
+
+    function getHorarioBrasilia() {
+        const agora = new Date();
+        const fmt = new Intl.DateTimeFormat('pt-BR', {
+            timeZone: 'America/Sao_Paulo',
+            year: 'numeric', month: '2-digit', day: '2-digit',
+            hour: '2-digit', minute: '2-digit', second: '2-digit',
+            hour12: false
+        });
+        const parts = fmt.formatToParts(agora);
+        const get = (t) => (parts.find(p => p.type === t) || {}).value || '00';
+        const data = get('day') + '/' + get('month') + '/' + get('year');
+        const hora = get('hour') + ':' + get('minute') + ':' + get('second');
+        return { data, hora, day: get('day'), month: get('month'), year: get('year'),
+                 hours: get('hour'), minutes: get('minute'), seconds: get('second') };
+    }
+
+    function atualizarRelogio() {
+        try {
+            const h = getHorarioBrasilia();
+            const set = (id, val) => {
+                const el = document.getElementById(id);
+                if (el) el.textContent = val;
+            };
+            set('clockHours', h.hours);
+            set('clockMinutes', h.minutes);
+            set('clockSeconds', h.seconds);
+            set('clockDate', h.data);
+            set('horaAtual', h.hora);
+            set('dataAtual', h.data);
+            set('horaAoVivo', h.hora);
+            // preenche data/hora do formulário se estiverem vazios ou placeholder
+            const dataEl = document.getElementById('dataSaida');
+            const horaEl = document.getElementById('horasSaida');
+            if (dataEl && (!dataEl.value || dataEl.value.indexOf('_') >= 0 || dataEl.value === '00/00/0000')) {
+                dataEl.value = h.data;
+            }
+            if (horaEl && (!horaEl.value || horaEl.value.indexOf('_') >= 0)) {
+                horaEl.value = h.hora;
+            }
+            // data no cabeçalho do card, se existir
+            set('dataCabecalho', h.data);
+            set('horaCabecalho', h.hora);
+        } catch (e) {
+            console.warn('relogio', e);
+        }
+    }
+
 function mostrarToast(mensagem, tipo = 'success') {
         const toast = document.getElementById('toastGlobal');
         const cores = { info: '#3498DB', success: '#7A816E', warning: '#C1A83C', danger: '#8B3A3A' };
