@@ -1680,65 +1680,137 @@ function mostrarToast(mensagem, tipo = 'success') {
         });
     }
 
-    function carregarColaboradores() {
-        let colaboradores = JSON.parse(localStorage.getItem('colaboradoresTaguaLife') || 'null');
-        if (!colaboradores || colaboradores.length === 0) {
-            colaboradores = COLABORADORES_INICIAIS;
-            localStorage.setItem('colaboradoresTaguaLife', JSON.stringify(colaboradores));
+
+    // ===== COLABORADORES (Supabase) =====
+    let cacheColaboradoresDB = []; // [{id, nome, cargo, ativo}]
+
+    async function carregarColaboradoresDB() {
+        try {
+            if (!sb) throw new Error('sem supabase');
+            const { data, error } = await sb.from('colaboradores')
+                .select('id,nome,cargo,ativo')
+                .order('nome');
+            if (error) throw error;
+            cacheColaboradoresDB = (data || []).map(c => ({
+                id: c.id,
+                nome: c.nome || '',
+                cargo: c.cargo || 'Colaborador',
+                ativo: c.ativo !== false
+            }));
+            localStorage.setItem('colaboradoresTaguaLife', JSON.stringify(cacheColaboradoresDB));
+            return cacheColaboradoresDB;
+        } catch (e) {
+            console.warn('colaboradores DB:', e);
+            // fallback local
+            let colaboradores = JSON.parse(localStorage.getItem('colaboradoresTaguaLife') || 'null');
+            if (!colaboradores || !colaboradores.length) {
+                colaboradores = (typeof COLABORADORES_INICIAIS !== 'undefined' ? COLABORADORES_INICIAIS : []).map(c => ({
+                    ...c, ativo: true, id: null
+                }));
+                localStorage.setItem('colaboradoresTaguaLife', JSON.stringify(colaboradores));
+            }
+            cacheColaboradoresDB = colaboradores.map(c => ({
+                id: c.id || null,
+                nome: c.nome,
+                cargo: c.cargo || 'Colaborador',
+                ativo: c.ativo !== false
+            }));
+            return cacheColaboradoresDB;
         }
-        return colaboradores;
+    }
+
+    function carregarColaboradores() {
+        // síncrono: usa cache (preenchido pelo DB)
+        if (cacheColaboradoresDB && cacheColaboradoresDB.length) return cacheColaboradoresDB.slice();
+        try {
+            const arr = JSON.parse(localStorage.getItem('colaboradoresTaguaLife') || '[]');
+            if (arr && arr.length) {
+                cacheColaboradoresDB = arr;
+                return arr.slice();
+            }
+        } catch (e) {}
+        return (typeof COLABORADORES_INICIAIS !== 'undefined' ? COLABORADORES_INICIAIS : []).map(c => ({
+            ...c, ativo: true, id: null
+        }));
     }
 
     function salvarColaboradores(colaboradores) {
-        localStorage.setItem('colaboradoresTaguaLife', JSON.stringify(colaboradores));
+        cacheColaboradoresDB = colaboradores || [];
+        localStorage.setItem('colaboradoresTaguaLife', JSON.stringify(cacheColaboradoresDB));
     }
 
+    window._colabEditId = null;
     window._colabEditIndex = null;
 
-    window.abrirModalColaborador = function() {
+    window.abrirModalColaborador = async function() {
+        window._colabEditId = null;
         window._colabEditIndex = null;
         document.getElementById('cadColabNome').value = '';
         document.getElementById('cadColabCargo').value = '';
         const btn = document.querySelector('#modalColaborador .btn-primary');
         if (btn) btn.innerHTML = '<i class="fas fa-save"></i> Cadastrar';
+        await carregarColaboradoresDB();
         renderizarListaColaboradores();
         abrirModal('modalColaborador');
     };
 
-    window.cadastrarColaborador = function() {
+    window.cadastrarColaborador = async function() {
         const nome = document.getElementById('cadColabNome').value.trim();
         const cargo = document.getElementById('cadColabCargo').value.trim() || 'Colaborador';
-        
         if (!nome) {
             mostrarToast('⚠️ Digite o nome do colaborador!', 'warning');
             return;
         }
-        
-        const colaboradores = carregarColaboradores();
 
-        // EDIÇÃO (só quem pode editar)
-        if (window._colabEditIndex !== null && window._colabEditIndex >= 0) {
+        await carregarColaboradoresDB();
+        const colaboradores = cacheColaboradoresDB;
+
+        // EDIÇÃO
+        if (window._colabEditId || (window._colabEditIndex !== null && window._colabEditIndex >= 0)) {
             if (typeof podeEditar === 'function' && !podeEditar()) {
                 mostrarToast('⛔ Sem permissão para editar colaborador', 'danger');
                 return;
             }
-            const idx = window._colabEditIndex;
-            const nomeAntigo = colaboradores[idx].nome;
-            const conflito = colaboradores.some((c, i) => i !== idx && c.nome.toLowerCase() === nome.toLowerCase());
+            const atual = window._colabEditId
+                ? colaboradores.find(c => String(c.id) === String(window._colabEditId))
+                : colaboradores[window._colabEditIndex];
+            if (!atual) {
+                mostrarToast('❌ Colaborador não encontrado', 'danger');
+                return;
+            }
+            const conflito = colaboradores.some(c =>
+                c.nome.toLowerCase() === nome.toLowerCase() && String(c.id) !== String(atual.id)
+            );
             if (conflito) {
                 mostrarToast('⚠️ Já existe outro colaborador com esse nome!', 'warning');
                 return;
             }
-            colaboradores[idx] = { nome, cargo };
-            salvarColaboradores(colaboradores);
+            try {
+                if (sb && atual.id) {
+                    const { error } = await sb.from('colaboradores')
+                        .update({ nome: nome, cargo: cargo, atualizado_em: new Date().toISOString() })
+                        .eq('id', atual.id);
+                    if (error) throw error;
+                } else if (sb && !atual.id) {
+                    const { data, error } = await sb.from('colaboradores')
+                        .insert({ nome, cargo, ativo: true })
+                        .select();
+                    if (error) throw error;
+                }
+            } catch (e) {
+                mostrarToast('❌ Erro ao atualizar: ' + (e.message || e), 'danger');
+                return;
+            }
+            window._colabEditId = null;
             window._colabEditIndex = null;
             document.getElementById('cadColabNome').value = '';
             document.getElementById('cadColabCargo').value = '';
             const btn = document.querySelector('#modalColaborador .btn-primary');
             if (btn) btn.innerHTML = '<i class="fas fa-save"></i> Cadastrar';
+            await carregarColaboradoresDB();
             renderizarListaColaboradores();
             carregarSelectColaboradores();
-            mostrarToast('✅ Colaborador atualizado!', 'success');
+            mostrarToast('✅ Colaborador atualizado no banco!', 'success');
             return;
         }
 
@@ -1748,17 +1820,28 @@ function mostrarToast(mensagem, tipo = 'success') {
             mostrarToast('⚠️ Este colaborador já está cadastrado!', 'warning');
             return;
         }
-        
-        colaboradores.push({ nome, cargo });
-        salvarColaboradores(colaboradores);
-        
+        try {
+            if (sb) {
+                const { error } = await sb.from('colaboradores').insert({
+                    nome: nome,
+                    cargo: cargo,
+                    ativo: true
+                });
+                if (error) throw error;
+            } else {
+                colaboradores.push({ nome, cargo, ativo: true, id: null });
+                salvarColaboradores(colaboradores);
+            }
+        } catch (e) {
+            mostrarToast('❌ Erro ao cadastrar: ' + (e.message || e), 'danger');
+            return;
+        }
         document.getElementById('cadColabNome').value = '';
         document.getElementById('cadColabCargo').value = '';
-        
+        await carregarColaboradoresDB();
         renderizarListaColaboradores();
         carregarSelectColaboradores();
-        
-        mostrarToast('✅ Colaborador cadastrado com sucesso!', 'success');
+        mostrarToast('✅ Colaborador cadastrado no banco!', 'success');
     };
 
     window.editarColaborador = function(index) {
@@ -1766,233 +1849,124 @@ function mostrarToast(mensagem, tipo = 'success') {
         const c = colaboradores[index];
         if (!c) return;
         window._colabEditIndex = index;
+        window._colabEditId = c.id || null;
         document.getElementById('cadColabNome').value = c.nome || '';
         document.getElementById('cadColabCargo').value = c.cargo || '';
         const btn = document.querySelector('#modalColaborador .btn-primary');
         if (btn) btn.innerHTML = '<i class="fas fa-edit"></i> Salvar alteração';
-        document.getElementById('cadColabNome').focus();
-        mostrarToast('✏️ Editando: ' + c.nome, 'info');
     };
 
     function renderizarListaColaboradores() {
         const colaboradores = carregarColaboradores();
         const container = document.getElementById('listaColaboradoresModal');
-        
+        if (!container) return;
+
         if (colaboradores.length === 0) {
             container.innerHTML = '<div style="padding:1rem; text-align:center; color:var(--text-secondary); font-size:0.7rem;">Nenhum colaborador cadastrado</div>';
             return;
         }
-        
+
         const podeGerirColab = (typeof podeEditar === 'function' && podeEditar());
-        container.innerHTML = colaboradores.map((c, index) => `
-            <div class="item-lista">
+        container.innerHTML = colaboradores.map((c, index) => {
+            const ativo = c.ativo !== false;
+            const idAttr = c.id ? String(c.id) : '';
+            return `
+            <div class="item-lista" style="opacity:${ativo ? '1' : '0.55'};">
                 <div class="info">
                     <strong>${c.nome}</strong>
-                    <small>${c.cargo || 'Colaborador'}</small>
+                    <small>${c.cargo || 'Colaborador'} ${ativo ? '' : '· <span style="color:#8B3A3A;">Inativo</span>'}</small>
                 </div>
-                ${podeGerirColab ? `<div style="display:flex; gap:0.3rem;">
+                ${podeGerirColab ? `<div style="display:flex; gap:0.3rem; flex-wrap:wrap;">
                     <button class="btn-remover" onclick="editarColaborador(${index})" title="Editar" style="background:#3498DB; color:white;">
                         <i class="fas fa-edit"></i>
                     </button>
-                    <button class="btn-remover" onclick="removerColaborador(${index})" title="Remover">
+                    <button class="btn-remover" onclick="toggleColaboradorAtivo('${idAttr}', ${index}, ${ativo})" title="${ativo ? 'Desativar' : 'Ativar'}"
+                        style="background:${ativo ? '#C1A83C' : '#7A816E'}; color:white;">
+                        <i class="fas fa-${ativo ? 'ban' : 'check'}"></i>
+                    </button>
+                    <button class="btn-remover" onclick="removerColaborador(${index})" title="Excluir">
                         <i class="fas fa-trash-alt"></i>
                     </button>
                 </div>` : ''}
-            </div>
-        `).join('');
+            </div>`;
+        }).join('');
     }
 
-    window.removerColaborador = function(index) {
+    window.toggleColaboradorAtivo = async function(id, index, ativoAtual) {
+        if (typeof podeEditar === 'function' && !podeEditar()) {
+            mostrarToast('⛔ Sem permissão', 'danger');
+            return;
+        }
+        const novo = !ativoAtual;
+        const colaboradores = carregarColaboradores();
+        const c = (id && colaboradores.find(x => String(x.id) === String(id))) || colaboradores[index];
+        if (!c) return;
+        if (!confirm((novo ? 'Ativar' : 'Desativar') + ' o colaborador "' + c.nome + '"?')) return;
+        try {
+            if (sb && c.id) {
+                const { error } = await sb.from('colaboradores')
+                    .update({ ativo: novo, atualizado_em: new Date().toISOString() })
+                    .eq('id', c.id);
+                if (error) throw error;
+            } else {
+                c.ativo = novo;
+                salvarColaboradores(colaboradores);
+            }
+            await carregarColaboradoresDB();
+            renderizarListaColaboradores();
+            carregarSelectColaboradores();
+            mostrarToast(novo ? '✅ Colaborador ativado' : '⚠️ Colaborador desativado', novo ? 'success' : 'warning');
+        } catch (e) {
+            mostrarToast('❌ ' + (e.message || e), 'danger');
+        }
+    };
+
+    window.removerColaborador = async function(index) {
         if (typeof podeEditar === 'function' && !podeEditar()) {
             mostrarToast('⛔ Sem permissão para remover colaborador', 'danger');
             return;
         }
-
         const colaboradores = carregarColaboradores();
-        const nome = colaboradores[index].nome;
-        
-        if (!confirm(`Remover o colaborador "${nome}"?`)) return;
-        
-        colaboradores.splice(index, 1);
-        salvarColaboradores(colaboradores);
-        renderizarListaColaboradores();
-        carregarSelectColaboradores();
-        mostrarToast('🗑️ Colaborador removido!', 'danger');
-    };
-
-    window.abrirModalItem = function() {
-        document.getElementById('cadItemNome').value = '';
-        document.getElementById('cadItemQtd').value = '0';
-        document.getElementById('cadItemCategoria').value = '';
-        document.getElementById('buscaItem').value = '';
-        mudarTabItem('novo');
-        renderizarListaItens();
-        abrirModal('modalItem');
-    };
-
-    window.mudarTabItem = function(tab) {
-        document.querySelectorAll('.modal-tabs .tab').forEach(t => t.classList.remove('ativo'));
-        document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('ativo'));
-        
-        if (tab === 'novo') {
-            document.querySelectorAll('.modal-tabs .tab')[0].classList.add('ativo');
-            document.getElementById('tabItemNovo').classList.add('ativo');
-        } else {
-            document.querySelectorAll('.modal-tabs .tab')[1].classList.add('ativo');
-            document.getElementById('tabItemLista').classList.add('ativo');
-            renderizarListaItens();
+        const c = colaboradores[index];
+        if (!c) return;
+        if (!confirm('Excluir permanentemente o colaborador "' + c.nome + '"?')) return;
+        try {
+            if (sb && c.id) {
+                const { error } = await sb.from('colaboradores').delete().eq('id', c.id);
+                if (error) throw error;
+            } else {
+                colaboradores.splice(index, 1);
+                salvarColaboradores(colaboradores);
+            }
+            await carregarColaboradoresDB();
+            renderizarListaColaboradores();
+            carregarSelectColaboradores();
+            mostrarToast('🗑️ Colaborador excluído!', 'danger');
+        } catch (e) {
+            mostrarToast('❌ ' + (e.message || e), 'danger');
         }
     };
-
-    window.cadastrarItem = function() {
-        const nome = document.getElementById('cadItemNome').value.trim().toUpperCase();
-        const qtd = parseInt(document.getElementById('cadItemQtd').value) || 0;
-        const categoria = document.getElementById('cadItemCategoria').value.trim() || 'Geral';
-        
-        if (!nome) {
-            mostrarToast('⚠️ Digite o nome do item!', 'warning');
-            return;
-        }
-        
-        const estoque = JSON.parse(localStorage.getItem('estoqueTaguaLife') || '[]');
-        const existe = estoque.some(i => i.nome.toLowerCase() === nome.toLowerCase());
-        
-        if (existe) {
-            mostrarToast('⚠️ Este item já está cadastrado!', 'warning');
-            return;
-        }
-        
-        estoque.push({ nome, quantidade: qtd, categoria });
-        localStorage.setItem('estoqueTaguaLife', JSON.stringify(estoque));
-        
-        document.getElementById('cadItemNome').value = '';
-        document.getElementById('cadItemQtd').value = '0';
-        document.getElementById('cadItemCategoria').value = '';
-        
-        renderizarListaItens();
-        carregarSelectItens();
-        atualizarPainel();
-        
-        mostrarToast(`✅ Item "${nome}" cadastrado com ${qtd} unid.!`, 'success');
-    };
-
-    function renderizarListaItens() {
-        const estoque = JSON.parse(localStorage.getItem('estoqueTaguaLife') || '[]');
-        const busca = document.getElementById('buscaItem')?.value?.toLowerCase() || '';
-        const container = document.getElementById('listaItensModal');
-        
-        let filtrados = estoque;
-        if (busca) {
-            filtrados = estoque.filter(i => 
-                i.nome.toLowerCase().includes(busca) || 
-                (i.categoria || '').toLowerCase().includes(busca)
-            );
-        }
-        
-        if (filtrados.length === 0) {
-            container.innerHTML = '<div style="padding:1rem; text-align:center; color:var(--text-secondary); font-size:0.7rem;">Nenhum item encontrado</div>';
-            return;
-        }
-        
-        container.innerHTML = filtrados.map((item) => {
-            const idxOriginal = estoque.indexOf(item);
-            const corQtd = item.quantidade <= 5 ? '#C62828' : '#2E7D32';
-            return `
-                <div class="item-lista">
-                    <div class="info">
-                        <strong>${item.nome}</strong>
-                        <small>${item.categoria || 'Geral'} • <span style="color:${corQtd}; font-weight:600;">${item.quantidade} unid.</span></small>
-                    </div>
-                    <button class="btn-remover" onclick="removerItem(${idxOriginal})" title="Remover">
-                        <i class="fas fa-trash-alt"></i>
-                    </button>
-                </div>
-            `;
-        }).join('');
-    }
-
-    window.removerItem = function(index) {
-        const estoque = JSON.parse(localStorage.getItem('estoqueTaguaLife') || '[]');
-        const nome = estoque[index].nome;
-        
-        if (!confirm(`Remover o item "${nome}" do estoque?`)) return;
-        
-        estoque.splice(index, 1);
-        localStorage.setItem('estoqueTaguaLife', JSON.stringify(estoque));
-        renderizarListaItens();
-        carregarSelectItens();
-        atualizarPainel();
-        mostrarToast('🗑️ Item removido!', 'danger');
-    };
-
-    function getHorarioBrasilia() {
-        const agora = new Date();
-        const data = agora.toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' });
-        const dataCompleta = agora.toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo', weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-        const hora = agora.toLocaleTimeString('pt-BR', { timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit' });
-        const horaCompleta = agora.toLocaleTimeString('pt-BR', { timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit', second: '2-digit' });
-        return { data, dataCompleta, hora, horaCompleta };
-    }
-
-    function atualizarRelogio() {
-        const horario = getHorarioBrasilia();
-        document.getElementById('clockHours').textContent = horario.hora.split(':')[0] || '00';
-        document.getElementById('clockMinutes').textContent = horario.hora.split(':')[1] || '00';
-        document.getElementById('clockSeconds').textContent = horario.horaCompleta.split(':')[2] || '00';
-        document.getElementById('clockDate').textContent = horario.data;
-        document.getElementById('dataAtual').textContent = horario.data;
-        document.getElementById('horaAtual').textContent = horario.hora;
-        document.getElementById('dataGeracao').textContent = horario.data + ' ' + horario.hora;
-        document.getElementById('horaAoVivo').textContent = horario.horaCompleta;
-
-        const dataSaidaInput = document.getElementById('dataSaida');
-        if (dataSaidaInput && !dataSaidaInput.value) { dataSaidaInput.value = horario.data; }
-        const horasInput = document.getElementById('horasSaida');
-        if (horasInput && !horasInput.value) { horasInput.value = horario.horaCompleta; }
-    }
-
-    function mostrarMensagem(texto, cor = '#191D1B') {
-        const feedback = document.getElementById('feedback');
-        feedback.innerHTML = `<span style="background:${cor}; color:white; padding:0.2rem 1.2rem; border-radius:40px; display:inline-block; font-size:0.65rem;">${texto}</span>`;
-        clearTimeout(feedback._timeout);
-        feedback._timeout = setTimeout(() => { feedback.innerHTML = ''; }, 4000);
-    }
-
-    async function carregarSelectItens() {
-        const estoque = await carregarEstoqueDB();
-        document.querySelectorAll('.item-select').forEach(select => {
-            const currentValue = select.value;
-            select.innerHTML = '<option value="">Selecione um item...</option>';
-            select.innerHTML += '<option value="__custom__" style="font-weight:700; color:#3498DB;">✏️ Digitar item manualmente...</option>';
-            [...estoque].sort((a,b) => (a.nome||'').localeCompare(b.nome||'')).forEach(item => {
-                const option = document.createElement('option');
-                option.value = item.nome;
-                option.textContent = `${item.nome} (${item.quantidade} unid.)`;
-                if (item.nome === currentValue) option.selected = true;
-                select.appendChild(option);
-            });
-            if (currentValue === '__custom__') select.value = '__custom__';
-        });
-    }
 
     function carregarSelectColaboradores() {
-        const colaboradores = carregarColaboradores();
+        const colaboradores = carregarColaboradores().filter(c => c.ativo !== false);
         const select = document.getElementById('colaborador');
+        if (!select) return;
         const currentValue = select.value;
         select.innerHTML = '<option value="">Selecione no cadastro único</option>';
         colaboradores.forEach(c => {
             const option = document.createElement('option');
             option.value = c.nome;
-            option.textContent = `${c.nome} (${c.cargo})`;
+            option.textContent = c.nome + ' (' + (c.cargo || 'Colaborador') + ')';
             if (c.nome === currentValue) option.selected = true;
             select.appendChild(option);
         });
 
         const filtroHistFunc = document.getElementById('filtroHistoricoFuncionario');
         if (filtroHistFunc) {
+            const todos = carregarColaboradores();
             filtroHistFunc.innerHTML = '<option value="">Todos os funcionários</option>';
-            colaboradores.forEach(c => {
-                filtroHistFunc.innerHTML += `<option value="${c.nome}">${c.nome}</option>`;
+            todos.forEach(c => {
+                filtroHistFunc.innerHTML += '<option value="' + c.nome + '">' + c.nome + (c.ativo === false ? ' (inativo)' : '') + '</option>';
             });
         }
     }
