@@ -1377,6 +1377,57 @@
         }
     }
 
+    async function carregarSelectItens() {
+        try {
+            if (!cacheEstoqueDB || !cacheEstoqueDB.length) {
+                await carregarEstoqueDB();
+            }
+        } catch (e) {
+            console.warn('carregarSelectItens estoque:', e);
+        }
+        let lista = (cacheEstoqueDB || []).slice();
+        if (!lista.length) {
+            try {
+                lista = JSON.parse(localStorage.getItem('estoqueTaguaLife') || '[]');
+            } catch (e) { lista = []; }
+        }
+        // ordena por nome
+        lista = lista.filter(i => i && i.nome).sort(function(a, b) {
+            return String(a.nome).localeCompare(String(b.nome), 'pt-BR');
+        });
+
+        const optionsHtml = ['<option value="">Selecione um item...</option>']
+            .concat(lista.map(function(item) {
+                const nome = String(item.nome || '').replace(/"/g, '&quot;');
+                const qtd = item.quantidade != null ? item.quantidade : 0;
+                const label = nome + ' (' + qtd + ' unid.)';
+                return '<option value="' + nome + '">' + label + '</option>';
+            }))
+            .concat(['<option value="__custom__">➕ Digitar item não cadastrado...</option>'])
+            .join('');
+
+        // preenche todos os selects de item nas linhas
+        document.querySelectorAll('#tabelaItensBody select.item-select, #tabelaItensBody select.select-item, select.item-select').forEach(function(sel) {
+            const atual = sel.value;
+            sel.innerHTML = optionsHtml;
+            if (atual && [...sel.options].some(o => o.value === atual)) {
+                sel.value = atual;
+            }
+        });
+
+        // se existir select global
+        const globalSel = document.getElementById('selectItemGlobal');
+        if (globalSel) {
+            const atual = globalSel.value;
+            globalSel.innerHTML = optionsHtml;
+            if (atual) globalSel.value = atual;
+        }
+
+        return lista;
+    }
+
+
+
     function dataBRParaISO(dataBR) {
         if (!dataBR) return null;
         // já ISO?
@@ -1624,7 +1675,7 @@
         const get = (t) => (parts.find(p => p.type === t) || {}).value || '00';
         const data = get('day') + '/' + get('month') + '/' + get('year');
         const hora = get('hour') + ':' + get('minute') + ':' + get('second');
-        return { data, hora, day: get('day'), month: get('month'), year: get('year'),
+        return { data, hora, horaCompleta: hora, day: get('day'), month: get('month'), year: get('year'),
                  hours: get('hour'), minutes: get('minute'), seconds: get('second') };
     }
 
@@ -3573,6 +3624,9 @@ function mostrarToast(mensagem, tipo = 'success') {
 
         // Carrega estoque e saídas do Supabase
         await carregarEstoqueDB();
+        await carregarSelectItens();
+        await carregarColaboradoresDB();
+        carregarSelectColaboradores();
         await carregarSaidasDB();
         // Importa nomes de colaboradores a partir das saídas do banco
         try {
@@ -3690,6 +3744,7 @@ function mostrarToast(mensagem, tipo = 'success') {
         const tbody = document.getElementById('tabelaItensBody');
         tbody.innerHTML = '';
         adicionarLinha();
+        await carregarSelectItens();
         
         document.getElementById('btnSalvar').addEventListener('click', function(e) {
             e.preventDefault();
