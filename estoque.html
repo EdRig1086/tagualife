@@ -420,6 +420,9 @@
                 <button type="button" class="btn-relatorio" onclick="gerarRelatorioEstoque('categoria_escolhida')">
                     <i class="fas fa-filter"></i> Categoria específica
                 </button>
+                <button type="button" class="btn-relatorio" onclick="abrirHistoricoMovimentacoes()" style="background:#191D1B;border-color:#191D1B;color:#fff;">
+                    <i class="fas fa-exchange-alt"></i> Movimentações
+                </button>
             </div>
 
             <div class="busca-bar">
@@ -506,6 +509,49 @@
                 <button type="button" class="btn-relatorio" id="btnAddCatModal" style="padding:0.4rem 0.8rem;"><i class="fas fa-plus"></i> Add</button>
             </div>
             <div id="listaCategoriasAdmin" style="max-height:320px; overflow-y:auto;"></div>
+        </div>
+    </div>
+</div>
+
+
+<div class="modal-overlay" id="modalMovimentacoes">
+    <div class="modal-box" style="max-width:920px; width:95%;">
+        <div class="modal-head">
+            <h3><i class="fas fa-exchange-alt"></i> Histórico de movimentações</h3>
+            <button type="button" class="btn-outline" onclick="fecharModalMovimentacoes()" style="padding:0.25rem 0.6rem;font-size:0.7rem;">✕ Fechar</button>
+        </div>
+        <div class="modal-body" style="padding:1rem;">
+            <div style="display:flex; flex-wrap:wrap; gap:0.4rem; margin-bottom:0.8rem; align-items:center;">
+                <select id="movFiltroTipo" onchange="carregarMovimentacoes()" style="padding:0.3rem 0.5rem;border-radius:6px;border:1px solid var(--border-color);font-size:0.75rem;background:var(--bg-card);color:var(--text-primary);">
+                    <option value="">Todos os tipos</option>
+                    <option value="saida">Saída</option>
+                    <option value="estorno">Estorno</option>
+                    <option value="entrada">Entrada</option>
+                    <option value="ajuste">Ajuste</option>
+                </select>
+                <input type="text" id="movFiltroItem" placeholder="Filtrar item..." oninput="carregarMovimentacoes()"
+                    style="padding:0.3rem 0.5rem;border-radius:6px;border:1px solid var(--border-color);font-size:0.75rem;min-width:160px;background:var(--bg-card);color:var(--text-primary);" />
+                <button type="button" class="btn-outline" onclick="carregarMovimentacoes()" style="padding:0.3rem 0.6rem;font-size:0.7rem;"><i class="fas fa-sync"></i></button>
+                <span id="movResumo" style="margin-left:auto;font-size:0.7rem;color:var(--text-secondary);"></span>
+            </div>
+            <div style="overflow:auto; max-height:60vh;">
+                <table class="tabela-relatorio" style="width:100%;">
+                    <thead>
+                        <tr>
+                            <th>Data/Hora</th>
+                            <th>Tipo</th>
+                            <th>Item</th>
+                            <th>Qtd</th>
+                            <th>Antes → Depois</th>
+                            <th>Colaborador</th>
+                            <th>Usuário</th>
+                        </tr>
+                    </thead>
+                    <tbody id="movTabelaBody">
+                        <tr><td colspan="7" style="text-align:center;padding:1rem;">Carregando...</td></tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 </div>
@@ -946,6 +992,8 @@
 
         try {
             if (editandoId) {
+                const antigo = (itensCache || []).find(i => String(i.id) === String(editandoId));
+                const qtdAntes = antigo ? (parseInt(antigo.quantidade) || 0) : null;
                 const { error } = await sb
                     .from('estoque')
                     .update({
@@ -961,10 +1009,22 @@
                     .eq('id', editandoId);
 
                 if (error) throw error;
+                if (qtdAntes != null && qtdAntes !== quantidade) {
+                    const delta = Math.abs(quantidade - qtdAntes);
+                    await registrarMovimentacaoEstoqueLocal([{
+                        estoque_id: editandoId,
+                        item_nome: nome,
+                        tipo: quantidade > qtdAntes ? 'entrada' : 'ajuste',
+                        quantidade: delta,
+                        quantidade_antes: qtdAntes,
+                        quantidade_depois: quantidade,
+                        observacao: 'Ajuste manual no cadastro de estoque'
+                    }]);
+                }
                 mostrarMensagem('✅ Item atualizado no banco!', '#7A816E');
                 mostrarToast('✅ Atualizado: ' + nome, 'success');
             } else {
-                const { error } = await sb
+                const { data: inserted, error } = await sb
                     .from('estoque')
                     .insert({
                         nome: nome,
@@ -974,9 +1034,22 @@
                         categoria: categoria,
                         limite_alerta: limite_alerta,
                         unidade: unidade
-                    });
+                    })
+                    .select('id,nome,quantidade');
 
                 if (error) throw error;
+                const novoId = inserted && inserted[0] ? inserted[0].id : null;
+                if (quantidade > 0) {
+                    await registrarMovimentacaoEstoqueLocal([{
+                        estoque_id: novoId,
+                        item_nome: nome,
+                        tipo: 'entrada',
+                        quantidade: quantidade,
+                        quantidade_antes: 0,
+                        quantidade_depois: quantidade,
+                        observacao: 'Cadastro inicial de item'
+                    }]);
+                }
                 mostrarMensagem('✅ Item salvo no Supabase!', '#7A816E');
                 mostrarToast('✅ Cadastrado: ' + nome, 'success');
             }
