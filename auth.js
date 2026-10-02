@@ -1,44 +1,64 @@
-// auth.js - Sessão, permissões e segurança TaguáLife
+
+/** Hash de senha (SHA-256 + salt) — usado no login e perfil */
+async function hashSenhaTagua(senha) {
+    const enc = new TextEncoder();
+    const data = enc.encode('tagualife_v1_' + String(senha || ''));
+    const buf = await crypto.subtle.digest('SHA-256', data);
+    return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+window.hashSenhaTagua = hashSenhaTagua;
+
+/** Verifica senha: aceita hash novo OU texto antigo (migração) */
+async function verificarSenhaTagua(senhaDigitada, senhaHashBanco) {
+    if (!senhaHashBanco) return false;
+    if (senhaHashBanco === senhaDigitada) return true; // legado
+    const h = await hashSenhaTagua(senhaDigitada);
+    return h === senhaHashBanco;
+}
+window.verificarSenhaTagua = verificarSenhaTagua;
+
+// auth.js - Sessão, permissões e multi-cliente (condomínio)
 const PERMISSOES = {
     Administrador: {
-        cadastrar: true, editar: true, excluir: true,
-        verTudo: true, gerenciarUsuarios: true, aprovarCotacoes: true
+        cadastrar: true, editar: true, excluir: true, verTudo: true,
+        gerenciarUsuarios: true, aprovarCotacoes: true
     },
     Síndico: {
-        cadastrar: true, editar: true, excluir: false,
-        verTudo: true, gerenciarUsuarios: false, aprovarCotacoes: true
+        cadastrar: true, editar: true, excluir: false, verTudo: true,
+        gerenciarUsuarios: false, aprovarCotacoes: true
     },
     Síndica: {
-        cadastrar: true, editar: true, excluir: false,
-        verTudo: true, gerenciarUsuarios: false, aprovarCotacoes: true
+        cadastrar: true, editar: true, excluir: false, verTudo: true,
+        gerenciarUsuarios: false, aprovarCotacoes: true
     },
     Almoxarife: {
-        cadastrar: true, editar: true, excluir: false,
-        verTudo: false, gerenciarUsuarios: false, aprovarCotacoes: false
+        cadastrar: true, editar: true, excluir: false, verTudo: false,
+        gerenciarUsuarios: false, aprovarCotacoes: false
     },
     Manutenção: {
-        cadastrar: false, editar: false, excluir: false,
-        verTudo: false, gerenciarUsuarios: false, aprovarCotacoes: false
+        cadastrar: false, editar: false, excluir: false, verTudo: false,
+        gerenciarUsuarios: false, aprovarCotacoes: false
     },
     Porteiro: {
-        cadastrar: false, editar: false, excluir: false,
-        verTudo: false, gerenciarUsuarios: false, aprovarCotacoes: false
+        cadastrar: false, editar: false, excluir: false, verTudo: false,
+        gerenciarUsuarios: false, aprovarCotacoes: false
     },
     Zelador: {
-        cadastrar: false, editar: false, excluir: false,
-        verTudo: false, gerenciarUsuarios: false, aprovarCotacoes: false
+        cadastrar: false, editar: false, excluir: false, verTudo: false,
+        gerenciarUsuarios: false, aprovarCotacoes: false
     },
     Usuário: {
-        cadastrar: false, editar: false, excluir: false,
-        verTudo: false, gerenciarUsuarios: false, aprovarCotacoes: false
+        cadastrar: false, editar: false, excluir: false, verTudo: false,
+        gerenciarUsuarios: false, aprovarCotacoes: false
     }
 };
 
 function getSessao() {
     try {
         const raw = localStorage.getItem('tagualife_sessao');
-        return raw ? JSON.parse(raw) : null;
-    } catch {
+        if (!raw) return null;
+        return JSON.parse(raw);
+    } catch (e) {
         return null;
     }
 }
@@ -47,24 +67,44 @@ function estaLogado() {
     return !!getSessao();
 }
 
-function protegerPagina() {
-    if (!estaLogado()) {
-        window.location.replace('login.html');
-        return false;
-    }
-    return true;
+function getCargo() {
+    const s = getSessao();
+    return (s && s.cargo) ? s.cargo : 'Usuário';
 }
 
-function getCargo() {
-    const sessao = getSessao();
-    return sessao ? (sessao.cargo || 'Usuário') : null;
+/** ID do condomínio do usuário logado (isolamento multi-cliente) */
+function getCondominioId() {
+    const s = getSessao();
+    return (s && s.condominio_id) ? s.condominio_id : null;
+}
+
+function getCondominioNome() {
+    const s = getSessao();
+    return (s && s.condominio_nome) ? s.condominio_nome : '';
+}
+
+/**
+ * Aplica filtro de condomínio em uma query Supabase.
+ * Uso: let q = sb.from('estoque').select('*'); q = comCondominio(q); 
+ */
+function comCondominio(query) {
+    const id = getCondominioId();
+    if (id) return query.eq('condominio_id', id);
+    return query;
+}
+
+/** Payload padrão para INSERT com condomínio */
+function payloadComCondominio(obj) {
+    const id = getCondominioId();
+    const base = obj || {};
+    if (id) base.condominio_id = id;
+    return base;
 }
 
 function temPermissao(acao) {
     const cargo = getCargo();
-    if (!cargo) return false;
-    const perms = PERMISSOES[cargo] || PERMISSOES['Usuário'];
-    return !!perms[acao];
+    const p = PERMISSOES[cargo] || PERMISSOES['Usuário'];
+    return !!(p && p[acao]);
 }
 
 function podeCadastrar() { return temPermissao('cadastrar'); }
@@ -86,8 +126,10 @@ function mostrarUsuarioLogado() {
     if (!sessao) return;
     const elNome = document.getElementById('usuarioLogado');
     const elCargo = document.getElementById('cargoLogado');
+    const elCond = document.getElementById('condominioLogado');
     if (elNome) elNome.textContent = sessao.nome || '';
     if (elCargo) elCargo.textContent = sessao.cargo || '';
+    if (elCond) elCond.textContent = sessao.condominio_nome || '';
 }
 
 function aplicarPermissoesNaTela() {
@@ -103,6 +145,19 @@ function aplicarPermissoesNaTela() {
     document.querySelectorAll('[data-perm="aprovar"]').forEach(el => {
         if (!podeAprovar()) el.style.display = 'none';
     });
+}
+
+function protegerPagina() {
+    if (!estaLogado()) {
+        window.location.replace('login.html');
+        return false;
+    }
+    // Sem condomínio vinculado — força re-login após migração
+    const s = getSessao();
+    if (s && !s.condominio_id) {
+        console.warn('Sessão sem condominio_id — faça login novamente');
+    }
+    return true;
 }
 
 function iniciarSeguranca() {
