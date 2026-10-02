@@ -1,6 +1,9 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
+    <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+    <link rel="apple-touch-icon" href="favicon.svg" />
+
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>TaguáLife Center · Dashboard</title>
@@ -1285,6 +1288,43 @@
                 print-color-adjust: exact; 
             }
         }
+    
+        .bloco-notas.tem-lembrete {
+            border: 2px solid #C1A83C;
+            box-shadow: 0 0 0 3px rgba(193,168,60,0.2);
+            animation: lembretePulse 2.5s ease-in-out infinite;
+        }
+        @keyframes lembretePulse {
+            0%, 100% { box-shadow: 0 0 0 3px rgba(193,168,60,0.15); }
+            50% { box-shadow: 0 0 0 6px rgba(193,168,60,0.28); }
+        }
+        .notas-titulo .badge-lembrete {
+            display: inline-flex; align-items: center; gap: 0.25rem;
+            background: #C1A83C; color: #191D1B; font-size: 0.6rem; font-weight: 800;
+            padding: 0.15rem 0.5rem; border-radius: 40px; margin-left: 0.4rem;
+            animation: piscarLembrete 1.2s infinite;
+        }
+        @keyframes piscarLembrete {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.55; }
+        }
+        .alerta-lembrete-bar {
+            display: none; align-items: center; gap: 0.5rem; flex-wrap: wrap;
+            background: #FFF8E1; border: 1px solid #C1A83C; color: #5D4E00;
+            padding: 0.55rem 0.85rem; border-radius: 10px; margin-bottom: 0.75rem;
+            font-size: 0.8rem; font-weight: 600;
+        }
+        .alerta-lembrete-bar.show { display: flex; }
+        body.dark-mode .alerta-lembrete-bar {
+            background: #3d3510; border-color: #C1A83C; color: #FFE082;
+        }
+        #badgeLembreteTop {
+            display: none; background: #C1A83C; color: #191D1B; padding: 0.2rem 0.65rem;
+            border-radius: 40px; font-size: 0.55rem; font-weight: 800; border: 1px solid #a88f20;
+            animation: piscarLembrete 1.2s infinite;
+        }
+        #badgeLembreteTop.show { display: inline-flex; align-items: center; gap: 0.25rem; }
+
     </style>
 </head>
 <body>
@@ -1312,6 +1352,7 @@
                 <span><strong id="usuarioLogado">—</strong> · <span id="cargoLogado">—</span></span>
             </div>
             <span class="badge" id="badgePrincipal"><i class="fas fa-check-circle"></i> Dashboard</span>
+            <span id="badgeLembreteTop" title="Há lembretes pendentes"><i class="fas fa-bell"></i> <span id="badgeLembreteTopN">0</span> lembrete(s)</span>
         </div>
 
         <!-- MENU -->
@@ -1399,10 +1440,16 @@
                 <!-- FIM CALENDÁRIO -->
 
                 <!-- BLOCO DE ANOTAÇÕES / LEMBRETES -->
-                <div class="bloco-notas">
+                <div class="alerta-lembrete-bar" id="alertaLembreteBar">
+                    <i class="fas fa-bell"></i>
+                    <span id="alertaLembreteTexto">Você tem lembretes pendentes!</span>
+                    <button type="button" onclick="document.querySelector('.bloco-notas').scrollIntoView({behavior:'smooth'})" style="margin-left:auto;padding:0.2rem 0.6rem;border-radius:6px;border:1px solid #C1A83C;background:#C1A83C;color:#191D1B;font-size:0.7rem;font-weight:700;cursor:pointer;font-family:inherit;">Ver lembretes</button>
+                </div>
+                <div class="bloco-notas" id="blocoNotas">
                     <div class="notas-header">
                         <span class="notas-titulo">
                             <i class="fas fa-sticky-note"></i> Lembretes & Anotações
+                            <span class="badge-lembrete" id="badgeLembreteTitulo" style="display:none;"><i class="fas fa-exclamation"></i> <span id="badgeLembreteTituloN">0</span></span>
                         </span>
                         <div class="notas-botoes">
                             <button onclick="limparNotas()" class="danger" title="Apagar todas as anotações">
@@ -1851,6 +1898,67 @@
     // ============================================
     // BLOCO DE ANOTAÇÕES / LEMBRETES
     // ============================================
+    function atualizarAlertaLembretes(qtd) {
+        const n = qtd != null ? qtd : (JSON.parse(localStorage.getItem('tagualife_notas') || '[]').length);
+        const bloco = document.getElementById('blocoNotas') || document.querySelector('.bloco-notas');
+        const bar = document.getElementById('alertaLembreteBar');
+        const badgeTop = document.getElementById('badgeLembreteTop');
+        const badgeTopN = document.getElementById('badgeLembreteTopN');
+        const badgeTit = document.getElementById('badgeLembreteTitulo');
+        const badgeTitN = document.getElementById('badgeLembreteTituloN');
+        const txt = document.getElementById('alertaLembreteTexto');
+
+        if (bloco) bloco.classList.toggle('tem-lembrete', n > 0);
+        if (bar) {
+            if (n > 0) {
+                bar.classList.add('show');
+                if (txt) txt.textContent = n === 1
+                    ? 'Você tem 1 lembrete pendente!'
+                    : ('Você tem ' + n + ' lembretes pendentes!');
+            } else {
+                bar.classList.remove('show');
+            }
+        }
+        if (badgeTop) {
+            if (n > 0) {
+                badgeTop.classList.add('show');
+                if (badgeTopN) badgeTopN.textContent = String(n);
+            } else {
+                badgeTop.classList.remove('show');
+            }
+        }
+        if (badgeTit) {
+            badgeTit.style.display = n > 0 ? 'inline-flex' : 'none';
+            if (badgeTitN) badgeTitN.textContent = String(n);
+        }
+        // Piscar título da aba do navegador quando há lembrete
+        try {
+            if (n > 0) {
+                if (!window._tituloOriginalDash) window._tituloOriginalDash = document.title;
+                if (!window._lembreteTitleTimer) {
+                    let on = false;
+                    window._lembreteTitleTimer = setInterval(function() {
+                        const q = JSON.parse(localStorage.getItem('tagualife_notas') || '[]').length;
+                        if (q <= 0) {
+                            document.title = window._tituloOriginalDash || 'TaguáLife Center · Dashboard';
+                            clearInterval(window._lembreteTitleTimer);
+                            window._lembreteTitleTimer = null;
+                            return;
+                        }
+                        on = !on;
+                        document.title = on
+                            ? ('🔔 ' + q + ' lembrete(s) · TaguáLife')
+                            : (window._tituloOriginalDash || 'TaguáLife Center · Dashboard');
+                    }, 2000);
+                }
+            } else if (window._lembreteTitleTimer) {
+                clearInterval(window._lembreteTitleTimer);
+                window._lembreteTitleTimer = null;
+                document.title = window._tituloOriginalDash || 'TaguáLife Center · Dashboard';
+            }
+        } catch (e) {}
+    }
+
     function carregarNotas() {
         const notas = JSON.parse(localStorage.getItem('tagualife_notas') || '[]');
         const lista = document.getElementById('notasLista');
@@ -1858,7 +1966,8 @@
         
         if (notas.length === 0) {
             lista.innerHTML = `<div class="notas-vazias"><i class="fas fa-edit"></i> Nenhuma anotação ainda. Adicione uma acima!</div>`;
-            contador.textContent = '0';
+            if (contador) contador.textContent = '0';
+            atualizarAlertaLembretes(0);
             return;
         }
         
@@ -1884,7 +1993,8 @@
             `;
         }).join('');
         
-        contador.textContent = notas.length;
+        if (contador) contador.textContent = notas.length;
+        atualizarAlertaLembretes(notas.length);
     }
 
     function escapeHTML(texto) {
@@ -2502,6 +2612,12 @@
         setTimeout(function() { 
             mostrarMensagem('📊 Dashboard carregado com gráficos, calendário e anotações!', '#191D1B');
             mostrarToast('✅ Sistema TaguáLife Center carregado!', 'success');
+            const nLemb = JSON.parse(localStorage.getItem('tagualife_notas') || '[]').length;
+            if (nLemb > 0) {
+                setTimeout(function() {
+                    mostrarToast('🔔 Você tem ' + nLemb + ' lembrete(s) pendente(s)!', 'warning');
+                }, 1200);
+            }
         }, 500);
     });
 </script>
