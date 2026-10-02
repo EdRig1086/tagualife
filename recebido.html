@@ -565,7 +565,7 @@ async function listarEntradas(periodo) {
     try {
         // Fonte principal: movimentações tipo entrada (sempre grava ao receber)
         let q = sb.from('estoque_movimentacoes')
-            .select('id,item_nome,tipo,quantidade,quantidade_antes,quantidade_depois,usuario,observacao,criado_em,colaborador')
+            .select('id,estoque_id,item_nome,tipo,quantidade,quantidade_antes,quantidade_depois,usuario,observacao,criado_em,colaborador')
             .eq('tipo', 'entrada')
             .order('criado_em', { ascending: false })
             .limit(300);
@@ -597,16 +597,22 @@ async function listarEntradas(periodo) {
         }
 
         const totalQtd = lista.reduce((s, m) => s + (parseInt(m.quantidade) || 0), 0);
+        const podeGerir = (typeof podeEditar === 'function' && podeEditar()) || (typeof getCargo === 'function' && getCargo() === 'Administrador');
         box.innerHTML =
             '<p style="font-size:0.75rem;margin-bottom:0.5rem;"><strong>' + lista.length + '</strong> registro(s) · <strong>' + totalQtd + '</strong> unidade(s) · filtro: <strong>' + periodo + '</strong></p>' +
-            '<table><thead><tr><th>Data/Hora</th><th>Item</th><th>Qtd</th><th>Antes → Depois</th><th>Obs / NF</th><th>Usuário</th></tr></thead><tbody>' +
+            '<table><thead><tr><th>Data/Hora</th><th>Item</th><th>Qtd</th><th>Antes → Depois</th><th>Obs / NF</th><th>Usuário</th><th>Ações</th></tr></thead><tbody>' +
             lista.map(m => {
                 const dt = m.criado_em ? new Date(m.criado_em).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' }) : '—';
+                const id = m.id || '';
+                const acoes = podeGerir
+                    ? ('<button type="button" class="btn" style="padding:0.15rem 0.4rem;font-size:0.65rem;background:#3498DB;color:#fff;border:0;" onclick="editarEntrada(\'' + id + '\')" title="Editar"><i class="fas fa-edit"></i></button> ' +
+                       '<button type="button" class="btn" style="padding:0.15rem 0.4rem;font-size:0.65rem;background:#8B3A3A;color:#fff;border:0;" onclick="excluirEntrada(\'' + id + '\')" title="Excluir"><i class="fas fa-trash-alt"></i></button>')
+                    : '<span style="font-size:0.65rem;color:var(--text-secondary);">—</span>';
                 return '<tr><td style="white-space:nowrap;font-size:0.7rem;">' + dt + '</td><td><strong>' + (m.item_nome || '—') +
                     '</strong></td><td style="font-weight:700;color:#2E7D32;">+' + (m.quantidade != null ? m.quantidade : '—') +
                     '</td><td style="font-size:0.7rem;">' + (m.quantidade_antes != null ? m.quantidade_antes : '—') + ' → ' +
                     (m.quantidade_depois != null ? m.quantidade_depois : '—') + '</td><td style="font-size:0.7rem;">' +
-                    (m.observacao || '—') + '</td><td style="font-size:0.7rem;">' + (m.usuario || '—') + '</td></tr>';
+                    (m.observacao || '—') + '</td><td style="font-size:0.7rem;">' + (m.usuario || '—') + '</td><td style="white-space:nowrap;">' + acoes + '</td></tr>';
             }).join('') + '</tbody></table>';
     } catch (e) {
         console.error(e);
@@ -614,6 +620,98 @@ async function listarEntradas(periodo) {
             '. Confira se a tabela <b>estoque_movimentacoes</b> existe no Supabase.</span>';
     }
 }
+
+
+async function excluirEntrada(id) {
+    if (typeof podeEditar === 'function' && !podeEditar() && !(typeof getCargo === 'function' && getCargo() === 'Administrador')) {
+        toast('⛔ Sem permissão para excluir');
+        return;
+    }
+    const m = (cacheEntradas || []).find(x => String(x.id) === String(id));
+    if (!m) { toast('Registro não encontrado'); return; }
+    if (!confirm('Excluir esta entrada de "' + (m.item_nome || '') + '" (+' + m.quantidade + ')?\\n\\nO estoque será reduzido nessa quantidade.')) return;
+    try {
+        const qtd = parseInt(m.quantidade) || 0;
+        // reverte estoque
+        if (m.estoque_id && qtd > 0) {
+            const { data: est } = await sb.from('estoque').select('id,quantidade').eq('id', m.estoque_id).maybeSingle();
+            if (est) {
+                const nova = Math.max(0, (parseInt(est.quantidade) || 0) - qtd);
+                await sb.from('estoque').update({ quantidade: nova, atualizado_em: new Date().toISOString() }).eq('id', est.id);
+            }
+        } else if (m.item_nome && qtd > 0) {
+            const { data: lista } = await sb.from('estoque').select('id,quantidade,nome').ilike('nome', m.item_nome).limit(5);
+            const est = (lista || []).find(e => (e.nome || '').toLowerCase() === (m.item_nome || '').toLowerCase()) || (lista || [])[0];
+            if (est) {
+                const nova = Math.max(0, (parseInt(est.quantidade) || 0) - qtd);
+                await sb.from('estoque').update({ quantidade: nova, atualizado_em: new Date().toISOString() }).eq('id', est.id);
+            }
+        }
+        const { error } = await sb.from('estoque_movimentacoes').delete().eq('id', id);
+        if (error) throw error;
+        toast('🗑️ Entrada excluída e estoque ajustado');
+        await carregarEstoque();
+        await listarEntradas();
+    } catch (e) {
+        toast('❌ ' + (e.message || e));
+    }
+}
+
+async function editarEntrada(id) {
+    if (typeof podeEditar === 'function' && !podeEditar() && !(typeof getCargo === 'function' && getCargo() === 'Administrador')) {
+        toast('⛔ Sem permissão para editar');
+        return;
+    }
+    const m = (cacheEntradas || []).find(x => String(x.id) === String(id));
+    if (!m) { toast('Registro não encontrado'); return; }
+    const qtdAntiga = parseInt(m.quantidade) || 0;
+    const novaStr = prompt('Nova quantidade da entrada "' + (m.item_nome || '') + '":', String(qtdAntiga));
+    if (novaStr === null) return;
+    const qtdNova = parseInt(novaStr, 10);
+    if (isNaN(qtdNova) || qtdNova < 0) {
+        toast('⚠️ Quantidade inválida');
+        return;
+    }
+    const obsNova = prompt('Observação / NF:', m.observacao || '');
+    if (obsNova === null) return;
+    try {
+        const delta = qtdNova - qtdAntiga; // positivo = entra mais; negativo = tira do estoque
+        let estoqueId = m.estoque_id;
+        let qtdAtualEstoque = null;
+        if (estoqueId) {
+            const { data: est } = await sb.from('estoque').select('id,quantidade').eq('id', estoqueId).maybeSingle();
+            if (est) qtdAtualEstoque = parseInt(est.quantidade) || 0;
+        } else if (m.item_nome) {
+            const { data: lista } = await sb.from('estoque').select('id,quantidade,nome').ilike('nome', m.item_nome).limit(5);
+            const est = (lista || []).find(e => (e.nome || '').toLowerCase() === (m.item_nome || '').toLowerCase()) || (lista || [])[0];
+            if (est) {
+                estoqueId = est.id;
+                qtdAtualEstoque = parseInt(est.quantidade) || 0;
+            }
+        }
+        let depois = m.quantidade_depois;
+        if (qtdAtualEstoque != null) {
+            const novaEst = Math.max(0, qtdAtualEstoque + delta);
+            await sb.from('estoque').update({ quantidade: novaEst, atualizado_em: new Date().toISOString() }).eq('id', estoqueId);
+            // recalcula depois com base no antes da movimentação
+            const antes = m.quantidade_antes != null ? parseInt(m.quantidade_antes) : (novaEst - qtdNova);
+            depois = (parseInt(antes) || 0) + qtdNova;
+        }
+        const { error } = await sb.from('estoque_movimentacoes').update({
+            quantidade: qtdNova,
+            quantidade_depois: depois,
+            observacao: obsNova,
+            estoque_id: estoqueId || m.estoque_id || null
+        }).eq('id', id);
+        if (error) throw error;
+        toast('✅ Entrada atualizada');
+        await carregarEstoque();
+        await listarEntradas();
+    } catch (e) {
+        toast('❌ ' + (e.message || e));
+    }
+}
+
 
 function imprimirRelatorioEntradas() {
     const lista = cacheEntradas || [];
