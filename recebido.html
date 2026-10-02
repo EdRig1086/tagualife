@@ -82,7 +82,7 @@
 <div class="wrap">
     <div class="card">
         <h2><i class="fas fa-truck-loading"></i> Entrada de material (aumenta o estoque)</h2>
-        <p class="hint">Registre o recebimento. Itens cadastrados no estoque terão a quantidade <strong>somada automaticamente</strong>.</p>
+        <p class="hint">Registre o recebimento. Escolha na lista <strong>ou digite</strong> o nome e use <strong>+ Cadastrar no estoque</strong>. A quantidade será <strong>somada</strong> no estoque.</p>
         <div class="grid" style="margin-top:.8rem;">
             <div>
                 <label>Fornecedor *</label>
@@ -110,7 +110,7 @@
             <thead>
                 <tr>
                     <th style="width:90px;">Qtd</th>
-                    <th>Item (estoque)</th>
+                    <th>Item (lista ou digitar / cadastrar)</th>
                     <th style="width:50px;"></th>
                 </tr>
             </thead>
@@ -168,11 +168,118 @@ function addLinhaRec() {
     const tr = document.createElement('tr');
     tr.innerHTML = `
         <td><input type="number" class="rec-qtd" min="1" value="1" /></td>
-        <td><select class="rec-item-select" style="width:100%"></select></td>
+        <td>
+            <select class="rec-item-select" style="width:100%;margin-bottom:0.25rem;"></select>
+            <input type="text" class="rec-item-manual" placeholder="Ou digite o nome do item..." style="width:100%;display:none;margin-bottom:0.25rem;" />
+            <div style="display:flex;gap:0.3rem;flex-wrap:wrap;align-items:center;">
+                <button type="button" class="btn rec-btn-digitar" style="padding:0.2rem 0.45rem;font-size:0.65rem;">✏️ Digitar</button>
+                <button type="button" class="btn rec-btn-lista" style="padding:0.2rem 0.45rem;font-size:0.65rem;display:none;">📋 Lista</button>
+                <button type="button" class="btn btn-success rec-btn-cadastrar" style="padding:0.2rem 0.45rem;font-size:0.65rem;display:none;">+ Cadastrar no estoque</button>
+            </div>
+        </td>
         <td><button type="button" class="btn" onclick="this.closest('tr').remove()" style="padding:.2rem .4rem;color:#8B3A3A;">✕</button></td>
     `;
     document.getElementById('recItensBody').appendChild(tr);
-    fillSelect(tr.querySelector('select'));
+    const sel = tr.querySelector('.rec-item-select');
+    const manual = tr.querySelector('.rec-item-manual');
+    const btnDig = tr.querySelector('.rec-btn-digitar');
+    const btnLista = tr.querySelector('.rec-btn-lista');
+    const btnCad = tr.querySelector('.rec-btn-cadastrar');
+    fillSelect(sel);
+
+    sel.innerHTML = sel.innerHTML; // keep
+    // option digitar no final do select
+    if (![...sel.options].some(o => o.value === '__manual__')) {
+        const opt = document.createElement('option');
+        opt.value = '__manual__';
+        opt.textContent = '➕ Digitar / cadastrar item...';
+        sel.appendChild(opt);
+    }
+
+    sel.addEventListener('change', function() {
+        if (this.value === '__manual__') {
+            sel.style.display = 'none';
+            manual.style.display = 'block';
+            btnLista.style.display = '';
+            btnCad.style.display = '';
+            btnDig.style.display = 'none';
+            manual.focus();
+        }
+    });
+    btnDig.onclick = function() {
+        sel.style.display = 'none';
+        sel.value = '';
+        manual.style.display = 'block';
+        btnLista.style.display = '';
+        btnCad.style.display = '';
+        btnDig.style.display = 'none';
+        manual.focus();
+    };
+    btnLista.onclick = function() {
+        manual.style.display = 'none';
+        manual.value = '';
+        sel.style.display = 'block';
+        sel.value = '';
+        btnLista.style.display = 'none';
+        btnCad.style.display = 'none';
+        btnDig.style.display = '';
+    };
+    btnCad.onclick = async function() {
+        const nome = (manual.value || '').trim();
+        const qtd = parseInt(tr.querySelector('.rec-qtd').value, 10) || 0;
+        if (nome.length < 2) { toast('⚠️ Digite o nome do item'); return; }
+        try {
+            const existe = estoqueCache.find(e => (e.nome || '').toLowerCase() === nome.toLowerCase());
+            if (existe) {
+                toast('Item já existe — selecione na lista');
+                await carregarEstoque();
+                fillSelect(sel);
+                if (![...sel.options].some(o => o.value === '__manual__')) {
+                    const opt = document.createElement('option');
+                    opt.value = '__manual__';
+                    opt.textContent = '➕ Digitar / cadastrar item...';
+                    sel.appendChild(opt);
+                }
+                sel.value = existe.id;
+                sel.style.display = 'block';
+                manual.style.display = 'none';
+                btnCad.style.display = 'none';
+                btnLista.style.display = 'none';
+                btnDig.style.display = '';
+                return;
+            }
+            let row = {
+                nome: nome,
+                quantidade: 0,
+                categoria: 'Outros',
+                limite_alerta: 5,
+                unidade: 'UN',
+                descricao: '',
+                fabricante: ''
+            };
+            if (typeof payloadComCondominio === 'function') row = payloadComCondominio(row);
+            const { data, error } = await sb.from('estoque').insert(row).select('id,nome,quantidade');
+            if (error) throw error;
+            toast('✅ Cadastrado no estoque: ' + nome);
+            await carregarEstoque();
+            fillSelect(sel);
+            if (![...sel.options].some(o => o.value === '__manual__')) {
+                const opt = document.createElement('option');
+                opt.value = '__manual__';
+                opt.textContent = '➕ Digitar / cadastrar item...';
+                sel.appendChild(opt);
+            }
+            const novoId = data && data[0] ? data[0].id : '';
+            if (novoId) sel.value = novoId;
+            sel.style.display = 'block';
+            manual.style.display = 'none';
+            btnCad.style.display = 'none';
+            btnLista.style.display = 'none';
+            btnDig.style.display = '';
+        } catch (e) {
+            toast('❌ ' + (e.message || e));
+        }
+    };
 }
 
 async function salvarRecebimento() {
@@ -191,13 +298,50 @@ async function salvarRecebimento() {
     const itens = [];
     for (const tr of rows) {
         const qtd = parseInt(tr.querySelector('.rec-qtd').value) || 0;
+        if (qtd <= 0) continue;
         const sel = tr.querySelector('.rec-item-select');
-        const id = sel.value;
-        const nome = sel.selectedOptions[0] ? (sel.selectedOptions[0].getAttribute('data-nome') || sel.selectedOptions[0].textContent) : '';
-        if (id && qtd > 0) itens.push({ id, nome, qtd });
+        const manual = tr.querySelector('.rec-item-manual');
+        let id = sel && sel.style.display !== 'none' ? sel.value : '';
+        if (id === '__manual__') id = '';
+        let nome = '';
+        if (id && sel.selectedOptions[0]) {
+            nome = sel.selectedOptions[0].getAttribute('data-nome') || sel.selectedOptions[0].textContent.split(' (atual')[0];
+        } else if (manual && manual.value.trim()) {
+            nome = manual.value.trim();
+        }
+        if (!nome) continue;
+
+        // Se só digitou e ainda não tem id, cadastra no estoque com qtd 0 e depois entra
+        if (!id) {
+            const existe = estoqueCache.find(e => (e.nome || '').toLowerCase() === nome.toLowerCase());
+            if (existe) {
+                id = existe.id;
+                nome = existe.nome;
+            } else {
+                try {
+                    let row = {
+                        nome: nome,
+                        quantidade: 0,
+                        categoria: 'Outros',
+                        limite_alerta: 5,
+                        unidade: 'UN'
+                    };
+                    if (typeof payloadComCondominio === 'function') row = payloadComCondominio(row);
+                    const { data, error } = await sb.from('estoque').insert(row).select('id,nome,quantidade');
+                    if (error) throw error;
+                    id = data[0].id;
+                    nome = data[0].nome;
+                    estoqueCache.push({ id, nome, quantidade: 0 });
+                } catch (e) {
+                    toast('❌ Não cadastrar "' + nome + '": ' + (e.message || e));
+                    return;
+                }
+            }
+        }
+        itens.push({ id, nome, qtd });
     }
     if (!itens.length) {
-        toast('⚠️ Adicione pelo menos um item');
+        toast('⚠️ Adicione pelo menos um item (lista ou digitado)');
         return;
     }
 
