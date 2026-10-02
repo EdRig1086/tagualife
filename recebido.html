@@ -106,17 +106,26 @@
                 <input type="date" id="recData" />
             </div>
         </div>
-        <div style="margin-top:.8rem;">
-            <label>Observação</label>
-            <input type="text" id="recObs" placeholder="Opcional" />
+        <div class="grid" style="margin-top:.8rem;">
+            <div>
+                <label>Observação</label>
+                <input type="text" id="recObs" placeholder="Opcional" />
+            </div>
+            <div>
+                <label>Valor total da nota (R$)</label>
+                <input type="number" id="recValorTotal" min="0" step="0.01" placeholder="0,00" />
+            </div>
         </div>
+        <p class="hint" id="recSomaItens" style="margin-top:0.4rem;">Soma dos itens: R$ 0,00</p>
 
         <table>
             <thead>
                 <tr>
-                    <th style="width:90px;">Qtd</th>
+                    <th style="width:70px;">Qtd</th>
                     <th>Item (lista ou digitar / cadastrar)</th>
-                    <th style="width:50px;"></th>
+                    <th style="width:110px;">Preço unit. R$</th>
+                    <th style="width:100px;">Total R$</th>
+                    <th style="width:40px;"></th>
                 </tr>
             </thead>
             <tbody id="recItensBody"></tbody>
@@ -198,6 +207,36 @@ const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 window.sb = sb;
 
 let estoqueCache = [];
+
+
+function formatBRL(n) {
+    return (Number(n) || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+function atualizarTotaisLinha(tr) {
+    if (!tr) return;
+    const qtd = parseFloat(tr.querySelector('.rec-qtd')?.value) || 0;
+    const preco = parseFloat(tr.querySelector('.rec-preco')?.value) || 0;
+    const el = tr.querySelector('.rec-total-linha');
+    if (el) el.textContent = formatBRL(qtd * preco);
+    atualizarSomaItens();
+}
+function atualizarSomaItens() {
+    let soma = 0;
+    document.querySelectorAll('#recItensBody tr').forEach(tr => {
+        const qtd = parseFloat(tr.querySelector('.rec-qtd')?.value) || 0;
+        const preco = parseFloat(tr.querySelector('.rec-preco')?.value) || 0;
+        soma += qtd * preco;
+    });
+    const el = document.getElementById('recSomaItens');
+    const totalNota = parseFloat(document.getElementById('recValorTotal')?.value) || 0;
+    let txt = 'Soma dos itens: R$ ' + formatBRL(soma);
+    if (totalNota > 0) {
+        const diff = Math.abs(totalNota - soma);
+        if (diff > 0.02) txt += ' · Nota: R$ ' + formatBRL(totalNota) + ' (diferença R$ ' + formatBRL(diff) + ')';
+        else txt += ' · Nota: R$ ' + formatBRL(totalNota) + ' ✓';
+    }
+    if (el) el.textContent = txt;
+}
 
 function toast(msg) {
     const el = document.getElementById('toast');
@@ -356,7 +395,7 @@ async function confirmarCadItemRec() {
 function addLinhaRec() {
     const tr = document.createElement('tr');
     tr.innerHTML = `
-        <td><input type="number" class="rec-qtd" min="1" value="1" /></td>
+        <td><input type="number" class="rec-qtd" min="1" value="1" oninput="atualizarTotaisLinha(this.closest('tr'))" /></td>
         <td>
             <select class="rec-item-select" style="width:100%;margin-bottom:0.25rem;"></select>
             <input type="text" class="rec-item-manual" placeholder="Ou digite o nome do item..." style="width:100%;display:none;margin-bottom:0.25rem;" />
@@ -366,7 +405,9 @@ function addLinhaRec() {
                 <button type="button" class="btn btn-success rec-btn-cadastrar" style="padding:0.2rem 0.45rem;font-size:0.65rem;display:none;">+ Cadastrar no estoque</button>
             </div>
         </td>
-        <td><button type="button" class="btn" onclick="this.closest('tr').remove()" style="padding:.2rem .4rem;color:#8B3A3A;">✕</button></td>
+        <td><input type="number" class="rec-preco" min="0" step="0.01" placeholder="0,00" oninput="atualizarTotaisLinha(this.closest('tr'))" /></td>
+        <td class="rec-total-linha" style="font-weight:700;font-size:0.8rem;">0,00</td>
+        <td><button type="button" class="btn" onclick="this.closest('tr').remove();atualizarSomaItens();" style="padding:.2rem .4rem;color:#8B3A3A;">✕</button></td>
     `;
     document.getElementById('recItensBody').appendChild(tr);
     const sel = tr.querySelector('.rec-item-select');
@@ -425,6 +466,7 @@ async function salvarRecebimento() {
     const recebidoPor = document.getElementById('recPor').value.trim() || (getSessao() && getSessao().nome) || 'Sistema';
     const dataRec = document.getElementById('recData').value || new Date().toISOString().slice(0, 10);
     const obs = document.getElementById('recObs').value.trim();
+    const valorTotalNota = parseFloat(document.getElementById('recValorTotal')?.value) || 0;
 
     if (!fornecedor || !nf) {
         toast('⚠️ Fornecedor e NF são obrigatórios');
@@ -475,7 +517,8 @@ async function salvarRecebimento() {
                 }
             }
         }
-        itens.push({ id, nome, qtd });
+        const preco = parseFloat(tr.querySelector('.rec-preco')?.value) || 0;
+        itens.push({ id, nome, qtd, preco, total: qtd * preco });
     }
     if (!itens.length) {
         toast('⚠️ Adicione pelo menos um item (lista ou digitado)');
@@ -487,7 +530,8 @@ async function salvarRecebimento() {
     try {
         let payload = {
             fornecedor, nota_fiscal: nf, recebido_por: recebidoPor,
-            data_recebimento: dataRec, observacao: obs || null, status: 'Recebido'
+            data_recebimento: dataRec, observacao: obs || null, status: 'Recebido',
+            valor_total: valorTotalNota || null
         };
         if (typeof payloadComCondominio === 'function') payload = payloadComCondominio(payload);
 
@@ -499,7 +543,9 @@ async function salvarRecebimento() {
             const itensRows = itens.map(i => ({
                 recebimento_id: recId,
                 descricao: i.nome,
-                quantidade: i.qtd
+                quantidade: i.qtd,
+                valor_unitario: i.preco || null,
+                valor_total: i.total || null
             }));
             await sb.from('recebimento_itens').insert(itensRows);
         } catch (e) {
@@ -528,7 +574,7 @@ async function salvarRecebimento() {
                     quantidade_antes: antes,
                     quantidade_depois: depois,
                     usuario: usuario,
-                    observacao: 'Recebimento NF ' + nf + (fornecedor ? ' — ' + fornecedor : ''),
+                    observacao: 'Recebimento NF ' + nf + (fornecedor ? ' — ' + fornecedor : '') + (item.preco ? (' · R$ ' + Number(item.preco).toFixed(2) + ' un') : '') + (valorTotalNota ? (' · Nota R$ ' + Number(valorTotalNota).toFixed(2)) : ''),
                     referencia: recId
                 };
                 if (typeof payloadComCondominio === 'function') mov = payloadComCondominio(mov);
@@ -540,6 +586,8 @@ async function salvarRecebimento() {
         document.getElementById('recFornecedor').value = '';
         document.getElementById('recNF').value = '';
         document.getElementById('recObs').value = '';
+        const vt = document.getElementById('recValorTotal'); if (vt) vt.value = '';
+        atualizarSomaItens();
         document.getElementById('recItensBody').innerHTML = '';
         addLinhaRec();
         await carregarEstoque();
@@ -764,7 +812,10 @@ document.addEventListener('DOMContentLoaded', async function () {
     await carregarEstoque();
     addLinhaRec();
     await listarRecebimentos();
+    const vt = document.getElementById('recValorTotal');
+    if (vt) vt.addEventListener('input', atualizarSomaItens);
 });
+
 </script>
 </body>
 </html>
