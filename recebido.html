@@ -61,6 +61,11 @@
             background: #191D1B; color: #fff; font-size: .8rem; z-index: 9999; display: none;
         }
         .toast.show { display: block; }
+        #modalCadItemRec.open, #modalCadItemRec[style*="flex"] { display: flex !important; }
+        #modalCadItemRec label { font-size: .65rem; font-weight: 600; color: var(--text-secondary); display: block; margin-bottom: .2rem; }
+        #modalCadItemRec input { width: 100%; padding: .45rem .55rem; border-radius: 8px; border: 1px solid var(--border-color);
+            background: transparent; color: var(--text-primary); font-family: inherit; font-size: .8rem; box-sizing: border-box; }
+
         .hint { font-size: .7rem; color: var(--text-secondary); margin-top: .4rem; }
     </style>
 </head>
@@ -138,6 +143,52 @@
         <div id="listaRec" class="hint">Carregando...</div>
     </div>
 </div>
+
+<div class="perfil-modal-overlay" id="modalCadItemRec" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:10050;align-items:center;justify-content:center;padding:1rem;">
+  <div style="background:var(--bg-card);border-radius:12px;width:100%;max-width:480px;border:1px solid var(--border-color);box-shadow:0 12px 40px rgba(0,0,0,.15);">
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:.8rem 1rem;border-bottom:1px solid var(--border-color);font-weight:700;font-size:.9rem;">
+      <span><i class="fas fa-box"></i> Cadastrar item no estoque</span>
+      <button type="button" class="btn" onclick="fecharModalCadItemRec()">✕</button>
+    </div>
+    <div style="padding:1rem;display:grid;gap:.55rem;">
+      <div>
+        <label>ITEM *</label>
+        <input type="text" id="recCadNome" placeholder="Nome do item" />
+      </div>
+      <div>
+        <label>DESCRIÇÃO</label>
+        <input type="text" id="recCadDesc" placeholder="Descrição" />
+      </div>
+      <div>
+        <label>FABRICANTE</label>
+        <input type="text" id="recCadFab" placeholder="Fabricante" />
+      </div>
+      <div class="grid" style="grid-template-columns:1fr 1fr;gap:.55rem;">
+        <div>
+          <label>QUANTIDADE</label>
+          <input type="number" id="recCadQtd" min="0" value="0" />
+        </div>
+        <div>
+          <label>CATEGORIA</label>
+          <input type="text" id="recCadCat" list="recCatList" placeholder="Ex: Hidráulico" />
+          <datalist id="recCatList">
+            <option value="Elétrico"><option value="Hidráulico"><option value="Limpeza">
+            <option value="Higiene"><option value="Manutenção"><option value="Pintura">
+            <option value="Ferragens"><option value="Iluminação"><option value="Outros">
+          </datalist>
+        </div>
+      </div>
+      <p id="recCadMsg" style="font-size:.75rem;min-height:1.1em;margin:0;"></p>
+    </div>
+    <div style="display:flex;gap:.5rem;justify-content:flex-end;padding:.8rem 1rem;border-top:1px solid var(--border-color);">
+      <button type="button" class="btn" onclick="fecharModalCadItemRec()">Cancelar</button>
+      <button type="button" class="btn btn-success" id="btnConfirmarCadItemRec" onclick="confirmarCadItemRec()">
+        <i class="fas fa-save"></i> Salvar no estoque
+      </button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -171,6 +222,136 @@ function fillSelect(sel) {
             i.nome + ' (atual: ' + (i.quantidade || 0) + ')</option>').join('');
     if (cur) sel.value = cur;
 }
+
+
+window._trCadItemRec = null;
+
+function fecharModalCadItemRec() {
+    const m = document.getElementById('modalCadItemRec');
+    if (m) { m.style.display = 'none'; m.classList.remove('open'); }
+    window._trCadItemRec = null;
+}
+
+function abrirModalCadItemRec(tr, nomeInicial) {
+    window._trCadItemRec = tr || null;
+    const m = document.getElementById('modalCadItemRec');
+    if (!m) return;
+    document.getElementById('recCadNome').value = (nomeInicial || '').trim();
+    document.getElementById('recCadDesc').value = '';
+    document.getElementById('recCadFab').value = '';
+    const qtdLinha = tr ? (parseInt(tr.querySelector('.rec-qtd')?.value, 10) || 0) : 0;
+    document.getElementById('recCadQtd').value = String(qtdLinha || 0);
+    document.getElementById('recCadCat').value = 'Outros';
+    document.getElementById('recCadMsg').textContent = '';
+    m.style.display = 'flex';
+    m.classList.add('open');
+    document.getElementById('recCadNome').focus();
+}
+
+async function confirmarCadItemRec() {
+    const msg = document.getElementById('recCadMsg');
+    const nome = (document.getElementById('recCadNome').value || '').trim();
+    const descricao = (document.getElementById('recCadDesc').value || '').trim();
+    const fabricante = (document.getElementById('recCadFab').value || '').trim();
+    const quantidade = parseInt(document.getElementById('recCadQtd').value, 10) || 0;
+    const categoria = (document.getElementById('recCadCat').value || '').trim() || 'Outros';
+    if (nome.length < 2) {
+        msg.style.color = '#8B3A3A';
+        msg.textContent = 'Informe o nome do item';
+        return;
+    }
+    try {
+        await carregarEstoque();
+        const existe = estoqueCache.find(e => (e.nome || '').toLowerCase() === nome.toLowerCase());
+        if (existe) {
+            msg.style.color = '#C1A83C';
+            msg.textContent = 'Item já existe no estoque. Selecione na lista.';
+            const tr = window._trCadItemRec;
+            if (tr) {
+                const sel = tr.querySelector('.rec-item-select');
+                const manual = tr.querySelector('.rec-item-manual');
+                fillSelect(sel);
+                if (![...sel.options].some(o => o.value === '__manual__')) {
+                    const opt = document.createElement('option');
+                    opt.value = '__manual__';
+                    opt.textContent = '➕ Digitar / cadastrar item...';
+                    sel.appendChild(opt);
+                }
+                sel.value = existe.id;
+                sel.style.display = 'block';
+                if (manual) { manual.style.display = 'none'; manual.value = ''; }
+            }
+            setTimeout(fecharModalCadItemRec, 900);
+            return;
+        }
+        let row = {
+            nome: nome,
+            descricao: descricao,
+            fabricante: fabricante,
+            quantidade: quantidade,
+            categoria: categoria,
+            limite_alerta: 5,
+            unidade: 'UN'
+        };
+        if (typeof payloadComCondominio === 'function') row = payloadComCondominio(row);
+        const { data, error } = await sb.from('estoque').insert(row).select('id,nome,quantidade,categoria,descricao,fabricante');
+        if (error) throw error;
+        const novo = data && data[0] ? data[0] : null;
+        // se já entrou com quantidade > 0, registra movimentação
+        if (novo && quantidade > 0) {
+            try {
+                let mov = {
+                    estoque_id: novo.id,
+                    item_nome: nome,
+                    tipo: 'entrada',
+                    quantidade: quantidade,
+                    quantidade_antes: 0,
+                    quantidade_depois: quantidade,
+                    observacao: 'Cadastro pelo Recebido',
+                    usuario: (typeof getSessao === 'function' && getSessao()) ? (getSessao().nome || '') : ''
+                };
+                if (typeof payloadComCondominio === 'function') mov = payloadComCondominio(mov);
+                await sb.from('estoque_movimentacoes').insert(mov);
+            } catch (e) { console.warn(e); }
+        }
+        toast('✅ Item cadastrado: ' + nome);
+        await carregarEstoque();
+        const tr = window._trCadItemRec;
+        if (tr && novo) {
+            const sel = tr.querySelector('.rec-item-select');
+            const manual = tr.querySelector('.rec-item-manual');
+            const btnDig = tr.querySelector('.rec-btn-digitar');
+            const btnLista = tr.querySelector('.rec-btn-lista');
+            const btnCad = tr.querySelector('.rec-btn-cadastrar');
+            fillSelect(sel);
+            if (![...sel.options].some(o => o.value === '__manual__')) {
+                const opt = document.createElement('option');
+                opt.value = '__manual__';
+                opt.textContent = '➕ Digitar / cadastrar item...';
+                sel.appendChild(opt);
+            }
+            sel.value = novo.id;
+            sel.style.display = 'block';
+            if (manual) { manual.style.display = 'none'; manual.value = ''; }
+            if (btnCad) btnCad.style.display = 'none';
+            if (btnLista) btnLista.style.display = 'none';
+            if (btnDig) btnDig.style.display = '';
+            // qtd da linha = o que vai ENTRAR agora além do já cadastrado?
+            // se cadastrou com quantidade, zera qtd da linha para não duplicar entrada no salvar
+            // ou mantém 0 e usuário informa só o que ainda vai entrar
+            if (quantidade > 0) {
+                tr.querySelector('.rec-qtd').value = '0';
+                toast('✅ Cadastrado com ' + quantidade + ' no estoque. Ajuste a Qtd da linha se for entrar mais na NF.');
+            }
+        }
+        fecharModalCadItemRec();
+        if (typeof listarEntradas === 'function') listarEntradas();
+    } catch (e) {
+        msg.style.color = '#8B3A3A';
+        msg.textContent = '❌ ' + (e.message || e);
+    }
+}
+
 
 function addLinhaRec() {
     const tr = document.createElement('tr');
@@ -232,61 +413,9 @@ function addLinhaRec() {
         btnCad.style.display = 'none';
         btnDig.style.display = '';
     };
-    btnCad.onclick = async function() {
+    btnCad.onclick = function() {
         const nome = (manual.value || '').trim();
-        const qtd = parseInt(tr.querySelector('.rec-qtd').value, 10) || 0;
-        if (nome.length < 2) { toast('⚠️ Digite o nome do item'); return; }
-        try {
-            const existe = estoqueCache.find(e => (e.nome || '').toLowerCase() === nome.toLowerCase());
-            if (existe) {
-                toast('Item já existe — selecione na lista');
-                await carregarEstoque();
-                fillSelect(sel);
-                if (![...sel.options].some(o => o.value === '__manual__')) {
-                    const opt = document.createElement('option');
-                    opt.value = '__manual__';
-                    opt.textContent = '➕ Digitar / cadastrar item...';
-                    sel.appendChild(opt);
-                }
-                sel.value = existe.id;
-                sel.style.display = 'block';
-                manual.style.display = 'none';
-                btnCad.style.display = 'none';
-                btnLista.style.display = 'none';
-                btnDig.style.display = '';
-                return;
-            }
-            let row = {
-                nome: nome,
-                quantidade: 0,
-                categoria: 'Outros',
-                limite_alerta: 5,
-                unidade: 'UN',
-                descricao: '',
-                fabricante: ''
-            };
-            if (typeof payloadComCondominio === 'function') row = payloadComCondominio(row);
-            const { data, error } = await sb.from('estoque').insert(row).select('id,nome,quantidade');
-            if (error) throw error;
-            toast('✅ Cadastrado no estoque: ' + nome);
-            await carregarEstoque();
-            fillSelect(sel);
-            if (![...sel.options].some(o => o.value === '__manual__')) {
-                const opt = document.createElement('option');
-                opt.value = '__manual__';
-                opt.textContent = '➕ Digitar / cadastrar item...';
-                sel.appendChild(opt);
-            }
-            const novoId = data && data[0] ? data[0].id : '';
-            if (novoId) sel.value = novoId;
-            sel.style.display = 'block';
-            manual.style.display = 'none';
-            btnCad.style.display = 'none';
-            btnLista.style.display = 'none';
-            btnDig.style.display = '';
-        } catch (e) {
-            toast('❌ ' + (e.message || e));
-        }
+        abrirModalCadItemRec(tr, nome);
     };
 }
 
