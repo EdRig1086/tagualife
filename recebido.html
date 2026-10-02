@@ -648,12 +648,12 @@ td{border-bottom:1px solid #D8DCCE;padding:5px 8px;}
 <table><thead><tr><th>Data/Hora</th><th>Item</th><th>Qtd</th><th>Antes → Depois</th><th>Obs / NF</th><th>Usuário</th></tr></thead>
 <tbody>${rows}</tbody></table>
 <div class="tot">Total de unidades: ${totalQtd}</div>
-<script>window.onload=function(){window.print();}</script>
 </body></html>`;
     const w = window.open('', '_blank');
     if (!w) { toast('⚠️ Permita pop-up para imprimir'); return; }
     w.document.write(html);
     w.document.close();
+    try { w.focus(); setTimeout(function(){ try { w.print(); } catch(e){} }, 300); } catch(e){}
 }
 
 document.addEventListener('DOMContentLoaded', async function () {
