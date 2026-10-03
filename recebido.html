@@ -78,14 +78,24 @@
     <span style="margin-left:auto;font-size:.7rem;"><strong id="usuarioLogado">—</strong> · <span id="cargoLogado">—</span></span>
     <div id="userMenuMount"></div>
 </div>
-<div class="nav-menu">
-    <a class="nav-item" href="index.html"><i class="fas fa-home"></i> Dashboard</a>
-    <a class="nav-item" href="estoque.html"><i class="fas fa-boxes"></i> Estoque</a>
-    <a class="nav-item" href="saida.html"><i class="fas fa-arrow-right"></i> Saída</a>
-    <a class="nav-item active" href="recebido.html"><i class="fas fa-clipboard-check"></i> Recebido</a>
-    <a class="nav-item" href="mapacota.html"><i class="fas fa-file-invoice"></i> Cotação</a>
-    <button class="nav-item" onclick="logout()" style="margin-left:auto;background:#8B3A3A;color:#fff;border:0;cursor:pointer;">Sair</button>
-</div>
+            <div class="nav-menu">
+        <a class="nav-item" href="index.html"><i class="fas fa-home"></i> Dashboard</a>
+        <a class="nav-item" href="estoque.html"><i class="fas fa-boxes"></i> Estoque</a>
+        <a class="nav-item" href="saida.html"><i class="fas fa-arrow-right"></i> Saída</a>
+        <a class="nav-item" href="mapacota.html"><i class="fas fa-file-invoice"></i> Cotação</a>
+        <a class="nav-item" href="cotacoes_aprovadas.html"><i class="fas fa-check-circle"></i> Aprovadas</a>
+        <a class="nav-item" href="orcamento.html"><i class="fas fa-file-pdf"></i> Orçamento</a>
+        <a class="nav-item" href="fornecedor.html"><i class="fas fa-handshake"></i> Fornecedores</a>
+        <a class="nav-item active" href="recebido.html"><i class="fas fa-clipboard-check"></i> Recebido</a>
+        <a class="nav-item" href="backup_automatico.html"><i class="fas fa-database"></i> Backup</a>
+        <a class="nav-item" href="usuarios.html" id="navUsuarios" style="display:none;"><i class="fas fa-users-cog"></i> Usuários</a>
+        <button class="nav-item btn-theme" onclick="if(typeof toggleTheme==='function')toggleTheme()" style="margin-left:auto;">
+            <i class="fas fa-moon" id="themeIcon"></i> <span id="themeLabel">Tema</span>
+        </button>
+        <button class="nav-item" onclick="if(typeof logout==='function')logout()" style="background:#8B3A3A; color:white; border-color:#8B3A3A;">
+            <i class="fas fa-sign-out-alt"></i> Sair
+        </button>
+    </div>
 
 <div class="wrap">
     <div class="card">
