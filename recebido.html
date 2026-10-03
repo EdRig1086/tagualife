@@ -3,82 +3,128 @@
 <head>
     <link rel="icon" type="image/svg+xml" href="favicon.svg" />
     <link rel="apple-touch-icon" href="favicon.svg" />
-
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>TaguáLife · Recebimento / Entrada de Estoque</title>
     <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TaguáLife Center · Recebido / Entrada</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="auth.js"></script>
     <script src="perfil.js"></script>
     <style>
         :root {
             --verde-claro: #C1CE83; --verde-oliva: #7A816E; --branco: #FBFBF7; --preto: #191D1B;
-            --bg-body: #E8EBE0; --bg-card: #FBFBF7; --text-primary: #191D1B; --text-secondary: #7A816E;
-            --border-color: #D8DCCE; --danger: #8B3A3A; --success: #2E7D32;
+            --danger: #8B3A3A; --success: #2E7D32; --warning: #C1A83C;
+            --gray-50: #FBFBF7; --gray-100: #F0F2EA; --gray-200: #D8DCCE; --gray-300: #B8BEA8;
+            --shadow: 0 4px 24px rgba(25,29,27,0.08);
+            --font-primary: 'Inter', sans-serif; --bg-body: #E8EBE0; --bg-card: #FBFBF7;
+            --text-primary: #191D1B; --text-secondary: #7A816E; --border-color: #D8DCCE;
+            --input-bg: transparent; --input-border: #B8BEA8;
         }
         body.dark-mode {
-            --bg-body: #1a1a1a; --bg-card: #2a2a2a; --text-primary: #e8e8e8;
-            --text-secondary: #b0b8a8; --border-color: #444;
+            --bg-body: #1a1a1a; --bg-card: #2a2a2a; --text-primary: #e8e8e8; --text-secondary: #b0b8a8;
+            --border-color: #444; --input-bg: #333; --input-border: #555;
+            --gray-50: #2a2a2a; --gray-100: #333; --preto: #e8e8e8; --branco: #2a2a2a;
         }
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: Inter, sans-serif; background: var(--bg-body); color: var(--text-primary); min-height: 100vh; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: var(--font-primary); background: var(--bg-body); min-height: 100vh;
+            padding: 1rem; display: flex; justify-content: center; align-items: flex-start;
+            color: var(--text-primary);
+        }
+        .app-container { max-width: 1100px; width: 100%; }
         .app-topbar {
-            display: flex; align-items: center; gap: 1rem; padding: .6rem 1.2rem;
-            background: var(--bg-card); border-bottom: 1px solid var(--border-color); flex-wrap: wrap;
+            display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.6rem;
+            flex-wrap: wrap; gap: 0.3rem; background: var(--bg-card); padding: 0.4rem 1rem;
+            border-radius: 10px; box-shadow: var(--shadow); border: 1px solid var(--border-color);
         }
-        .logo { font-weight: 800; text-decoration: none; color: var(--text-primary); }
-        .logo span { color: var(--verde-oliva); }
-        .nav-menu { display: flex; flex-wrap: wrap; gap: .3rem; padding: .5rem 1rem; background: var(--bg-card); border-bottom: 1px solid var(--border-color); }
-        .nav-item {
-            padding: .35rem .7rem; border-radius: 40px; font-size: .7rem; font-weight: 600;
+        .logo-area { display: flex; align-items: center; gap: 0.5rem; text-decoration: none; color: inherit; }
+        .logo-icon {
+            width: 36px; height: 36px; background: var(--preto); color: var(--verde-claro);
+            border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center;
+            font-weight: 900; font-size: 0.85rem; line-height: 1;
+        }
+        .logo-icon small { font-size: 0.45rem; color: var(--branco); letter-spacing: 0.5px; }
+        .logo-text .title { font-weight: 800; font-size: 0.95rem; }
+        .logo-text .title .life { color: var(--verde-oliva); }
+        .logo-text .slogan { font-size: 0.55rem; color: var(--text-secondary); }
+        .nav-menu {
+            display: flex; flex-wrap: wrap; gap: 0.25rem; align-items: center;
+            background: var(--bg-card); padding: 0.35rem 0.5rem; border-radius: 10px;
+            border: 1px solid var(--border-color); margin-bottom: 0.75rem; box-shadow: var(--shadow);
+        }
+        .nav-menu .nav-item {
+            padding: 0.3rem 0.65rem; border-radius: 40px; font-size: 0.7rem; font-weight: 600;
             text-decoration: none; color: var(--text-secondary); border: 1px solid transparent;
+            background: transparent; cursor: pointer; font-family: inherit;
         }
-        .nav-item:hover, .nav-item.active { background: #191D1B; color: #FBFBF7; }
-        .wrap { max-width: 1100px; margin: 1rem auto; padding: 0 1rem 2rem; }
-        .card {
-            background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px;
-            padding: 1rem 1.2rem; margin-bottom: 1rem;
+        .nav-menu .nav-item:hover { background: var(--gray-50); color: var(--text-primary); }
+        .nav-menu .nav-item.active { background: var(--preto); color: var(--branco); border-color: var(--preto); }
+        .nav-menu .nav-item i { margin-right: 0.2rem; }
+        .protocolo-card {
+            background: var(--bg-card); border-radius: 12px; border: 1px solid var(--border-color);
+            box-shadow: var(--shadow); overflow: hidden; margin-bottom: 1rem;
         }
-        .card h2 { font-size: 1rem; margin-bottom: .8rem; }
-        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: .6rem; }
-        label { font-size: .65rem; font-weight: 600; color: var(--text-secondary); display: block; margin-bottom: .2rem; }
+        .protocolo-header {
+            display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;
+            background: linear-gradient(90deg, #C1CE83 0%, #a8b86e 100%); color: #191D1B;
+            padding: 0.55rem 1rem; font-weight: 700;
+        }
+        .protocolo-header h2 { font-size: 0.95rem; display: inline; }
+        .protocolo-header .left { display: flex; align-items: center; gap: 0.4rem; }
+        .protocolo-header .right { font-size: 0.7rem; font-weight: 600; opacity: 0.9; }
+        .protocolo-body { padding: 1rem 1.1rem 1.2rem; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 0.6rem; }
+        label { font-size: 0.65rem; font-weight: 600; color: var(--text-secondary); display: block; margin-bottom: 0.2rem; }
         input, select {
-            width: 100%; padding: .45rem .55rem; border-radius: 8px; border: 1px solid var(--border-color);
-            background: transparent; color: var(--text-primary); font-family: inherit; font-size: .8rem;
+            width: 100%; padding: 0.45rem 0.55rem; border-radius: 8px;
+            border: 1px solid var(--border-color); background: var(--input-bg);
+            color: var(--text-primary); font-family: inherit; font-size: 0.8rem;
         }
-        table { width: 100%; border-collapse: collapse; font-size: .75rem; margin-top: .6rem; }
-        th { text-align: left; background: var(--verde-oliva); color: #fff; padding: .4rem .5rem; }
-        td { padding: .4rem .5rem; border-bottom: 1px solid var(--border-color); }
+        table { width: 100%; border-collapse: collapse; font-size: 0.75rem; margin-top: 0.6rem; }
+        th { text-align: left; background: var(--verde-oliva); color: #fff; padding: 0.4rem 0.5rem; }
+        td { padding: 0.4rem 0.5rem; border-bottom: 1px solid var(--border-color); }
         .btn {
-            padding: .4rem .85rem; border-radius: 8px; border: 1px solid var(--border-color);
-            background: var(--bg-body); cursor: pointer; font-size: .75rem; font-family: inherit; font-weight: 600;
+            padding: 0.4rem 0.85rem; border-radius: 8px; border: 1px solid var(--border-color);
+            background: var(--bg-body); cursor: pointer; font-size: 0.75rem; font-family: inherit; font-weight: 600;
+            color: var(--text-primary);
         }
         .btn-primary { background: #191D1B; color: #fff; border-color: #191D1B; }
         .btn-success { background: #2E7D32; color: #fff; border-color: #2E7D32; }
-        .actions { display: flex; gap: .4rem; flex-wrap: wrap; margin-top: .8rem; }
+        .actions { display: flex; gap: 0.4rem; flex-wrap: wrap; margin-top: 0.8rem; align-items: center; }
+        .hint { font-size: 0.7rem; color: var(--text-secondary); margin-top: 0.4rem; }
         .toast {
-            position: fixed; bottom: 1.2rem; right: 1.2rem; padding: .6rem 1rem; border-radius: 8px;
-            background: #191D1B; color: #fff; font-size: .8rem; z-index: 9999; display: none;
+            position: fixed; bottom: 1.2rem; right: 1.2rem; padding: 0.6rem 1rem; border-radius: 8px;
+            background: #191D1B; color: #fff; font-size: 0.8rem; z-index: 9999; display: none;
         }
         .toast.show { display: block; }
         #modalCadItemRec.open, #modalCadItemRec[style*="flex"] { display: flex !important; }
         #modalCadItemRec label { font-size: .65rem; font-weight: 600; color: var(--text-secondary); display: block; margin-bottom: .2rem; }
-        #modalCadItemRec input { width: 100%; padding: .45rem .55rem; border-radius: 8px; border: 1px solid var(--border-color);
-            background: transparent; color: var(--text-primary); font-family: inherit; font-size: .8rem; box-sizing: border-box; }
-
-        .hint { font-size: .7rem; color: var(--text-secondary); margin-top: .4rem; }
+        #modalCadItemRec input, #modalCadItemRec select {
+            width: 100%; padding: .45rem .55rem; border-radius: 8px; border: 1px solid var(--border-color);
+            background: transparent; color: var(--text-primary); font-family: inherit; font-size: .8rem; box-sizing: border-box;
+        }
+        .section-title { font-size: 0.9rem; font-weight: 700; margin-bottom: 0.6rem; display: flex; align-items: center; gap: 0.4rem; }
     </style>
 </head>
 <body>
-<div class="app-topbar">
-    <a class="logo" href="index.html">Taguá<span>Life</span></a>
-    <span style="margin-left:auto;font-size:.7rem;"><strong id="usuarioLogado">—</strong> · <span id="cargoLogado">—</span></span>
-    <div id="userMenuMount"></div>
-</div>
-            <div class="nav-menu">
+<div class="app-container">
+    <div class="app-topbar">
+        <a href="index.html" class="logo-area">
+            <div class="logo-icon">T <small>LIFE</small></div>
+            <div class="logo-text">
+                <div class="title"><span class="tagua">Taguá</span><span class="life">Life</span></div>
+                <div class="slogan">Life Conceito em Gestão Condominial</div>
+            </div>
+        </a>
+        <div style="display:flex;align-items:center;gap:0.5rem;font-size:0.7rem;color:var(--text-secondary);">
+            <span><strong id="usuarioLogado">—</strong> · <span id="cargoLogado">—</span></span>
+            <div id="userMenuMount"></div>
+        </div>
+    </div>
+
+    <div class="nav-menu">
         <a class="nav-item" href="index.html"><i class="fas fa-home"></i> Dashboard</a>
         <a class="nav-item" href="estoque.html"><i class="fas fa-boxes"></i> Estoque</a>
         <a class="nav-item" href="saida.html"><i class="fas fa-arrow-right"></i> Saída</a>
@@ -97,10 +143,19 @@
         </button>
     </div>
 
-<div class="wrap">
-    <div class="card">
-        <h2><i class="fas fa-truck-loading"></i> Entrada de material (aumenta o estoque)</h2>
-        <p class="hint">Registre o recebimento. Escolha na lista <strong>ou digite</strong> o nome e use <strong>+ Cadastrar no estoque</strong>. A quantidade será <strong>somada</strong> no estoque.</p>
+    <div class="protocolo-card">
+        <div class="protocolo-header">
+            <div class="left">
+                <i class="fas fa-truck-loading"></i>
+                <h2>Recebido · Entrada de Material</h2>
+                <span style="font-weight:500;font-size:0.75rem;">• Aumenta o estoque</span>
+            </div>
+            <div class="right">
+                <span id="dataAtualRec"></span>
+            </div>
+        </div>
+        <div class="protocolo-body">
+<p class="hint">Registre o recebimento. Escolha na lista <strong>ou digite</strong> o nome e use <strong>+ Cadastrar no estoque</strong>. A quantidade será <strong>somada</strong> no estoque.</p>
         <div class="grid" style="margin-top:.8rem;">
             <div>
                 <label>Fornecedor *</label>
@@ -152,8 +207,12 @@
         </div>
     </div>
 
-    <div class="card">
-        <h2><i class="fas fa-history"></i> Histórico de entradas</h2>
+    
+        </div>
+    </div>
+
+<div class="protocolo-card" style="margin-top:0;">
+        <div class="protocolo-header"><div class="left"><i class="fas fa-history"></i><h2>Histórico de entradas</h2></div></div><div class="protocolo-body">
         <div class="actions" style="margin-top:0;margin-bottom:0.6rem;">
             <button type="button" class="btn" onclick="listarEntradas('todas')"><i class="fas fa-list"></i> Todas</button>
             <button type="button" class="btn" onclick="listarEntradas('hoje')"><i class="fas fa-calendar-day"></i> Hoje</button>
@@ -164,6 +223,14 @@
         <p class="hint">Mostra as <strong>entradas no estoque</strong> (recebimentos). Também em <strong>Estoque → Movimentações → filtro Entrada</strong>.</p>
         <div id="listaRec" class="hint">Carregando...</div>
     </div>
+</div>
+
+<div class="perfil-modal-overlay" id="modalCadItemRec" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:10050;align-items:center;justify-content:center;padding:1rem;">
+  <div style="background:var(--bg-card);border-radius:12px;width:100%;max-width:480px;border:1px solid var(--border-color);box-shadow:0 12px 40px rgba(0,0,0,.15);">
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:.8rem 1rem;border-bottom:1px solid var(--border-color);font-weight:700;font-size:.9rem;">
+      <span><i class="fas fa-box"></i> Cadastrar item no estoque</span>
+      <button type="button" class="btn" onclick="fecharModalCadItemRec()">✕</button>
+    </div></div></div>
 </div>
 
 <div class="perfil-modal-overlay" id="modalCadItemRec" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:10050;align-items:center;justify-content:center;padding:1rem;">
@@ -915,6 +982,8 @@ document.addEventListener('DOMContentLoaded', async function () {
         document.getElementById('recPor').value = s.nome || '';
     }
     document.getElementById('recData').value = new Date().toISOString().slice(0, 10);
+    const dRec = document.getElementById('dataAtualRec');
+    if (dRec) dRec.innerHTML = '<i class="far fa-calendar-alt"></i> ' + new Date().toLocaleDateString('pt-BR') + ' · <i class="far fa-clock"></i> ' + new Date().toLocaleTimeString('pt-BR', {hour:'2-digit',minute:'2-digit'});
     await carregarEstoque();
     addLinhaRec();
     await listarRecebimentos();
