@@ -264,28 +264,32 @@ function fillSelect(sel) {
 
 
 
-const CATEGORIAS_PADRAO_REC = [
-    'Automóvel','Elétrico','Ferragens','Hidráulico','Higiene','Manutenção',
-    'Pintura','Iluminação','Limpeza','Segurança','Construção','Ferramentas',
-    'Sinalização','Copa','Jardim','Piscina','Adesivos','Eletrônicos','Outros'
-];
+// Mesmas categorias padrão do estoque.html
+const CATEGORIAS_PADRAO_REC = ['Elétrico', 'Hidráulico', 'Ferragens', 'Manutenção', 'Higiene', 'Automóvel', 'Outros'];
+const CHAVE_CATS_REC = 'estoqueCategoriasTaguaLife'; // mesma chave do estoque
 
 async function carregarCategoriasRec() {
     const set = {};
+    // 1) padrão do estoque
     CATEGORIAS_PADRAO_REC.forEach(c => { set[c] = true; });
+    // 2) categorias criadas no estoque (localStorage compartilhado)
     try {
-        // do estoque em cache
+        const salvas = JSON.parse(localStorage.getItem(CHAVE_CATS_REC) || '[]');
+        if (Array.isArray(salvas)) salvas.forEach(c => { if (c) set[String(c).trim()] = true; });
+    } catch (e) {}
+    try {
+        // 3) categorias dos itens em cache
         (estoqueCache || []).forEach(i => {
             if (i.categoria) set[String(i.categoria).trim()] = true;
         });
-        // tabela categorias se existir
+        // 4) tabela categorias (Supabase)
         let q = sb.from('categorias').select('nome').order('nome');
         if (typeof comCondominio === 'function') q = comCondominio(q);
         const { data } = await q;
         (data || []).forEach(r => {
             if (r && r.nome) set[String(r.nome).trim()] = true;
         });
-        // distinct no estoque do banco
+        // 5) distinct no estoque do banco
         let qe = sb.from('estoque').select('categoria');
         if (typeof comCondominio === 'function') qe = comCondominio(qe);
         const { data: est } = await qe;
@@ -293,6 +297,7 @@ async function carregarCategoriasRec() {
             if (r && r.categoria) set[String(r.categoria).trim()] = true;
         });
     } catch (e) { console.warn('cats', e); }
+    // Pintura e outras que já existem nos itens continuam entrando pelo passo 3/5
     const lista = Object.keys(set).filter(Boolean).sort((a, b) => a.localeCompare(b, 'pt-BR'));
     if (!lista.includes('Outros')) lista.push('Outros');
     const sel = document.getElementById('recCadCat');
@@ -311,28 +316,32 @@ function fecharModalCadItemRec() {
     const m = document.getElementById('modalCadItemRec');
     if (m) { m.style.display = 'none'; m.classList.remove('open'); }
     
-const CATEGORIAS_PADRAO_REC = [
-    'Automóvel','Elétrico','Ferragens','Hidráulico','Higiene','Manutenção',
-    'Pintura','Iluminação','Limpeza','Segurança','Construção','Ferramentas',
-    'Sinalização','Copa','Jardim','Piscina','Adesivos','Eletrônicos','Outros'
-];
+// Mesmas categorias padrão do estoque.html
+const CATEGORIAS_PADRAO_REC = ['Elétrico', 'Hidráulico', 'Ferragens', 'Manutenção', 'Higiene', 'Automóvel', 'Outros'];
+const CHAVE_CATS_REC = 'estoqueCategoriasTaguaLife'; // mesma chave do estoque
 
 async function carregarCategoriasRec() {
     const set = {};
+    // 1) padrão do estoque
     CATEGORIAS_PADRAO_REC.forEach(c => { set[c] = true; });
+    // 2) categorias criadas no estoque (localStorage compartilhado)
     try {
-        // do estoque em cache
+        const salvas = JSON.parse(localStorage.getItem(CHAVE_CATS_REC) || '[]');
+        if (Array.isArray(salvas)) salvas.forEach(c => { if (c) set[String(c).trim()] = true; });
+    } catch (e) {}
+    try {
+        // 3) categorias dos itens em cache
         (estoqueCache || []).forEach(i => {
             if (i.categoria) set[String(i.categoria).trim()] = true;
         });
-        // tabela categorias se existir
+        // 4) tabela categorias (Supabase)
         let q = sb.from('categorias').select('nome').order('nome');
         if (typeof comCondominio === 'function') q = comCondominio(q);
         const { data } = await q;
         (data || []).forEach(r => {
             if (r && r.nome) set[String(r.nome).trim()] = true;
         });
-        // distinct no estoque do banco
+        // 5) distinct no estoque do banco
         let qe = sb.from('estoque').select('categoria');
         if (typeof comCondominio === 'function') qe = comCondominio(qe);
         const { data: est } = await qe;
@@ -340,6 +349,7 @@ async function carregarCategoriasRec() {
             if (r && r.categoria) set[String(r.categoria).trim()] = true;
         });
     } catch (e) { console.warn('cats', e); }
+    // Pintura e outras que já existem nos itens continuam entrando pelo passo 3/5
     const lista = Object.keys(set).filter(Boolean).sort((a, b) => a.localeCompare(b, 'pt-BR'));
     if (!lista.includes('Outros')) lista.push('Outros');
     const sel = document.getElementById('recCadCat');
