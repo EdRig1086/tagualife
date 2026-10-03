@@ -1,6 +1,9 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
+    <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+    <link rel="apple-touch-icon" href="favicon.svg" />
+
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>TaguáLife Center · Saída de Material</title>
@@ -8,6 +11,7 @@
     <meta http-equiv="Pragma" content="no-cache" />
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="auth.js"></script>
+    <script src="perfil.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -1024,7 +1028,7 @@
 
     <button class="menu-toggle" onclick="toggleMenu()"><i class="fas fa-bars"></i> Menu</button>
 
-    <div class="nav-menu" id="navMenu">
+            <div class="nav-menu" id="navMenu">
         <a class="nav-item" href="index.html"><i class="fas fa-home"></i> Dashboard</a>
         <a class="nav-item" href="estoque.html"><i class="fas fa-boxes"></i> Estoque</a>
         <a class="nav-item active" href="saida.html"><i class="fas fa-arrow-right"></i> Saída</a>
@@ -1034,10 +1038,11 @@
         <a class="nav-item" href="fornecedor.html"><i class="fas fa-handshake"></i> Fornecedores</a>
         <a class="nav-item" href="recebido.html"><i class="fas fa-clipboard-check"></i> Recebido</a>
         <a class="nav-item" href="backup_automatico.html"><i class="fas fa-database"></i> Backup</a>
-        <button class="nav-item btn-theme" onclick="toggleTheme()" style="margin-left:auto;">
+        <a class="nav-item" href="usuarios.html" id="navUsuarios" style="display:none;"><i class="fas fa-users-cog"></i> Usuários</a>
+        <button class="nav-item btn-theme" onclick="if(typeof toggleTheme==='function')toggleTheme()" style="margin-left:auto;">
             <i class="fas fa-moon" id="themeIcon"></i> <span id="themeLabel">Tema</span>
         </button>
-        <button class="nav-item" onclick="logout()" style="background:#8B3A3A; color:white; border-color:#8B3A3A;">
+        <button class="nav-item" onclick="if(typeof logout==='function')logout()" style="background:#8B3A3A; color:white; border-color:#8B3A3A;">
             <i class="fas fa-sign-out-alt"></i> Sair
         </button>
     </div>
@@ -1362,7 +1367,9 @@
             return cacheEstoqueDB;
         }
         try {
-            const { data, error } = await sb.from('estoque').select('id,nome,quantidade,categoria,limite_alerta').order('nome');
+            let qEst = sb.from('estoque').select('id,nome,quantidade,categoria,limite_alerta').order('nome');
+            if (typeof comCondominio === 'function') qEst = comCondominio(qEst);
+            const { data, error } = await qEst;
             if (error) throw error;
             cacheEstoqueDB = data || [];
             // espelho local para trechos legados
@@ -1466,12 +1473,14 @@
             let data = null;
             let error = null;
             // tenta join
-            ({ data, error } = await sb.from('saidas')
-                .select('*, saida_itens(*)')
-                .order('criado_em', { ascending: false }));
+            let qSaida = sb.from('saidas').select('*, saida_itens(*)').order('criado_em', { ascending: false });
+            if (typeof comCondominio === 'function') qSaida = comCondominio(qSaida);
+            ({ data, error } = await qSaida);
             if (error) {
                 console.warn('join saida_itens falhou, busca separada', error.message);
-                ({ data, error } = await sb.from('saidas').select('*').order('criado_em', { ascending: false }));
+                let q2 = sb.from('saidas').select('*').order('criado_em', { ascending: false });
+                if (typeof comCondominio === 'function') q2 = comCondominio(q2);
+                ({ data, error } = await q2);
                 if (error) throw error;
                 // busca itens de todas as saídas
                 const ids = (data || []).map(r => r.id);
@@ -1758,6 +1767,116 @@ function mostrarToast(mensagem, tipo = 'success') {
     function fecharModal(id) {
         document.getElementById(id).classList.remove('ativo');
     }
+
+
+    window.abrirModalItem = function() {
+        const nome = document.getElementById('cadItemNome');
+        const qtd = document.getElementById('cadItemQtd');
+        const cat = document.getElementById('cadItemCategoria');
+        if (nome) nome.value = '';
+        if (qtd) qtd.value = '0';
+        if (cat) cat.value = '';
+        mudarTabItem('novo');
+        abrirModal('modalItem');
+    };
+
+    window.mudarTabItem = function(tab) {
+        const tabNovo = document.getElementById('tabItemNovo');
+        const tabLista = document.getElementById('tabItemLista');
+        const tabs = document.querySelectorAll('#modalItem .modal-tabs .tab');
+        if (tabs && tabs.length >= 2) {
+            tabs[0].classList.toggle('ativo', tab === 'novo');
+            tabs[1].classList.toggle('ativo', tab === 'lista');
+        }
+        if (tabNovo) tabNovo.classList.toggle('ativo', tab === 'novo');
+        if (tabLista) tabLista.classList.toggle('ativo', tab === 'lista');
+        if (tab === 'lista') renderizarListaItens();
+    };
+
+    window.renderizarListaItens = async function() {
+        const box = document.getElementById('listaItensModal');
+        if (!box) return;
+        try {
+            if (!cacheEstoqueDB || !cacheEstoqueDB.length) await carregarEstoqueDB();
+        } catch (e) {}
+        let lista = (cacheEstoqueDB || []).slice();
+        const busca = (document.getElementById('buscaItem')?.value || '').trim().toLowerCase();
+        if (busca) lista = lista.filter(i => (i.nome || '').toLowerCase().includes(busca));
+        lista.sort((a, b) => String(a.nome || '').localeCompare(String(b.nome || ''), 'pt-BR'));
+        if (!lista.length) {
+            box.innerHTML = '<div style="padding:1rem;text-align:center;color:var(--text-secondary);font-size:0.75rem;">Nenhum item encontrado</div>';
+            return;
+        }
+        box.innerHTML = lista.slice(0, 100).map(i =>
+            '<div class="item-lista" style="display:flex;justify-content:space-between;padding:0.4rem 0.5rem;border-bottom:1px solid var(--border-color);font-size:0.75rem;">' +
+            '<span><strong>' + (i.nome || '—') + '</strong> <small style="color:var(--text-secondary);">(' + (i.categoria || '—') + ')</small></span>' +
+            '<span style="font-weight:700;">' + (i.quantidade != null ? i.quantidade : 0) + '</span></div>'
+        ).join('');
+    };
+
+    window.cadastrarItem = async function() {
+        const nome = (document.getElementById('cadItemNome')?.value || '').trim();
+        const qtd = parseInt(document.getElementById('cadItemQtd')?.value, 10) || 0;
+        const categoria = (document.getElementById('cadItemCategoria')?.value || '').trim() || 'Outros';
+        if (!nome || nome.length < 2) {
+            mostrarToast('⚠️ Informe o nome do item', 'warning');
+            return;
+        }
+        if (typeof podeCadastrar === 'function' && !podeCadastrar()) {
+            // Usuário comum na saída: permitir cadastrar item (como no estoque)
+            // não bloqueia — cadastro de item é operacional
+        }
+        try {
+            if (!sb) throw new Error('Supabase não conectado');
+            // evita duplicata por nome
+            await carregarEstoqueDB();
+            const existe = (cacheEstoqueDB || []).find(e => (e.nome || '').toLowerCase() === nome.toLowerCase());
+            if (existe) {
+                mostrarToast('⚠️ Item já existe no estoque: ' + existe.nome, 'warning');
+                return;
+            }
+            let row = {
+                nome: nome,
+                quantidade: qtd,
+                categoria: categoria,
+                limite_alerta: 5,
+                unidade: 'UN',
+                descricao: '',
+                fabricante: ''
+            };
+            if (typeof payloadComCondominio === 'function') row = payloadComCondominio(row);
+            const { data, error } = await sb.from('estoque').insert(row).select('id,nome,quantidade,categoria,limite_alerta');
+            if (error) throw error;
+            // movimentação entrada
+            try {
+                if (data && data[0] && qtd > 0) {
+                    let mov = {
+                        estoque_id: data[0].id,
+                        item_nome: nome,
+                        tipo: 'entrada',
+                        quantidade: qtd,
+                        quantidade_antes: 0,
+                        quantidade_depois: qtd,
+                        observacao: 'Cadastro pela tela de Saída'
+                    };
+                    if (typeof payloadComCondominio === 'function') mov = payloadComCondominio(mov);
+                    await sb.from('estoque_movimentacoes').insert(mov);
+                }
+            } catch (e) { console.warn(e); }
+
+            await carregarEstoqueDB();
+            await carregarSelectItens();
+            document.getElementById('cadItemNome').value = '';
+            document.getElementById('cadItemQtd').value = '0';
+            document.getElementById('cadItemCategoria').value = '';
+            mostrarToast('✅ Item cadastrado no estoque: ' + nome, 'success');
+            fecharModal('modalItem');
+        } catch (e) {
+            console.error(e);
+            mostrarToast('❌ Erro ao cadastrar: ' + (e.message || e), 'danger');
+        }
+    };
+
     document.querySelectorAll('.modal-overlay').forEach(overlay => {
         overlay.addEventListener('click', function(e) {
             if (e.target === this) this.classList.remove('ativo');
@@ -1846,9 +1965,11 @@ function mostrarToast(mensagem, tipo = 'success') {
     async function carregarColaboradoresDB() {
         try {
             if (!sb) throw new Error('sem supabase');
-            const { data, error } = await sb.from('colaboradores')
-                .select('id,nome,cargo,ativo')
-                .order('nome');
+            let qCol = sb.from('colaboradores').select('id,nome,cargo,ativo').order('nome');
+            if (typeof comCondominio === 'function') qCol = comCondominio(qCol);
+            const { data, error } = await qCol;
+            // filter below
+
             if (error) throw error;
             cacheColaboradoresDB = (data || []).map(c => ({
                 id: c.id,
@@ -1981,11 +2102,11 @@ function mostrarToast(mensagem, tipo = 'success') {
         }
         try {
             if (sb) {
-                const { error } = await sb.from('colaboradores').insert({
+                const { error } = await sb.from('colaboradores').insert((typeof payloadComCondominio === 'function' ? payloadComCondominio : (x=>x))({
                     nome: nome,
                     cargo: cargo,
                     ativo: true
-                });
+                }));
                 if (error) throw error;
             } else {
                 colaboradores.push({ nome, cargo, ativo: true, id: null });
@@ -2588,7 +2709,7 @@ function mostrarToast(mensagem, tipo = 'success') {
                     mostrarToast('⚠️ Supabase não conectado — só local', 'warning');
                 } else {
                     try {
-                        const row = {
+                        const row = (typeof payloadComCondominio === 'function' ? payloadComCondominio : (x=>x))({
                             colaborador: novoProtocolo.colaborador,
                             data_saida: dataBRParaISO(novoProtocolo.dataSaida),
                             hora_saida: horaParaDB(novoProtocolo.horas),
@@ -2597,7 +2718,7 @@ function mostrarToast(mensagem, tipo = 'success') {
                             observacao: (qtdNaoCadastrados > 0)
                                 ? (qtdNaoCadastrados + ' item(ns) não cadastrado(s)')
                                 : null
-                        };
+                        });
                         console.log('➡️ Insert saidas', row);
                         const { data: saved, error } = await sb.from('saidas').insert([row]).select();
                         if (error) {
