@@ -160,13 +160,31 @@ function protegerPagina() {
     return true;
 }
 
+
+function ehAdministrador() {
+    return getCargo() === 'Administrador';
+}
+
+/** Mostra link Usuários só para Administrador; em usuarios.html redireciona se não for admin */
+function mostrarNavUsuariosAdmin() {
+    const el = document.getElementById('navUsuarios');
+    const admin = ehAdministrador();
+    if (el) el.style.display = admin ? '' : 'none';
+    const path = (window.location.pathname || '').toLowerCase();
+    if (path.includes('usuarios.html') && !admin) {
+        window.location.replace('index.html');
+    }
+}
+
 function iniciarSeguranca() {
     const path = (window.location.pathname || '').toLowerCase();
     if (path.includes('login.html')) return;
     if (!protegerPagina()) return;
     mostrarUsuarioLogado();
     aplicarPermissoesNaTela();
+    mostrarNavUsuariosAdmin();
 }
+
 
 (function checagemImediata() {
     try {
