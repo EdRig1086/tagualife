@@ -1,6 +1,9 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
+    <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+    <link rel="apple-touch-icon" href="favicon.svg" />
+
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>TaguáLife · Recebimento / Entrada de Estoque</title>
@@ -179,12 +182,9 @@
         </div>
         <div>
           <label>CATEGORIA</label>
-          <input type="text" id="recCadCat" list="recCatList" placeholder="Ex: Hidráulico" />
-          <datalist id="recCatList">
-            <option value="Elétrico"><option value="Hidráulico"><option value="Limpeza">
-            <option value="Higiene"><option value="Manutenção"><option value="Pintura">
-            <option value="Ferragens"><option value="Iluminação"><option value="Outros">
-          </datalist>
+          <select id="recCadCat" style="width:100%;padding:.45rem .55rem;border-radius:8px;border:1px solid var(--border-color);background:var(--bg-card);color:var(--text-primary);font-family:inherit;font-size:.8rem;">
+            <option value="Outros">Outros</option>
+          </select>
         </div>
       </div>
       <p id="recCadMsg" style="font-size:.75rem;min-height:1.1em;margin:0;"></p>
@@ -263,15 +263,99 @@ function fillSelect(sel) {
 }
 
 
+
+const CATEGORIAS_PADRAO_REC = [
+    'Automóvel','Elétrico','Ferragens','Hidráulico','Higiene','Manutenção',
+    'Pintura','Iluminação','Limpeza','Segurança','Construção','Ferramentas',
+    'Sinalização','Copa','Jardim','Piscina','Adesivos','Eletrônicos','Outros'
+];
+
+async function carregarCategoriasRec() {
+    const set = {};
+    CATEGORIAS_PADRAO_REC.forEach(c => { set[c] = true; });
+    try {
+        // do estoque em cache
+        (estoqueCache || []).forEach(i => {
+            if (i.categoria) set[String(i.categoria).trim()] = true;
+        });
+        // tabela categorias se existir
+        let q = sb.from('categorias').select('nome').order('nome');
+        if (typeof comCondominio === 'function') q = comCondominio(q);
+        const { data } = await q;
+        (data || []).forEach(r => {
+            if (r && r.nome) set[String(r.nome).trim()] = true;
+        });
+        // distinct no estoque do banco
+        let qe = sb.from('estoque').select('categoria');
+        if (typeof comCondominio === 'function') qe = comCondominio(qe);
+        const { data: est } = await qe;
+        (est || []).forEach(r => {
+            if (r && r.categoria) set[String(r.categoria).trim()] = true;
+        });
+    } catch (e) { console.warn('cats', e); }
+    const lista = Object.keys(set).filter(Boolean).sort((a, b) => a.localeCompare(b, 'pt-BR'));
+    if (!lista.includes('Outros')) lista.push('Outros');
+    const sel = document.getElementById('recCadCat');
+    if (!sel) return lista;
+    const atual = sel.value || 'Outros';
+    sel.innerHTML = lista.map(c => '<option value="' + c.replace(/"/g, '&quot;') + '">' + c + '</option>').join('');
+    if ([...sel.options].some(o => o.value === atual)) sel.value = atual;
+    else sel.value = 'Outros';
+    return lista;
+}
+
+
 window._trCadItemRec = null;
 
 function fecharModalCadItemRec() {
     const m = document.getElementById('modalCadItemRec');
     if (m) { m.style.display = 'none'; m.classList.remove('open'); }
-    window._trCadItemRec = null;
+    
+const CATEGORIAS_PADRAO_REC = [
+    'Automóvel','Elétrico','Ferragens','Hidráulico','Higiene','Manutenção',
+    'Pintura','Iluminação','Limpeza','Segurança','Construção','Ferramentas',
+    'Sinalização','Copa','Jardim','Piscina','Adesivos','Eletrônicos','Outros'
+];
+
+async function carregarCategoriasRec() {
+    const set = {};
+    CATEGORIAS_PADRAO_REC.forEach(c => { set[c] = true; });
+    try {
+        // do estoque em cache
+        (estoqueCache || []).forEach(i => {
+            if (i.categoria) set[String(i.categoria).trim()] = true;
+        });
+        // tabela categorias se existir
+        let q = sb.from('categorias').select('nome').order('nome');
+        if (typeof comCondominio === 'function') q = comCondominio(q);
+        const { data } = await q;
+        (data || []).forEach(r => {
+            if (r && r.nome) set[String(r.nome).trim()] = true;
+        });
+        // distinct no estoque do banco
+        let qe = sb.from('estoque').select('categoria');
+        if (typeof comCondominio === 'function') qe = comCondominio(qe);
+        const { data: est } = await qe;
+        (est || []).forEach(r => {
+            if (r && r.categoria) set[String(r.categoria).trim()] = true;
+        });
+    } catch (e) { console.warn('cats', e); }
+    const lista = Object.keys(set).filter(Boolean).sort((a, b) => a.localeCompare(b, 'pt-BR'));
+    if (!lista.includes('Outros')) lista.push('Outros');
+    const sel = document.getElementById('recCadCat');
+    if (!sel) return lista;
+    const atual = sel.value || 'Outros';
+    sel.innerHTML = lista.map(c => '<option value="' + c.replace(/"/g, '&quot;') + '">' + c + '</option>').join('');
+    if ([...sel.options].some(o => o.value === atual)) sel.value = atual;
+    else sel.value = 'Outros';
+    return lista;
 }
 
-function abrirModalCadItemRec(tr, nomeInicial) {
+
+window._trCadItemRec = null;
+}
+
+async function abrirModalCadItemRec(tr, nomeInicial) {
     window._trCadItemRec = tr || null;
     const m = document.getElementById('modalCadItemRec');
     if (!m) return;
@@ -280,8 +364,10 @@ function abrirModalCadItemRec(tr, nomeInicial) {
     document.getElementById('recCadFab').value = '';
     const qtdLinha = tr ? (parseInt(tr.querySelector('.rec-qtd')?.value, 10) || 0) : 0;
     document.getElementById('recCadQtd').value = String(qtdLinha || 0);
-    document.getElementById('recCadCat').value = 'Outros';
     document.getElementById('recCadMsg').textContent = '';
+    await carregarCategoriasRec();
+    const catEl = document.getElementById('recCadCat');
+    if (catEl) catEl.value = 'Outros';
     m.style.display = 'flex';
     m.classList.add('open');
     document.getElementById('recCadNome').focus();
