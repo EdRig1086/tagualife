@@ -1423,7 +1423,8 @@
             // período: últimos 90 dias (editável depois)
             const ate = new Date();
             const de = new Date();
-            de.setDate(de.getDate() - 90);
+            // últimos 120 dias (cobre trimestre +)
+            de.setDate(de.getDate() - 120);
             const deStr = de.toISOString().slice(0, 10);
             const ateStr = ate.toISOString().slice(0, 10);
             const deBR = de.toLocaleDateString('pt-BR');
@@ -1549,7 +1550,41 @@
             const topItensRet = Object.keys(porItemRet).map(k => ({
                 nome: k, qtd: porItemRet[k].qtd,
                 destStr: Object.keys(porItemRet[k].destinos).sort((a, b) => porItemRet[k].destinos[b] - porItemRet[k].destinos[a]).slice(0, 3).join(', ')
-            })).sort((a, b) => b.qtd - a.qtd).slice(0, 10);
+            })).sort((a, b) => b.qtd - a.qtd).slice(0, 15);
+            // ranking completo de colaboradores
+            const todosColab = Object.keys(porColab).map(k => ({
+                nome: k, ...porColab[k],
+                destStr: Object.keys(porColab[k].destinos).sort((a, b) => porColab[k].destinos[b] - porColab[k].destinos[a]).slice(0, 5).join(', ')
+            })).sort((a, b) => b.unid - a.unid);
+            // detalhe itens por colaborador
+            const itensPorColab = {};
+            saidas.forEach(s => {
+                const col = (s.colaborador || '—').trim();
+                if (!itensPorColab[col]) itensPorColab[col] = {};
+                (s.itens || []).forEach(it => {
+                    const nome = (it.descricao || it.item_nome || it.nome || '—').trim();
+                    const q = parseInt(it.quantidade) || 0;
+                    itensPorColab[col][nome] = (itensPorColab[col][nome] || 0) + q;
+                });
+            });
+            // empresas / destinos (todos, não só top 10)
+            const todosDest = Object.keys(porDestino).map(k => ({ nome: k, ...porDestino[k] }))
+                .sort((a, b) => b.unid - a.unid);
+            // análise consumo vs estoque
+            const consumoVsEstoque = Object.keys(porItemRet).map(nome => {
+                const consumo = porItemRet[nome].qtd;
+                const est = itens.find(i => (i.nome || '').toLowerCase() === nome.toLowerCase());
+                const estoqueAtual = est ? (parseInt(est.quantidade) || 0) : null;
+                let risco = '—';
+                if (estoqueAtual === null) risco = 'Não cadastrado';
+                else if (estoqueAtual === 0) risco = 'CRÍTICO — zerado';
+                else if (consumo >= estoqueAtual * 2) risco = 'CRÍTICO — reposição urgente';
+                else if (consumo >= estoqueAtual) risco = 'ALTO — consumo ≥ estoque';
+                else if (estoqueAtual <= (est.limite_alerta || 5)) risco = 'ALTO — abaixo do limite';
+                else if (consumo >= estoqueAtual * 0.5) risco = 'Moderado — monitorar';
+                else risco = 'OK';
+                return { nome, estoqueAtual, consumo, risco };
+            }).filter(x => x.consumo > 0).sort((a, b) => b.consumo - a.consumo).slice(0, 20);
             const meses = Object.keys(porMes).sort().map(ym => {
                 const [y, m] = ym.split('-');
                 const nomes = ['', 'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
@@ -1652,28 +1687,48 @@ ${meses.map(m => `<tr><td>${esc(m.label)}</td><td>${fmtN(m.saidas)}</td><td>${fm
 <tr style="font-weight:700;"><td>TOTAL</td><td>${fmtN(totalSaidas)}</td><td>${fmtN(totalUnidSaidas)}</td></tr>
 </tbody></table>
 
-<h3>5.3 Top 10 Colaboradores por Volume</h3>
+<h3>5.3 Ranking de Colaboradores por Volume de Saídas</h3>
 <table>
-<thead><tr><th>Colaborador</th><th>Saídas</th><th>Unidades</th><th>Principais destinos</th></tr></thead>
+<thead><tr><th>#</th><th>Colaborador</th><th>Saídas</th><th>Unidades</th><th>Principais Destinos</th></tr></thead>
 <tbody>
-${topColab.map(c => `<tr><td>${esc(c.nome)}</td><td>${fmtN(c.saidas)}</td><td>${fmtN(c.unid)}</td><td>${esc(c.destStr)}</td></tr>`).join('') || '<tr><td colspan="4">Sem dados</td></tr>'}
+${todosColab.map((c, i) => `<tr><td>${i + 1}</td><td><strong>${esc(c.nome)}</strong></td><td>${fmtN(c.saidas)}</td><td>${fmtN(c.unid)}</td><td>${esc(c.destStr)}</td></tr>`).join('') || '<tr><td colspan="5">Sem dados</td></tr>'}
 </tbody></table>
 
-<h3>5.4 Top 10 Destinos com Maior Consumo</h3>
+<h3>5.4 Detalhamento por Colaborador (itens retirados)</h3>
+${todosColab.slice(0, 25).map(c => {
+    const itensC = itensPorColab[c.nome] || {};
+    const lista = Object.keys(itensC).map(n => ({ n, q: itensC[n] })).sort((a, b) => b.q - a.q).slice(0, 12);
+    if (!lista.length) return '';
+    return `<h4 style="margin:10px 0 4px;font-size:10.5px;">${esc(c.nome)} — ${fmtN(c.saidas)} saídas · ${fmtN(c.unid)} unid.</h4>
+    <table><thead><tr><th>Item</th><th>Qtd</th></tr></thead><tbody>
+    ${lista.map(x => `<tr><td>${esc(x.n)}</td><td style="text-align:center;">${fmtN(x.q)}</td></tr>`).join('')}
+    </tbody></table>`;
+}).join('') || '<p>Sem detalhamento de itens por colaborador.</p>'}
+
+<h3>5.5 Destinos / Empresas com Maior Consumo</h3>
+<p class="sub">Agrupado pelo campo <strong>Uso / Destino</strong> das saídas (setores, empresas prestadoras, locais do condomínio).</p>
 <table>
-<thead><tr><th>Destino</th><th>Saídas</th><th>Unidades</th></tr></thead>
+<thead><tr><th>#</th><th>Destino / Empresa</th><th>Saídas</th><th>Unidades</th></tr></thead>
 <tbody>
-${topDest.map(d => `<tr><td>${esc(d.nome)}</td><td>${fmtN(d.saidas)}</td><td>${fmtN(d.unid)}</td></tr>`).join('') || '<tr><td colspan="3">Sem dados</td></tr>'}
+${todosDest.map((d, i) => `<tr><td>${i + 1}</td><td><strong>${esc(d.nome)}</strong></td><td>${fmtN(d.saidas)}</td><td>${fmtN(d.unid)}</td></tr>`).join('') || '<tr><td colspan="4">Sem dados</td></tr>'}
 </tbody></table>
 
-<h3>5.5 Itens Mais Retirados</h3>
+<h3>5.6 Itens Mais Retirados (Consolidado)</h3>
 <table>
 <thead><tr><th>Item</th><th>Qtd total</th><th>Principais destinos</th></tr></thead>
 <tbody>
 ${topItensRet.map(i => `<tr><td>${esc(i.nome)}</td><td>${fmtN(i.qtd)}</td><td>${esc(i.destStr)}</td></tr>`).join('') || '<tr><td colspan="3">Sem dados</td></tr>'}
 </tbody></table>
 
-<h2>6. Recomendações</h2>
+<h2>6. Análise de Consumo vs. Estoque</h2>
+<h3>6.1 Itens com Alto Consumo no Período</h3>
+<table>
+<thead><tr><th>Item</th><th>Estoque Atual</th><th>Consumo no Período</th><th>Risco</th></tr></thead>
+<tbody>
+${consumoVsEstoque.map(x => `<tr><td>${esc(x.nome)}</td><td>${x.estoqueAtual == null ? '—' : fmtN(x.estoqueAtual)}</td><td>${fmtN(x.consumo)}</td><td>${esc(x.risco)}</td></tr>`).join('') || '<tr><td colspan="4">Sem dados</td></tr>'}
+</tbody></table>
+
+<h2>7. Recomendações</h2>
 <ul>
 <li><strong>Reposição prioritária</strong> dos ${fmtN(nBaixo)} itens em baixa, começando pelas categorias com maior % crítico.</li>
 <li><strong>Revisar limites mínimos</strong> de itens de alto giro (consumo no período vs. estoque atual).</li>
