@@ -1538,11 +1538,11 @@
             const porMes = {};
             saidas.forEach(s => {
                 const col = (s.colaborador || '—').trim();
-                const dest = (s.destino || s.uso || '—').trim();
+                const destSaida = (s.destino || s.uso || '—').trim();
                 if (!porColab[col]) porColab[col] = { saidas: 0, unid: 0, destinos: {} };
                 porColab[col].saidas++;
-                if (!porDestino[dest]) porDestino[dest] = { saidas: 0, unid: 0 };
-                porDestino[dest].saidas++;
+                if (!porDestino[destSaida]) porDestino[destSaida] = { saidas: 0, unid: 0 };
+                porDestino[destSaida].saidas++;
                 const dt = s.data_saida || (s.criado_em || '').slice(0, 10);
                 if (dt) {
                     const ym = dt.slice(0, 7);
@@ -1551,8 +1551,11 @@
                 }
                 (s.itens || []).forEach(it => {
                     const q = parseInt(it.quantidade) || 0;
+                    // destino do item (linha) ou da saída
+                    const dest = (it.destino || it.uso || destSaida || '—').trim() || '—';
                     totalUnidSaidas += q;
                     porColab[col].unid += q;
+                    if (!porDestino[dest]) porDestino[dest] = { saidas: 0, unid: 0 };
                     porDestino[dest].unid += q;
                     if (dt) {
                         const ym = dt.slice(0, 7);
@@ -1744,6 +1747,21 @@ ${todosDest.map((d, i) => `<tr><td>${i + 1}</td><td><strong>${esc(d.nome)}</stro
 <tbody>
 ${topItensRet.map(i => `<tr><td>${esc(i.nome)}</td><td>${fmtN(i.qtd)}</td><td>${esc(i.destStr)}</td></tr>`).join('') || '<tr><td colspan="3">Sem dados</td></tr>'}
 </tbody></table>
+
+<h3>5.7 Destinos de cada item (para onde foi)</h3>
+<p class="sub">Lista de cada item retirado no período, com <strong>todos os destinos</strong> e quantidades.</p>
+${Object.keys(porItemRet).sort((a,b) => (porItemRet[b].qtd||0)-(porItemRet[a].qtd||0)).map(nome => {
+    const info = porItemRet[nome];
+    const dests = Object.keys(info.destinos || {}).map(d => ({ d, q: info.destinos[d] })).sort((a, b) => b.q - a.q);
+    if (!dests.length) return '';
+    return `<h4 style="margin:12px 0 4px;font-size:10.5px;">${esc(nome)} — total <strong>${fmtN(info.qtd)}</strong></h4>
+    <table><thead><tr><th>Destino / Empresa / Local</th><th>Qtd</th><th>%</th></tr></thead><tbody>
+    ${dests.map(x => {
+        const pct = info.qtd ? ((x.q / info.qtd) * 100).toFixed(1).replace('.', ',') : '0';
+        return `<tr><td>${esc(x.d)}</td><td style="text-align:center;">${fmtN(x.q)}</td><td style="text-align:center;">${pct}%</td></tr>`;
+    }).join('')}
+    </tbody></table>`;
+}).sort((a, b) => 0).join('') || '<p>Sem movimentação de itens no período.</p>'}
 
 <h2>6. Análise de Consumo vs. Estoque</h2>
 <h3>6.1 Itens com Alto Consumo no Período</h3>
