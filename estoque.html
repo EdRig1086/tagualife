@@ -1431,41 +1431,66 @@
             const ateBR = ate.toLocaleDateString('pt-BR');
             const hojeBR = ate.toLocaleDateString('pt-BR');
 
-            // carrega saídas do período
+            // ===== SAÍDAS DO BANCO (mesmas tabelas da página saida.html) =====
+            // tabelas: public.saidas + public.saida_itens
             let saidas = [];
             try {
-                let q = sb.from('saidas').select('id,colaborador,destino,uso,data_saida,criado_em').gte('data_saida', deStr).lte('data_saida', ateStr).order('data_saida', { ascending: false });
+                // 1) tenta join (como na página de saída)
+                let q = sb.from('saidas').select('*, saida_itens(*)').order('criado_em', { ascending: false }).limit(5000);
                 if (typeof comCondominio === 'function') q = comCondominio(q);
                 let { data, error } = await q;
                 if (error) {
-                    // tenta por criado_em
-                    let q2 = sb.from('saidas').select('id,colaborador,destino,uso,data_saida,criado_em').gte('criado_em', deStr).order('criado_em', { ascending: false });
+                    console.warn('join saida_itens falhou, busca separada', error.message);
+                    let q2 = sb.from('saidas').select('*').order('criado_em', { ascending: false }).limit(5000);
                     if (typeof comCondominio === 'function') q2 = comCondominio(q2);
                     const r2 = await q2;
-                    data = r2.data;
+                    data = r2.data || [];
+                    if (data.length) {
+                        const ids = data.map(r => r.id).filter(Boolean);
+                        let todosItens = [];
+                        for (let i = 0; i < ids.length; i += 150) {
+                            const chunk = ids.slice(i, i + 150);
+                            const { data: its } = await sb.from('saida_itens').select('*').in('saida_id', chunk);
+                            todosItens = todosItens.concat(its || []);
+                        }
+                        const map = {};
+                        todosItens.forEach(it => {
+                            if (!map[it.saida_id]) map[it.saida_id] = [];
+                            map[it.saida_id].push(it);
+                        });
+                        data = data.map(r => ({ ...r, saida_itens: map[r.id] || [] }));
+                    }
                 }
-                saidas = data || [];
-            } catch (e) { console.warn(e); }
-
-            // itens das saídas
-            let saidaItens = [];
-            if (saidas.length) {
-                const ids = saidas.map(s => s.id).filter(Boolean);
-                // em lotes de 100
-                for (let i = 0; i < ids.length; i += 100) {
-                    const chunk = ids.slice(i, i + 100);
-                    try {
-                        const { data } = await sb.from('saida_itens').select('saida_id,descricao,quantidade,item_nome,nome').in('saida_id', chunk);
-                        saidaItens = saidaItens.concat(data || []);
-                    } catch (e) { console.warn(e); }
-                }
+                // normaliza campos (colaborador, destino/empresa, itens)
+                saidas = (data || []).map(r => {
+                    const itensRel = r.saida_itens || r.itens || [];
+                    return {
+                        id: r.id,
+                        colaborador: r.colaborador || r.nome_colaborador || '—',
+                        destino: r.destino || r.uso || r.local || '—',
+                        uso: r.uso || r.destino || '',
+                        data_saida: r.data_saida || (r.criado_em || '').toString().slice(0, 10),
+                        criado_em: r.criado_em,
+                        almoxarife: r.almoxarife || '',
+                        itens: itensRel.map(i => ({
+                            descricao: i.descricao || i.item_nome || i.nome || i.item || '—',
+                            item_nome: i.item_nome || i.descricao || i.nome || '',
+                            nome: i.nome || i.descricao || i.item_nome || '',
+                            quantidade: parseInt(i.quantidade) || 0,
+                            destino: i.destino || i.uso || r.destino || r.uso || ''
+                        }))
+                    };
+                });
+                // filtra período no cliente (garante pegar mesmo se data_saida/criado_em variar)
+                saidas = saidas.filter(s => {
+                    const d = (s.data_saida || (s.criado_em || '').toString().slice(0, 10) || '').slice(0, 10);
+                    if (!d) return true;
+                    return d >= deStr && d <= ateStr;
+                });
+            } catch (e) {
+                console.error('Erro ao carregar saídas do banco:', e);
+                mostrarToast('⚠️ Não foi possível carregar saídas do banco', 'warning');
             }
-            const itensPorSaida = {};
-            saidaItens.forEach(it => {
-                if (!itensPorSaida[it.saida_id]) itensPorSaida[it.saida_id] = [];
-                itensPorSaida[it.saida_id].push(it);
-            });
-            saidas = saidas.map(s => ({ ...s, itens: itensPorSaida[s.id] || [] }));
 
             // ===== 1. Visão geral =====
             const totalItens = itens.length;
@@ -1744,7 +1769,7 @@ No período de ${deBR} a ${ateBR} foram registradas <strong>${fmtN(totalSaidas)}
 
 <div class="footer">
 Elaborado por: Sistema de Gestão de Estoque — TaguáLife<br>
-Data: ${hojeBR} · Fontes: tabela estoque + saidas / saida_itens (Supabase)
+Data: ${hojeBR} · Fontes: estoque + saidas + saida_itens (banco Supabase — mesmas da página Saída)
 </div>
 </body></html>`;
 
