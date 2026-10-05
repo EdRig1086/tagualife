@@ -1179,7 +1179,7 @@
                     <button class="btn-relatorio" onclick="gerarRelatorioPDF('colaborador')">
                         <i class="fas fa-user"></i> Por colaborador
                     </button>
-                    <button class="btn-relatorio" onclick="gerarRelatorioDetalhadoSaidas()" style="background:#0d5c63;border-color:#0d5c63;">
+                    <button class="btn-relatorio" onclick="gerarRelatorioDetalhadoSaidas()" style="background:#7A816E;border-color:#7A816E;">
                         <i class="fas fa-list-alt"></i> Relatório detalhado
                     </button>
                 </div>
@@ -3366,30 +3366,30 @@ function mostrarToast(mensagem, tipo = 'success') {
 <title>Relatório Detalhado de Saídas - TaguáLife</title>
 <style>
 @page { size: A4; margin: 12mm; }
-body { font-family: Inter, Arial, sans-serif; color: #1a2e2b; font-size: 10px; margin: 0; padding: 16px 20px; }
-h1 { text-align: center; color: #0d5c63; font-size: 20px; margin: 8px 0 4px; letter-spacing: 0.5px; }
-.sub { text-align: center; color: #5a7a76; margin-bottom: 16px; font-size: 11px; }
+body { font-family: Inter, Arial, sans-serif; color: #191D1B; font-size: 10px; margin: 0; padding: 16px 20px; background: #FBFBF7; }
+h1 { text-align: center; color: #191D1B; font-size: 20px; margin: 8px 0 4px; letter-spacing: 0.5px; }
+.sub { text-align: center; color: #7A816E; margin-bottom: 16px; font-size: 11px; }
 .box {
-  max-width: 360px; margin: 0 auto 20px; background: #f0f7f6; border: 1px solid #c5ddd9;
-  border-radius: 10px; padding: 12px 16px; font-size: 11px; color: #0d5c63; line-height: 1.55;
+  max-width: 380px; margin: 0 auto 20px; background: #F0F2EA; border: 1px solid #D8DCCE;
+  border-radius: 10px; padding: 12px 16px; font-size: 11px; color: #191D1B; line-height: 1.55;
 }
-.linha { border: 0; border-top: 3px solid #0d5c63; margin: 16px 0 20px; }
+.linha { border: 0; border-top: 3px solid #7A816E; margin: 16px 0 20px; }
 h2 {
-  font-size: 13px; color: #0d5c63; margin: 18px 0 8px; padding: 6px 10px;
-  background: linear-gradient(90deg, #e6f3f2, #f8fbfb); border-left: 4px solid #0d5c63; border-radius: 0 6px 6px 0;
+  font-size: 13px; color: #191D1B; margin: 18px 0 8px; padding: 6px 10px;
+  background: linear-gradient(90deg, #C1CE83, #E8EBE0); border-left: 4px solid #7A816E; border-radius: 0 6px 6px 0;
 }
-h3 { font-size: 11px; color: #2a4a47; margin: 12px 0 6px; background: #eef5f4; padding: 5px 8px; border-radius: 4px; }
+h3 { font-size: 11px; color: #191D1B; margin: 12px 0 6px; background: #E8EBE0; padding: 5px 8px; border-radius: 4px; }
 .cards { display: flex; gap: 10px; flex-wrap: wrap; margin: 12px 0 18px; justify-content: space-between; }
 .card {
-  flex: 1; min-width: 100px; text-align: center; background: #fff; border: 1px solid #c5ddd9;
-  border-radius: 10px; padding: 12px 8px; box-shadow: 0 1px 3px rgba(0,0,0,.04);
+  flex: 1; min-width: 100px; text-align: center; background: #FBFBF7; border: 1px solid #D8DCCE;
+  border-radius: 10px; padding: 12px 8px; box-shadow: 0 1px 3px rgba(25,29,27,.06);
 }
-.card .n { font-size: 22px; font-weight: 800; color: #0d5c63; }
-.card .l { font-size: 9px; color: #5a7a76; text-transform: uppercase; margin-top: 2px; letter-spacing: 0.3px; }
+.card .n { font-size: 22px; font-weight: 800; color: #191D1B; }
+.card .l { font-size: 9px; color: #7A816E; text-transform: uppercase; margin-top: 2px; letter-spacing: 0.3px; }
 table { width: 100%; border-collapse: collapse; margin: 6px 0 14px; table-layout: fixed; }
-th { background: #0d5c63; color: #fff; text-align: left; padding: 6px 7px; font-size: 9.5px; word-wrap: break-word; }
-td { border-bottom: 1px solid #dce8e6; padding: 5px 7px; vertical-align: top; word-wrap: break-word; overflow-wrap: break-word; }
-tr:nth-child(even) td { background: #f5fafa; }
+th { background: #7A816E; color: #FBFBF7; text-align: left; padding: 6px 7px; font-size: 9.5px; word-wrap: break-word; }
+td { border-bottom: 1px solid #D8DCCE; padding: 5px 7px; vertical-align: top; word-wrap: break-word; overflow-wrap: break-word; }
+tr:nth-child(even) td { background: #F0F2EA; }
 col.c-nro { width: 8%; }
 col.c-data { width: 11%; }
 col.c-colab { width: 18%; }
@@ -3397,11 +3397,11 @@ col.c-item { width: 32%; }
 col.c-qtd { width: 8%; }
 col.c-dest { width: 23%; }
 td.c-qtd, th.c-qtd { text-align: center; }
-.footer { margin-top: 24px; font-size: 9px; color: #7a9a96; text-align: center; border-top: 1px solid #dce8e6; padding-top: 8px; }
+.footer { margin-top: 24px; font-size: 9px; color: #7A816E; text-align: center; border-top: 1px solid #D8DCCE; padding-top: 8px; }
 @media print { .no-print { display: none !important; } body { padding: 0; } }
 </style></head><body>
 <div class="no-print" style="margin-bottom:12px;text-align:center;">
-  <button onclick="window.print()" style="padding:8px 18px;background:#0d5c63;color:#fff;border:0;border-radius:8px;cursor:pointer;font-weight:700;">🖨 Imprimir / PDF</button>
+  <button onclick="window.print()" style="padding:8px 18px;background:#191D1B;color:#FBFBF7;border:0;border-radius:8px;cursor:pointer;font-weight:700;">🖨 Imprimir / PDF</button>
 </div>
 <h1>RELATÓRIO DETALHADO DE SAÍDAS</h1>
 <div class="sub">Condomínio TaguáLife · Life Conceito em Gestão Condominial</div>
