@@ -1755,10 +1755,9 @@ ${Object.keys(porItemRet).sort((a,b) => (porItemRet[b].qtd||0)-(porItemRet[a].qt
     const dests = Object.keys(info.destinos || {}).map(d => ({ d, q: info.destinos[d] })).sort((a, b) => b.q - a.q);
     if (!dests.length) return '';
     return `<h4 style="margin:12px 0 4px;font-size:10.5px;">${esc(nome)} — total <strong>${fmtN(info.qtd)}</strong></h4>
-    <table><thead><tr><th>Destino / Empresa / Local</th><th>Qtd</th><th>%</th></tr></thead><tbody>
+    <table><thead><tr><th>Destino / Empresa / Local</th><th>Qtd</th></tr></thead><tbody>
     ${dests.map(x => {
-        const pct = info.qtd ? ((x.q / info.qtd) * 100).toFixed(1).replace('.', ',') : '0';
-        return `<tr><td>${esc(x.d)}</td><td style="text-align:center;">${fmtN(x.q)}</td><td style="text-align:center;">${pct}%</td></tr>`;
+        return `<tr><td>${esc(x.d)}</td><td style="text-align:center;">${fmtN(x.q)}</td></tr>`;
     }).join('')}
     </tbody></table>`;
 }).sort((a, b) => 0).join('') || '<p>Sem movimentação de itens no período.</p>'}
