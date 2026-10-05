@@ -1179,6 +1179,9 @@
                     <button class="btn-relatorio" onclick="gerarRelatorioPDF('colaborador')">
                         <i class="fas fa-user"></i> Por colaborador
                     </button>
+                    <button class="btn-relatorio" onclick="gerarRelatorioDetalhadoSaidas()" style="background:#0d5c63;border-color:#0d5c63;">
+                        <i class="fas fa-list-alt"></i> Relatório detalhado
+                    </button>
                 </div>
             </div>
             
@@ -3184,6 +3187,264 @@ function mostrarToast(mensagem, tipo = 'success') {
     // ============================================
     // GERAR RELATÓRIO - USA DATA DE SAÍDA
     // ============================================
+    
+    async function gerarRelatorioDetalhadoSaidas() {
+        try {
+            mostrarToast('📊 Gerando relatório detalhado de saídas...', 'info');
+            let protocolos = (await carregarSaidasDB()).map(p => ({
+                ...p,
+                itens: Array.isArray(p.itens) ? p.itens : []
+            }));
+            if (!protocolos.length) {
+                mostrarToast('⚠️ Nenhum registro de saída encontrado!', 'warning');
+                return;
+            }
+
+            // período padrão: últimos 120 dias
+            const ate = new Date();
+            const de = new Date();
+            de.setDate(de.getDate() - 120);
+            const deStr = de.toISOString().slice(0, 10);
+            const ateStr = ate.toISOString().slice(0, 10);
+            const deBR = de.toLocaleDateString('pt-BR');
+            const ateBR = ate.toLocaleDateString('pt-BR');
+            const geradoEm = new Date().toLocaleString('pt-BR');
+
+            protocolos = protocolos.filter(p => {
+                const d = parseDataSaida(p);
+                if (!d) return true;
+                const iso = d.toISOString().slice(0, 10);
+                return iso >= deStr && iso <= ateStr;
+            });
+
+            // expand lines: one row per item
+            const linhas = [];
+            protocolos.forEach((p, idx) => {
+                const nro = p.numero || p.n || p.id || (idx + 1);
+                const data = parseDataSaida(p);
+                const dataBR = data ? data.toLocaleDateString('pt-BR') : (p.dataSaida || '—');
+                const colab = (p.colaborador || '—').trim();
+                // destino padrão da saída (pode vir nos itens)
+                let destPadrao = (p.destino || p.uso || '').trim();
+                if (!destPadrao && p.itens && p.itens[0]) {
+                    destPadrao = (p.itens[0].destino || p.itens[0].uso || '').trim();
+                }
+                if (!destPadrao) destPadrao = 'sem destino';
+
+                const itens = (p.itens && p.itens.length) ? p.itens : [];
+                if (!itens.length) {
+                    linhas.push({
+                        nro, dataBR, dataObj: data, colaborador: colab,
+                        item: '(sem item registrado)', qtd: 0, destino: destPadrao
+                    });
+                    return;
+                }
+                itens.forEach(it => {
+                    // carregarSaidasDB usa: item, qtd, destino
+                    const nomeItem = (it.item || it.descricao || it.item_nome || it.nome || it.nome_do_item || '').trim() || '—';
+                    const qtdItem = parseInt(it.qtd != null ? it.qtd : it.quantidade, 10);
+                    linhas.push({
+                        nro,
+                        dataBR,
+                        dataObj: data,
+                        colaborador: colab,
+                        item: nomeItem,
+                        qtd: isNaN(qtdItem) ? 0 : qtdItem,
+                        destino: (it.destino || it.uso || destPadrao || 'sem destino').trim()
+                    });
+                });
+            });
+
+            const totalSaidas = protocolos.length;
+            const totalUnid = linhas.reduce((s, l) => s + (l.qtd || 0), 0);
+            const colabsSet = new Set(linhas.map(l => l.colaborador));
+            const nColabs = colabsSet.size;
+
+            // Classifica empresas conhecidas pelo nome do colaborador
+            const empresasKey = [
+                { key: 'mafi', titulo: 'MAFI Engenharia e Colaboradores', match: /mafi/i },
+                { key: 'atlas', titulo: 'Atlas Elevadores e Colaboradores', match: /atlas/i },
+                { key: 'hseng', titulo: 'HSENG e Colaboradores', match: /hseng|hs eng/i },
+                { key: 'wd', titulo: 'WD Piscinas', match: /wd\s*piscina|wd\s*piscinas/i },
+                { key: 'humana', titulo: 'Humana', match: /humana/i },
+                { key: 'oregon', titulo: 'Oregon', match: /oregon/i },
+                { key: 'life', titulo: 'Life / Gestão', match: /life\s*-|gestão condominial/i }
+            ];
+
+            function grupoEmpresa(nome) {
+                for (const e of empresasKey) {
+                    if (e.match.test(nome)) return e.key;
+                }
+                return null;
+            }
+
+            const porEmpresa = {};
+            const internos = {};
+            linhas.forEach(l => {
+                const g = grupoEmpresa(l.colaborador);
+                if (g) {
+                    if (!porEmpresa[g]) porEmpresa[g] = [];
+                    porEmpresa[g].push(l);
+                } else {
+                    if (!internos[l.colaborador]) internos[l.colaborador] = [];
+                    internos[l.colaborador].push(l);
+                }
+            });
+
+            // Outras empresas: se colaborador parece empresa (maiúsculas longas) — resto fica em internos
+            const almox = (document.getElementById('almoxarife') && document.getElementById('almoxarife').value) || 'Ednaldo de Souza';
+
+            function esc(s) {
+                return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+            }
+            function fmtN(n) { return (Number(n)||0).toLocaleString('pt-BR'); }
+
+            function tabelaLinhas(arr, comEmpresa) {
+                if (!arr || !arr.length) return '<p style="color:#7A816E;font-size:11px;">Sem registros neste grupo.</p>';
+                const col = `<colgroup>
+                  <col class="c-nro"><col class="c-data"><col class="c-colab"><col class="c-item"><col class="c-qtd"><col class="c-dest">
+                </colgroup>`;
+                const head = `<tr>
+                  <th class="c-nro">Nº</th><th class="c-data">Data</th>
+                  <th class="c-colab">Colaborador / Empresa</th>
+                  <th class="c-item">Item retirado</th>
+                  <th class="c-qtd">Qtd.</th><th class="c-dest">Destino</th>
+                </tr>`;
+                const body = arr.map(l => `<tr>
+                  <td class="c-nro">#${esc(String(l.nro).slice(0,8))}</td>
+                  <td class="c-data">${esc(l.dataBR)}</td>
+                  <td class="c-colab">${esc(l.colaborador)}</td>
+                  <td class="c-item">${esc(l.item)}</td>
+                  <td class="c-qtd">${fmtN(l.qtd)}</td>
+                  <td class="c-dest">${esc(l.destino)}</td>
+                </tr>`).join('');
+                return `<table>${col}<thead>${head}</thead><tbody>${body}</tbody></table>`;
+            }
+
+            function tabelaInterno(arr) {
+                if (!arr || !arr.length) return '';
+                const col = `<colgroup>
+                  <col class="c-nro"><col class="c-data"><col class="c-item" style="width:40%;"><col class="c-qtd"><col class="c-dest" style="width:25%;">
+                </colgroup>`;
+                const head = `<tr>
+                  <th class="c-nro">Nº</th><th class="c-data">Data</th>
+                  <th class="c-item">Item retirado</th>
+                  <th class="c-qtd">Qtd.</th><th class="c-dest">Destino</th>
+                </tr>`;
+                const body = arr.map(l => `<tr>
+                  <td class="c-nro">#${esc(String(l.nro).slice(0,8))}</td>
+                  <td class="c-data">${esc(l.dataBR)}</td>
+                  <td class="c-item">${esc(l.item)}</td>
+                  <td class="c-qtd">${fmtN(l.qtd)}</td>
+                  <td class="c-dest">${esc(l.destino)}</td>
+                </tr>`).join('');
+                return `<table>${col}<thead>${head}</thead><tbody>${body}</tbody></table>`;
+            }
+
+            let secEmp = '';
+            let num = 2;
+            empresasKey.forEach(e => {
+                const arr = porEmpresa[e.key];
+                if (!arr || !arr.length) return;
+                secEmp += `<h2>${num}. ${esc(e.titulo)}</h2>` + tabelaLinhas(arr, false);
+                num++;
+            });
+
+            // outras identificadas (já nas keys) — se sobrar algo com palavra empresa
+            secEmp += '';
+
+            let secInt = `<h2>${num}. Colaboradores Internos — Item por Item</h2>`;
+            const nomesInt = Object.keys(internos).sort((a, b) => internos[b].length - internos[a].length);
+            let sub = 1;
+            nomesInt.forEach(nome => {
+                const arr = internos[nome];
+                secInt += `<h3>${num}.${sub} ${esc(nome)}</h3>` + tabelaInterno(arr);
+                sub++;
+            });
+
+            const html = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="utf-8">
+<title>Relatório Detalhado de Saídas - TaguáLife</title>
+<style>
+@page { size: A4; margin: 12mm; }
+body { font-family: Inter, Arial, sans-serif; color: #1a2e2b; font-size: 10px; margin: 0; padding: 16px 20px; }
+h1 { text-align: center; color: #0d5c63; font-size: 20px; margin: 8px 0 4px; letter-spacing: 0.5px; }
+.sub { text-align: center; color: #5a7a76; margin-bottom: 16px; font-size: 11px; }
+.box {
+  max-width: 360px; margin: 0 auto 20px; background: #f0f7f6; border: 1px solid #c5ddd9;
+  border-radius: 10px; padding: 12px 16px; font-size: 11px; color: #0d5c63; line-height: 1.55;
+}
+.linha { border: 0; border-top: 3px solid #0d5c63; margin: 16px 0 20px; }
+h2 {
+  font-size: 13px; color: #0d5c63; margin: 18px 0 8px; padding: 6px 10px;
+  background: linear-gradient(90deg, #e6f3f2, #f8fbfb); border-left: 4px solid #0d5c63; border-radius: 0 6px 6px 0;
+}
+h3 { font-size: 11px; color: #2a4a47; margin: 12px 0 6px; background: #eef5f4; padding: 5px 8px; border-radius: 4px; }
+.cards { display: flex; gap: 10px; flex-wrap: wrap; margin: 12px 0 18px; justify-content: space-between; }
+.card {
+  flex: 1; min-width: 100px; text-align: center; background: #fff; border: 1px solid #c5ddd9;
+  border-radius: 10px; padding: 12px 8px; box-shadow: 0 1px 3px rgba(0,0,0,.04);
+}
+.card .n { font-size: 22px; font-weight: 800; color: #0d5c63; }
+.card .l { font-size: 9px; color: #5a7a76; text-transform: uppercase; margin-top: 2px; letter-spacing: 0.3px; }
+table { width: 100%; border-collapse: collapse; margin: 6px 0 14px; table-layout: fixed; }
+th { background: #0d5c63; color: #fff; text-align: left; padding: 6px 7px; font-size: 9.5px; word-wrap: break-word; }
+td { border-bottom: 1px solid #dce8e6; padding: 5px 7px; vertical-align: top; word-wrap: break-word; overflow-wrap: break-word; }
+tr:nth-child(even) td { background: #f5fafa; }
+col.c-nro { width: 8%; }
+col.c-data { width: 11%; }
+col.c-colab { width: 18%; }
+col.c-item { width: 32%; }
+col.c-qtd { width: 8%; }
+col.c-dest { width: 23%; }
+td.c-qtd, th.c-qtd { text-align: center; }
+.footer { margin-top: 24px; font-size: 9px; color: #7a9a96; text-align: center; border-top: 1px solid #dce8e6; padding-top: 8px; }
+@media print { .no-print { display: none !important; } body { padding: 0; } }
+</style></head><body>
+<div class="no-print" style="margin-bottom:12px;text-align:center;">
+  <button onclick="window.print()" style="padding:8px 18px;background:#0d5c63;color:#fff;border:0;border-radius:8px;cursor:pointer;font-weight:700;">🖨 Imprimir / PDF</button>
+</div>
+<h1>RELATÓRIO DETALHADO DE SAÍDAS</h1>
+<div class="sub">Condomínio TaguáLife · Life Conceito em Gestão Condominial</div>
+<div class="box">
+  <strong>Período:</strong> ${deBR} a ${ateBR}<br>
+  <strong>Documento gerado em:</strong> ${geradoEm}<br>
+  <strong>Almoxarife responsável:</strong> ${esc(almox)}<br>
+  <strong>Total de Saídas:</strong> ${fmtN(totalSaidas)} &nbsp;|&nbsp; <strong>Itens:</strong> ${fmtN(totalUnid)} unid.
+</div>
+<hr class="linha">
+
+<h2>1. Resumo Geral</h2>
+<div class="cards">
+  <div class="card"><div class="n">${fmtN(totalSaidas)}</div><div class="l">Total de Saídas</div></div>
+  <div class="card"><div class="n">${fmtN(totalUnid)}</div><div class="l">Itens (unid.)</div></div>
+  <div class="card"><div class="n">${fmtN(nColabs)}</div><div class="l">Colaboradores</div></div>
+  <div class="card"><div class="n">0</div><div class="l">Não cadastrados</div></div>
+</div>
+
+${secEmp}
+${secInt}
+
+<div class="footer">
+  Elaborado por: Sistema TaguáLife Center · Fontes: tabelas saidas + saida_itens (Supabase)<br>
+  ${geradoEm}
+</div>
+</body></html>`;
+
+            const w = window.open('', '_blank');
+            if (!w) {
+                mostrarToast('⚠️ Permita pop-up para abrir o relatório', 'warning');
+                return;
+            }
+            w.document.write(html);
+            w.document.close();
+            mostrarToast('✅ Relatório detalhado gerado!', 'success');
+        } catch (e) {
+            console.error(e);
+            mostrarToast('❌ Erro: ' + (e.message || e), 'danger');
+        }
+    }
+
+
     async function gerarRelatorioPDF(filtro = 'geral') {
         try {
             const protocolos = (await carregarSaidasDB()).map(p => ({
