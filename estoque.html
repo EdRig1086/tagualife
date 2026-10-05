@@ -425,6 +425,9 @@
                 <button type="button" class="btn-relatorio" onclick="gerarRelatorioEstoque('categoria_escolhida')">
                     <i class="fas fa-filter"></i> Categoria específica
                 </button>
+                <button type="button" class="btn-relatorio" onclick="gerarLevantamentoCompleto()" style="background:#2E5A3C;border-color:#2E5A3C;">
+                    <i class="fas fa-file-alt"></i> Levantamento completo
+                </button>
                 <button type="button" class="btn-relatorio" onclick="abrirHistoricoMovimentacoes()" style="background:#191D1B;border-color:#191D1B;color:#fff;">
                     <i class="fas fa-exchange-alt"></i> Movimentações
                 </button>
@@ -1410,6 +1413,301 @@
     function fecharModalRelatorio() {
         document.getElementById('modalRelatorio').classList.remove('ativo');
     }
+    
+    async function gerarLevantamentoCompleto() {
+        mostrarToast('📊 Gerando levantamento completo...', 'info');
+        try {
+            if (!itensCache || !itensCache.length) await carregarEstoque();
+            const itens = (itensCache || []).slice();
+
+            // período: últimos 90 dias (editável depois)
+            const ate = new Date();
+            const de = new Date();
+            de.setDate(de.getDate() - 90);
+            const deStr = de.toISOString().slice(0, 10);
+            const ateStr = ate.toISOString().slice(0, 10);
+            const deBR = de.toLocaleDateString('pt-BR');
+            const ateBR = ate.toLocaleDateString('pt-BR');
+            const hojeBR = ate.toLocaleDateString('pt-BR');
+
+            // carrega saídas do período
+            let saidas = [];
+            try {
+                let q = sb.from('saidas').select('id,colaborador,destino,uso,data_saida,criado_em').gte('data_saida', deStr).lte('data_saida', ateStr).order('data_saida', { ascending: false });
+                if (typeof comCondominio === 'function') q = comCondominio(q);
+                let { data, error } = await q;
+                if (error) {
+                    // tenta por criado_em
+                    let q2 = sb.from('saidas').select('id,colaborador,destino,uso,data_saida,criado_em').gte('criado_em', deStr).order('criado_em', { ascending: false });
+                    if (typeof comCondominio === 'function') q2 = comCondominio(q2);
+                    const r2 = await q2;
+                    data = r2.data;
+                }
+                saidas = data || [];
+            } catch (e) { console.warn(e); }
+
+            // itens das saídas
+            let saidaItens = [];
+            if (saidas.length) {
+                const ids = saidas.map(s => s.id).filter(Boolean);
+                // em lotes de 100
+                for (let i = 0; i < ids.length; i += 100) {
+                    const chunk = ids.slice(i, i + 100);
+                    try {
+                        const { data } = await sb.from('saida_itens').select('saida_id,descricao,quantidade,item_nome,nome').in('saida_id', chunk);
+                        saidaItens = saidaItens.concat(data || []);
+                    } catch (e) { console.warn(e); }
+                }
+            }
+            const itensPorSaida = {};
+            saidaItens.forEach(it => {
+                if (!itensPorSaida[it.saida_id]) itensPorSaida[it.saida_id] = [];
+                itensPorSaida[it.saida_id].push(it);
+            });
+            saidas = saidas.map(s => ({ ...s, itens: itensPorSaida[s.id] || [] }));
+
+            // ===== 1. Visão geral =====
+            const totalItens = itens.length;
+            const totalUnid = itens.reduce((s, i) => s + (parseInt(i.quantidade) || 0), 0);
+            const cats = {};
+            itens.forEach(i => {
+                const c = (i.categoria || 'Outros').trim() || 'Outros';
+                if (!cats[c]) cats[c] = { itens: 0, unidades: 0, baixo: 0 };
+                cats[c].itens++;
+                cats[c].unidades += parseInt(i.quantidade) || 0;
+                const lim = parseInt(i.limite_alerta) || 5;
+                if ((parseInt(i.quantidade) || 0) <= lim) cats[c].baixo++;
+            });
+            const nCats = Object.keys(cats).length;
+            const baixoList = itens.filter(i => (parseInt(i.quantidade) || 0) <= (parseInt(i.limite_alerta) || 5));
+            const nBaixo = baixoList.length;
+            const nOk = totalItens - nBaixo;
+            const pctBaixo = totalItens ? ((nBaixo / totalItens) * 100).toFixed(1).replace('.', ',') : '0';
+            const pctOk = totalItens ? ((nOk / totalItens) * 100).toFixed(1).replace('.', ',') : '0';
+
+            // ===== 2. Por categoria =====
+            const catRows = Object.keys(cats).sort((a, b) => cats[b].itens - cats[a].itens).map(c => {
+                const x = cats[c];
+                const pct = x.itens ? ((x.baixo / x.itens) * 100).toFixed(1).replace('.', ',') : '0';
+                return { nome: c, ...x, pct };
+            });
+
+            // ===== 3. Maior volume =====
+            const topVolume = itens.slice().sort((a, b) => (parseInt(b.quantidade) || 0) - (parseInt(a.quantidade) || 0)).slice(0, 15);
+
+            // ===== 4. Baixo por categoria =====
+            const baixoPorCat = {};
+            baixoList.forEach(i => {
+                const c = (i.categoria || 'Outros').trim() || 'Outros';
+                if (!baixoPorCat[c]) baixoPorCat[c] = [];
+                baixoPorCat[c].push(i);
+            });
+
+            // ===== 5. Movimentação =====
+            let totalSaidas = saidas.length;
+            let totalUnidSaidas = 0;
+            const porColab = {};
+            const porDestino = {};
+            const porItemRet = {};
+            const porMes = {};
+            saidas.forEach(s => {
+                const col = (s.colaborador || '—').trim();
+                const dest = (s.destino || s.uso || '—').trim();
+                if (!porColab[col]) porColab[col] = { saidas: 0, unid: 0, destinos: {} };
+                porColab[col].saidas++;
+                if (!porDestino[dest]) porDestino[dest] = { saidas: 0, unid: 0 };
+                porDestino[dest].saidas++;
+                const dt = s.data_saida || (s.criado_em || '').slice(0, 10);
+                if (dt) {
+                    const ym = dt.slice(0, 7);
+                    if (!porMes[ym]) porMes[ym] = { saidas: 0, unid: 0 };
+                    porMes[ym].saidas++;
+                }
+                (s.itens || []).forEach(it => {
+                    const q = parseInt(it.quantidade) || 0;
+                    totalUnidSaidas += q;
+                    porColab[col].unid += q;
+                    porDestino[dest].unid += q;
+                    if (dt) {
+                        const ym = dt.slice(0, 7);
+                        if (porMes[ym]) porMes[ym].unid += q;
+                    }
+                    const nome = (it.descricao || it.item_nome || it.nome || '—').trim();
+                    if (!porItemRet[nome]) porItemRet[nome] = { qtd: 0, destinos: {} };
+                    porItemRet[nome].qtd += q;
+                    porItemRet[nome].destinos[dest] = (porItemRet[nome].destinos[dest] || 0) + q;
+                    porColab[col].destinos[dest] = (porColab[col].destinos[dest] || 0) + q;
+                });
+            });
+            const nColabs = Object.keys(porColab).length;
+            const topColab = Object.keys(porColab).map(k => ({
+                nome: k, ...porColab[k],
+                destStr: Object.keys(porColab[k].destinos).sort((a, b) => porColab[k].destinos[b] - porColab[k].destinos[a]).slice(0, 3).join(', ')
+            })).sort((a, b) => b.unid - a.unid).slice(0, 10);
+            const topDest = Object.keys(porDestino).map(k => ({ nome: k, ...porDestino[k] }))
+                .sort((a, b) => b.unid - a.unid).slice(0, 10);
+            const topItensRet = Object.keys(porItemRet).map(k => ({
+                nome: k, qtd: porItemRet[k].qtd,
+                destStr: Object.keys(porItemRet[k].destinos).sort((a, b) => porItemRet[k].destinos[b] - porItemRet[k].destinos[a]).slice(0, 3).join(', ')
+            })).sort((a, b) => b.qtd - a.qtd).slice(0, 10);
+            const meses = Object.keys(porMes).sort().map(ym => {
+                const [y, m] = ym.split('-');
+                const nomes = ['', 'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+                return { label: (nomes[parseInt(m, 10)] || m) + '/' + y, ...porMes[ym] };
+            });
+
+            // ===== HTML =====
+            function esc(s) {
+                return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            }
+            function fmtN(n) { return (Number(n) || 0).toLocaleString('pt-BR'); }
+
+            let secBaixo = '';
+            Object.keys(baixoPorCat).sort().forEach(c => {
+                const lista = baixoPorCat[c].sort((a, b) => (a.nome || '').localeCompare(b.nome || '', 'pt-BR'));
+                secBaixo += '<h3>4.' + (Object.keys(baixoPorCat).indexOf(c) + 1) + ' ' + esc(c) + ' (' + lista.length + ' itens em baixa)</h3>';
+                secBaixo += '<table><thead><tr><th>Item</th><th>Qtd</th><th>Limite</th></tr></thead><tbody>';
+                lista.forEach(i => {
+                    secBaixo += '<tr><td>' + esc(i.nome) + '</td><td style="text-align:center;">' + fmtN(i.quantidade) + ' ' + esc(i.unidade || 'UN') +
+                        '</td><td style="text-align:center;">' + fmtN(i.limite_alerta || 5) + '</td></tr>';
+                });
+                secBaixo += '</tbody></table>';
+            });
+
+            const html = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="utf-8">
+<title>Levantamento de Estoque e Movimentação · TaguáLife</title>
+<style>
+@page { size: A4; margin: 14mm; }
+body { font-family: Inter, Arial, sans-serif; color: #191D1B; font-size: 10.5px; line-height: 1.35; margin: 0; padding: 12px 16px; }
+h1 { font-size: 16px; margin: 0 0 4px; color: #191D1B; }
+h2 { font-size: 12.5px; margin: 18px 0 8px; padding-bottom: 4px; border-bottom: 2px solid #7A816E; color: #3d4538; }
+h3 { font-size: 11px; margin: 12px 0 6px; color: #5a614e; }
+.sub { color: #7A816E; margin-bottom: 12px; font-size: 10px; }
+table { width: 100%; border-collapse: collapse; margin: 6px 0 10px; }
+th { background: #7A816E; color: #fff; text-align: left; padding: 5px 7px; font-size: 10px; }
+td { border-bottom: 1px solid #D8DCCE; padding: 4px 7px; vertical-align: top; }
+tr:nth-child(even) td { background: #F5F7F0; }
+.alerta { background: #FFF3CD; border-left: 4px solid #C1A83C; padding: 8px 10px; margin: 8px 0 12px; font-size: 10px; }
+.ok { background: #E8F5E9; border-left: 4px solid #2E7D32; padding: 8px 10px; margin: 8px 0; font-size: 10px; }
+ul { margin: 4px 0 10px 16px; padding: 0; }
+li { margin-bottom: 3px; }
+.footer { margin-top: 20px; padding-top: 8px; border-top: 1px solid #D8DCCE; font-size: 9px; color: #7A816E; }
+.badge-crit { color: #8B3A3A; font-weight: 700; }
+@media print { .no-print { display: none !important; } body { padding: 0; } }
+</style></head><body>
+<div class="no-print" style="margin-bottom:12px;">
+  <button onclick="window.print()" style="padding:8px 16px;background:#191D1B;color:#fff;border:0;border-radius:8px;cursor:pointer;font-weight:700;">🖨 Imprimir / PDF</button>
+</div>
+<h1>Levantamento de Estoque e Movimentação</h1>
+<div class="sub"><strong>Condomínio TaguáLife · Life Conceito em Gestão Condominial</strong><br>
+Período analisado: ${deBR} a ${ateBR} · Elaborado em: ${hojeBR}</div>
+
+<h2>1. Visão Geral do Estoque Atual</h2>
+<table>
+<tr><th>Indicador</th><th>Valor</th></tr>
+<tr><td>Total de itens cadastrados</td><td><strong>${fmtN(totalItens)}</strong></td></tr>
+<tr><td>Total de unidades em estoque</td><td><strong>${fmtN(totalUnid)}</strong></td></tr>
+<tr><td>Categorias</td><td><strong>${fmtN(nCats)}</strong></td></tr>
+<tr><td>Itens com baixo estoque</td><td class="badge-crit"><strong>${fmtN(nBaixo)} (${pctBaixo}% do total)</strong></td></tr>
+<tr><td>Itens em nível OK</td><td><strong>${fmtN(nOk)} (${pctOk}% do total)</strong></td></tr>
+</table>
+${nBaixo > totalItens * 0.4 ? `<div class="alerta"><strong>Alerta crítico:</strong> ${fmtN(nBaixo)} de ${fmtN(totalItens)} itens (${pctBaixo}%) estão no limite ou abaixo do mínimo. Necessária reposição prioritária.</div>` : `<div class="ok">Situação de estoque sob controle proporcionalmente.</div>`}
+
+<h2>2. Estoque por Categoria</h2>
+<table>
+<thead><tr><th>Categoria</th><th>Itens</th><th>Unidades</th><th>Baixo Estoque</th><th>% Baixo</th></tr></thead>
+<tbody>
+${catRows.map(c => `<tr><td>${esc(c.nome)}</td><td>${fmtN(c.itens)}</td><td>${fmtN(c.unidades)}</td><td>${fmtN(c.baixo)}</td><td>${c.pct}%</td></tr>`).join('')}
+<tr style="font-weight:700;background:#E8EBE0;"><td>TOTAL</td><td>${fmtN(totalItens)}</td><td>${fmtN(totalUnid)}</td><td>${fmtN(nBaixo)}</td><td>${pctBaixo}%</td></tr>
+</tbody></table>
+<div class="sub"><strong>Destaques:</strong>
+<ul>
+${catRows.slice(0, 5).map(c => `<li><strong>${esc(c.nome)}</strong>: ${fmtN(c.itens)} itens, ${fmtN(c.unidades)} unid., ${c.pct}% em baixa.</li>`).join('')}
+</ul></div>
+
+<h2>3. Itens com Maior Volume em Estoque</h2>
+<table>
+<thead><tr><th>Item</th><th>Qtd</th><th>Categoria</th></tr></thead>
+<tbody>
+${topVolume.map(i => `<tr><td>${esc(i.nome)}</td><td>${fmtN(i.quantidade)} ${esc(i.unidade || 'UN')}</td><td>${esc(i.categoria || '—')}</td></tr>`).join('')}
+</tbody></table>
+
+<h2>4. Itens em Baixa — Prioridades de Reposição</h2>
+${secBaixo || '<p>Nenhum item em baixa no momento.</p>'}
+
+<h2>5. Movimentação de Saídas (${deBR} a ${ateBR})</h2>
+<h3>5.1 Indicadores Gerais</h3>
+<table>
+<tr><th>Indicador</th><th>Valor</th></tr>
+<tr><td>Total de saídas registradas</td><td><strong>${fmtN(totalSaidas)}</strong></td></tr>
+<tr><td>Total de unidades retiradas</td><td><strong>${fmtN(totalUnidSaidas)}</strong></td></tr>
+<tr><td>Colaboradores envolvidos</td><td><strong>${fmtN(nColabs)}</strong></td></tr>
+</table>
+
+<h3>5.2 Saídas por Mês</h3>
+<table>
+<thead><tr><th>Mês</th><th>Saídas</th><th>Unidades</th></tr></thead>
+<tbody>
+${meses.map(m => `<tr><td>${esc(m.label)}</td><td>${fmtN(m.saidas)}</td><td>${fmtN(m.unid)}</td></tr>`).join('') || '<tr><td colspan="3">Sem dados no período</td></tr>'}
+<tr style="font-weight:700;"><td>TOTAL</td><td>${fmtN(totalSaidas)}</td><td>${fmtN(totalUnidSaidas)}</td></tr>
+</tbody></table>
+
+<h3>5.3 Top 10 Colaboradores por Volume</h3>
+<table>
+<thead><tr><th>Colaborador</th><th>Saídas</th><th>Unidades</th><th>Principais destinos</th></tr></thead>
+<tbody>
+${topColab.map(c => `<tr><td>${esc(c.nome)}</td><td>${fmtN(c.saidas)}</td><td>${fmtN(c.unid)}</td><td>${esc(c.destStr)}</td></tr>`).join('') || '<tr><td colspan="4">Sem dados</td></tr>'}
+</tbody></table>
+
+<h3>5.4 Top 10 Destinos com Maior Consumo</h3>
+<table>
+<thead><tr><th>Destino</th><th>Saídas</th><th>Unidades</th></tr></thead>
+<tbody>
+${topDest.map(d => `<tr><td>${esc(d.nome)}</td><td>${fmtN(d.saidas)}</td><td>${fmtN(d.unid)}</td></tr>`).join('') || '<tr><td colspan="3">Sem dados</td></tr>'}
+</tbody></table>
+
+<h3>5.5 Itens Mais Retirados</h3>
+<table>
+<thead><tr><th>Item</th><th>Qtd total</th><th>Principais destinos</th></tr></thead>
+<tbody>
+${topItensRet.map(i => `<tr><td>${esc(i.nome)}</td><td>${fmtN(i.qtd)}</td><td>${esc(i.destStr)}</td></tr>`).join('') || '<tr><td colspan="3">Sem dados</td></tr>'}
+</tbody></table>
+
+<h2>6. Recomendações</h2>
+<ul>
+<li><strong>Reposição prioritária</strong> dos ${fmtN(nBaixo)} itens em baixa, começando pelas categorias com maior % crítico.</li>
+<li><strong>Revisar limites mínimos</strong> de itens de alto giro (consumo no período vs. estoque atual).</li>
+<li><strong>Monitorar destinos</strong> de maior consumo e padronizar cadastro de itens.</li>
+<li><strong>Relatório mensal</strong> para acompanhar evolução de estoque e saídas.</li>
+</ul>
+
+<h2>7. Conclusão</h2>
+<p>O estoque do Condomínio TaguáLife apresenta <strong>${fmtN(totalUnid)}</strong> unidades em <strong>${fmtN(totalItens)}</strong> itens
+(${fmtN(nCats)} categorias), com <strong>${pctBaixo}%</strong> dos itens em baixa.
+No período de ${deBR} a ${ateBR} foram registradas <strong>${fmtN(totalSaidas)}</strong> saídas
+(${fmtN(totalUnidSaidas)} unidades retiradas).</p>
+
+<div class="footer">
+Elaborado por: Sistema de Gestão de Estoque — TaguáLife<br>
+Data: ${hojeBR} · Fontes: tabela estoque + saidas / saida_itens (Supabase)
+</div>
+</body></html>`;
+
+            const w = window.open('', '_blank');
+            if (!w) {
+                mostrarToast('⚠️ Permita pop-up para abrir o relatório', 'warning');
+                return;
+            }
+            w.document.write(html);
+            w.document.close();
+            mostrarToast('✅ Levantamento gerado!', 'success');
+        } catch (e) {
+            console.error(e);
+            mostrarToast('❌ Erro ao gerar: ' + (e.message || e), 'danger');
+        }
+    }
+
+
     function imprimirRelatorioEstoque() {
         const conteudo = document.getElementById('relatorioConteudo');
         if (!conteudo || !conteudo.innerHTML.trim()) {
