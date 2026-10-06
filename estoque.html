@@ -428,6 +428,9 @@
                 <button type="button" class="btn-relatorio" onclick="gerarLevantamentoCompleto()" style="background:#2E5A3C;border-color:#2E5A3C;">
                     <i class="fas fa-file-alt"></i> Levantamento completo
                 </button>
+                <button type="button" class="btn-relatorio" onclick="gerarSugestaoCompra()" style="background:#8B6914;border-color:#8B6914;">
+                    <i class="fas fa-cart-plus"></i> Sugestão de compra
+                </button>
                 <button type="button" class="btn-relatorio" onclick="abrirHistoricoMovimentacoes()" style="background:#191D1B;border-color:#191D1B;color:#fff;">
                     <i class="fas fa-exchange-alt"></i> Movimentações
                 </button>
@@ -1414,6 +1417,100 @@
         document.getElementById('modalRelatorio').classList.remove('ativo');
     }
     
+    
+    function abrirSeletorPeriodoEstoque() {
+        return new Promise((resolve) => {
+            const ate = new Date();
+            const de = new Date();
+            de.setDate(de.getDate() - 120);
+            const overlay = document.createElement('div');
+            overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9999;display:flex;align-items:center;justify-content:center;padding:1rem;';
+            overlay.innerHTML = `
+                <div style="background:var(--bg-card,#FBFBF7);color:var(--text-primary,#191D1B);border-radius:12px;padding:1.2rem;min-width:300px;border:1px solid #D8DCCE;font-family:Inter,sans-serif;">
+                    <h3 style="margin:0 0 0.8rem;font-size:0.95rem;"><i class="fas fa-calendar-range"></i> Período do levantamento</h3>
+                    <label style="font-size:0.75rem;font-weight:600;display:block;margin-bottom:0.2rem;">Data inicial</label>
+                    <input type="date" id="levDe" value="${de.toISOString().slice(0,10)}" style="width:100%;padding:0.45rem;margin-bottom:0.5rem;border-radius:8px;border:1px solid #D8DCCE;font-family:inherit;" />
+                    <label style="font-size:0.75rem;font-weight:600;display:block;margin-bottom:0.2rem;">Data final</label>
+                    <input type="date" id="levAte" value="${ate.toISOString().slice(0,10)}" style="width:100%;padding:0.45rem;margin-bottom:0.8rem;border-radius:8px;border:1px solid #D8DCCE;font-family:inherit;" />
+                    <div style="display:flex;gap:0.5rem;justify-content:flex-end;">
+                        <button type="button" id="levCancel" style="padding:0.4rem 0.8rem;border-radius:8px;border:1px solid #D8DCCE;background:#F0F2EA;cursor:pointer;font-family:inherit;">Cancelar</button>
+                        <button type="button" id="levOk" style="padding:0.4rem 0.8rem;border-radius:8px;border:0;background:#191D1B;color:#fff;cursor:pointer;font-family:inherit;font-weight:600;">Gerar</button>
+                    </div>
+                </div>`;
+            document.body.appendChild(overlay);
+            const fechar = (v) => { try { document.body.removeChild(overlay); } catch(e){} resolve(v); };
+            overlay.querySelector('#levCancel').onclick = () => fechar(null);
+            overlay.querySelector('#levOk').onclick = () => {
+                const a = overlay.querySelector('#levDe').value;
+                const b = overlay.querySelector('#levAte').value;
+                if (!a || !b || a > b) { alert('Informe um período válido'); return; }
+                fechar({ de: a, ate: b });
+            };
+            overlay.addEventListener('click', e => { if (e.target === overlay) fechar(null); });
+        });
+    }
+
+    
+    async function gerarSugestaoCompra() {
+        try {
+            if (!itensCache || !itensCache.length) await carregarEstoque();
+            const itens = (itensCache || []).filter(i => {
+                const q = parseInt(i.quantidade) || 0;
+                const lim = parseInt(i.limite_alerta) || 5;
+                return q <= lim;
+            }).sort((a, b) => {
+                const da = (parseInt(a.limite_alerta) || 5) - (parseInt(a.quantidade) || 0);
+                const db = (parseInt(b.limite_alerta) || 5) - (parseInt(b.quantidade) || 0);
+                return db - da;
+            });
+            if (!itens.length) {
+                mostrarToast('✅ Nenhum item abaixo do limite — sem sugestão de compra', 'success');
+                return;
+            }
+            function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;'); }
+            const rows = itens.map((i, n) => {
+                const q = parseInt(i.quantidade) || 0;
+                const lim = parseInt(i.limite_alerta) || 5;
+                const sugerido = Math.max(lim * 2 - q, lim); // repor até 2x o limite
+                return `<tr>
+                  <td>${n+1}</td>
+                  <td>${esc(i.nome)}</td>
+                  <td>${esc(i.categoria||'—')}</td>
+                  <td style="text-align:center;">${q} ${esc(i.unidade||'UN')}</td>
+                  <td style="text-align:center;">${lim}</td>
+                  <td style="text-align:center;font-weight:700;">${sugerido}</td>
+                </tr>`;
+            }).join('');
+            const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Sugestão de Compra · TaguáLife</title>
+<style>
+body{font-family:Inter,Arial,sans-serif;color:#191D1B;padding:16px;font-size:12px;background:#FBFBF7;}
+h1{font-size:18px;margin:0 0 4px;} .sub{color:#7A816E;margin-bottom:12px;}
+table{width:100%;border-collapse:collapse;} th{background:#7A816E;color:#fff;padding:6px 8px;text-align:left;}
+td{border-bottom:1px solid #D8DCCE;padding:5px 8px;} tr:nth-child(even) td{background:#F0F2EA;}
+@media print{.no-print{display:none;}}
+</style></head><body>
+<div class="no-print" style="margin-bottom:10px;">
+<button onclick="window.print()" style="padding:8px 14px;background:#191D1B;color:#fff;border:0;border-radius:8px;cursor:pointer;">🖨 Imprimir</button>
+</div>
+<h1>Sugestão de compra / reposição</h1>
+<div class="sub">Condomínio TaguáLife · ${itens.length} itens abaixo ou no limite · ${new Date().toLocaleString('pt-BR')}</div>
+<table>
+<thead><tr><th>#</th><th>Item</th><th>Categoria</th><th>Estoque</th><th>Limite</th><th>Qtd sugerida</th></tr></thead>
+<tbody>${rows}</tbody>
+</table>
+<p class="sub" style="margin-top:12px;">Qtd sugerida = repor até cerca de 2× o limite mínimo (ajuste conforme consumo real).</p>
+</body></html>`;
+            const w = window.open('', '_blank');
+            if (!w) { mostrarToast('⚠️ Permita pop-up', 'warning'); return; }
+            w.document.write(html);
+            w.document.close();
+            mostrarToast('🛒 Sugestão de compra gerada!', 'success');
+        } catch (e) {
+            mostrarToast('❌ ' + (e.message || e), 'danger');
+        }
+    }
+
+
     async function gerarLevantamentoCompleto() {
         mostrarToast('📊 Gerando levantamento completo...', 'info');
         try {
@@ -1421,15 +1518,16 @@
             const itens = (itensCache || []).slice();
 
             // período: últimos 90 dias (editável depois)
-            const ate = new Date();
-            const de = new Date();
-            // últimos 120 dias (cobre trimestre +)
-            de.setDate(de.getDate() - 120);
-            const deStr = de.toISOString().slice(0, 10);
-            const ateStr = ate.toISOString().slice(0, 10);
-            const deBR = de.toLocaleDateString('pt-BR');
-            const ateBR = ate.toLocaleDateString('pt-BR');
-            const hojeBR = ate.toLocaleDateString('pt-BR');
+            const periodo = await abrirSeletorPeriodoEstoque();
+            if (!periodo) {
+                mostrarToast('ℹ️ Levantamento cancelado', 'info');
+                return;
+            }
+            const deStr = periodo.de;
+            const ateStr = periodo.ate;
+            const deBR = deStr.split('-').reverse().join('/');
+            const ateBR = ateStr.split('-').reverse().join('/');
+            const hojeBR = new Date().toLocaleDateString('pt-BR');
 
             // ===== SAÍDAS DO BANCO (mesmas tabelas da página saida.html) =====
             // tabelas: public.saidas + public.saida_itens
