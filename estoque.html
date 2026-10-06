@@ -1569,7 +1569,15 @@ td{border-bottom:1px solid #D8DCCE;padding:5px 7px;} .A{background:#E8F5E9;} .B{
 @media print{.no-print{display:none}}</style></head><body>
 <div class="no-print"><button onclick="window.print()" style="padding:8px 14px;background:#191D1B;color:#fff;border:0;border-radius:8px;">🖨 Imprimir</button></div>
 <h1>Curva ABC de consumo</h1>
-<p style="color:#7A816E;">Últimos 120 dias · Classe A ≈ 80% do volume · B até 95% · C restante</p>
+<p style="color:#7A816E;">Últimos 120 dias · Classifica itens pelo volume de saída (não é qualidade do material).</p>
+<div style="background:#F0F2EA;border:1px solid #D8DCCE;border-radius:10px;padding:10px 14px;margin:10px 0 14px;font-size:11px;line-height:1.45;">
+  <strong>O que significa A, B e C</strong><br>
+  <strong>A</strong> — poucos itens que concentram ~80% do consumo · <strong>B</strong> — médio movimento (até ~95% acumulado) · <strong>C</strong> — muitos itens que saem pouco (resto).<br><br>
+  <strong>Para que serve no condomínio</strong><br>
+  • <strong>A</strong> → não pode faltar (comprar com folga, olhar todo mês)<br>
+  • <strong>B</strong> → acompanhar de perto<br>
+  • <strong>C</strong> → estoque menor, repor quando baixar
+</div>
 <table><thead><tr><th>#</th><th>Item</th><th>Qtd consumida</th><th>%</th><th>% acum.</th><th>Classe</th></tr></thead>
 <tbody>${lista.map((x,i)=>`<tr class="${x.classe}"><td>${i+1}</td><td>${x.nome}</td><td>${x.qtd}</td><td>${x.pct.toFixed(1)}%</td><td>${x.pctAc.toFixed(1)}%</td><td><strong>${x.classe}</strong></td></tr>`).join('')}</tbody></table>
 </body></html>`;
