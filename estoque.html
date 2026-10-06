@@ -431,6 +431,12 @@
                 <button type="button" class="btn-relatorio" onclick="gerarSugestaoCompra()" style="background:#8B6914;border-color:#8B6914;">
                     <i class="fas fa-cart-plus"></i> Sugestão de compra
                 </button>
+                <button type="button" class="btn-relatorio" onclick="gerarCurvaABC()" style="background:#4A5568;border-color:#4A5568;">
+                    <i class="fas fa-chart-pie"></i> Curva ABC
+                </button>
+                <button type="button" class="btn-relatorio" onclick="exportarEstoqueExcel()">
+                    <i class="fas fa-file-excel"></i> Excel estoque
+                </button>
                 <button type="button" class="btn-relatorio" onclick="abrirHistoricoMovimentacoes()" style="background:#191D1B;border-color:#191D1B;color:#fff;">
                     <i class="fas fa-exchange-alt"></i> Movimentações
                 </button>
@@ -1511,6 +1517,86 @@ td{border-bottom:1px solid #D8DCCE;padding:5px 8px;} tr:nth-child(even) td{backg
     }
 
 
+    
+    async function gerarCurvaABC() {
+        try {
+            mostrarToast('📊 Gerando Curva ABC...', 'info');
+            if (!itensCache || !itensCache.length) await carregarEstoque();
+            // consumo via saidas últimos 120 dias
+            const de = new Date(); de.setDate(de.getDate() - 120);
+            const deStr = de.toISOString().slice(0, 10);
+            let consumo = {};
+            try {
+                let q = sb.from('saidas').select('id,criado_em,data_saida').limit(3000);
+                const { data: saidas } = await q;
+                const ids = (saidas || []).filter(s => {
+                    const d = (s.data_saida || (s.criado_em||'').slice(0,10) || '');
+                    return d >= deStr;
+                }).map(s => s.id);
+                for (let i = 0; i < ids.length; i += 150) {
+                    const { data: its } = await sb.from('saida_itens').select('*').in('saida_id', ids.slice(i, i+150));
+                    (its || []).forEach(it => {
+                        const n = (it.item_nome || it.descricao || it.nome || it.item || '').trim();
+                        if (!n) return;
+                        consumo[n] = (consumo[n] || 0) + (parseInt(it.quantidade || it.qtd) || 0);
+                    });
+                }
+            } catch (e) { console.warn(e); }
+            let lista = Object.keys(consumo).map(n => ({ nome: n, qtd: consumo[n] }));
+            if (!lista.length) {
+                // fallback: rank by low stock urgency
+                lista = (itensCache || []).map(i => ({
+                    nome: i.nome,
+                    qtd: Math.max(0, (parseInt(i.limite_alerta)||5) - (parseInt(i.quantidade)||0) + 1)
+                }));
+            }
+            lista.sort((a, b) => b.qtd - a.qtd);
+            const total = lista.reduce((s, x) => s + x.qtd, 0) || 1;
+            let acum = 0;
+            lista = lista.map(x => {
+                acum += x.qtd;
+                const pct = (x.qtd / total) * 100;
+                const pctAc = (acum / total) * 100;
+                let classe = 'C';
+                if (pctAc <= 80) classe = 'A';
+                else if (pctAc <= 95) classe = 'B';
+                return { ...x, pct, pctAc, classe };
+            });
+            const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Curva ABC · TaguáLife</title>
+<style>body{font-family:Inter,Arial,sans-serif;padding:16px;color:#191D1B;font-size:12px;background:#FBFBF7;}
+h1{font-size:18px;} table{width:100%;border-collapse:collapse;} th{background:#7A816E;color:#fff;padding:6px;}
+td{border-bottom:1px solid #D8DCCE;padding:5px 7px;} .A{background:#E8F5E9;} .B{background:#FFF8E1;} .C{background:#F5F5F5;}
+@media print{.no-print{display:none}}</style></head><body>
+<div class="no-print"><button onclick="window.print()" style="padding:8px 14px;background:#191D1B;color:#fff;border:0;border-radius:8px;">🖨 Imprimir</button></div>
+<h1>Curva ABC de consumo</h1>
+<p style="color:#7A816E;">Últimos 120 dias · Classe A ≈ 80% do volume · B até 95% · C restante</p>
+<table><thead><tr><th>#</th><th>Item</th><th>Qtd consumida</th><th>%</th><th>% acum.</th><th>Classe</th></tr></thead>
+<tbody>${lista.map((x,i)=>`<tr class="${x.classe}"><td>${i+1}</td><td>${x.nome}</td><td>${x.qtd}</td><td>${x.pct.toFixed(1)}%</td><td>${x.pctAc.toFixed(1)}%</td><td><strong>${x.classe}</strong></td></tr>`).join('')}</tbody></table>
+</body></html>`;
+            const w = window.open('','_blank');
+            if (!w) return mostrarToast('Permita pop-up','warning');
+            w.document.write(html); w.document.close();
+            mostrarToast('✅ Curva ABC gerada!', 'success');
+        } catch (e) { mostrarToast('❌ '+(e.message||e),'danger'); }
+    }
+
+    function exportarEstoqueExcel() {
+        const itens = itensCache || [];
+        if (!itens.length) { mostrarToast('⚠️ Sem itens','warning'); return; }
+        let csv = 'Nome;Descrição;Fabricante;Quantidade;Unidade;Categoria;Limite alerta\n';
+        itens.forEach(i => {
+            csv += [i.nome,i.descricao,i.fabricante,i.quantidade,i.unidade,i.categoria,i.limite_alerta]
+                .map(v => String(v==null?'':v).replace(/;/g,',')).join(';') + '\n';
+        });
+        const blob = new Blob(["\uFEFF"+csv], {type:'text/csv;charset=utf-8;'});
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'estoque_tagualife_'+new Date().toISOString().slice(0,10)+'.csv';
+        a.click();
+        mostrarToast('📊 Excel/CSV do estoque baixado!','success');
+    }
+
+
     async function gerarLevantamentoCompleto() {
         mostrarToast('📊 Gerando levantamento completo...', 'info');
         try {
@@ -1757,6 +1843,7 @@ li { margin-bottom: 3px; }
 @media print { .no-print { display: none !important; } body { padding: 0; } }
 </style></head><body>
 <div class="no-print" style="margin-bottom:12px;">
+  <button onclick="(function(){try{const t=document.querySelectorAll('table');let c='';t.forEach((tb,i)=>{c+='\n--- Tabela '+(i+1)+' ---\n';tb.querySelectorAll('tr').forEach(tr=>{const cells=[...tr.children].map(td=>td.innerText.replace(/;/g,',')).join(';');c+=cells+'\n';});});const b=new Blob(['\uFEFF'+c],{type:'text/csv'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='levantamento.csv';a.click();}catch(e){alert(e)}})()" style="padding:8px 16px;background:#2E7D32;color:#fff;border:0;border-radius:8px;cursor:pointer;font-weight:700;margin-right:8px;">📊 Excel/CSV</button>
   <button onclick="window.print()" style="padding:8px 16px;background:#191D1B;color:#fff;border:0;border-radius:8px;cursor:pointer;font-weight:700;">🖨 Imprimir / PDF</button>
 </div>
 <h1>Levantamento de Estoque e Movimentação</h1>
