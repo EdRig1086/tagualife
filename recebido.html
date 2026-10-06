@@ -221,7 +221,11 @@
                 <button type="button" class="btn" onclick="listarEntradas('todas')"><i class="fas fa-list"></i> Todas</button>
                 <button type="button" class="btn" onclick="listarEntradas('hoje')"><i class="fas fa-calendar-day"></i> Hoje</button>
                 <button type="button" class="btn" onclick="listarEntradas('mes')"><i class="fas fa-calendar-alt"></i> Este mês</button>
-                <button type="button" class="btn btn-primary" onclick="imprimirRelatorioEntradas()"><i class="fas fa-print"></i> Imprimir relatório</button>
+                <button type="button" class="btn btn-primary" onclick="gerarRelatorioRecebidosCompleto('dia')"><i class="fas fa-calendar-day"></i> Dia</button>
+                <button type="button" class="btn btn-primary" onclick="gerarRelatorioRecebidosCompleto('mes')"><i class="fas fa-calendar-alt"></i> Mês</button>
+                <button type="button" class="btn btn-primary" onclick="gerarRelatorioRecebidosCompleto('ano')"><i class="fas fa-calendar"></i> Ano</button>
+                <button type="button" class="btn btn-primary" onclick="gerarRelatorioRecebidosCompleto('geral')"><i class="fas fa-file-alt"></i> Geral</button>
+                <button type="button" class="btn" onclick="imprimirRelatorioEntradas()"><i class="fas fa-print"></i> Imprimir lista</button>
                 <button type="button" class="btn" onclick="listarEntradas()"><i class="fas fa-sync"></i> Atualizar</button>
             </div>
             <p class="hint">Mostra as <strong>entradas no estoque</strong> (recebimentos). Também em <strong>Estoque → Movimentações → filtro Entrada</strong>.</p>
@@ -926,6 +930,296 @@ async function editarEntrada(id) {
         await carregarEstoque();
         await listarEntradas();
     } catch (e) {
+        toast('❌ ' + (e.message || e));
+    }
+}
+
+
+
+function abrirSeletorDataRec(tipo) {
+    return new Promise(function(resolve) {
+        var agora = new Date();
+        var titulo, inputType, valor;
+        if (tipo === 'dia') {
+            titulo = 'Selecione o DIA';
+            inputType = 'date';
+            valor = agora.toISOString().slice(0, 10);
+        } else if (tipo === 'mes') {
+            titulo = 'Selecione o MÊS';
+            inputType = 'month';
+            valor = agora.toISOString().slice(0, 7);
+        } else {
+            titulo = 'Selecione o ANO';
+            inputType = 'number';
+            valor = String(agora.getFullYear());
+        }
+        var overlay = document.createElement('div');
+        overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:99999;display:flex;align-items:center;justify-content:center;padding:1rem;';
+        overlay.innerHTML = '<div style="background:#FBFBF7;color:#191D1B;border-radius:12px;padding:1.2rem;min-width:280px;border:1px solid #D8DCCE;font-family:Inter,sans-serif;">' +
+            '<h3 style="margin:0 0 0.8rem;font-size:0.95rem;">' + titulo + '</h3>' +
+            '<input type="' + inputType + '" id="recDataSel" value="' + valor + '" ' +
+            (tipo === 'ano' ? 'min="2020" max="2100" step="1"' : '') +
+            ' style="width:100%;padding:0.5rem;margin-bottom:0.8rem;border-radius:8px;border:1px solid #D8DCCE;font-family:inherit;font-size:0.95rem;" />' +
+            '<div style="display:flex;gap:0.5rem;justify-content:flex-end;">' +
+            '<button type="button" id="recDataCancel" style="padding:0.4rem 0.8rem;border-radius:8px;border:1px solid #D8DCCE;background:#F0F2EA;cursor:pointer;font-family:inherit;">Cancelar</button>' +
+            '<button type="button" id="recDataOk" style="padding:0.4rem 0.8rem;border-radius:8px;border:0;background:#191D1B;color:#fff;cursor:pointer;font-family:inherit;font-weight:600;">Gerar</button>' +
+            '</div></div>';
+        document.body.appendChild(overlay);
+        function fechar(v) { try { document.body.removeChild(overlay); } catch(e){} resolve(v); }
+        overlay.querySelector('#recDataCancel').onclick = function() { fechar(null); };
+        overlay.querySelector('#recDataOk').onclick = function() {
+            var v = overlay.querySelector('#recDataSel').value;
+            if (!v) { alert('Selecione uma data'); return; }
+            fechar(v);
+        };
+        overlay.addEventListener('click', function(e) { if (e.target === overlay) fechar(null); });
+    });
+}
+
+async function gerarRelatorioRecebidosCompleto(filtro) {
+    try {
+        filtro = filtro || 'geral';
+        toast('📊 Gerando relatório de entradas (' + filtro + ')...');
+        var agora = new Date();
+        var deStr, ateStr, deBR, ateBR, labelFiltro;
+
+        if (filtro === 'dia') {
+            var dia = await abrirSeletorDataRec('dia');
+            if (!dia) { toast('ℹ️ Cancelado'); return; }
+            deStr = ateStr = dia;
+            deBR = ateBR = dia.split('-').reverse().join('/');
+            labelFiltro = 'Dia ' + deBR;
+        } else if (filtro === 'mes') {
+            var mes = await abrirSeletorDataRec('mes');
+            if (!mes) { toast('ℹ️ Cancelado'); return; }
+            // mes = YYYY-MM
+            var y = parseInt(mes.slice(0, 4), 10), m = parseInt(mes.slice(5, 7), 10);
+            var ultimo = new Date(y, m, 0).getDate();
+            deStr = mes + '-01';
+            ateStr = mes + '-' + String(ultimo).padStart(2, '0');
+            var nomes = ['','Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+            deBR = '01/' + String(m).padStart(2,'0') + '/' + y;
+            ateBR = String(ultimo).padStart(2,'0') + '/' + String(m).padStart(2,'0') + '/' + y;
+            labelFiltro = nomes[m] + '/' + y;
+        } else if (filtro === 'ano') {
+            var ano = await abrirSeletorDataRec('ano');
+            if (!ano) { toast('ℹ️ Cancelado'); return; }
+            deStr = ano + '-01-01';
+            ateStr = ano + '-12-31';
+            deBR = '01/01/' + ano;
+            ateBR = '31/12/' + ano;
+            labelFiltro = 'Ano ' + ano;
+        } else {
+            // geral = tudo (últimos 5 anos ou sem filtro restrito)
+            deStr = '2020-01-01';
+            ateStr = agora.toISOString().slice(0, 10);
+            deBR = '01/01/2020';
+            ateBR = ateStr.split('-').reverse().join('/');
+            labelFiltro = 'Geral (todo o histórico disponível)';
+        }
+        var geradoEm = new Date().toLocaleString('pt-BR');
+
+        var recs = [];
+        var usouRecebimentos = false;
+        try {
+            var q = sb.from('recebimentos').select('*').order('criado_em', { ascending: false }).limit(2000);
+            if (typeof comCondominio === 'function') q = comCondominio(q);
+            var r1 = await q;
+            if (!r1.error && r1.data && r1.data.length) {
+                recs = r1.data;
+                usouRecebimentos = true;
+                var ids = recs.map(function(r) { return r.id; });
+                var todosItens = [];
+                for (var i = 0; i < ids.length; i += 100) {
+                    var chunk = ids.slice(i, i + 100);
+                    var ri = await sb.from('recebimento_itens').select('*').in('recebimento_id', chunk);
+                    todosItens = todosItens.concat(ri.data || []);
+                }
+                var map = {};
+                todosItens.forEach(function(it) {
+                    if (!map[it.recebimento_id]) map[it.recebimento_id] = [];
+                    map[it.recebimento_id].push(it);
+                });
+                recs = recs.map(function(r) {
+                    return Object.assign({}, r, { itens: map[r.id] || [] });
+                });
+            }
+        } catch (e) { console.warn('recebimentos', e); }
+
+        function dataRec(r) {
+            var d = r.data_recebimento || r.data || (r.criado_em || '').toString().slice(0, 10);
+            return (d || '').toString().slice(0, 10);
+        }
+        if (usouRecebimentos) {
+            recs = recs.filter(function(r) {
+                var d = dataRec(r);
+                return d >= deStr && d <= ateStr;
+            });
+        }
+
+        var movs = [];
+        if (!usouRecebimentos || !recs.length) {
+            usouRecebimentos = false;
+            var qm = sb.from('estoque_movimentacoes')
+                .select('*')
+                .eq('tipo', 'entrada')
+                .order('criado_em', { ascending: false })
+                .limit(3000);
+            if (typeof comCondominio === 'function') qm = comCondominio(qm);
+            var rm = await qm;
+            movs = (rm.data || []).filter(function(m) {
+                var d = (m.criado_em || '').toString().slice(0, 10);
+                return d >= deStr && d <= ateStr;
+            });
+        }
+
+        function esc(s) {
+            return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        }
+        function fmtN(n) { return (Number(n) || 0).toLocaleString('pt-BR'); }
+        function fmtBRL(n) {
+            return (Number(n) || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
+        var totalUnid = 0, totalValorItens = 0;
+        var porFornecedor = {}, porItem = {}, linhasDetalhe = [];
+
+        if (usouRecebimentos && recs.length) {
+            recs.forEach(function(r) {
+                var forn = (r.fornecedor || '—').trim();
+                var nf = r.nota_fiscal || r.nf || '—';
+                var valNota = parseFloat(r.valor_total || 0) || 0;
+                if (!porFornecedor[forn]) porFornecedor[forn] = { notas: 0, unid: 0, valor: 0 };
+                porFornecedor[forn].notas++;
+                porFornecedor[forn].valor += valNota;
+                var itens = r.itens || [];
+                if (!itens.length) {
+                    linhasDetalhe.push({
+                        data: dataRec(r), nf: nf, fornecedor: forn,
+                        item: '(sem itens detalhados)', qtd: 0,
+                        preco: 0, total: valNota, usuario: r.recebido_por || r.usuario || ''
+                    });
+                }
+                itens.forEach(function(it) {
+                    var nome = (it.descricao || it.item_nome || it.nome || '—').trim();
+                    var qq = parseInt(it.quantidade) || 0;
+                    var pu = parseFloat(it.valor_unitario || it.preco || 0) || 0;
+                    var tot = parseFloat(it.valor_total) || (pu * qq);
+                    totalUnid += qq;
+                    totalValorItens += tot;
+                    porFornecedor[forn].unid += qq;
+                    if (!porItem[nome]) porItem[nome] = { qtd: 0, valor: 0 };
+                    porItem[nome].qtd += qq;
+                    porItem[nome].valor += tot;
+                    linhasDetalhe.push({
+                        data: dataRec(r), nf: nf, fornecedor: forn,
+                        item: nome, qtd: qq, preco: pu, total: tot,
+                        usuario: r.recebido_por || ''
+                    });
+                });
+            });
+        } else {
+            movs.forEach(function(m) {
+                var obs = m.observacao || '';
+                var nf = '—', forn = '—';
+                var mNf = obs.match(/NF\s*([^\s—\-]+)/i);
+                if (mNf) nf = mNf[1];
+                var mF = obs.match(/—\s*([^·]+)/);
+                if (mF) forn = mF[1].trim();
+                var qq = parseInt(m.quantidade) || 0;
+                totalUnid += qq;
+                var nome = (m.item_nome || '—').trim();
+                if (!porFornecedor[forn]) porFornecedor[forn] = { notas: 0, unid: 0, valor: 0 };
+                porFornecedor[forn].notas++;
+                porFornecedor[forn].unid += qq;
+                if (!porItem[nome]) porItem[nome] = { qtd: 0, valor: 0 };
+                porItem[nome].qtd += qq;
+                var data = (m.criado_em || '').toString().slice(0, 10);
+                var dataBR = data ? data.split('-').reverse().join('/') : '—';
+                var hora = m.criado_em ? new Date(m.criado_em).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '';
+                linhasDetalhe.push({
+                    data: dataBR + (hora ? ' ' + hora : ''),
+                    nf: nf, fornecedor: forn, item: nome, qtd: qq,
+                    preco: 0, total: 0, usuario: m.usuario || ''
+                });
+            });
+        }
+
+        var fornRows = Object.keys(porFornecedor).map(function(k) {
+            return { nome: k, notas: porFornecedor[k].notas, unid: porFornecedor[k].unid, valor: porFornecedor[k].valor };
+        }).sort(function(a, b) { return b.unid - a.unid; });
+
+        var itemRows = Object.keys(porItem).map(function(k) {
+            return { nome: k, qtd: porItem[k].qtd, valor: porItem[k].valor };
+        }).sort(function(a, b) { return b.qtd - a.qtd; });
+
+        var nReg = usouRecebimentos && recs.length ? recs.length : movs.length;
+        var temValor = fornRows.some(function(f) { return f.valor; }) || itemRows.some(function(x) { return x.valor; });
+        var fonte = usouRecebimentos && recs.length ? 'tabela recebimentos' : 'movimentações de entrada';
+
+        var html = '<!DOCTYPE html><html lang="pt-BR"><head><meta charset="utf-8">' +
+            '<title>Relatório de Recebimentos e Entradas · TaguáLife</title><style>' +
+            'body{font-family:Inter,Arial,sans-serif;color:#191D1B;font-size:10.5px;margin:0;padding:16px;background:#FBFBF7;}' +
+            'h1{font-size:18px;margin:0 0 4px;text-align:center;}' +
+            '.sub{text-align:center;color:#7A816E;margin-bottom:14px;font-size:11px;}' +
+            '.box{max-width:400px;margin:0 auto 14px;background:#F0F2EA;border:1px solid #D8DCCE;border-radius:10px;padding:10px 14px;font-size:11px;line-height:1.5;}' +
+            'h2{font-size:12.5px;margin:16px 0 8px;padding:6px 10px;background:linear-gradient(90deg,#C1CE83,#E8EBE0);border-left:4px solid #7A816E;}' +
+            '.cards{display:flex;gap:10px;flex-wrap:wrap;margin:10px 0 14px;}' +
+            '.card{flex:1;min-width:100px;text-align:center;background:#FBFBF7;border:1px solid #D8DCCE;border-radius:10px;padding:12px 8px;}' +
+            '.card .n{font-size:20px;font-weight:800;}' +
+            '.card .l{font-size:9px;color:#7A816E;text-transform:uppercase;margin-top:2px;}' +
+            'table{width:100%;border-collapse:collapse;margin:6px 0 12px;}' +
+            'th{background:#7A816E;color:#FBFBF7;text-align:left;padding:5px 7px;font-size:9.5px;}' +
+            'td{border-bottom:1px solid #D8DCCE;padding:4px 7px;vertical-align:top;}' +
+            'tr:nth-child(even) td{background:#F0F2EA;}' +
+            '.footer{margin-top:18px;font-size:9px;color:#7A816E;text-align:center;border-top:1px solid #D8DCCE;padding-top:8px;}' +
+            '@media print{.no-print{display:none!important;}}' +
+            '</style></head><body>' +
+            '<div class="no-print" style="margin-bottom:12px;text-align:center;">' +
+            '<button onclick="window.print()" style="padding:8px 16px;background:#191D1B;color:#FBFBF7;border:0;border-radius:8px;cursor:pointer;font-weight:700;margin:0 4px;">Imprimir / PDF</button>' +
+            '<button onclick="(function(){var c=\\'Data;NF;Fornecedor;Item;Qtd;Preco;Total;Usuario\\\\n\\';document.querySelectorAll(\\'#tabDetalhe tr\\').forEach(function(tr){var cells=[].slice.call(tr.querySelectorAll(\\'td\\'));if(cells.length)c+=cells.map(function(td){return td.innerText.replace(/;/g,\\',\\');}).join(\\';\\')+\\'\\\\n\\';});var b=new Blob([\\'\\uFEFF\\'+c],{type:\\'text/csv\\'});var a=document.createElement(\\'a\\');a.href=URL.createObjectURL(b);a.download=\\'entradas_recebidos.csv\\';a.click();})()" style="padding:8px 16px;background:#2E7D32;color:#fff;border:0;border-radius:8px;cursor:pointer;font-weight:700;margin:0 4px;">Excel/CSV</button>' +
+            '</div>' +
+            '<h1>RELATÓRIO DE RECEBIMENTOS E ENTRADAS</h1>' +
+            '<div class="sub">Condomínio TaguáLife · Life Conceito em Gestão Condominial</div>' +
+            '<div class="box"><strong>Filtro:</strong> ' + labelFiltro + '<br><strong>Período:</strong> ' + deBR + ' a ' + ateBR + '<br><strong>Gerado em:</strong> ' + geradoEm + '<br><strong>Fonte:</strong> ' + fonte + '</div>' +
+            '<h2>1. Resumo geral</h2><div class="cards">' +
+            '<div class="card"><div class="n">' + fmtN(nReg) + '</div><div class="l">Registros</div></div>' +
+            '<div class="card"><div class="n">' + fmtN(totalUnid) + '</div><div class="l">Unidades entradas</div></div>' +
+            '<div class="card"><div class="n">' + fmtN(fornRows.length) + '</div><div class="l">Fornecedores</div></div>' +
+            '<div class="card"><div class="n">' + fmtN(itemRows.length) + '</div><div class="l">Itens distintos</div></div>' +
+            (totalValorItens > 0 ? '<div class="card"><div class="n">R$ ' + fmtBRL(totalValorItens) + '</div><div class="l">Valor itens</div></div>' : '') +
+            '</div>' +
+            '<h2>2. Por fornecedor</h2><table><thead><tr><th>#</th><th>Fornecedor</th><th>Registros</th><th>Unidades</th>' +
+            (temValor ? '<th>Valor (R$)</th>' : '') + '</tr></thead><tbody>' +
+            fornRows.map(function(f, i) {
+                return '<tr><td>' + (i+1) + '</td><td><strong>' + esc(f.nome) + '</strong></td><td>' + fmtN(f.notas) + '</td><td>' + fmtN(f.unid) + '</td>' +
+                    (temValor ? '<td>' + fmtBRL(f.valor) + '</td>' : '') + '</tr>';
+            }).join('') + '</tbody></table>' +
+            '<h2>3. Itens mais recebidos</h2><table><thead><tr><th>#</th><th>Item</th><th>Qtd total</th>' +
+            (temValor ? '<th>Valor (R$)</th>' : '') + '</tr></thead><tbody>' +
+            itemRows.slice(0, 50).map(function(it, i) {
+                return '<tr><td>' + (i+1) + '</td><td>' + esc(it.nome) + '</td><td>' + fmtN(it.qtd) + '</td>' +
+                    (temValor ? '<td>' + fmtBRL(it.valor) + '</td>' : '') + '</tr>';
+            }).join('') + '</tbody></table>' +
+            '<h2>4. Detalhamento item a item</h2><table id="tabDetalhe"><thead><tr><th>Data</th><th>NF</th><th>Fornecedor</th><th>Item</th><th>Qtd</th>' +
+            (temValor ? '<th>Preço un.</th><th>Total</th>' : '') +
+            '<th>Usuário</th></tr></thead><tbody>' +
+            linhasDetalhe.map(function(l) {
+                var dataShow = l.data;
+                if (/^\d{4}-\d{2}-\d{2}/.test(dataShow)) dataShow = dataShow.split('-').reverse().join('/');
+                return '<tr><td>' + esc(dataShow) + '</td><td>' + esc(l.nf) + '</td><td>' + esc(l.fornecedor) + '</td><td>' + esc(l.item) + '</td><td style="text-align:center;">' + fmtN(l.qtd) + '</td>' +
+                    (temValor ? '<td>' + fmtBRL(l.preco) + '</td><td>' + fmtBRL(l.total) + '</td>' : '') +
+                    '<td>' + esc(l.usuario) + '</td></tr>';
+            }).join('') + '</tbody></table>' +
+            '<div class="footer">Sistema TaguáLife Center · Recebidos / Entradas<br>' + geradoEm + '</div></body></html>';
+
+        var w = window.open('', '_blank');
+        if (!w) { toast('⚠️ Permita pop-up'); return; }
+        w.document.write(html);
+        w.document.close();
+        toast('✅ Relatório de entradas gerado!');
+    } catch (e) {
+        console.error(e);
         toast('❌ ' + (e.message || e));
     }
 }
