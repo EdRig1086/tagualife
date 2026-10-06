@@ -1004,6 +1004,20 @@
             .campos-grid, .assinaturas-grid, .almoxarife-area { background: #FBFBF7 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
             .tabela-items thead { background: #7A816E !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
         }
+    
+        /* Etapa 5 — mobile Saída */
+        @media (max-width: 700px) {
+            .app-container, .main-content { padding: 0.4rem !important; }
+            .nav-menu { gap: 0.15rem; }
+            .nav-menu .nav-item { font-size: 0.6rem; padding: 0.25rem 0.45rem; }
+            .painel-topo { flex-direction: column; }
+            .campos-grid { grid-template-columns: 1fr !important; }
+            table.tabela-itens, #tabelaItens { font-size: 0.7rem; }
+            .col-destino input, .item-select, .item-busca-rapida { font-size: 0.75rem !important; }
+            .botoes { flex-wrap: wrap; }
+            .relatorios-area .linha { flex-wrap: wrap; }
+        }
+
     </style>
 </head>
 <body>
@@ -3470,7 +3484,8 @@ td.c-qtd, th.c-qtd { text-align: center; }
 @media print { .no-print { display: none !important; } body { padding: 0; } }
 </style></head><body>
 <div class="no-print" style="margin-bottom:12px;text-align:center;">
-  <button onclick="window.print()" style="padding:8px 18px;background:#191D1B;color:#FBFBF7;border:0;border-radius:8px;cursor:pointer;font-weight:700;">🖨 Imprimir / PDF</button>
+  <button onclick="window.print()" style="padding:8px 18px;background:#191D1B;color:#FBFBF7;border:0;border-radius:8px;cursor:pointer;font-weight:700;margin:0 4px;">🖨 Imprimir / PDF</button>
+  <button onclick="(function(){const rows=[...document.querySelectorAll('table tr')];let c='Nº;Data;Colaborador;Item;Qtd;Destino\n';rows.forEach(tr=>{const cells=[...tr.querySelectorAll('td')];if(cells.length>=5){c+=cells.map(td=>td.innerText.replace(/;/g,',')).join(';')+'\n';}});const b=new Blob(['\uFEFF'+c],{type:'text/csv'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='saidas_detalhado.csv';a.click();})()" style="padding:8px 18px;background:#2E7D32;color:#fff;border:0;border-radius:8px;cursor:pointer;font-weight:700;margin:0 4px;">📊 Excel/CSV</button>
 </div>
 <h1>RELATÓRIO DETALHADO DE SAÍDAS</h1>
 <div class="sub">Condomínio TaguáLife · Life Conceito em Gestão Condominial</div>
