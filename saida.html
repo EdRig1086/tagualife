@@ -2423,8 +2423,10 @@ function mostrarToast(mensagem, tipo = 'success') {
         tr.innerHTML = `
             <td class="col-qtd"><input type="number" class="qtd-input" value="1" min="1" /></td>
             <td class="col-item">
-                <div style="display:flex; gap:0.3rem; align-items:center;">
-                    <select class="item-select" style="width:100%; padding:0.5rem; border-radius:4px; border:1px solid var(--border-color); background:var(--input-bg); color:var(--text-primary);">
+                <div style="display:flex; flex-direction:column; gap:0.25rem;">
+                    <input type="text" class="item-busca-rapida" placeholder="🔍 Buscar item..." autocomplete="off"
+                        style="width:100%; padding:0.35rem 0.5rem; border-radius:4px; border:1px solid var(--border-color); background:var(--input-bg); color:var(--text-primary); font-size:0.8rem;" />
+                    <select class="item-select" size="1" style="width:100%; padding:0.5rem; border-radius:4px; border:1px solid var(--border-color); background:var(--input-bg); color:var(--text-primary);">
                         <option value="">Selecione um item...</option>
                     </select>
                     <input type="text" class="item-input-manual" placeholder="✏️ Digite o nome do item..." style="display:none; width:100%; padding:0.5rem; border-radius:4px; border:2px solid #3498DB; background:var(--input-bg); color:var(--text-primary); font-weight:600;" />
@@ -2445,9 +2447,40 @@ function mostrarToast(mensagem, tipo = 'success') {
         const qtdInput = tr.querySelector('.qtd-input');
         const destinoInput = tr.querySelector('.destino-input');
         
+        const buscaRapida = tr.querySelector('.item-busca-rapida');
+        if (buscaRapida) {
+            buscaRapida.addEventListener('input', function() {
+                const q = (this.value || '').trim().toLowerCase();
+                const opts = select.querySelectorAll('option');
+                let firstVisible = null;
+                opts.forEach(function(opt) {
+                    if (!opt.value || opt.value === '__custom__') {
+                        opt.hidden = false;
+                        return;
+                    }
+                    const show = !q || opt.textContent.toLowerCase().includes(q);
+                    opt.hidden = !show;
+                    if (show && !firstVisible && opt.value) firstVisible = opt;
+                });
+                // opcional: não muda seleção até o usuário escolher
+            });
+            buscaRapida.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    const vis = [...select.options].filter(o => !o.hidden && o.value && o.value !== '__custom__');
+                    if (vis.length === 1) {
+                        select.value = vis[0].value;
+                        select.dispatchEvent(new Event('change'));
+                    } else {
+                        select.focus();
+                    }
+                }
+            });
+        }
         select.addEventListener('change', function() {
             if (this.value === '__custom__') {
                 select.style.display = 'none';
+                if (buscaRapida) buscaRapida.style.display = 'none';
                 inputManual.style.display = 'block';
                 inputManual.value = '';
                 inputManual.focus();
@@ -3188,7 +3221,41 @@ function mostrarToast(mensagem, tipo = 'success') {
     // GERAR RELATÓRIO - USA DATA DE SAÍDA
     // ============================================
     
-    async function gerarRelatorioDetalhadoSaidas() {
+    
+    function abrirSeletorPeriodo() {
+        return new Promise((resolve) => {
+            const ate = new Date();
+            const de = new Date();
+            de.setDate(de.getDate() - 120);
+            const overlay = document.createElement('div');
+            overlay.className = 'seletor-data-overlay';
+            overlay.innerHTML = `
+                <div class="seletor-data-box" style="min-width:320px;">
+                    <h3><i class="fas fa-calendar-range"></i> Período do relatório</h3>
+                    <label style="font-size:0.75rem;font-weight:600;display:block;margin:0.4rem 0 0.2rem;">Data inicial</label>
+                    <input type="date" id="periodoDe" value="${de.toISOString().slice(0,10)}" />
+                    <label style="font-size:0.75rem;font-weight:600;display:block;margin:0.5rem 0 0.2rem;">Data final</label>
+                    <input type="date" id="periodoAte" value="${ate.toISOString().slice(0,10)}" />
+                    <div class="botoes-seletor" style="margin-top:0.8rem;">
+                        <button class="btn btn-outline" id="btnCancelarPeriodo"><i class="fas fa-times"></i> Cancelar</button>
+                        <button class="btn btn-primary" id="btnConfirmarPeriodo"><i class="fas fa-check"></i> Gerar</button>
+                    </div>
+                </div>`;
+            document.body.appendChild(overlay);
+            const fechar = (val) => { try { document.body.removeChild(overlay); } catch(e){} resolve(val); };
+            overlay.querySelector('#btnCancelarPeriodo').onclick = () => fechar(null);
+            overlay.querySelector('#btnConfirmarPeriodo').onclick = () => {
+                const a = overlay.querySelector('#periodoDe').value;
+                const b = overlay.querySelector('#periodoAte').value;
+                if (!a || !b) { alert('Informe as duas datas'); return; }
+                if (a > b) { alert('Data inicial não pode ser maior que a final'); return; }
+                fechar({ de: a, ate: b });
+            };
+            overlay.addEventListener('click', e => { if (e.target === overlay) fechar(null); });
+        });
+    }
+
+async function gerarRelatorioDetalhadoSaidas() {
         try {
             mostrarToast('📊 Gerando relatório detalhado de saídas...', 'info');
             let protocolos = (await carregarSaidasDB()).map(p => ({
@@ -3200,14 +3267,16 @@ function mostrarToast(mensagem, tipo = 'success') {
                 return;
             }
 
-            // período padrão: últimos 120 dias
-            const ate = new Date();
-            const de = new Date();
-            de.setDate(de.getDate() - 120);
-            const deStr = de.toISOString().slice(0, 10);
-            const ateStr = ate.toISOString().slice(0, 10);
-            const deBR = de.toLocaleDateString('pt-BR');
-            const ateBR = ate.toLocaleDateString('pt-BR');
+            // usuário escolhe o período
+            const periodo = await abrirSeletorPeriodo();
+            if (!periodo) {
+                mostrarToast('ℹ️ Relatório cancelado', 'info');
+                return;
+            }
+            const deStr = periodo.de;
+            const ateStr = periodo.ate;
+            const deBR = deStr.split('-').reverse().join('/');
+            const ateBR = ateStr.split('-').reverse().join('/');
             const geradoEm = new Date().toLocaleString('pt-BR');
 
             protocolos = protocolos.filter(p => {
