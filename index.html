@@ -1474,6 +1474,28 @@
                 <!-- FIM BLOCO DE ANOTAÇÕES -->
 
                 <!-- DASHBOARD COM GRÁFICOS -->
+                
+                <!-- PAINEL ATENÇÃO HOJE -->
+                <div class="protocolo-card" id="painelAtencaoHoje" style="margin-bottom:1rem;">
+                    <div class="protocolo-header" style="background:linear-gradient(90deg,#C1A83C,#C1CE83);">
+                        <div class="left">
+                            <i class="fas fa-exclamation-circle"></i>
+                            <h2>Atenção hoje</h2>
+                            <span style="font-weight:500;font-size:0.75rem;">• Alertas unificados</span>
+                        </div>
+                        <div class="right">
+                            <button type="button" onclick="backupRapidoDashboard()" style="padding:0.25rem 0.7rem;border-radius:8px;border:1px solid #191D1B;background:#191D1B;color:#fff;font-size:0.7rem;font-weight:700;cursor:pointer;font-family:inherit;">
+                                <i class="fas fa-download"></i> Backup rápido
+                            </button>
+                        </div>
+                    </div>
+                    <div class="protocolo-body" style="padding:0.85rem 1rem;">
+                        <div id="listaAtencaoHoje" style="display:grid;gap:0.45rem;font-size:0.8rem;">
+                            <div style="color:var(--text-secondary);">Carregando alertas...</div>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="dashboard-grid" id="dashboardGrid">
                     <a href="estoque.html" class="dash-card">
                         <div class="icon"><i class="fas fa-boxes"></i></div>
@@ -2529,6 +2551,88 @@
         }
     }
 
+    
+    const SUPABASE_URL = 'https://frlecudymdpnrsilavbj.supabase.co';
+    const SUPABASE_ANON_KEY = 'sb_publishable_Uv-GZdW4peH3IZTIwiNYXg_IrYytpn4';
+    const sb = (window.supabase && window.supabase.createClient)
+        ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+        : null;
+
+    async function montarPainelAtencaoHoje() {
+        const box = document.getElementById('listaAtencaoHoje');
+        if (!box) return;
+        const linhas = [];
+        // Lembretes
+        let nLemb = 0;
+        try { nLemb = JSON.parse(localStorage.getItem('tagualife_notas') || '[]').length; } catch(e) {}
+        if (nLemb > 0) {
+            linhas.push(`<div style="padding:0.45rem 0.65rem;border-radius:8px;border:1px solid #C1A83C;background:#FFF8E1;">🔔 <strong>${nLemb}</strong> lembrete(s) pendente(s)</div>`);
+        }
+        // Estoque do banco
+        let itens = [];
+        try {
+            if (typeof sb !== 'undefined' && sb) {
+                let q = sb.from('estoque').select('nome,quantidade,limite_alerta,categoria');
+                if (typeof comCondominio === 'function') q = comCondominio(q);
+                const { data } = await q;
+                itens = data || [];
+            }
+        } catch (e) { console.warn(e); }
+        if (!itens.length) {
+            try { itens = JSON.parse(localStorage.getItem('estoqueTaguaLife') || '[]'); } catch(e) {}
+        }
+        const zerados = itens.filter(i => (parseInt(i.quantidade)||0) <= 0);
+        const baixos = itens.filter(i => {
+            const q = parseInt(i.quantidade)||0;
+            const lim = parseInt(i.limite_alerta)||5;
+            return q > 0 && q <= lim;
+        });
+        if (zerados.length) {
+            const nomes = zerados.slice(0, 5).map(i => i.nome).join(', ');
+            linhas.push(`<div style="padding:0.45rem 0.65rem;border-radius:8px;border:1px solid #8B3A3A;background:#FCE8E8;">🛑 <strong>${zerados.length}</strong> item(ns) <strong>zerado(s)</strong>: ${nomes}${zerados.length>5?'…':''} — <a href="estoque.html" style="color:#8B3A3A;font-weight:700;">Ver estoque</a></div>`);
+        }
+        if (baixos.length) {
+            linhas.push(`<div style="padding:0.45rem 0.65rem;border-radius:8px;border:1px solid #C1A83C;background:#FFF8E1;">⚠️ <strong>${baixos.length}</strong> item(ns) em estoque baixo — <a href="estoque.html" style="font-weight:700;color:#5D4E00;">Repos / sugestão de compra</a></div>`);
+        }
+        if (!linhas.length) {
+            linhas.push(`<div style="padding:0.45rem 0.65rem;border-radius:8px;border:1px solid #C1CE83;background:#F0F2EA;">✅ Nada crítico no momento. Estoque e lembretes ok.</div>`);
+        }
+        box.innerHTML = linhas.join('');
+    }
+
+    async function backupRapidoDashboard() {
+        try {
+            const payload = {
+                gerado_em: new Date().toISOString(),
+                sistema: 'TaguáLife Center',
+                estoque: [],
+                saidas: [],
+                usuarios: [],
+                notas: JSON.parse(localStorage.getItem('tagualife_notas') || '[]')
+            };
+            if (typeof sb !== 'undefined' && sb) {
+                const [e, s, u] = await Promise.all([
+                    sb.from('estoque').select('*'),
+                    sb.from('saidas').select('*, saida_itens(*)').order('criado_em', { ascending: false }).limit(2000),
+                    sb.from('usuarios').select('id,nome,email,cargo,ativo,criado_em')
+                ]);
+                payload.estoque = e.data || [];
+                payload.saidas = s.data || [];
+                payload.usuarios = u.data || [];
+            }
+            const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = 'backup_tagualife_' + new Date().toISOString().slice(0,10) + '.json';
+            a.click();
+            URL.revokeObjectURL(a.href);
+            if (typeof mostrarToast === 'function') mostrarToast('💾 Backup baixado!', 'success');
+        } catch (err) {
+            console.error(err);
+            alert('Erro no backup: ' + (err.message || err));
+        }
+    }
+
     function atualizarDashboard() {
         const itens = JSON.parse(localStorage.getItem('estoqueTaguaLife') || '[]');
         const saidas = JSON.parse(localStorage.getItem('saidaMaterialTaguaLife') || '[]');
@@ -2596,6 +2700,10 @@
         setInterval(atualizarRelogio, 1000);
         atualizarDashboard();
         setInterval(atualizarDashboard, 30000);
+        if (typeof montarPainelAtencaoHoje === 'function') {
+            montarPainelAtencaoHoje();
+            setInterval(montarPainelAtencaoHoje, 60000);
+        }
         buscarVersiculo();
         renderizarCalendario(mesAtual, anoAtual);
         carregarNotas();
