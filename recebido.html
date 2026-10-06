@@ -281,7 +281,7 @@
 <script>
 const SUPABASE_URL = 'https://frlecudymdpnrsilavbj.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_Uv-GZdW4peH3IZTIwiNYXg_IrYytpn4';
-const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const sb = (window.supabase && window.supabase.createClient) ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
 window.sb = sb;
 
 let estoqueCache = [];
@@ -785,6 +785,7 @@ async function listarEntradas(periodo) {
     periodo = periodo || window._periodoEntradas || 'todas';
     window._periodoEntradas = periodo;
     try {
+        if (!sb) throw new Error('Supabase não conectado');
         // Fonte principal: movimentações tipo entrada (sempre grava ao receber)
         let q = sb.from('estoque_movimentacoes')
             .select('id,estoque_id,item_nome,tipo,quantidade,quantidade_antes,quantidade_depois,usuario,observacao,criado_em,colaborador')
@@ -974,6 +975,27 @@ function abrirSeletorDataRec(tipo) {
         };
         overlay.addEventListener('click', function(e) { if (e.target === overlay) fechar(null); });
     });
+}
+
+
+function exportarCSVRecebidos() {
+    try {
+        var c = 'Data;NF;Fornecedor;Item;Qtd;Preco;Total;Usuario\n';
+        document.querySelectorAll('#tabDetalhe tr').forEach(function(tr) {
+            var cells = [].slice.call(tr.querySelectorAll('td'));
+            if (cells.length) {
+                c += cells.map(function(td) { return (td.innerText || '').replace(/;/g, ','); }).join(';') + '\n';
+            }
+        });
+        var b = new Blob(['\uFEFF' + c], { type: 'text/csv;charset=utf-8;' });
+        var a = document.createElement('a');
+        a.href = URL.createObjectURL(b);
+        a.download = 'entradas_recebidos.csv';
+        a.click();
+        URL.revokeObjectURL(a.href);
+    } catch (e) {
+        alert('Erro ao exportar: ' + (e.message || e));
+    }
 }
 
 async function gerarRelatorioRecebidosCompleto(filtro) {
@@ -1177,7 +1199,7 @@ async function gerarRelatorioRecebidosCompleto(filtro) {
             '</style></head><body>' +
             '<div class="no-print" style="margin-bottom:12px;text-align:center;">' +
             '<button onclick="window.print()" style="padding:8px 16px;background:#191D1B;color:#FBFBF7;border:0;border-radius:8px;cursor:pointer;font-weight:700;margin:0 4px;">Imprimir / PDF</button>' +
-            '<button onclick="(function(){var c=\\'Data;NF;Fornecedor;Item;Qtd;Preco;Total;Usuario\\\\n\\';document.querySelectorAll(\\'#tabDetalhe tr\\').forEach(function(tr){var cells=[].slice.call(tr.querySelectorAll(\\'td\\'));if(cells.length)c+=cells.map(function(td){return td.innerText.replace(/;/g,\\',\\');}).join(\\';\\')+\\'\\\\n\\';});var b=new Blob([\\'\\uFEFF\\'+c],{type:\\'text/csv\\'});var a=document.createElement(\\'a\\');a.href=URL.createObjectURL(b);a.download=\\'entradas_recebidos.csv\\';a.click();})()" style="padding:8px 16px;background:#2E7D32;color:#fff;border:0;border-radius:8px;cursor:pointer;font-weight:700;margin:0 4px;">Excel/CSV</button>' +
+            '<button onclick="exportarCSVRecebidos()" style="padding:8px 16px;background:#2E7D32;color:#fff;border:0;border-radius:8px;cursor:pointer;font-weight:700;margin:0 4px;">Excel/CSV</button>' +
             '</div>' +
             '<h1>RELATÓRIO DE RECEBIMENTOS E ENTRADAS</h1>' +
             '<div class="sub">Condomínio TaguáLife · Life Conceito em Gestão Condominial</div>' +
