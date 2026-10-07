@@ -1496,6 +1496,27 @@
                     </div>
                 </div>
 
+                <!-- QUADRO DE AVISOS -->
+                <div class="protocolo-card" id="painelQuadroAvisos" style="margin-bottom:1rem;">
+                    <div class="protocolo-header" style="background:linear-gradient(90deg,#7A816E,#C1CE83);">
+                        <div class="left">
+                            <i class="fas fa-bullhorn"></i>
+                            <h2>Quadro de avisos</h2>
+                            <span style="font-weight:500;font-size:0.75rem;">• Comunicados do condomínio</span>
+                        </div>
+                        <div class="right">
+                            <button type="button" id="btnNovoAviso" onclick="abrirModalAviso()" style="display:none;padding:0.25rem 0.7rem;border-radius:8px;border:1px solid #191D1B;background:#191D1B;color:#fff;font-size:0.7rem;font-weight:700;cursor:pointer;font-family:inherit;">
+                                <i class="fas fa-plus"></i> Novo aviso
+                            </button>
+                        </div>
+                    </div>
+                    <div class="protocolo-body" style="padding:0.85rem 1rem;">
+                        <div id="listaQuadroAvisos" style="display:grid;gap:0.55rem;font-size:0.8rem;">
+                            <div style="color:var(--text-secondary);">Carregando avisos...</div>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="dashboard-grid" id="dashboardGrid">
                     <a href="estoque.html" class="dash-card">
                         <div class="icon"><i class="fas fa-boxes"></i></div>
@@ -2558,6 +2579,224 @@
         ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
         : null;
 
+
+    // ========== QUADRO DE AVISOS ==========
+    var cacheAvisos = [];
+
+    function isAdminAvisos() {
+        try {
+            if (typeof getCargo === 'function' && getCargo() === 'Administrador') return true;
+            if (typeof podeGerenciarUsuarios === 'function' && podeGerenciarUsuarios()) return true;
+            var s = typeof getSessao === 'function' ? getSessao() : null;
+            return !!(s && s.cargo === 'Administrador');
+        } catch (e) { return false; }
+    }
+
+    function autorAtualAviso() {
+        try {
+            var s = typeof getSessao === 'function' ? getSessao() : null;
+            return (s && (s.nome || s.email)) || 'Sistema';
+        } catch (e) { return 'Sistema'; }
+    }
+
+    async function carregarAvisos() {
+        var box = document.getElementById('listaQuadroAvisos');
+        if (!box) return;
+        try {
+            var lista = [];
+            if (sb) {
+                var q = sb.from('avisos').select('*').eq('ativo', true).order('criado_em', { ascending: false }).limit(30);
+                if (typeof comCondominio === 'function') q = comCondominio(q);
+                var res = await q;
+                if (res.error) throw res.error;
+                lista = res.data || [];
+            }
+            if (!lista.length) {
+                // fallback localStorage
+                try {
+                    lista = JSON.parse(localStorage.getItem('tagualife_avisos') || '[]');
+                    lista = (lista || []).filter(function(a) { return a.ativo !== false; });
+                } catch (e) { lista = []; }
+            }
+            cacheAvisos = lista;
+            renderAvisos(lista);
+            var btn = document.getElementById('btnNovoAviso');
+            if (btn) btn.style.display = isAdminAvisos() ? 'inline-flex' : 'none';
+        } catch (e) {
+            console.warn('avisos', e);
+            // tenta local
+            try {
+                cacheAvisos = JSON.parse(localStorage.getItem('tagualife_avisos') || '[]');
+            } catch (e2) { cacheAvisos = []; }
+            renderAvisos(cacheAvisos);
+            var msg = (e && e.message) ? e.message : String(e);
+            if (msg.indexOf('avisos') >= 0 || msg.indexOf('schema') >= 0 || msg.indexOf('does not exist') >= 0) {
+                box.insertAdjacentHTML('afterbegin',
+                    '<div style="padding:0.5rem 0.65rem;background:#FFF3E0;border:1px solid #FFB74D;border-radius:8px;font-size:0.72rem;margin-bottom:0.4rem;">' +
+                    '⚠️ Tabela <b>avisos</b> ainda não existe no Supabase. Os avisos ficam salvos neste navegador até você criar a tabela (SQL no final desta mensagem ao Admin).' +
+                    '</div>');
+            }
+            var btn2 = document.getElementById('btnNovoAviso');
+            if (btn2) btn2.style.display = isAdminAvisos() ? 'inline-flex' : 'none';
+        }
+    }
+
+    function prioridadeStyle(p) {
+        p = (p || 'normal').toLowerCase();
+        if (p === 'urgente') return { bg: '#FCE8E8', border: '#8B3A3A', label: 'Urgente', color: '#8B3A3A' };
+        if (p === 'importante') return { bg: '#FFF8E6', border: '#C1A83C', label: 'Importante', color: '#8a7420' };
+        return { bg: '#F0F2EA', border: '#7A816E', label: 'Normal', color: '#5A614E' };
+    }
+
+    function renderAvisos(lista) {
+        var box = document.getElementById('listaQuadroAvisos');
+        if (!box) return;
+        if (!lista || !lista.length) {
+            box.innerHTML = '<div style="color:var(--text-secondary);padding:0.4rem 0;">Nenhum aviso publicado no momento.</div>';
+            return;
+        }
+        var admin = isAdminAvisos();
+        box.innerHTML = lista.map(function(a) {
+            var st = prioridadeStyle(a.prioridade);
+            var data = a.criado_em ? new Date(a.criado_em).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' }) : '';
+            var acoes = admin
+                ? ('<div style="display:flex;gap:0.3rem;margin-top:0.35rem;">' +
+                   '<button type="button" onclick="abrirModalAviso(\'' + a.id + '\')" style="padding:0.15rem 0.45rem;font-size:0.65rem;border-radius:6px;border:1px solid var(--border-color);background:var(--bg-card);cursor:pointer;font-family:inherit;"><i class="fas fa-edit"></i> Editar</button>' +
+                   '<button type="button" onclick="excluirAviso(\'' + a.id + '\')" style="padding:0.15rem 0.45rem;font-size:0.65rem;border-radius:6px;border:0;background:#8B3A3A;color:#fff;cursor:pointer;font-family:inherit;"><i class="fas fa-trash"></i></button>' +
+                   '</div>')
+                : '';
+            return '<div style="padding:0.65rem 0.75rem;background:' + st.bg + ';border-left:4px solid ' + st.border + ';border-radius:0 8px 8px 0;">' +
+                '<div style="display:flex;justify-content:space-between;gap:0.5rem;flex-wrap:wrap;">' +
+                '<strong style="font-size:0.85rem;">' + escHtmlAviso(a.titulo || 'Aviso') + '</strong>' +
+                '<span style="font-size:0.65rem;font-weight:700;color:' + st.color + ';text-transform:uppercase;">' + st.label + '</span>' +
+                '</div>' +
+                '<div style="margin-top:0.3rem;font-size:0.78rem;line-height:1.4;white-space:pre-wrap;">' + escHtmlAviso(a.texto || '') + '</div>' +
+                '<div style="margin-top:0.35rem;font-size:0.65rem;color:var(--text-secondary);">' +
+                (a.autor ? ('Por ' + escHtmlAviso(a.autor) + ' · ') : '') + escHtmlAviso(data) +
+                '</div>' + acoes +
+                '</div>';
+        }).join('');
+    }
+
+    function escHtmlAviso(s) {
+        return String(s == null ? '' : s)
+            .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    function abrirModalAviso(id) {
+        if (!isAdminAvisos()) {
+            alert('Somente Administrador pode publicar avisos.');
+            return;
+        }
+        var aviso = id ? (cacheAvisos || []).find(function(a) { return String(a.id) === String(id); }) : null;
+        var overlay = document.getElementById('modalQuadroAviso');
+        if (overlay) overlay.remove();
+        overlay = document.createElement('div');
+        overlay.id = 'modalQuadroAviso';
+        overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:10080;display:flex;align-items:center;justify-content:center;padding:1rem;';
+        overlay.innerHTML =
+            '<div style="background:var(--bg-card,#FBFBF7);color:var(--text-primary,#191D1B);border-radius:12px;width:100%;max-width:480px;border:1px solid var(--border-color,#D8DCCE);font-family:Inter,sans-serif;box-shadow:0 12px 40px rgba(0,0,0,.18);">' +
+            '<div style="display:flex;justify-content:space-between;align-items:center;padding:.8rem 1rem;border-bottom:1px solid var(--border-color);font-weight:700;">' +
+            '<span><i class="fas fa-bullhorn"></i> ' + (aviso ? 'Editar aviso' : 'Novo aviso') + '</span>' +
+            '<button type="button" id="avClose" style="border:0;background:transparent;font-size:1.1rem;cursor:pointer;">✕</button></div>' +
+            '<div style="padding:1rem;display:grid;gap:.55rem;font-size:.85rem;">' +
+            '<div><label style="font-size:.7rem;font-weight:600;display:block;margin-bottom:.2rem;">TÍTULO *</label>' +
+            '<input type="text" id="avTitulo" value="' + escHtmlAviso(aviso ? aviso.titulo : '') + '" style="width:100%;padding:.45rem;border-radius:8px;border:1px solid var(--border-color);font-family:inherit;" /></div>' +
+            '<div><label style="font-size:.7rem;font-weight:600;display:block;margin-bottom:.2rem;">MENSAGEM *</label>' +
+            '<textarea id="avTexto" rows="4" style="width:100%;padding:.45rem;border-radius:8px;border:1px solid var(--border-color);font-family:inherit;resize:vertical;">' + (aviso ? escHtmlAviso(aviso.texto) : '') + '</textarea></div>' +
+            '<div><label style="font-size:.7rem;font-weight:600;display:block;margin-bottom:.2rem;">PRIORIDADE</label>' +
+            '<select id="avPrioridade" style="width:100%;padding:.45rem;border-radius:8px;border:1px solid var(--border-color);font-family:inherit;">' +
+            '<option value="normal"' + (!aviso || aviso.prioridade === 'normal' ? ' selected' : '') + '>Normal</option>' +
+            '<option value="importante"' + (aviso && aviso.prioridade === 'importante' ? ' selected' : '') + '>Importante</option>' +
+            '<option value="urgente"' + (aviso && aviso.prioridade === 'urgente' ? ' selected' : '') + '>Urgente</option>' +
+            '</select></div>' +
+            '<div style="display:flex;gap:.5rem;justify-content:flex-end;margin-top:.3rem;">' +
+            '<button type="button" id="avCancel" style="padding:.4rem .8rem;border-radius:8px;border:1px solid var(--border-color);background:#F0F2EA;cursor:pointer;font-family:inherit;">Cancelar</button>' +
+            '<button type="button" id="avSave" style="padding:.4rem .9rem;border-radius:8px;border:0;background:#191D1B;color:#fff;font-weight:700;cursor:pointer;font-family:inherit;">Publicar</button>' +
+            '</div></div></div>';
+        document.body.appendChild(overlay);
+        function fechar() { try { overlay.remove(); } catch (e) {} }
+        overlay.querySelector('#avClose').onclick = fechar;
+        overlay.querySelector('#avCancel').onclick = fechar;
+        overlay.addEventListener('click', function(e) { if (e.target === overlay) fechar(); });
+        overlay.querySelector('#avSave').onclick = async function() {
+            var titulo = (document.getElementById('avTitulo').value || '').trim();
+            var texto = (document.getElementById('avTexto').value || '').trim();
+            var prioridade = document.getElementById('avPrioridade').value || 'normal';
+            if (!titulo || !texto) { alert('Preencha título e mensagem'); return; }
+            var btn = overlay.querySelector('#avSave');
+            btn.disabled = true;
+            btn.textContent = 'Salvando...';
+            try {
+                var payload = {
+                    titulo: titulo,
+                    texto: texto,
+                    prioridade: prioridade,
+                    ativo: true,
+                    autor: autorAtualAviso(),
+                    atualizado_em: new Date().toISOString()
+                };
+                if (typeof payloadComCondominio === 'function') payload = payloadComCondominio(payload);
+                if (sb) {
+                    if (aviso && aviso.id && String(aviso.id).indexOf('local-') !== 0) {
+                        var up = await sb.from('avisos').update(payload).eq('id', aviso.id);
+                        if (up.error) throw up.error;
+                    } else {
+                        payload.criado_em = new Date().toISOString();
+                        var ins = await sb.from('avisos').insert([payload]);
+                        if (ins.error) throw ins.error;
+                    }
+                } else {
+                    throw new Error('Sem Supabase');
+                }
+                fechar();
+                await carregarAvisos();
+            } catch (e) {
+                console.warn(e);
+                // fallback local
+                var lista = [];
+                try { lista = JSON.parse(localStorage.getItem('tagualife_avisos') || '[]'); } catch (e2) {}
+                if (aviso && aviso.id) {
+                    lista = lista.map(function(a) {
+                        if (String(a.id) === String(aviso.id)) {
+                            return Object.assign({}, a, payload, { id: a.id });
+                        }
+                        return a;
+                    });
+                } else {
+                    lista.unshift(Object.assign({ id: 'local-' + Date.now() }, payload, { criado_em: new Date().toISOString() }));
+                }
+                localStorage.setItem('tagualife_avisos', JSON.stringify(lista));
+                fechar();
+                await carregarAvisos();
+                alert('Aviso salvo localmente. Para gravar no banco, rode o SQL da tabela avisos no Supabase.');
+            }
+        };
+    }
+
+    async function excluirAviso(id) {
+        if (!isAdminAvisos()) return;
+        if (!confirm('Remover este aviso?')) return;
+        try {
+            if (sb && String(id).indexOf('local-') !== 0) {
+                var { error } = await sb.from('avisos').update({ ativo: false }).eq('id', id);
+                if (error) {
+                    // tenta delete
+                    var d = await sb.from('avisos').delete().eq('id', id);
+                    if (d.error) throw d.error;
+                }
+            }
+            var lista = [];
+            try { lista = JSON.parse(localStorage.getItem('tagualife_avisos') || '[]'); } catch (e) {}
+            lista = lista.filter(function(a) { return String(a.id) !== String(id); });
+            localStorage.setItem('tagualife_avisos', JSON.stringify(lista));
+            await carregarAvisos();
+        } catch (e) {
+            alert('Erro: ' + (e.message || e));
+        }
+    }
+
+
     async function montarPainelAtencaoHoje() {
         const box = document.getElementById('listaAtencaoHoje');
         if (!box) return;
@@ -2703,6 +2942,10 @@
         if (typeof montarPainelAtencaoHoje === 'function') {
             montarPainelAtencaoHoje();
             setInterval(montarPainelAtencaoHoje, 60000);
+        }
+        if (typeof carregarAvisos === 'function') {
+            carregarAvisos();
+            setInterval(carregarAvisos, 120000);
         }
         buscarVersiculo();
         renderizarCalendario(mesAtual, anoAtual);
