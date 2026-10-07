@@ -880,60 +880,162 @@ async function excluirEntrada(id) {
     }
 }
 
+
+function isAdminRec() {
+    try {
+        if (typeof getCargo === 'function' && getCargo() === 'Administrador') return true;
+        if (typeof podeEditar === 'function' && podeEditar()) return true;
+        var s = typeof getSessao === 'function' ? getSessao() : null;
+        return !!(s && s.cargo === 'Administrador');
+    } catch (e) { return false; }
+}
+
+function parseObsRecebimento(obs) {
+    obs = obs || '';
+    var nf = '', forn = '', preco = '', valNota = '', resto = obs;
+    var mNf = obs.match(/NF\s*([^\s—\-·]+)/i);
+    if (mNf) nf = mNf[1].trim();
+    var mF = obs.match(/—\s*([^·]+)/);
+    if (mF) forn = mF[1].trim();
+    var mPu = obs.match(/R\$\s*([0-9]+(?:[.,][0-9]+)?)\s*un/i);
+    if (mPu) preco = mPu[1].replace(',', '.');
+    var mNota = obs.match(/Nota\s*R\$\s*([0-9]+(?:[.,][0-9]+)?)/i);
+    if (mNota) valNota = mNota[1].replace(',', '.');
+    return { nf: nf, fornecedor: forn, preco: preco, valorNota: valNota, obsOriginal: obs };
+}
+
+function montarObsRecebimento(nf, forn, preco, valNota) {
+    var o = 'Recebimento NF ' + (nf || '—');
+    if (forn) o += ' — ' + forn;
+    if (preco && parseFloat(preco) > 0) o += ' · R$ ' + Number(preco).toFixed(2) + ' un';
+    if (valNota && parseFloat(valNota) > 0) o += ' · Nota R$ ' + Number(valNota).toFixed(2);
+    return o;
+}
+
 async function editarEntrada(id) {
-    if (typeof podeEditar === 'function' && !podeEditar() && !(typeof getCargo === 'function' && getCargo() === 'Administrador')) {
-        toast('⛔ Sem permissão para editar');
+    if (!isAdminRec()) {
+        toast('⛔ Somente Administrador / quem pode editar');
         return;
     }
     const m = (cacheEntradas || []).find(x => String(x.id) === String(id));
     if (!m) { toast('Registro não encontrado'); return; }
+
+    const parsed = parseObsRecebimento(m.observacao || '');
     const qtdAntiga = parseInt(m.quantidade) || 0;
-    const novaStr = prompt('Nova quantidade da entrada "' + (m.item_nome || '') + '":', String(qtdAntiga));
-    if (novaStr === null) return;
-    const qtdNova = parseInt(novaStr, 10);
-    if (isNaN(qtdNova) || qtdNova < 0) {
-        toast('⚠️ Quantidade inválida');
-        return;
-    }
-    const obsNova = prompt('Observação / NF:', m.observacao || '');
-    if (obsNova === null) return;
-    try {
-        const delta = qtdNova - qtdAntiga; // positivo = entra mais; negativo = tira do estoque
-        let estoqueId = m.estoque_id;
-        let qtdAtualEstoque = null;
-        if (estoqueId) {
-            const { data: est } = await sb.from('estoque').select('id,quantidade').eq('id', estoqueId).maybeSingle();
-            if (est) qtdAtualEstoque = parseInt(est.quantidade) || 0;
-        } else if (m.item_nome) {
-            const { data: lista } = await sb.from('estoque').select('id,quantidade,nome').ilike('nome', m.item_nome).limit(5);
-            const est = (lista || []).find(e => (e.nome || '').toLowerCase() === (m.item_nome || '').toLowerCase()) || (lista || [])[0];
-            if (est) {
-                estoqueId = est.id;
-                qtdAtualEstoque = parseInt(est.quantidade) || 0;
+
+    // modal
+    let overlay = document.getElementById('modalEditEntrada');
+    if (overlay) overlay.remove();
+    overlay = document.createElement('div');
+    overlay.id = 'modalEditEntrada';
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:10070;display:flex;align-items:center;justify-content:center;padding:1rem;';
+    overlay.innerHTML = `
+      <div style="background:var(--bg-card,#FBFBF7);color:var(--text-primary,#191D1B);border-radius:12px;width:100%;max-width:440px;border:1px solid var(--border-color,#D8DCCE);font-family:Inter,sans-serif;box-shadow:0 12px 40px rgba(0,0,0,.18);">
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:.8rem 1rem;border-bottom:1px solid var(--border-color,#D8DCCE);font-weight:700;">
+          <span><i class="fas fa-edit"></i> Editar entrada (Admin)</span>
+          <button type="button" id="eeClose" style="border:0;background:transparent;font-size:1.1rem;cursor:pointer;color:inherit;">✕</button>
+        </div>
+        <div style="padding:1rem;display:grid;gap:.55rem;font-size:.85rem;">
+          <div>
+            <label style="font-size:.7rem;font-weight:600;display:block;margin-bottom:.2rem;">ITEM</label>
+            <input type="text" id="eeItem" value="${(m.item_nome||'').replace(/"/g,'&quot;')}" style="width:100%;padding:.45rem;border-radius:8px;border:1px solid var(--border-color);font-family:inherit;" />
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem;">
+            <div>
+              <label style="font-size:.7rem;font-weight:600;display:block;margin-bottom:.2rem;">QUANTIDADE</label>
+              <input type="number" id="eeQtd" min="0" value="${qtdAntiga}" style="width:100%;padding:.45rem;border-radius:8px;border:1px solid var(--border-color);font-family:inherit;" />
+            </div>
+            <div>
+              <label style="font-size:.7rem;font-weight:600;display:block;margin-bottom:.2rem;">PREÇO UNIT. (R$)</label>
+              <input type="number" id="eePreco" min="0" step="0.01" value="${parsed.preco || ''}" style="width:100%;padding:.45rem;border-radius:8px;border:1px solid var(--border-color);font-family:inherit;" />
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem;">
+            <div>
+              <label style="font-size:.7rem;font-weight:600;display:block;margin-bottom:.2rem;">Nº NF</label>
+              <input type="text" id="eeNF" value="${(parsed.nf||'').replace(/"/g,'&quot;')}" style="width:100%;padding:.45rem;border-radius:8px;border:1px solid var(--border-color);font-family:inherit;" />
+            </div>
+            <div>
+              <label style="font-size:.7rem;font-weight:600;display:block;margin-bottom:.2rem;">VALOR TOTAL NF (R$)</label>
+              <input type="number" id="eeValNota" min="0" step="0.01" value="${parsed.valorNota || ''}" style="width:100%;padding:.45rem;border-radius:8px;border:1px solid var(--border-color);font-family:inherit;" />
+            </div>
+          </div>
+          <div>
+            <label style="font-size:.7rem;font-weight:600;display:block;margin-bottom:.2rem;">FORNECEDOR</label>
+            <input type="text" id="eeForn" value="${(parsed.fornecedor||'').replace(/"/g,'&quot;')}" style="width:100%;padding:.45rem;border-radius:8px;border:1px solid var(--border-color);font-family:inherit;" />
+          </div>
+          <p style="font-size:.7rem;color:var(--text-secondary,#7A816E);margin:0;">Ao mudar a quantidade, o estoque é ajustado automaticamente.</p>
+          <div style="display:flex;gap:.5rem;justify-content:flex-end;margin-top:.3rem;">
+            <button type="button" id="eeCancel" style="padding:.4rem .8rem;border-radius:8px;border:1px solid var(--border-color);background:#F0F2EA;cursor:pointer;font-family:inherit;">Cancelar</button>
+            <button type="button" id="eeSave" style="padding:.4rem .9rem;border-radius:8px;border:0;background:#191D1B;color:#fff;font-weight:700;cursor:pointer;font-family:inherit;">Salvar</button>
+          </div>
+        </div>
+      </div>`;
+    document.body.appendChild(overlay);
+    const fechar = () => { try { overlay.remove(); } catch(e){} };
+    overlay.querySelector('#eeClose').onclick = fechar;
+    overlay.querySelector('#eeCancel').onclick = fechar;
+    overlay.addEventListener('click', e => { if (e.target === overlay) fechar(); });
+
+    overlay.querySelector('#eeSave').onclick = async function() {
+        const itemNome = (document.getElementById('eeItem').value || '').trim();
+        const qtdNova = parseInt(document.getElementById('eeQtd').value, 10);
+        const preco = parseFloat(document.getElementById('eePreco').value) || 0;
+        const nf = (document.getElementById('eeNF').value || '').trim();
+        const valNota = parseFloat(document.getElementById('eeValNota').value) || 0;
+        const forn = (document.getElementById('eeForn').value || '').trim();
+        if (!itemNome) { alert('Informe o item'); return; }
+        if (isNaN(qtdNova) || qtdNova < 0) { alert('Quantidade inválida'); return; }
+
+        const btn = overlay.querySelector('#eeSave');
+        btn.disabled = true;
+        btn.textContent = 'Salvando...';
+        try {
+            const delta = qtdNova - qtdAntiga;
+            let estoqueId = m.estoque_id;
+            let qtdAtualEstoque = null;
+            if (estoqueId) {
+                const { data: est } = await sb.from('estoque').select('id,quantidade').eq('id', estoqueId).maybeSingle();
+                if (est) qtdAtualEstoque = parseInt(est.quantidade) || 0;
+            } else if (m.item_nome || itemNome) {
+                const nomeBusca = m.item_nome || itemNome;
+                const { data: lista } = await sb.from('estoque').select('id,quantidade,nome').ilike('nome', nomeBusca).limit(5);
+                const est = (lista || []).find(e => (e.nome || '').toLowerCase() === nomeBusca.toLowerCase()) || (lista || [])[0];
+                if (est) {
+                    estoqueId = est.id;
+                    qtdAtualEstoque = parseInt(est.quantidade) || 0;
+                }
             }
+            let depois = m.quantidade_depois;
+            if (qtdAtualEstoque != null && delta !== 0) {
+                const novaEst = Math.max(0, qtdAtualEstoque + delta);
+                await sb.from('estoque').update({ quantidade: novaEst, atualizado_em: new Date().toISOString() }).eq('id', estoqueId);
+                const antes = m.quantidade_antes != null ? parseInt(m.quantidade_antes) : (novaEst - qtdNova);
+                depois = (parseInt(antes) || 0) + qtdNova;
+            }
+            const obsNova = montarObsRecebimento(nf, forn, preco, valNota);
+            const { error } = await sb.from('estoque_movimentacoes').update({
+                item_nome: itemNome,
+                quantidade: qtdNova,
+                quantidade_depois: depois,
+                observacao: obsNova,
+                estoque_id: estoqueId || m.estoque_id || null
+            }).eq('id', id);
+            if (error) throw error;
+            toast('✅ Entrada atualizada (NF, valores e estoque)');
+            fechar();
+            await listarEntradas();
+            try { await carregarEstoque(); } catch (e) {}
+        } catch (e) {
+            console.error(e);
+            toast('❌ ' + (e.message || e));
+            btn.disabled = false;
+            btn.textContent = 'Salvar';
         }
-        let depois = m.quantidade_depois;
-        if (qtdAtualEstoque != null) {
-            const novaEst = Math.max(0, qtdAtualEstoque + delta);
-            await sb.from('estoque').update({ quantidade: novaEst, atualizado_em: new Date().toISOString() }).eq('id', estoqueId);
-            // recalcula depois com base no antes da movimentação
-            const antes = m.quantidade_antes != null ? parseInt(m.quantidade_antes) : (novaEst - qtdNova);
-            depois = (parseInt(antes) || 0) + qtdNova;
-        }
-        const { error } = await sb.from('estoque_movimentacoes').update({
-            quantidade: qtdNova,
-            quantidade_depois: depois,
-            observacao: obsNova,
-            estoque_id: estoqueId || m.estoque_id || null
-        }).eq('id', id);
-        if (error) throw error;
-        toast('✅ Entrada atualizada');
-        await carregarEstoque();
-        await listarEntradas();
-    } catch (e) {
-        toast('❌ ' + (e.message || e));
-    }
+    };
 }
+
+
 
 
 
