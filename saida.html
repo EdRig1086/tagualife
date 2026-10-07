@@ -1124,7 +1124,7 @@
                         <tr>
                             <th class="col-qtd">QTD</th>
                             <th class="col-item">ITEM</th>
-                            <th class="col-destino">USO / DESTINO</th>
+                            <th class="col-destino">USO / DESTINO<br><span style="font-weight:400;font-size:0.6rem;opacity:.85;">Local + complemento</span></th>
                             <th class="col-acoes"></th>
                         </tr>
                     </thead>
@@ -2433,6 +2433,129 @@ function mostrarToast(mensagem, tipo = 'success') {
         return { temErro, temNaoCadastrado };
     }
 
+
+    // Locais do prédio (destino)
+    const LOCAIS_PREDIO = [
+        // Andares / estrutura
+        '1º Subsolo',
+        '2º Subsolo',
+        'Térreo',
+        '1º Andar',
+        '2º Andar',
+        '3º Andar',
+        '4º Andar',
+        '5º Andar',
+        '6º Andar',
+        '7º Andar',
+        '8º Andar',
+        '9º Andar',
+        '10º Andar',
+        'Cobertura',
+        // Áreas comuns / lazer
+        'Academia',
+        'Área Pet — Bloco D',
+        'Bar — Bloco B',
+        'Biblioteca — Bloco E',
+        'Brinquedoteca — Bloco A',
+        'Car Wash — 1º Subsolo',
+        'Churrasqueira — Bloco C',
+        'Churrasqueira — Bloco D',
+        'Churrasqueira — Bloco E',
+        'Churrasqueira — Bloco F',
+        'Cinema — Bloco A',
+        'Cinema — Bloco D',
+        'Espaço Gourmet — Bloco A',
+        'Espaço Gourmet — Bloco D',
+        'Espaço Gourmet — Bloco E',
+        'Espaço Pet — 1º Subsolo',
+        'Home Office — Bloco E',
+        'Lan House — Bloco D',
+        'Lan House — Bloco E',
+        'Lavanderia — Bloco B 1º Subsolo',
+        'Massagem',
+        'Massoterapia — Semana da Mulher',
+        'Pilates',
+        'Piscina Adulto',
+        'Piscina Infantil',
+        'Quadra de Areia',
+        'Quadra de Squash — 1º Subsolo',
+        'Quadra Poliesportiva',
+        'Sala de Jogos — Bloco D',
+        'Salão de Festa Infantil — Bloco A',
+        'Salão de Festas 1 — Bloco B',
+        'Salão de Festas 2 — Bloco B',
+        'Spinning',
+        'TAG-VEICULAR',
+        // Apoio / operação
+        'Administração',
+        'Área externa',
+        'Casa de bombas',
+        'Casa de máquinas',
+        'Copa',
+        'Gerador',
+        'Jardim',
+        'Portaria',
+        'Outro'
+    ];
+
+    function htmlSelectLocalPredio(valorSel) {
+        valorSel = (valorSel || '').trim();
+        let opts = '<option value="">Local / bloco...</option>';
+        LOCAIS_PREDIO.forEach(function(l) {
+            const sel = (valorSel === l) ? ' selected' : '';
+            opts += '<option value="' + l.replace(/"/g, '&quot;') + '"' + sel + '>' + l + '</option>';
+        });
+        return opts;
+    }
+
+    /** Junta local do prédio + complemento → destino final */
+    function obterDestinoDaLinha(row) {
+        if (!row) return '';
+        const sel = row.querySelector('.destino-local');
+        const comp = row.querySelector('.destino-complemento');
+        const local = sel ? (sel.value || '').trim() : '';
+        const extra = comp ? (comp.value || '').trim() : '';
+        // legado: só input .destino-input
+        const legado = row.querySelector('.destino-input:not(.destino-complemento)');
+        if (!sel && legado) return (legado.value || '').trim();
+        if (local && extra) return local + ' — ' + extra;
+        return local || extra || '';
+    }
+
+    function preencherDestinoNaLinha(row, destinoCompleto) {
+        if (!row) return;
+        const sel = row.querySelector('.destino-local');
+        const comp = row.querySelector('.destino-complemento');
+        const d = (destinoCompleto || '').trim();
+        if (!sel) {
+            const leg = row.querySelector('.destino-input');
+            if (leg) leg.value = d;
+            return;
+        }
+        // tenta casar com local conhecido
+        let achou = '';
+        for (let i = 0; i < LOCAIS_PREDIO.length; i++) {
+            const L = LOCAIS_PREDIO[i];
+            if (d === L || d.indexOf(L + ' — ') === 0 || d.indexOf(L + ' - ') === 0 || d.indexOf(L + ',') === 0) {
+                achou = L;
+                break;
+            }
+        }
+        if (achou) {
+            sel.value = achou;
+            let resto = d;
+            if (resto.indexOf(achou + ' — ') === 0) resto = resto.slice(achou.length + 3);
+            else if (resto.indexOf(achou + ' - ') === 0) resto = resto.slice(achou.length + 3);
+            else if (resto === achou) resto = '';
+            else if (resto.indexOf(achou) === 0) resto = resto.slice(achou.length).replace(/^[\s—\-,]+/, '');
+            if (comp) comp.value = resto;
+        } else {
+            sel.value = d ? 'Outro' : '';
+            if (comp) comp.value = d;
+        }
+    }
+
+
     function adicionarLinha() {
         const tbody = document.getElementById('tabelaItensBody');
         const tr = document.createElement('tr');
@@ -2448,7 +2571,14 @@ function mostrarToast(mensagem, tipo = 'success') {
                     <input type="text" class="item-input-manual" placeholder="✏️ Digite o nome do item..." style="display:none; width:100%; padding:0.5rem; border-radius:4px; border:2px solid #3498DB; background:var(--input-bg); color:var(--text-primary); font-weight:600;" />
                 </div>
             </td>
-            <td class="col-destino"><input type="text" class="destino-input" placeholder="Uso / destino" /></td>
+            <td class="col-destino">
+                <div style="display:flex;flex-direction:column;gap:0.25rem;min-width:160px;">
+                    <select class="destino-local" style="width:100%;padding:0.4rem;border-radius:4px;border:1px solid var(--border-color);background:var(--input-bg);color:var(--text-primary);font-size:0.8rem;">
+                        ${htmlSelectLocalPredio('')}
+                    </select>
+                    <input type="text" class="destino-complemento destino-input" placeholder="Complemento (apto, sala...)" style="width:100%;padding:0.35rem 0.45rem;border-radius:4px;border:1px solid var(--border-color);background:var(--input-bg);color:var(--text-primary);font-size:0.78rem;" />
+                </div>
+            </td>
             <td class="col-acoes">
                 <span class="status-cell" style="display:none;"></span>
                 <span class="remove-item" onclick="removerLinha(this)" style="color:var(--danger); cursor:pointer; font-size:1rem;"><i class="fas fa-minus-circle"></i></span>
@@ -2547,7 +2677,7 @@ function mostrarToast(mensagem, tipo = 'success') {
             const select = row.querySelector('.item-select');
             const inputManual = row.querySelector('.item-input-manual');
             const qtd = row.querySelector('.qtd-input')?.value?.trim() || '';
-            const destino = row.querySelector('.destino-input')?.value?.trim() || '';
+            const destino = obterDestinoDaLinha(row);
             
             let item = '';
             
@@ -3113,12 +3243,20 @@ function mostrarToast(mensagem, tipo = 'success') {
                             <input type="text" class="item-input-manual" placeholder="✏️ Digite o nome do item..." style="display:none; width:100%; padding:0.5rem; border-radius:4px; border:2px solid #3498DB; background:var(--input-bg); color:var(--text-primary); font-weight:600;" />
                         </div>
                     </td>
-                    <td class="col-destino"><input type="text" class="destino-input" value="${item.destino || ''}" placeholder="Uso / destino" /></td>
+                    <td class="col-destino">
+                <div style="display:flex;flex-direction:column;gap:0.25rem;min-width:160px;">
+                    <select class="destino-local" style="width:100%;padding:0.4rem;border-radius:4px;border:1px solid var(--border-color);background:var(--input-bg);color:var(--text-primary);font-size:0.8rem;">
+                        ${htmlSelectLocalPredio('')}
+                    </select>
+                    <input type="text" class="destino-complemento destino-input" placeholder="Complemento (apto, sala...)" style="width:100%;padding:0.35rem 0.45rem;border-radius:4px;border:1px solid var(--border-color);background:var(--input-bg);color:var(--text-primary);font-size:0.78rem;" />
+                </div>
+            </td>
                     <td class="col-acoes">
                         <span class="remove-item" onclick="removerLinha(this)" style="color:var(--danger); cursor:pointer; font-size:1rem;"><i class="fas fa-minus-circle"></i></span>
                     </td>
                 `;
                 tbody.appendChild(tr);
+                preencherDestinoNaLinha(tr, item.destino || '');
                 
                 carregarSelectItens();
                 const select = tr.querySelector('.item-select');
