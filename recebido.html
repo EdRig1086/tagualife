@@ -1082,19 +1082,44 @@ function abrirSeletorDataRec(tipo) {
 
 function exportarCSVRecebidos() {
     try {
-        var c = 'Data;NF;Valor NF;Fornecedor;Item;Qtd;Preco;Total item;Usuario\n';
-        document.querySelectorAll('#tabDetalhe tr').forEach(function(tr) {
-            var cells = [].slice.call(tr.querySelectorAll('td'));
-            if (cells.length) {
-                c += cells.map(function(td) { return (td.innerText || '').replace(/;/g, ','); }).join(';') + '\n';
+        var c = 'NF;Fornecedor;Item;Qtd;Preco unit;Total item;Valor NF;Data;Usuario\n';
+        // todas as tabelas de detalhe do relatório (popup ou página)
+        var tabs = document.querySelectorAll('table[id^="tabDetalhe"], table[id^="tabNF"]');
+        if (!tabs.length) tabs = document.querySelectorAll('table');
+        tabs.forEach(function(tab) {
+            // pega NF do bloco anterior se houver
+            var prev = tab.previousElementSibling;
+            var nf = '', forn = '', valNf = '', data = '', usuario = '';
+            if (prev && prev.classList && prev.classList.contains('nf-bloco')) {
+                var tit = prev.querySelector('.titulo');
+                var meta = prev.querySelector('.meta');
+                if (tit) nf = (tit.textContent || '').replace(/^NF\s*/i, '').trim();
+                if (meta) {
+                    var mt = meta.textContent || '';
+                    var mF = mt.match(/Fornecedor:\s*([^|]+)/i);
+                    if (mF) forn = mF[1].trim();
+                    var mV = mt.match(/Valor da NF:\s*R\$\s*([0-9.,]+)/i);
+                    if (mV) valNf = mV[1].trim();
+                }
             }
+            tab.querySelectorAll('tbody tr').forEach(function(tr) {
+                if (tr.classList.contains('subtotal')) return;
+                var cells = [].slice.call(tr.querySelectorAll('td'));
+                if (cells.length < 2) return;
+                var item = (cells[0].innerText || '').replace(/;/g, ',');
+                var qtd = (cells[1].innerText || '').replace(/;/g, ',');
+                var preco = cells[2] ? (cells[2].innerText || '').replace(/;/g, ',') : '';
+                var total = cells[3] ? (cells[3].innerText || '').replace(/;/g, ',') : '';
+                c += [nf, forn, item, qtd, preco, total, valNf, data, usuario].join(';') + '\n';
+            });
         });
         var b = new Blob(['\uFEFF' + c], { type: 'text/csv;charset=utf-8;' });
         var a = document.createElement('a');
         a.href = URL.createObjectURL(b);
-        a.download = 'entradas_recebidos.csv';
+        a.download = 'entradas_recebidos_' + new Date().toISOString().slice(0,10) + '.csv';
+        document.body.appendChild(a);
         a.click();
-        URL.revokeObjectURL(a.href);
+        setTimeout(function() { try { document.body.removeChild(a); URL.revokeObjectURL(a.href); } catch(e){} }, 500);
     } catch (e) {
         alert('Erro ao exportar: ' + (e.message || e));
     }
@@ -1319,10 +1344,10 @@ async function gerarRelatorioRecebidosCompleto(filtro) {
   .no-print button { padding: 8px 16px; border: 0; border-radius: 8px; cursor: pointer; font-weight: 700; margin: 0 4px; font-family: inherit; }
   .btn-print { background: #191D1B; color: #fff; }
   .btn-excel { background: #2E7D32; color: #fff; }
-  .topo { text-align: center; border-bottom: 3px solid #7A816E; padding-bottom: 10px; margin-bottom: 12px; }
-  .topo .marca { font-size: 10px; font-weight: 700; color: #7A816E; text-transform: uppercase; letter-spacing: 0.4px; }
-  .topo h1 { font-size: 15px; margin: 6px 0 3px; font-weight: 800; }
-  .topo .sub { font-size: 10px; color: #7A816E; margin: 0; }
+  .topo { text-align: center; border-bottom: 3px solid #7A816E; padding: 0 0 10px; margin: 0 auto 12px; max-width: 100%; }
+  .topo .marca { display: block; font-size: 10px; font-weight: 700; color: #7A816E; text-transform: uppercase; letter-spacing: 0.4px; margin: 0 0 4px; }
+  .topo h1 { display: block; font-size: 15px; margin: 4px 0; font-weight: 800; text-align: center; line-height: 1.25; color: #191D1B; }
+  .topo .sub { display: block; font-size: 10px; color: #7A816E; margin: 0; text-align: center; }
   .info-bar { display: flex; flex-wrap: wrap; gap: 6px 14px; justify-content: center; background: #F0F2EA; border: 1px solid #D8DCCE; border-radius: 8px; padding: 8px 12px; margin-bottom: 12px; font-size: 9.5px; }
   .cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; margin-bottom: 12px; }
   .card { text-align: center; background: #FBFBF7; border: 1px solid #D8DCCE; border-radius: 8px; padding: 9px 5px; }
@@ -1350,7 +1375,7 @@ async function gerarRelatorioRecebidosCompleto(filtro) {
 <body>
   <div class="no-print">
     <button class="btn-print" onclick="window.print()">Imprimir / PDF (A4 retrato)</button>
-    <button class="btn-excel" onclick="exportarCSVRecebidos()">Excel / CSV</button>
+    <button class="btn-excel" onclick="exportarCSVNesteRelatorio()">Excel / CSV</button>
   </div>
 
   <div class="topo">
@@ -1444,6 +1469,50 @@ async function gerarRelatorioRecebidosCompleto(filtro) {
     Sistema TaguáLife Center · Relatório de Entradas / Recebidos<br>
     Documento gerado em ${geradoEm} · Formato A4 retrato
   </div>
+<script>
+function exportarCSVNesteRelatorio() {
+  try {
+    var c = 'NF;Fornecedor;Item;Qtd;Preco unit;Total item;Valor NF\n';
+    var tabs = document.querySelectorAll('table[id^="tabDetalhe"], table[id^="tabNF"]');
+    if (!tabs.length) tabs = document.querySelectorAll('table');
+    tabs.forEach(function(tab) {
+      var prev = tab.previousElementSibling;
+      var nf = '', forn = '', valNf = '';
+      if (prev && prev.classList && prev.classList.contains('nf-bloco')) {
+        var tit = prev.querySelector('.titulo');
+        var meta = prev.querySelector('.meta');
+        if (tit) nf = (tit.textContent || '').replace(/^NF\s*/i, '').trim();
+        if (meta) {
+          var mt = meta.textContent || '';
+          var mF = mt.match(/Fornecedor:\s*([^|]+)/i);
+          if (mF) forn = mF[1].trim();
+          var mV = mt.match(/Valor da NF:\s*R\$\s*([0-9.,]+)/i);
+          if (mV) valNf = mV[1].trim();
+        }
+      }
+      tab.querySelectorAll('tbody tr').forEach(function(tr) {
+        if (tr.classList.contains('subtotal')) return;
+        var cells = [].slice.call(tr.querySelectorAll('td'));
+        if (cells.length < 2) return;
+        var item = (cells[0].innerText || '').replace(/;/g, ',');
+        var qtd = (cells[1].innerText || '').replace(/;/g, ',');
+        var preco = cells[2] ? (cells[2].innerText || '').replace(/;/g, ',') : '';
+        var total = cells[3] ? (cells[3].innerText || '').replace(/;/g, ',') : '';
+        c += [nf, forn, item, qtd, preco, total, valNf].join(';') + '\n';
+      });
+    });
+    var blob = new Blob(['\uFEFF' + c], { type: 'text/csv;charset=utf-8;' });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'entradas_recebidos.csv';
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(function(){ try{document.body.removeChild(a);}catch(e){} }, 400);
+  } catch (e) {
+    alert('Erro ao exportar CSV: ' + (e.message || e));
+  }
+}
+<\/script>
 </body>
 </html>`;
 
