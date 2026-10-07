@@ -1116,6 +1116,9 @@
                 <button class="btn-add-item" onclick="adicionarLinha()">
                     <i class="fas fa-plus"></i> Adicionar Item
                 </button>
+                <button type="button" id="btnGerirLocais" onclick="abrirModalLocaisDestino()" style="display:none;margin-left:0.35rem;padding:0.35rem 0.7rem;border-radius:8px;border:1px solid var(--border-color);background:var(--bg-card);color:var(--text-primary);font-size:0.7rem;font-weight:600;cursor:pointer;font-family:inherit;">
+                    <i class="fas fa-map-marker-alt"></i> Destinos
+                </button>
             </div>
 
             <div class="tabela-wrapper">
@@ -2435,73 +2438,147 @@ function mostrarToast(mensagem, tipo = 'success') {
 
 
     // Locais do prédio (destino)
-    const LOCAIS_PREDIO = [
-        // Andares / estrutura
-        '1º Subsolo',
-        '2º Subsolo',
-        'Térreo',
-        '1º Andar',
-        '2º Andar',
-        '3º Andar',
-        '4º Andar',
-        '5º Andar',
-        '6º Andar',
-        '7º Andar',
-        '8º Andar',
-        '9º Andar',
-        '10º Andar',
-        'Cobertura',
-        // Áreas comuns / lazer
-        'Academia',
-        'Área Pet — Bloco D',
-        'Bar — Bloco B',
-        'Biblioteca — Bloco E',
-        'Brinquedoteca — Bloco A',
-        'Car Wash — 1º Subsolo',
-        'Churrasqueira — Bloco C',
-        'Churrasqueira — Bloco D',
-        'Churrasqueira — Bloco E',
-        'Churrasqueira — Bloco F',
-        'Cinema — Bloco A',
-        'Cinema — Bloco D',
-        'Espaço Gourmet — Bloco A',
-        'Espaço Gourmet — Bloco D',
-        'Espaço Gourmet — Bloco E',
-        'Espaço Pet — 1º Subsolo',
-        'Home Office — Bloco E',
-        'Lan House — Bloco D',
-        'Lan House — Bloco E',
-        'Lavanderia — Bloco B 1º Subsolo',
-        'Massagem',
-        'Massoterapia — Semana da Mulher',
-        'Pilates',
-        'Piscina Adulto',
-        'Piscina Infantil',
-        'Quadra de Areia',
-        'Quadra de Squash — 1º Subsolo',
-        'Quadra Poliesportiva',
-        'Sala de Jogos — Bloco D',
-        'Salão de Festa Infantil — Bloco A',
-        'Salão de Festas 1 — Bloco B',
-        'Salão de Festas 2 — Bloco B',
-        'Spinning',
-        'TAG-VEICULAR',
-        // Apoio / operação
-        'Administração',
-        'Área externa',
-        'Casa de bombas',
-        'Casa de máquinas',
-        'Copa',
-        'Gerador',
-        'Jardim',
-        'Portaria',
-        'Outro'
+    const LOCAIS_PREDIO_PADRAO = [
+        '1º Subsolo', '2º Subsolo', 'Térreo',
+        '1º Andar', '2º Andar', '3º Andar', '4º Andar', '5º Andar',
+        '6º Andar', '7º Andar', '8º Andar', '9º Andar', '10º Andar', 'Cobertura',
+        'Academia', 'Área Pet — Bloco D', 'Bar — Bloco B', 'Biblioteca — Bloco E',
+        'Brinquedoteca — Bloco A', 'Car Wash — 1º Subsolo',
+        'Churrasqueira — Bloco C', 'Churrasqueira — Bloco D', 'Churrasqueira — Bloco E', 'Churrasqueira — Bloco F',
+        'Cinema — Bloco A', 'Cinema — Bloco D',
+        'Espaço Gourmet — Bloco A', 'Espaço Gourmet — Bloco D', 'Espaço Gourmet — Bloco E',
+        'Espaço Pet — 1º Subsolo', 'Home Office — Bloco E',
+        'Lan House — Bloco D', 'Lan House — Bloco E', 'Lavanderia — Bloco B 1º Subsolo',
+        'Massagem', 'Massoterapia — Semana da Mulher', 'Pilates',
+        'Piscina Adulto', 'Piscina Infantil', 'Quadra de Areia',
+        'Quadra de Squash — 1º Subsolo', 'Quadra Poliesportiva',
+        'Sala de Jogos — Bloco D', 'Salão de Festa Infantil — Bloco A',
+        'Salão de Festas 1 — Bloco B', 'Salão de Festas 2 — Bloco B',
+        'Spinning', 'TAG-VEICULAR',
+        'Administração', 'Área externa', 'Casa de bombas', 'Casa de máquinas',
+        'Copa', 'Gerador', 'Jardim', 'Portaria', 'Outro'
     ];
+
+    function isAdminLocais() {
+        try {
+            if (typeof getCargo === 'function' && getCargo() === 'Administrador') return true;
+            if (typeof podeGerenciarUsuarios === 'function' && podeGerenciarUsuarios()) return true;
+            var s = typeof getSessao === 'function' ? getSessao() : null;
+            return !!(s && (s.cargo === 'Administrador' || s.cargo === 'Admin'));
+        } catch (e) { return false; }
+    }
+
+    function carregarLocaisPredio() {
+        try {
+            var salvos = JSON.parse(localStorage.getItem('tagualife_locais_destino') || 'null');
+            if (Array.isArray(salvos) && salvos.length) {
+                return salvos.map(function(x) { return String(x || '').trim(); }).filter(Boolean);
+            }
+        } catch (e) {}
+        return LOCAIS_PREDIO_PADRAO.slice();
+    }
+
+    function salvarLocaisPredio(lista) {
+        localStorage.setItem('tagualife_locais_destino', JSON.stringify(lista));
+    }
+
+    function getLocaisPredio() {
+        return carregarLocaisPredio();
+    }
+
+    // compat: código antigo usa LOCAIS_PREDIO
+    var LOCAIS_PREDIO = carregarLocaisPredio();
+
+    function atualizarSelectsDestino() {
+        LOCAIS_PREDIO = carregarLocaisPredio();
+        document.querySelectorAll('select.destino-local').forEach(function(sel) {
+            var atual = sel.value;
+            sel.innerHTML = htmlSelectLocalPredio(atual);
+            if (atual && [...sel.options].some(function(o) { return o.value === atual; })) {
+                sel.value = atual;
+            }
+        });
+    }
+
+    function abrirModalLocaisDestino() {
+        if (!isAdminLocais()) {
+            mostrarToast('⛔ Somente Administrador pode editar os destinos', 'danger');
+            return;
+        }
+        var lista = carregarLocaisPredio();
+        var overlay = document.getElementById('modalLocaisDestino');
+        if (!overlay) {
+            overlay = document.createElement('div');
+            overlay.id = 'modalLocaisDestino';
+            overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:10060;display:flex;align-items:center;justify-content:center;padding:1rem;';
+            overlay.innerHTML = '<div style="background:var(--bg-card,#FBFBF7);color:var(--text-primary,#191D1B);border-radius:12px;width:100%;max-width:480px;max-height:90vh;overflow:auto;border:1px solid var(--border-color,#D8DCCE);font-family:Inter,sans-serif;box-shadow:0 12px 40px rgba(0,0,0,.18);">' +
+                '<div style="display:flex;justify-content:space-between;align-items:center;padding:.85rem 1rem;border-bottom:1px solid var(--border-color,#D8DCCE);font-weight:700;">' +
+                '<span><i class="fas fa-map-marker-alt"></i> Destinos / locais do prédio</span>' +
+                '<button type="button" id="btnFecharLocais" style="border:0;background:transparent;font-size:1.1rem;cursor:pointer;color:inherit;">✕</button></div>' +
+                '<div style="padding:1rem;">' +
+                '<p style="font-size:.75rem;color:var(--text-secondary,#7A816E);margin:0 0 .6rem;">Somente <strong>Administrador</strong>. Inclua, renomeie ou remova. Usado no campo Uso / Destino da saída.</p>' +
+                '<div style="display:flex;gap:.4rem;margin-bottom:.7rem;">' +
+                '<input type="text" id="novoLocalDestino" placeholder="Novo local..." style="flex:1;padding:.45rem .6rem;border-radius:8px;border:1px solid var(--border-color,#D8DCCE);font-family:inherit;" />' +
+                '<button type="button" id="btnAddLocal" style="padding:.45rem .8rem;border-radius:8px;border:0;background:#191D1B;color:#fff;font-weight:600;cursor:pointer;font-family:inherit;">+ Add</button>' +
+                '</div>' +
+                '<div id="listaLocaisEdit" style="display:flex;flex-direction:column;gap:.35rem;max-height:50vh;overflow:auto;"></div>' +
+                '<div style="display:flex;gap:.5rem;justify-content:space-between;margin-top:.9rem;flex-wrap:wrap;">' +
+                '<button type="button" id="btnRestaurarLocais" style="padding:.4rem .7rem;border-radius:8px;border:1px solid var(--border-color);background:#F0F2EA;cursor:pointer;font-family:inherit;font-size:.75rem;">Restaurar padrão</button>' +
+                '<button type="button" id="btnSalvarLocais" style="padding:.4rem .9rem;border-radius:8px;border:0;background:#2E7D32;color:#fff;font-weight:700;cursor:pointer;font-family:inherit;">Salvar</button>' +
+                '</div></div></div>';
+            document.body.appendChild(overlay);
+            overlay.addEventListener('click', function(e) { if (e.target === overlay) overlay.style.display = 'none'; });
+            overlay.querySelector('#btnFecharLocais').onclick = function() { overlay.style.display = 'none'; };
+            overlay.querySelector('#btnAddLocal').onclick = function() {
+                var inp = document.getElementById('novoLocalDestino');
+                var v = (inp.value || '').trim();
+                if (!v) return;
+                var box = document.getElementById('listaLocaisEdit');
+                box.insertAdjacentHTML('afterbegin', htmlLinhaLocal(v));
+                inp.value = '';
+                inp.focus();
+            };
+            overlay.querySelector('#btnRestaurarLocais').onclick = function() {
+                if (!confirm('Restaurar lista padrão de destinos?')) return;
+                document.getElementById('listaLocaisEdit').innerHTML = LOCAIS_PREDIO_PADRAO.map(htmlLinhaLocal).join('');
+            };
+            overlay.querySelector('#btnSalvarLocais').onclick = function() {
+                var vals = [];
+                document.querySelectorAll('#listaLocaisEdit .local-edit-input').forEach(function(inp) {
+                    var v = (inp.value || '').trim();
+                    if (v && vals.indexOf(v) < 0) vals.push(v);
+                });
+                if (!vals.length) { alert('Mantenha ao menos um local'); return; }
+                // garante Outro no fim
+                vals = vals.filter(function(x) { return x !== 'Outro'; });
+                vals.push('Outro');
+                salvarLocaisPredio(vals);
+                LOCAIS_PREDIO = vals;
+                atualizarSelectsDestino();
+                overlay.style.display = 'none';
+                mostrarToast('✅ Destinos atualizados!', 'success');
+            };
+        }
+        function htmlLinhaLocal(nome) {
+            return '<div style="display:flex;gap:.35rem;align-items:center;">' +
+                '<input type="text" class="local-edit-input" value="' + String(nome).replace(/"/g, '&quot;') + '" style="flex:1;padding:.35rem .5rem;border-radius:6px;border:1px solid var(--border-color,#D8DCCE);font-family:inherit;font-size:.8rem;" />' +
+                '<button type="button" class="btn-rm-local" style="border:0;background:#8B3A3A;color:#fff;border-radius:6px;padding:.3rem .5rem;cursor:pointer;" title="Remover">✕</button></div>';
+        }
+        window.htmlLinhaLocal = htmlLinhaLocal;
+        var box = document.getElementById('listaLocaisEdit');
+        box.innerHTML = lista.map(htmlLinhaLocal).join('');
+        box.onclick = function(e) {
+            var btn = e.target.closest('.btn-rm-local');
+            if (btn) btn.parentElement.remove();
+        };
+        overlay.style.display = 'flex';
+    }
+
 
     function htmlSelectLocalPredio(valorSel) {
         valorSel = (valorSel || '').trim();
         let opts = '<option value="">Local / bloco...</option>';
-        LOCAIS_PREDIO.forEach(function(l) {
+        getLocaisPredio().forEach(function(l) {
             const sel = (valorSel === l) ? ' selected' : '';
             opts += '<option value="' + l.replace(/"/g, '&quot;') + '"' + sel + '>' + l + '</option>';
         });
@@ -2534,8 +2611,9 @@ function mostrarToast(mensagem, tipo = 'success') {
         }
         // tenta casar com local conhecido
         let achou = '';
-        for (let i = 0; i < LOCAIS_PREDIO.length; i++) {
-            const L = LOCAIS_PREDIO[i];
+        const _locs = getLocaisPredio();
+        for (let i = 0; i < _locs.length; i++) {
+            const L = _locs[i];
             if (d === L || d.indexOf(L + ' — ') === 0 || d.indexOf(L + ' - ') === 0 || d.indexOf(L + ',') === 0) {
                 achou = L;
                 break;
@@ -3649,7 +3727,7 @@ async function gerarRelatorioDetalhadoSaidas() {
             // outras identificadas (já nas keys) — se sobrar algo com palavra empresa
             secEmp += '';
 
-            let secInt = `<h2>${num}. Colaboradores Internos — Item por Item</h2>`;
+            let secInt = `<h2>${num}. Colaboradores internos — o que cada um retirou</h2>`;
             const nomesInt = Object.keys(internos).sort((a, b) => internos[b].length - internos[a].length);
             let sub = 1;
             nomesInt.forEach(nome => {
@@ -3660,32 +3738,41 @@ async function gerarRelatorioDetalhadoSaidas() {
 
             const html = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="utf-8">
 <title>Relatório Detalhado de Saídas - TaguáLife</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet" />
 <style>
-@page { size: A4; margin: 12mm; }
-body { font-family: Inter, Arial, sans-serif; color: #191D1B; font-size: 10px; margin: 0; padding: 16px 20px; background: #FBFBF7; }
-h1 { text-align: center; color: #191D1B; font-size: 20px; margin: 8px 0 4px; letter-spacing: 0.5px; }
-.sub { text-align: center; color: #7A816E; margin-bottom: 16px; font-size: 11px; }
+@page { size: A4 portrait; margin: 12mm 10mm; }
+* { box-sizing: border-box; }
+body { font-family: Inter, Arial, sans-serif; color: #191D1B; font-size: 9.5px; margin: 0; padding: 10px 12px; background: #fff; line-height: 1.35; }
+.topo { text-align: center; border-bottom: 3px solid #7A816E; padding-bottom: 10px; margin-bottom: 12px; }
+.topo .marca { font-size: 10px; font-weight: 700; color: #7A816E; text-transform: uppercase; letter-spacing: 0.4px; }
+h1 { text-align: center; color: #191D1B; font-size: 15px; margin: 6px 0 3px; font-weight: 800; letter-spacing: 0; }
+.sub { text-align: center; color: #7A816E; margin-bottom: 10px; font-size: 10px; }
 .box {
-  max-width: 380px; margin: 0 auto 20px; background: #F0F2EA; border: 1px solid #D8DCCE;
-  border-radius: 10px; padding: 12px 16px; font-size: 11px; color: #191D1B; line-height: 1.55;
+  max-width: 100%; margin: 0 0 12px; background: #F0F2EA; border: 1px solid #D8DCCE;
+  border-radius: 8px; padding: 8px 12px; font-size: 9.5px; color: #191D1B; line-height: 1.45;
+  display: flex; flex-wrap: wrap; gap: 6px 16px; justify-content: center;
 }
-.linha { border: 0; border-top: 3px solid #7A816E; margin: 16px 0 20px; }
+.linha { border: 0; border-top: 2px solid #7A816E; margin: 12px 0 14px; }
 h2 {
-  font-size: 13px; color: #191D1B; margin: 18px 0 8px; padding: 6px 10px;
-  background: linear-gradient(90deg, #C1CE83, #E8EBE0); border-left: 4px solid #7A816E; border-radius: 0 6px 6px 0;
+  font-size: 11px; color: #191D1B; margin: 14px 0 6px; padding: 5px 9px;
+  background: #E8EBE0; border-left: 4px solid #7A816E; border-radius: 0 6px 6px 0; font-weight: 700;
+  page-break-after: avoid;
 }
-h3 { font-size: 11px; color: #191D1B; margin: 12px 0 6px; background: #E8EBE0; padding: 5px 8px; border-radius: 4px; }
-.cards { display: flex; gap: 10px; flex-wrap: wrap; margin: 12px 0 18px; justify-content: space-between; }
+h3 { font-size: 10px; color: #191D1B; margin: 10px 0 5px; background: #F0F2EA; padding: 4px 8px; border-radius: 4px; page-break-after: avoid; font-weight: 700; }
+.cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 7px; margin: 10px 0 12px; }
 .card {
-  flex: 1; min-width: 100px; text-align: center; background: #FBFBF7; border: 1px solid #D8DCCE;
-  border-radius: 10px; padding: 12px 8px; box-shadow: 0 1px 3px rgba(25,29,27,.06);
+  text-align: center; background: #FBFBF7; border: 1px solid #D8DCCE;
+  border-radius: 8px; padding: 9px 6px;
 }
-.card .n { font-size: 22px; font-weight: 800; color: #191D1B; }
-.card .l { font-size: 9px; color: #7A816E; text-transform: uppercase; margin-top: 2px; letter-spacing: 0.3px; }
+.card .n { font-size: 16px; font-weight: 800; color: #191D1B; line-height: 1.1; }
+.card .l { font-size: 7.5px; color: #7A816E; text-transform: uppercase; margin-top: 2px; letter-spacing: 0.2px; font-weight: 600; }
+.legenda { font-size: 8.5px; color: #7A816E; margin: 0 0 8px; }
 table { width: 100%; border-collapse: collapse; margin: 6px 0 14px; table-layout: fixed; }
-th { background: #7A816E; color: #FBFBF7; text-align: left; padding: 6px 7px; font-size: 9.5px; word-wrap: break-word; }
-td { border-bottom: 1px solid #D8DCCE; padding: 5px 7px; vertical-align: top; word-wrap: break-word; overflow-wrap: break-word; }
-tr:nth-child(even) td { background: #F0F2EA; }
+th { background: #7A816E; color: #FBFBF7; text-align: left; padding: 4px 5px; font-size: 8.5px; font-weight: 600; word-wrap: break-word; }
+td { border-bottom: 1px solid #E4E8DC; padding: 3.5px 5px; vertical-align: top; word-wrap: break-word; overflow-wrap: break-word; }
+tr:nth-child(even) td { background: #F7F8F3; }
+tr { page-break-inside: avoid; }
+thead { display: table-header-group; }
 col.c-nro { width: 8%; }
 col.c-data { width: 11%; }
 col.c-colab { width: 18%; }
@@ -3697,20 +3784,22 @@ td.c-qtd, th.c-qtd { text-align: center; }
 @media print { .no-print { display: none !important; } body { padding: 0; } }
 </style></head><body>
 <div class="no-print" style="margin-bottom:12px;text-align:center;">
-  <button onclick="window.print()" style="padding:8px 18px;background:#191D1B;color:#FBFBF7;border:0;border-radius:8px;cursor:pointer;font-weight:700;margin:0 4px;">🖨 Imprimir / PDF</button>
+  <button onclick="window.print()" style="padding:8px 18px;background:#191D1B;color:#FBFBF7;border:0;border-radius:8px;cursor:pointer;font-weight:700;margin:0 4px;">Imprimir / PDF (A4 retrato)</button>
   <button onclick="(function(){const rows=[...document.querySelectorAll('table tr')];let c='Nº;Data;Colaborador;Item;Qtd;Destino\n';rows.forEach(tr=>{const cells=[...tr.querySelectorAll('td')];if(cells.length>=5){c+=cells.map(td=>td.innerText.replace(/;/g,',')).join(';')+'\n';}});const b=new Blob(['\uFEFF'+c],{type:'text/csv'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='saidas_detalhado.csv';a.click();})()" style="padding:8px 18px;background:#2E7D32;color:#fff;border:0;border-radius:8px;cursor:pointer;font-weight:700;margin:0 4px;">📊 Excel/CSV</button>
 </div>
-<h1>RELATÓRIO DETALHADO DE SAÍDAS</h1>
-<div class="sub">Condomínio TaguáLife · Life Conceito em Gestão Condominial</div>
-<div class="box">
-  <strong>Período:</strong> ${deBR} a ${ateBR}<br>
-  <strong>Documento gerado em:</strong> ${geradoEm}<br>
-  <strong>Almoxarife responsável:</strong> ${esc(almox)}<br>
-  <strong>Total de Saídas:</strong> ${fmtN(totalSaidas)} &nbsp;|&nbsp; <strong>Itens:</strong> ${fmtN(totalUnid)} unid.
+<div class="topo">
+  <div class="marca">TaguáLife Center · Almoxarifado</div>
+  <h1>Relatório Detalhado de Saídas</h1>
+  <p class="sub">Condomínio TaguáLife · Life Conceito em Gestão Condominial</p>
 </div>
-<hr class="linha">
+<div class="box">
+  <span><strong>Período:</strong> ${deBR} a ${ateBR}</span>
+  <span><strong>Emitido em:</strong> ${geradoEm}</span>
+  <span><strong>Almoxarife:</strong> ${esc(almox)}</span>
+</div>
+<p class="legenda">Material retirado do estoque no período — organizado por empresa e por colaborador para facilitar a conferência.</p>
 
-<h2>1. Resumo Geral</h2>
+<h2>1. Resumo em números</h2>
 <div class="cards">
   <div class="card"><div class="n">${fmtN(totalSaidas)}</div><div class="l">Total de Saídas</div></div>
   <div class="card"><div class="n">${fmtN(totalUnid)}</div><div class="l">Itens (unid.)</div></div>
@@ -3722,8 +3811,8 @@ ${secEmp}
 ${secInt}
 
 <div class="footer">
-  Elaborado por: Sistema TaguáLife Center · Fontes: tabelas saidas + saida_itens (Supabase)<br>
-  ${geradoEm}
+  Sistema TaguáLife Center · Relatório de Saídas<br>
+  Documento gerado em ${geradoEm} · Formato A4 retrato
 </div>
 </body></html>`;
 
@@ -4425,6 +4514,9 @@ ${secInt}
         adicionarLinha();
         await carregarSelectItens();
         
+        const _btnLoc = document.getElementById('btnGerirLocais');
+        if (_btnLoc && isAdminLocais()) _btnLoc.style.display = 'inline-flex';
+
         document.getElementById('btnSalvar').addEventListener('click', function(e) {
             e.preventDefault();
             salvarProtocolo();
