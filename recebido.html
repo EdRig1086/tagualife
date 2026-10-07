@@ -980,7 +980,7 @@ function abrirSeletorDataRec(tipo) {
 
 function exportarCSVRecebidos() {
     try {
-        var c = 'Data;NF;Fornecedor;Item;Qtd;Preco;Total;Usuario\n';
+        var c = 'Data;NF;Valor NF;Fornecedor;Item;Qtd;Preco;Total item;Usuario\n';
         document.querySelectorAll('#tabDetalhe tr').forEach(function(tr) {
             var cells = [].slice.call(tr.querySelectorAll('td'));
             if (cells.length) {
@@ -1136,33 +1136,54 @@ async function gerarRelatorioRecebidosCompleto(filtro) {
                     linhasDetalhe.push({
                         data: dataRec(r), nf: nf, fornecedor: forn,
                         item: nome, qtd: qq, preco: pu, total: tot,
+                        valorNota: valNota,
                         usuario: r.recebido_por || ''
                     });
                 });
             });
         } else {
+            var valorNotaPorNF = {}; // evita somar valor da nota em cada item
             movs.forEach(function(m) {
                 var obs = m.observacao || '';
                 var nf = '—', forn = '—';
                 var mNf = obs.match(/NF\s*([^\s—\-]+)/i);
-                if (mNf) nf = mNf[1];
+                if (mNf) nf = mNf[1].trim();
                 var mF = obs.match(/—\s*([^·]+)/);
                 if (mF) forn = mF[1].trim();
+                // preço unitário na obs: · R$ 12.50 un
+                var pu = 0, valNota = 0;
+                var mPu = obs.match(/R\$\s*([0-9]+(?:[.,][0-9]+)?)\s*un/i);
+                if (mPu) pu = parseFloat(mPu[1].replace(',', '.')) || 0;
+                var mNota = obs.match(/Nota\s*R\$\s*([0-9]+(?:[.,][0-9]+)?)/i);
+                if (mNota) valNota = parseFloat(mNota[1].replace(',', '.')) || 0;
+
                 var qq = parseInt(m.quantidade) || 0;
+                var totLinha = pu * qq;
                 totalUnid += qq;
+                totalValorItens += totLinha;
                 var nome = (m.item_nome || '—').trim();
                 if (!porFornecedor[forn]) porFornecedor[forn] = { notas: 0, unid: 0, valor: 0 };
                 porFornecedor[forn].notas++;
                 porFornecedor[forn].unid += qq;
+                // valor da NF conta 1x por número da nota
+                if (valNota && nf !== '—' && !valorNotaPorNF[nf]) {
+                    valorNotaPorNF[nf] = valNota;
+                    porFornecedor[forn].valor += valNota;
+                } else if (!valNota && totLinha) {
+                    porFornecedor[forn].valor += totLinha;
+                }
                 if (!porItem[nome]) porItem[nome] = { qtd: 0, valor: 0 };
                 porItem[nome].qtd += qq;
+                porItem[nome].valor += totLinha;
                 var data = (m.criado_em || '').toString().slice(0, 10);
                 var dataBR = data ? data.split('-').reverse().join('/') : '—';
                 var hora = m.criado_em ? new Date(m.criado_em).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '';
                 linhasDetalhe.push({
                     data: dataBR + (hora ? ' ' + hora : ''),
                     nf: nf, fornecedor: forn, item: nome, qtd: qq,
-                    preco: 0, total: 0, usuario: m.usuario || ''
+                    preco: pu, total: totLinha,
+                    valorNota: valNota || (valorNotaPorNF[nf] || 0),
+                    usuario: m.usuario || ''
                 });
             });
         }
@@ -1176,7 +1197,9 @@ async function gerarRelatorioRecebidosCompleto(filtro) {
         }).sort(function(a, b) { return b.qtd - a.qtd; });
 
         var nReg = usouRecebimentos && recs.length ? recs.length : movs.length;
-        var temValor = fornRows.some(function(f) { return f.valor; }) || itemRows.some(function(x) { return x.valor; });
+        var temValor = true; // sempre mostra colunas de valor (NF / item)
+        var totalNotasValor = fornRows.reduce(function(s, f) { return s + (f.valor || 0); }, 0);
+        if (!totalValorItens && totalNotasValor) totalValorItens = totalNotasValor;
         var fonte = usouRecebimentos && recs.length ? 'tabela recebimentos' : 'movimentações de entrada';
 
         var html = '<!DOCTYPE html><html lang="pt-BR"><head><meta charset="utf-8">' +
@@ -1209,7 +1232,8 @@ async function gerarRelatorioRecebidosCompleto(filtro) {
             '<div class="card"><div class="n">' + fmtN(totalUnid) + '</div><div class="l">Unidades entradas</div></div>' +
             '<div class="card"><div class="n">' + fmtN(fornRows.length) + '</div><div class="l">Fornecedores</div></div>' +
             '<div class="card"><div class="n">' + fmtN(itemRows.length) + '</div><div class="l">Itens distintos</div></div>' +
-            (totalValorItens > 0 ? '<div class="card"><div class="n">R$ ' + fmtBRL(totalValorItens) + '</div><div class="l">Valor itens</div></div>' : '') +
+            '<div class="card"><div class="n">R$ ' + fmtBRL(totalNotasValor || totalValorItens || 0) + '</div><div class="l">Valor total NF</div></div>' +
+            '<div class="card"><div class="n">R$ ' + fmtBRL(totalValorItens || 0) + '</div><div class="l">Soma itens</div></div>' +
             '</div>' +
             '<h2>2. Por fornecedor</h2><table><thead><tr><th>#</th><th>Fornecedor</th><th>Registros</th><th>Unidades</th>' +
             (temValor ? '<th>Valor (R$)</th>' : '') + '</tr></thead><tbody>' +
@@ -1223,15 +1247,11 @@ async function gerarRelatorioRecebidosCompleto(filtro) {
                 return '<tr><td>' + (i+1) + '</td><td>' + esc(it.nome) + '</td><td>' + fmtN(it.qtd) + '</td>' +
                     (temValor ? '<td>' + fmtBRL(it.valor) + '</td>' : '') + '</tr>';
             }).join('') + '</tbody></table>' +
-            '<h2>4. Detalhamento item a item</h2><table id="tabDetalhe"><thead><tr><th>Data</th><th>NF</th><th>Fornecedor</th><th>Item</th><th>Qtd</th>' +
-            (temValor ? '<th>Preço un.</th><th>Total</th>' : '') +
-            '<th>Usuário</th></tr></thead><tbody>' +
+            '<h2>4. Detalhamento item a item</h2><table id="tabDetalhe"><thead><tr><th>Data</th><th>NF</th><th>Valor NF (R$)</th><th>Fornecedor</th><th>Item</th><th>Qtd</th><th>Preço un.</th><th>Total item</th><th>Usuário</th></tr></thead><tbody>' +
             linhasDetalhe.map(function(l) {
                 var dataShow = l.data;
                 if (/^\d{4}-\d{2}-\d{2}/.test(dataShow)) dataShow = dataShow.split('-').reverse().join('/');
-                return '<tr><td>' + esc(dataShow) + '</td><td>' + esc(l.nf) + '</td><td>' + esc(l.fornecedor) + '</td><td>' + esc(l.item) + '</td><td style="text-align:center;">' + fmtN(l.qtd) + '</td>' +
-                    (temValor ? '<td>' + fmtBRL(l.preco) + '</td><td>' + fmtBRL(l.total) + '</td>' : '') +
-                    '<td>' + esc(l.usuario) + '</td></tr>';
+                return '<tr><td>' + esc(dataShow) + '</td><td><strong>' + esc(l.nf) + '</strong></td><td>' + fmtBRL(l.valorNota || 0) + '</td><td>' + esc(l.fornecedor) + '</td><td>' + esc(l.item) + '</td><td style="text-align:center;">' + fmtN(l.qtd) + '</td><td>' + fmtBRL(l.preco) + '</td><td><strong>' + fmtBRL(l.total) + '</strong></td><td>' + esc(l.usuario) + '</td></tr>';
             }).join('') + '</tbody></table>' +
             '<div class="footer">Sistema TaguáLife Center · Recebidos / Entradas<br>' + geradoEm + '</div></body></html>';
 
