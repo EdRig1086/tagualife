@@ -1304,106 +1304,148 @@ async function gerarRelatorioRecebidosCompleto(filtro) {
         if (!totalValorItens && totalNotasValor) totalValorItens = totalNotasValor;
         var fonte = usouRecebimentos && recs.length ? 'tabela recebimentos' : 'movimentações de entrada';
 
-        var html = '<!DOCTYPE html><html lang="pt-BR"><head><meta charset="utf-8">' +
-            '<title>Relatório de Recebimentos e Entradas · TaguáLife</title><style>' +
-            'body{font-family:Inter,Arial,sans-serif;color:#191D1B;font-size:10.5px;margin:0;padding:16px;background:#FBFBF7;}' +
-            'h1{font-size:18px;margin:0 0 4px;text-align:center;}' +
-            '.sub{text-align:center;color:#7A816E;margin-bottom:14px;font-size:11px;}' +
-            '.box{max-width:400px;margin:0 auto 14px;background:#F0F2EA;border:1px solid #D8DCCE;border-radius:10px;padding:10px 14px;font-size:11px;line-height:1.5;}' +
-            'h2{font-size:12.5px;margin:16px 0 8px;padding:6px 10px;background:linear-gradient(90deg,#C1CE83,#E8EBE0);border-left:4px solid #7A816E;}' +
-            '.cards{display:flex;gap:10px;flex-wrap:wrap;margin:10px 0 14px;}' +
-            '.card{flex:1;min-width:100px;text-align:center;background:#FBFBF7;border:1px solid #D8DCCE;border-radius:10px;padding:12px 8px;}' +
-            '.card .n{font-size:20px;font-weight:800;}' +
-            '.card .l{font-size:9px;color:#7A816E;text-transform:uppercase;margin-top:2px;}' +
-            'table{width:100%;border-collapse:collapse;margin:6px 0 12px;}' +
-            'th{background:#7A816E;color:#FBFBF7;text-align:left;padding:5px 7px;font-size:9.5px;}' +
-            'td{border-bottom:1px solid #D8DCCE;padding:4px 7px;vertical-align:top;}' +
-            'tr:nth-child(even) td{background:#F0F2EA;}' +
-            '.footer{margin-top:18px;font-size:9px;color:#7A816E;text-align:center;border-top:1px solid #D8DCCE;padding-top:8px;}' +
-            '@media print{.no-print{display:none!important;}}' +
-            '</style></head><body>' +
-            '<div class="no-print" style="margin-bottom:12px;text-align:center;">' +
-            '<button onclick="window.print()" style="padding:8px 16px;background:#191D1B;color:#FBFBF7;border:0;border-radius:8px;cursor:pointer;font-weight:700;margin:0 4px;">Imprimir / PDF</button>' +
-            '<button onclick="exportarCSVRecebidos()" style="padding:8px 16px;background:#2E7D32;color:#fff;border:0;border-radius:8px;cursor:pointer;font-weight:700;margin:0 4px;">Excel/CSV</button>' +
-            '</div>' +
-            '<h1>RELATÓRIO DE RECEBIMENTOS E ENTRADAS</h1>' +
-            '<div class="sub">Condomínio TaguáLife · Life Conceito em Gestão Condominial</div>' +
-            '<div class="box"><strong>Filtro:</strong> ' + labelFiltro + '<br><strong>Período:</strong> ' + deBR + ' a ' + ateBR + '<br><strong>Gerado em:</strong> ' + geradoEm + '<br><strong>Fonte:</strong> ' + fonte + '</div>' +
-            '<h2>1. Resumo geral</h2><div class="cards">' +
-            '<div class="card"><div class="n">' + fmtN(nReg) + '</div><div class="l">Registros</div></div>' +
-            '<div class="card"><div class="n">' + fmtN(totalUnid) + '</div><div class="l">Unidades entradas</div></div>' +
-            '<div class="card"><div class="n">' + fmtN(fornRows.length) + '</div><div class="l">Fornecedores</div></div>' +
-            '<div class="card"><div class="n">' + fmtN(itemRows.length) + '</div><div class="l">Itens distintos</div></div>' +
-            '<div class="card"><div class="n">R$ ' + fmtBRL(totalNotasValor || totalValorItens || 0) + '</div><div class="l">Valor total NF</div></div>' +
-            '<div class="card"><div class="n">R$ ' + fmtBRL(totalValorItens || 0) + '</div><div class="l">Soma itens</div></div>' +
-            '</div>' +
-            '<h2>2. Por fornecedor</h2><table><thead><tr><th>#</th><th>Fornecedor</th><th>Registros</th><th>Unidades</th>' +
-            (temValor ? '<th>Valor (R$)</th>' : '') + '</tr></thead><tbody>' +
-            fornRows.map(function(f, i) {
-                return '<tr><td>' + (i+1) + '</td><td><strong>' + esc(f.nome) + '</strong></td><td>' + fmtN(f.notas) + '</td><td>' + fmtN(f.unid) + '</td>' +
-                    (temValor ? '<td>' + fmtBRL(f.valor) + '</td>' : '') + '</tr>';
-            }).join('') + '</tbody></table>' +
-            '<h2>3. Itens mais recebidos</h2><table><thead><tr><th>#</th><th>Item</th><th>Qtd total</th>' +
-            (temValor ? '<th>Valor (R$)</th>' : '') + '</tr></thead><tbody>' +
-            itemRows.slice(0, 50).map(function(it, i) {
-                return '<tr><td>' + (i+1) + '</td><td>' + esc(it.nome) + '</td><td>' + fmtN(it.qtd) + '</td>' +
-                    (temValor ? '<td>' + fmtBRL(it.valor) + '</td>' : '') + '</tr>';
-            }).join('') + '</tbody></table>' +
-            '<h2>4. Detalhamento agrupado por NF</h2>' +
-            (function() {
-                var grupos = {};
-                var ordem = [];
-                linhasDetalhe.forEach(function(l) {
-                    var k = String(l.nf || '—');
-                    if (!grupos[k]) {
-                        grupos[k] = {
-                            nf: k,
-                            fornecedor: l.fornecedor || '—',
-                            valorNota: Number(l.valorNota) || 0,
-                            usuario: l.usuario || '',
-                            data: l.data || '',
-                            itens: [],
-                            qtdTotal: 0,
-                            valorItens: 0
-                        };
-                        ordem.push(k);
-                    }
-                    var g = grupos[k];
-                    if (!g.valorNota && l.valorNota) g.valorNota = Number(l.valorNota) || 0;
-                    if ((!g.fornecedor || g.fornecedor === '—') && l.fornecedor) g.fornecedor = l.fornecedor;
-                    if (!g.usuario && l.usuario) g.usuario = l.usuario;
-                    if (!g.data && l.data) g.data = l.data;
-                    g.itens.push(l);
-                    g.qtdTotal += Number(l.qtd) || 0;
-                    g.valorItens += Number(l.total) || 0;
-                });
-                var htmlG = '';
-                ordem.forEach(function(k, idx) {
-                    var g = grupos[k];
-                    var dataShow = g.data || '';
-                    if (/^\d{4}-\d{2}-\d{2}/.test(dataShow)) dataShow = dataShow.split('-').reverse().join('/');
-                    htmlG += '<div style="margin:12px 0 6px;padding:8px 10px;background:#E8EBE0;border-left:4px solid #7A816E;border-radius:0 8px 8px 0;">' +
-                        '<strong style="font-size:12px;">NF ' + esc(g.nf) + '</strong>' +
-                        ' &nbsp;·&nbsp; Fornecedor: <strong>' + esc(g.fornecedor) + '</strong>' +
-                        ' &nbsp;·&nbsp; Valor NF: <strong>R$ ' + fmtBRL(g.valorNota || g.valorItens) + '</strong>' +
-                        ' &nbsp;·&nbsp; ' + fmtN(g.itens.length) + ' item(ns) · ' + fmtN(g.qtdTotal) + ' unid.' +
-                        (dataShow ? ' &nbsp;·&nbsp; ' + esc(dataShow) : '') +
-                        (g.usuario ? ' &nbsp;·&nbsp; ' + esc(g.usuario) : '') +
-                        '</div>';
-                    htmlG += '<table id="' + (idx === 0 ? 'tabDetalhe' : 'tabDetalhe' + idx) + '"><thead><tr>' +
-                        '<th>Item</th><th>Qtd</th><th>Preço un.</th><th>Total item</th></tr></thead><tbody>';
-                    g.itens.forEach(function(l) {
-                        htmlG += '<tr><td>' + esc(l.item) + '</td><td style="text-align:center;">' + fmtN(l.qtd) +
-                            '</td><td>R$ ' + fmtBRL(l.preco) + '</td><td><strong>R$ ' + fmtBRL(l.total) + '</strong></td></tr>';
-                    });
-                    htmlG += '<tr style="background:#F0F2EA;font-weight:700;"><td>Subtotal NF ' + esc(g.nf) + '</td><td style="text-align:center;">' +
-                        fmtN(g.qtdTotal) + '</td><td></td><td>R$ ' + fmtBRL(g.valorItens || g.valorNota) + '</td></tr>';
-                    htmlG += '</tbody></table>';
-                });
-                if (!ordem.length) htmlG = '<p style="color:#7A816E;">Nenhum item no período.</p>';
-                return htmlG;
-            })() +
-            '<div class="footer">Sistema TaguáLife Center · Recebidos / Entradas<br>' + geradoEm + '</div></body></html>';
+
+        var html = `<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<title>Relatório de Entradas · TaguáLife</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet" />
+<style>
+  @page { size: A4 portrait; margin: 12mm 10mm; }
+  * { box-sizing: border-box; }
+  body { font-family: Inter, Arial, sans-serif; color: #191D1B; font-size: 10px; margin: 0; padding: 10px 12px; background: #fff; line-height: 1.35; }
+  .no-print { text-align: center; margin-bottom: 12px; }
+  .no-print button { padding: 8px 16px; border: 0; border-radius: 8px; cursor: pointer; font-weight: 700; margin: 0 4px; font-family: inherit; }
+  .btn-print { background: #191D1B; color: #fff; }
+  .btn-excel { background: #2E7D32; color: #fff; }
+  .topo { text-align: center; border-bottom: 3px solid #7A816E; padding-bottom: 10px; margin-bottom: 12px; }
+  .topo .marca { font-size: 10px; font-weight: 700; color: #7A816E; text-transform: uppercase; letter-spacing: 0.4px; }
+  .topo h1 { font-size: 15px; margin: 6px 0 3px; font-weight: 800; }
+  .topo .sub { font-size: 10px; color: #7A816E; margin: 0; }
+  .info-bar { display: flex; flex-wrap: wrap; gap: 6px 14px; justify-content: center; background: #F0F2EA; border: 1px solid #D8DCCE; border-radius: 8px; padding: 8px 12px; margin-bottom: 12px; font-size: 9.5px; }
+  .cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; margin-bottom: 12px; }
+  .card { text-align: center; background: #FBFBF7; border: 1px solid #D8DCCE; border-radius: 8px; padding: 9px 5px; }
+  .card .n { font-size: 16px; font-weight: 800; line-height: 1.15; }
+  .card .l { font-size: 7.5px; color: #7A816E; text-transform: uppercase; margin-top: 2px; font-weight: 600; letter-spacing: 0.2px; }
+  h2 { font-size: 11px; margin: 14px 0 6px; padding: 5px 9px; background: #E8EBE0; border-left: 4px solid #7A816E; border-radius: 0 6px 6px 0; font-weight: 700; page-break-after: avoid; }
+  h2 .hint { font-weight: 400; font-size: 9px; color: #7A816E; }
+  .legenda { font-size: 8.5px; color: #7A816E; margin: 0 0 8px; }
+  table { width: 100%; border-collapse: collapse; margin: 0 0 8px; font-size: 9px; }
+  thead { display: table-header-group; }
+  tr { page-break-inside: avoid; }
+  th { background: #7A816E; color: #fff; text-align: left; padding: 4px 5px; font-size: 8.5px; font-weight: 600; }
+  td { border-bottom: 1px solid #E4E8DC; padding: 3.5px 5px; vertical-align: top; }
+  tr:nth-child(even) td { background: #F7F8F3; }
+  .num { text-align: right; font-variant-numeric: tabular-nums; }
+  .centro { text-align: center; }
+  .nf-bloco { margin: 10px 0 4px; padding: 7px 9px; background: #E8EBE0; border-left: 4px solid #7A816E; border-radius: 0 8px 8px 0; page-break-after: avoid; }
+  .nf-bloco .titulo { font-size: 11px; font-weight: 800; }
+  .nf-bloco .meta { font-size: 9px; color: #5a5f52; margin-top: 2px; line-height: 1.4; }
+  .subtotal td { background: #F0F2EA !important; font-weight: 700; border-top: 1px solid #C1CE83; }
+  .footer { margin-top: 14px; padding-top: 7px; border-top: 1px solid #D8DCCE; font-size: 8px; color: #7A816E; text-align: center; }
+  @media print { .no-print { display: none !important; } body { padding: 0; } }
+</style>
+</head>
+<body>
+  <div class="no-print">
+    <button class="btn-print" onclick="window.print()">Imprimir / PDF (A4 retrato)</button>
+    <button class="btn-excel" onclick="exportarCSVRecebidos()">Excel / CSV</button>
+  </div>
+
+  <div class="topo">
+    <div class="marca">TaguáLife Center · Almoxarifado</div>
+    <h1>Relatório de Recebimentos e Entradas</h1>
+    <p class="sub">Condomínio TaguáLife · Life Conceito em Gestão Condominial</p>
+  </div>
+
+  <div class="info-bar">
+    <span><strong>Filtro:</strong> ${labelFiltro}</span>
+    <span><strong>Período:</strong> ${deBR} a ${ateBR}</span>
+    <span><strong>Emitido em:</strong> ${geradoEm}</span>
+  </div>
+
+  <h2>1. Resumo em números</h2>
+  <p class="legenda">Visão rápida do que entrou no estoque no período escolhido.</p>
+  <div class="cards">
+    <div class="card"><div class="n">${fmtN(nReg)}</div><div class="l">Registros de entrada</div></div>
+    <div class="card"><div class="n">${fmtN(totalUnid)}</div><div class="l">Unidades que entraram</div></div>
+    <div class="card"><div class="n">${fmtN(fornRows.length)}</div><div class="l">Fornecedores</div></div>
+    <div class="card"><div class="n">${fmtN(itemRows.length)}</div><div class="l">Itens diferentes</div></div>
+    <div class="card"><div class="n">R$ ${fmtBRL(totalNotasValor || totalValorItens || 0)}</div><div class="l">Valor total das NFs</div></div>
+    <div class="card"><div class="n">R$ ${fmtBRL(totalValorItens || 0)}</div><div class="l">Soma dos itens</div></div>
+  </div>
+
+  <h2>2. Por fornecedor <span class="hint">— de quem veio o material</span></h2>
+  <table>
+    <thead><tr><th>#</th><th>Fornecedor</th><th class="centro">Entradas</th><th class="centro">Unidades</th><th class="num">Valor (R$)</th></tr></thead>
+    <tbody>
+      ${fornRows.map(function(f, i) {
+        return '<tr><td>' + (i+1) + '</td><td><strong>' + esc(f.nome) + '</strong></td><td class="centro">' + fmtN(f.notas) + '</td><td class="centro">' + fmtN(f.unid) + '</td><td class="num">' + fmtBRL(f.valor) + '</td></tr>';
+      }).join('') || '<tr><td colspan="5">Nenhum fornecedor no período</td></tr>'}
+    </tbody>
+  </table>
+
+  <h2>3. Itens que mais entraram <span class="hint">— ranking de quantidade</span></h2>
+  <table>
+    <thead><tr><th>#</th><th>Item</th><th class="centro">Qtd</th><th class="num">Valor (R$)</th></tr></thead>
+    <tbody>
+      ${itemRows.slice(0, 40).map(function(it, i) {
+        return '<tr><td>' + (i+1) + '</td><td>' + esc(it.nome) + '</td><td class="centro">' + fmtN(it.qtd) + '</td><td class="num">' + fmtBRL(it.valor) + '</td></tr>';
+      }).join('') || '<tr><td colspan="4">Nenhum item no período</td></tr>'}
+    </tbody>
+  </table>
+
+  <h2>4. Detalhe por nota fiscal (NF) <span class="hint">— itens agrupados pela mesma NF</span></h2>
+  <p class="legenda">Cada bloco é uma nota. Assim fica fácil conferir o que veio em cada NF e o valor.</p>
+  ${(() => {
+    var grupos = {}, ordem = [];
+    linhasDetalhe.forEach(function(l) {
+      var k = String(l.nf || '—');
+      if (!grupos[k]) {
+        grupos[k] = { nf: k, fornecedor: l.fornecedor || '—', valorNota: Number(l.valorNota) || 0, usuario: l.usuario || '', data: l.data || '', itens: [], qtdTotal: 0, valorItens: 0 };
+        ordem.push(k);
+      }
+      var g = grupos[k];
+      if (!g.valorNota && l.valorNota) g.valorNota = Number(l.valorNota) || 0;
+      if ((!g.fornecedor || g.fornecedor === '—') && l.fornecedor) g.fornecedor = l.fornecedor;
+      if (!g.usuario && l.usuario) g.usuario = l.usuario;
+      if (!g.data && l.data) g.data = l.data;
+      g.itens.push(l);
+      g.qtdTotal += Number(l.qtd) || 0;
+      g.valorItens += Number(l.total) || 0;
+    });
+    if (!ordem.length) return '<p style="color:#7A816E;">Nenhuma entrada neste período.</p>';
+    return ordem.map(function(k, idx) {
+      var g = grupos[k];
+      var dataShow = g.data || '';
+      if (/^\\d{4}-\\d{2}-\\d{2}/.test(dataShow)) dataShow = dataShow.split('-').reverse().join('/');
+      var rows = g.itens.map(function(l) {
+        return '<tr><td>' + esc(l.item) + '</td><td class="centro">' + fmtN(l.qtd) + '</td><td class="num">' + fmtBRL(l.preco) + '</td><td class="num"><strong>' + fmtBRL(l.total) + '</strong></td></tr>';
+      }).join('');
+      return '<div class="nf-bloco">' +
+        '<div class="titulo">NF ' + esc(g.nf) + '</div>' +
+        '<div class="meta">' +
+          '<strong>Fornecedor:</strong> ' + esc(g.fornecedor) +
+          ' &nbsp;|&nbsp; <strong>Valor da NF:</strong> R$ ' + fmtBRL(g.valorNota || g.valorItens) +
+          ' &nbsp;|&nbsp; ' + fmtN(g.itens.length) + ' item(ns) · ' + fmtN(g.qtdTotal) + ' unid.' +
+          (dataShow ? ' &nbsp;|&nbsp; ' + esc(dataShow) : '') +
+          (g.usuario ? ' &nbsp;|&nbsp; Recebido por: ' + esc(g.usuario) : '') +
+        '</div></div>' +
+        '<table id="' + (idx === 0 ? 'tabDetalhe' : ('tabNF' + idx)) + '">' +
+        '<thead><tr><th>Item</th><th class="centro">Qtd</th><th class="num">Preço unit. (R$)</th><th class="num">Total (R$)</th></tr></thead>' +
+        '<tbody>' + rows +
+        '<tr class="subtotal"><td>Subtotal desta NF</td><td class="centro">' + fmtN(g.qtdTotal) + '</td><td></td><td class="num">R$ ' + fmtBRL(g.valorItens || g.valorNota) + '</td></tr>' +
+        '</tbody></table>';
+    }).join('');
+  })()}
+
+  <div class="footer">
+    Sistema TaguáLife Center · Relatório de Entradas / Recebidos<br>
+    Documento gerado em ${geradoEm} · Formato A4 retrato
+  </div>
+</body>
+</html>`;
 
         var w = window.open('', '_blank');
         if (!w) { toast('⚠️ Permita pop-up'); return; }
