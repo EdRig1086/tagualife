@@ -1349,12 +1349,60 @@ async function gerarRelatorioRecebidosCompleto(filtro) {
                 return '<tr><td>' + (i+1) + '</td><td>' + esc(it.nome) + '</td><td>' + fmtN(it.qtd) + '</td>' +
                     (temValor ? '<td>' + fmtBRL(it.valor) + '</td>' : '') + '</tr>';
             }).join('') + '</tbody></table>' +
-            '<h2>4. Detalhamento item a item</h2><table id="tabDetalhe"><thead><tr><th>Data</th><th>NF</th><th>Valor NF (R$)</th><th>Fornecedor</th><th>Item</th><th>Qtd</th><th>Preço un.</th><th>Total item</th><th>Usuário</th></tr></thead><tbody>' +
-            linhasDetalhe.map(function(l) {
-                var dataShow = l.data;
-                if (/^\d{4}-\d{2}-\d{2}/.test(dataShow)) dataShow = dataShow.split('-').reverse().join('/');
-                return '<tr><td>' + esc(dataShow) + '</td><td><strong>' + esc(l.nf) + '</strong></td><td>' + fmtBRL(l.valorNota || 0) + '</td><td>' + esc(l.fornecedor) + '</td><td>' + esc(l.item) + '</td><td style="text-align:center;">' + fmtN(l.qtd) + '</td><td>' + fmtBRL(l.preco) + '</td><td><strong>' + fmtBRL(l.total) + '</strong></td><td>' + esc(l.usuario) + '</td></tr>';
-            }).join('') + '</tbody></table>' +
+            '<h2>4. Detalhamento agrupado por NF</h2>' +
+            (function() {
+                var grupos = {};
+                var ordem = [];
+                linhasDetalhe.forEach(function(l) {
+                    var k = String(l.nf || '—');
+                    if (!grupos[k]) {
+                        grupos[k] = {
+                            nf: k,
+                            fornecedor: l.fornecedor || '—',
+                            valorNota: Number(l.valorNota) || 0,
+                            usuario: l.usuario || '',
+                            data: l.data || '',
+                            itens: [],
+                            qtdTotal: 0,
+                            valorItens: 0
+                        };
+                        ordem.push(k);
+                    }
+                    var g = grupos[k];
+                    if (!g.valorNota && l.valorNota) g.valorNota = Number(l.valorNota) || 0;
+                    if ((!g.fornecedor || g.fornecedor === '—') && l.fornecedor) g.fornecedor = l.fornecedor;
+                    if (!g.usuario && l.usuario) g.usuario = l.usuario;
+                    if (!g.data && l.data) g.data = l.data;
+                    g.itens.push(l);
+                    g.qtdTotal += Number(l.qtd) || 0;
+                    g.valorItens += Number(l.total) || 0;
+                });
+                var htmlG = '';
+                ordem.forEach(function(k, idx) {
+                    var g = grupos[k];
+                    var dataShow = g.data || '';
+                    if (/^\d{4}-\d{2}-\d{2}/.test(dataShow)) dataShow = dataShow.split('-').reverse().join('/');
+                    htmlG += '<div style="margin:12px 0 6px;padding:8px 10px;background:#E8EBE0;border-left:4px solid #7A816E;border-radius:0 8px 8px 0;">' +
+                        '<strong style="font-size:12px;">NF ' + esc(g.nf) + '</strong>' +
+                        ' &nbsp;·&nbsp; Fornecedor: <strong>' + esc(g.fornecedor) + '</strong>' +
+                        ' &nbsp;·&nbsp; Valor NF: <strong>R$ ' + fmtBRL(g.valorNota || g.valorItens) + '</strong>' +
+                        ' &nbsp;·&nbsp; ' + fmtN(g.itens.length) + ' item(ns) · ' + fmtN(g.qtdTotal) + ' unid.' +
+                        (dataShow ? ' &nbsp;·&nbsp; ' + esc(dataShow) : '') +
+                        (g.usuario ? ' &nbsp;·&nbsp; ' + esc(g.usuario) : '') +
+                        '</div>';
+                    htmlG += '<table id="' + (idx === 0 ? 'tabDetalhe' : 'tabDetalhe' + idx) + '"><thead><tr>' +
+                        '<th>Item</th><th>Qtd</th><th>Preço un.</th><th>Total item</th></tr></thead><tbody>';
+                    g.itens.forEach(function(l) {
+                        htmlG += '<tr><td>' + esc(l.item) + '</td><td style="text-align:center;">' + fmtN(l.qtd) +
+                            '</td><td>R$ ' + fmtBRL(l.preco) + '</td><td><strong>R$ ' + fmtBRL(l.total) + '</strong></td></tr>';
+                    });
+                    htmlG += '<tr style="background:#F0F2EA;font-weight:700;"><td>Subtotal NF ' + esc(g.nf) + '</td><td style="text-align:center;">' +
+                        fmtN(g.qtdTotal) + '</td><td></td><td>R$ ' + fmtBRL(g.valorItens || g.valorNota) + '</td></tr>';
+                    htmlG += '</tbody></table>';
+                });
+                if (!ordem.length) htmlG = '<p style="color:#7A816E;">Nenhum item no período.</p>';
+                return htmlG;
+            })() +
             '<div class="footer">Sistema TaguáLife Center · Recebidos / Entradas<br>' + geradoEm + '</div></body></html>';
 
         var w = window.open('', '_blank');
