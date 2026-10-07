@@ -1127,7 +1127,7 @@
                         <tr>
                             <th class="col-qtd">QTD</th>
                             <th class="col-item">ITEM</th>
-                            <th class="col-destino">USO / DESTINO<br><span style="font-weight:400;font-size:0.6rem;opacity:.85;">Local + complemento</span></th>
+                            <th class="col-destino">USO / DESTINO<br><span style="font-weight:400;font-size:0.6rem;opacity:.85;">Bloco → andar · ou área comum</span></th>
                             <th class="col-acoes"></th>
                         </tr>
                     </thead>
@@ -2437,27 +2437,72 @@ function mostrarToast(mensagem, tipo = 'success') {
     }
 
 
-    // Locais do prédio (destino)
-    const LOCAIS_PREDIO_PADRAO = [
+
+    // ========== DESTINO: Blocos A–F + andares + áreas comuns ==========
+    const BLOCOS_PREDIO = ['A', 'B', 'C', 'D', 'E', 'F'];
+    const ANDARES_POR_BLOCO = [
         '1º Subsolo', '2º Subsolo', 'Térreo',
         '1º Andar', '2º Andar', '3º Andar', '4º Andar', '5º Andar',
-        '6º Andar', '7º Andar', '8º Andar', '9º Andar', '10º Andar', 'Cobertura',
-        'Academia', 'Área Pet — Bloco D', 'Bar — Bloco B', 'Biblioteca — Bloco E',
-        'Brinquedoteca — Bloco A', 'Car Wash — 1º Subsolo',
-        'Churrasqueira — Bloco C', 'Churrasqueira — Bloco D', 'Churrasqueira — Bloco E', 'Churrasqueira — Bloco F',
-        'Cinema — Bloco A', 'Cinema — Bloco D',
-        'Espaço Gourmet — Bloco A', 'Espaço Gourmet — Bloco D', 'Espaço Gourmet — Bloco E',
-        'Espaço Pet — 1º Subsolo', 'Home Office — Bloco E',
-        'Lan House — Bloco D', 'Lan House — Bloco E', 'Lavanderia — Bloco B 1º Subsolo',
-        'Massagem', 'Massoterapia — Semana da Mulher', 'Pilates',
-        'Piscina Adulto', 'Piscina Infantil', 'Quadra de Areia',
-        'Quadra de Squash — 1º Subsolo', 'Quadra Poliesportiva',
-        'Sala de Jogos — Bloco D', 'Salão de Festa Infantil — Bloco A',
-        'Salão de Festas 1 — Bloco B', 'Salão de Festas 2 — Bloco B',
-        'Spinning', 'TAG-VEICULAR',
-        'Administração', 'Área externa', 'Casa de bombas', 'Casa de máquinas',
-        'Copa', 'Gerador', 'Jardim', 'Portaria', 'Outro'
+        '6º Andar', '7º Andar', '8º Andar', '9º Andar', '10º Andar',
+        'Cobertura'
     ];
+    const AREAS_COMUNS_PADRAO = [
+        'Academia',
+        'Área Pet — Bloco D',
+        'Bar — Bloco B',
+        'Biblioteca — Bloco E',
+        'Brinquedoteca — Bloco A',
+        'Car Wash — 1º Subsolo',
+        'Churrasqueira — Bloco C',
+        'Churrasqueira — Bloco D',
+        'Churrasqueira — Bloco E',
+        'Churrasqueira — Bloco F',
+        'Cinema — Bloco A',
+        'Cinema — Bloco D',
+        'Espaço Gourmet — Bloco A',
+        'Espaço Gourmet — Bloco D',
+        'Espaço Gourmet — Bloco E',
+        'Espaço Pet — 1º Subsolo',
+        'Home Office — Bloco E',
+        'Lan House — Bloco D',
+        'Lan House — Bloco E',
+        'Lavanderia — Bloco B 1º Subsolo',
+        'Massagem',
+        'Massoterapia — Semana da Mulher',
+        'Pilates',
+        'Piscina Adulto',
+        'Piscina Infantil',
+        'Quadra de Areia',
+        'Quadra de Squash — 1º Subsolo',
+        'Quadra Poliesportiva',
+        'Sala de Jogos — Bloco D',
+        'Salão de Festa Infantil — Bloco A',
+        'Salão de Festas 1 — Bloco B',
+        'Salão de Festas 2 — Bloco B',
+        'Spinning',
+        'TAG-VEICULAR',
+        'Administração',
+        'Área externa',
+        'Casa de bombas',
+        'Casa de máquinas',
+        'Copa',
+        'Gerador',
+        'Jardim',
+        'Portaria'
+    ];
+
+    // lista plana padrão (admin / compat)
+    const LOCAIS_PREDIO_PADRAO = (function() {
+        var L = [];
+        BLOCOS_PREDIO.forEach(function(b) {
+            ANDARES_POR_BLOCO.forEach(function(a) {
+                L.push('Bloco ' + b + ' — ' + a);
+            });
+        });
+        AREAS_COMUNS_PADRAO.forEach(function(a) { L.push(a); });
+        L.push('Outro');
+        return L;
+    })();
 
     function isAdminLocais() {
         try {
@@ -2468,171 +2513,252 @@ function mostrarToast(mensagem, tipo = 'success') {
         } catch (e) { return false; }
     }
 
-    function carregarLocaisPredio() {
+    function carregarAreasComuns() {
         try {
-            var salvos = JSON.parse(localStorage.getItem('tagualife_locais_destino') || 'null');
+            var salvos = JSON.parse(localStorage.getItem('tagualife_areas_comuns') || 'null');
             if (Array.isArray(salvos) && salvos.length) {
                 return salvos.map(function(x) { return String(x || '').trim(); }).filter(Boolean);
             }
         } catch (e) {}
-        return LOCAIS_PREDIO_PADRAO.slice();
+        return AREAS_COMUNS_PADRAO.slice();
     }
 
-    function salvarLocaisPredio(lista) {
-        localStorage.setItem('tagualife_locais_destino', JSON.stringify(lista));
+    function salvarAreasComuns(lista) {
+        localStorage.setItem('tagualife_areas_comuns', JSON.stringify(lista));
     }
 
-    function getLocaisPredio() {
-        return carregarLocaisPredio();
+    function carregarLocaisPredio() {
+        // lista plana completa (blocos x andares + áreas)
+        var L = [];
+        BLOCOS_PREDIO.forEach(function(b) {
+            ANDARES_POR_BLOCO.forEach(function(a) {
+                L.push('Bloco ' + b + ' — ' + a);
+            });
+        });
+        carregarAreasComuns().forEach(function(a) { L.push(a); });
+        L.push('Outro');
+        return L;
     }
 
-    // compat: código antigo usa LOCAIS_PREDIO
+    function getLocaisPredio() { return carregarLocaisPredio(); }
     var LOCAIS_PREDIO = carregarLocaisPredio();
+
+    function htmlOptionsAndares(sel) {
+        sel = sel || '';
+        var h = '<option value="">Andar / local...</option>';
+        ANDARES_POR_BLOCO.forEach(function(a) {
+            h += '<option value="' + a.replace(/"/g, '&quot;') + '"' + (sel === a ? ' selected' : '') + '>' + a + '</option>';
+        });
+        return h;
+    }
+
+    function htmlOptionsAreas(sel) {
+        sel = sel || '';
+        var h = '<option value="">Área comum...</option>';
+        carregarAreasComuns().forEach(function(a) {
+            h += '<option value="' + a.replace(/"/g, '&quot;') + '"' + (sel === a ? ' selected' : '') + '>' + a + '</option>';
+        });
+        h += '<option value="Outro"' + (sel === 'Outro' ? ' selected' : '') + '>Outro</option>';
+        return h;
+    }
+
+    function htmlSelectBloco(valor) {
+        valor = valor || '';
+        var h = '<option value="">Bloco / área...</option>';
+        BLOCOS_PREDIO.forEach(function(b) {
+            var v = 'Bloco ' + b;
+            h += '<option value="' + v + '"' + (valor === v ? ' selected' : '') + '>' + v + '</option>';
+        });
+        h += '<option value="Áreas comuns"' + (valor === 'Áreas comuns' ? ' selected' : '') + '>Áreas comuns</option>';
+        h += '<option value="Outro"' + (valor === 'Outro' ? ' selected' : '') + '>Outro (só complemento)</option>';
+        return h;
+    }
+
+    function montarHtmlDestinoCell() {
+        return '<div style="display:flex;flex-direction:column;gap:0.25rem;min-width:150px;">' +
+            '<select class="destino-bloco" style="width:100%;padding:0.35rem;border-radius:4px;border:1px solid var(--border-color);background:var(--input-bg);color:var(--text-primary);font-size:0.78rem;">' +
+            htmlSelectBloco('') +
+            '</select>' +
+            '<select class="destino-local" style="width:100%;padding:0.35rem;border-radius:4px;border:1px solid var(--border-color);background:var(--input-bg);color:var(--text-primary);font-size:0.78rem;">' +
+            '<option value="">Andar / local...</option>' +
+            '</select>' +
+            '<input type="text" class="destino-complemento destino-input" placeholder="Complemento (apto, sala...)" style="width:100%;padding:0.3rem 0.4rem;border-radius:4px;border:1px solid var(--border-color);background:var(--input-bg);color:var(--text-primary);font-size:0.75rem;" />' +
+            '</div>';
+    }
+
+    function ligarDestinoLinha(tr) {
+        var selBloco = tr.querySelector('.destino-bloco');
+        var selLocal = tr.querySelector('.destino-local');
+        if (!selBloco || !selLocal) return;
+        function atualizarLocais() {
+            var b = selBloco.value;
+            if (b.indexOf('Bloco ') === 0) {
+                selLocal.innerHTML = htmlOptionsAndares('');
+                selLocal.disabled = false;
+            } else if (b === 'Áreas comuns') {
+                selLocal.innerHTML = htmlOptionsAreas('');
+                selLocal.disabled = false;
+            } else if (b === 'Outro') {
+                selLocal.innerHTML = '<option value="">— use o complemento —</option>';
+                selLocal.disabled = true;
+            } else {
+                selLocal.innerHTML = '<option value="">Andar / local...</option>';
+                selLocal.disabled = false;
+            }
+        }
+        selBloco.addEventListener('change', atualizarLocais);
+    }
+
+    function obterDestinoDaLinha(row) {
+        if (!row) return '';
+        var selBloco = row.querySelector('.destino-bloco');
+        var selLocal = row.querySelector('.destino-local');
+        var comp = row.querySelector('.destino-complemento');
+        var bloco = selBloco ? (selBloco.value || '').trim() : '';
+        var local = selLocal ? (selLocal.value || '').trim() : '';
+        var extra = comp ? (comp.value || '').trim() : '';
+        // legado
+        if (!selBloco) {
+            var leg = row.querySelector('.destino-input');
+            return leg ? (leg.value || '').trim() : '';
+        }
+        var base = '';
+        if (bloco.indexOf('Bloco ') === 0 && local) base = bloco + ' — ' + local;
+        else if (bloco === 'Áreas comuns' && local) base = local;
+        else if (bloco === 'Outro') base = extra || 'Outro';
+        else if (bloco && local) base = bloco + ' — ' + local;
+        else base = bloco || local || '';
+        if (base && extra && bloco !== 'Outro') return base + ' — ' + extra;
+        if (!base && extra) return extra;
+        return base;
+    }
+
+    function preencherDestinoNaLinha(row, destinoCompleto) {
+        if (!row) return;
+        var selBloco = row.querySelector('.destino-bloco');
+        var selLocal = row.querySelector('.destino-local');
+        var comp = row.querySelector('.destino-complemento');
+        var d = (destinoCompleto || '').trim();
+        if (!selBloco) {
+            var leg = row.querySelector('.destino-input');
+            if (leg) leg.value = d;
+            return;
+        }
+        // Bloco X — Andar — complemento?
+        var m = d.match(/^Bloco\s([A-F])\s*[—\-]\s*(.+)$/i);
+        if (m) {
+            selBloco.value = 'Bloco ' + m[1].toUpperCase();
+            selLocal.innerHTML = htmlOptionsAndares('');
+            selLocal.disabled = false;
+            var resto = m[2].trim();
+            var andarOk = '';
+            for (var i = 0; i < ANDARES_POR_BLOCO.length; i++) {
+                var A = ANDARES_POR_BLOCO[i];
+                if (resto === A || resto.indexOf(A + ' — ') === 0 || resto.indexOf(A + ' - ') === 0) {
+                    andarOk = A;
+                    break;
+                }
+            }
+            if (andarOk) {
+                selLocal.value = andarOk;
+                var extra = resto;
+                if (extra.indexOf(andarOk + ' — ') === 0) extra = extra.slice(andarOk.length + 3);
+                else if (extra === andarOk) extra = '';
+                else extra = resto.replace(andarOk, '').replace(/^[\s—\-]+/, '');
+                if (comp) comp.value = extra;
+            } else {
+                if (comp) comp.value = resto;
+            }
+            return;
+        }
+        // área comum conhecida
+        var areas = carregarAreasComuns();
+        for (var j = 0; j < areas.length; j++) {
+            var ar = areas[j];
+            if (d === ar || d.indexOf(ar + ' — ') === 0) {
+                selBloco.value = 'Áreas comuns';
+                selLocal.innerHTML = htmlOptionsAreas(ar);
+                selLocal.disabled = false;
+                var ex = d === ar ? '' : d.slice(ar.length).replace(/^[\s—\-]+/, '');
+                if (comp) comp.value = ex;
+                return;
+            }
+        }
+        selBloco.value = 'Outro';
+        selLocal.innerHTML = '<option value="">— use o complemento —</option>';
+        selLocal.disabled = true;
+        if (comp) comp.value = d;
+    }
 
     function atualizarSelectsDestino() {
         LOCAIS_PREDIO = carregarLocaisPredio();
-        document.querySelectorAll('select.destino-local').forEach(function(sel) {
-            var atual = sel.value;
-            sel.innerHTML = htmlSelectLocalPredio(atual);
-            if (atual && [...sel.options].some(function(o) { return o.value === atual; })) {
-                sel.value = atual;
-            }
+        document.querySelectorAll('#tabelaItensBody tr').forEach(function(tr) {
+            // mantém valores atuais se possível
         });
     }
 
     function abrirModalLocaisDestino() {
         if (!isAdminLocais()) {
-            mostrarToast('⛔ Somente Administrador pode editar os destinos', 'danger');
+            mostrarToast('⛔ Somente Administrador pode editar as áreas comuns', 'danger');
             return;
         }
-        var lista = carregarLocaisPredio();
+        var lista = carregarAreasComuns();
         var overlay = document.getElementById('modalLocaisDestino');
-        if (!overlay) {
-            overlay = document.createElement('div');
-            overlay.id = 'modalLocaisDestino';
-            overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:10060;display:flex;align-items:center;justify-content:center;padding:1rem;';
-            overlay.innerHTML = '<div style="background:var(--bg-card,#FBFBF7);color:var(--text-primary,#191D1B);border-radius:12px;width:100%;max-width:480px;max-height:90vh;overflow:auto;border:1px solid var(--border-color,#D8DCCE);font-family:Inter,sans-serif;box-shadow:0 12px 40px rgba(0,0,0,.18);">' +
-                '<div style="display:flex;justify-content:space-between;align-items:center;padding:.85rem 1rem;border-bottom:1px solid var(--border-color,#D8DCCE);font-weight:700;">' +
-                '<span><i class="fas fa-map-marker-alt"></i> Destinos / locais do prédio</span>' +
-                '<button type="button" id="btnFecharLocais" style="border:0;background:transparent;font-size:1.1rem;cursor:pointer;color:inherit;">✕</button></div>' +
-                '<div style="padding:1rem;">' +
-                '<p style="font-size:.75rem;color:var(--text-secondary,#7A816E);margin:0 0 .6rem;">Somente <strong>Administrador</strong>. Inclua, renomeie ou remova. Usado no campo Uso / Destino da saída.</p>' +
-                '<div style="display:flex;gap:.4rem;margin-bottom:.7rem;">' +
-                '<input type="text" id="novoLocalDestino" placeholder="Novo local..." style="flex:1;padding:.45rem .6rem;border-radius:8px;border:1px solid var(--border-color,#D8DCCE);font-family:inherit;" />' +
-                '<button type="button" id="btnAddLocal" style="padding:.45rem .8rem;border-radius:8px;border:0;background:#191D1B;color:#fff;font-weight:600;cursor:pointer;font-family:inherit;">+ Add</button>' +
-                '</div>' +
-                '<div id="listaLocaisEdit" style="display:flex;flex-direction:column;gap:.35rem;max-height:50vh;overflow:auto;"></div>' +
-                '<div style="display:flex;gap:.5rem;justify-content:space-between;margin-top:.9rem;flex-wrap:wrap;">' +
-                '<button type="button" id="btnRestaurarLocais" style="padding:.4rem .7rem;border-radius:8px;border:1px solid var(--border-color);background:#F0F2EA;cursor:pointer;font-family:inherit;font-size:.75rem;">Restaurar padrão</button>' +
-                '<button type="button" id="btnSalvarLocais" style="padding:.4rem .9rem;border-radius:8px;border:0;background:#2E7D32;color:#fff;font-weight:700;cursor:pointer;font-family:inherit;">Salvar</button>' +
-                '</div></div></div>';
-            document.body.appendChild(overlay);
-            overlay.addEventListener('click', function(e) { if (e.target === overlay) overlay.style.display = 'none'; });
-            overlay.querySelector('#btnFecharLocais').onclick = function() { overlay.style.display = 'none'; };
-            overlay.querySelector('#btnAddLocal').onclick = function() {
-                var inp = document.getElementById('novoLocalDestino');
-                var v = (inp.value || '').trim();
-                if (!v) return;
-                var box = document.getElementById('listaLocaisEdit');
-                box.insertAdjacentHTML('afterbegin', htmlLinhaLocal(v));
-                inp.value = '';
-                inp.focus();
-            };
-            overlay.querySelector('#btnRestaurarLocais').onclick = function() {
-                if (!confirm('Restaurar lista padrão de destinos?')) return;
-                document.getElementById('listaLocaisEdit').innerHTML = LOCAIS_PREDIO_PADRAO.map(htmlLinhaLocal).join('');
-            };
-            overlay.querySelector('#btnSalvarLocais').onclick = function() {
-                var vals = [];
-                document.querySelectorAll('#listaLocaisEdit .local-edit-input').forEach(function(inp) {
-                    var v = (inp.value || '').trim();
-                    if (v && vals.indexOf(v) < 0) vals.push(v);
-                });
-                if (!vals.length) { alert('Mantenha ao menos um local'); return; }
-                // garante Outro no fim
-                vals = vals.filter(function(x) { return x !== 'Outro'; });
-                vals.push('Outro');
-                salvarLocaisPredio(vals);
-                LOCAIS_PREDIO = vals;
-                atualizarSelectsDestino();
-                overlay.style.display = 'none';
-                mostrarToast('✅ Destinos atualizados!', 'success');
-            };
-        }
+        if (overlay) overlay.remove();
+        overlay = document.createElement('div');
+        overlay.id = 'modalLocaisDestino';
+        overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:10060;display:flex;align-items:center;justify-content:center;padding:1rem;';
         function htmlLinhaLocal(nome) {
             return '<div style="display:flex;gap:.35rem;align-items:center;">' +
                 '<input type="text" class="local-edit-input" value="' + String(nome).replace(/"/g, '&quot;') + '" style="flex:1;padding:.35rem .5rem;border-radius:6px;border:1px solid var(--border-color,#D8DCCE);font-family:inherit;font-size:.8rem;" />' +
-                '<button type="button" class="btn-rm-local" style="border:0;background:#8B3A3A;color:#fff;border-radius:6px;padding:.3rem .5rem;cursor:pointer;" title="Remover">✕</button></div>';
+                '<button type="button" class="btn-rm-local" style="border:0;background:#8B3A3A;color:#fff;border-radius:6px;padding:.3rem .5rem;cursor:pointer;">✕</button></div>';
         }
-        window.htmlLinhaLocal = htmlLinhaLocal;
+        overlay.innerHTML = '<div style="background:var(--bg-card,#FBFBF7);color:var(--text-primary,#191D1B);border-radius:12px;width:100%;max-width:480px;max-height:90vh;overflow:auto;border:1px solid var(--border-color,#D8DCCE);font-family:Inter,sans-serif;box-shadow:0 12px 40px rgba(0,0,0,.18);">' +
+            '<div style="display:flex;justify-content:space-between;align-items:center;padding:.85rem 1rem;border-bottom:1px solid var(--border-color);font-weight:700;">' +
+            '<span><i class="fas fa-map-marker-alt"></i> Áreas comuns (Admin)</span>' +
+            '<button type="button" id="btnFecharLocais" style="border:0;background:transparent;font-size:1.1rem;cursor:pointer;">✕</button></div>' +
+            '<div style="padding:1rem;">' +
+            '<p style="font-size:.75rem;color:var(--text-secondary);margin:0 0 .5rem;"><strong>Blocos A–F</strong> já têm andares fixos (subsolos, térreo, 1º–10º, cobertura). Aqui você edita só as <strong>áreas comuns</strong>.</p>' +
+            '<div style="display:flex;gap:.4rem;margin-bottom:.7rem;">' +
+            '<input type="text" id="novoLocalDestino" placeholder="Nova área comum..." style="flex:1;padding:.45rem .6rem;border-radius:8px;border:1px solid var(--border-color);font-family:inherit;" />' +
+            '<button type="button" id="btnAddLocal" style="padding:.45rem .8rem;border-radius:8px;border:0;background:#191D1B;color:#fff;font-weight:600;cursor:pointer;">+ Add</button></div>' +
+            '<div id="listaLocaisEdit" style="display:flex;flex-direction:column;gap:.35rem;max-height:45vh;overflow:auto;"></div>' +
+            '<div style="display:flex;gap:.5rem;justify-content:space-between;margin-top:.9rem;">' +
+            '<button type="button" id="btnRestaurarLocais" style="padding:.4rem .7rem;border-radius:8px;border:1px solid var(--border-color);background:#F0F2EA;cursor:pointer;font-size:.75rem;">Restaurar padrão</button>' +
+            '<button type="button" id="btnSalvarLocais" style="padding:.4rem .9rem;border-radius:8px;border:0;background:#2E7D32;color:#fff;font-weight:700;cursor:pointer;">Salvar</button>' +
+            '</div></div></div>';
+        document.body.appendChild(overlay);
         var box = document.getElementById('listaLocaisEdit');
         box.innerHTML = lista.map(htmlLinhaLocal).join('');
         box.onclick = function(e) {
             var btn = e.target.closest('.btn-rm-local');
             if (btn) btn.parentElement.remove();
         };
-        overlay.style.display = 'flex';
+        overlay.querySelector('#btnFecharLocais').onclick = function() { overlay.remove(); };
+        overlay.addEventListener('click', function(e) { if (e.target === overlay) overlay.remove(); });
+        overlay.querySelector('#btnAddLocal').onclick = function() {
+            var v = (document.getElementById('novoLocalDestino').value || '').trim();
+            if (!v) return;
+            box.insertAdjacentHTML('afterbegin', htmlLinhaLocal(v));
+            document.getElementById('novoLocalDestino').value = '';
+        };
+        overlay.querySelector('#btnRestaurarLocais').onclick = function() {
+            if (!confirm('Restaurar áreas comuns padrão?')) return;
+            box.innerHTML = AREAS_COMUNS_PADRAO.map(htmlLinhaLocal).join('');
+        };
+        overlay.querySelector('#btnSalvarLocais').onclick = function() {
+            var vals = [];
+            document.querySelectorAll('#listaLocaisEdit .local-edit-input').forEach(function(inp) {
+                var v = (inp.value || '').trim();
+                if (v && vals.indexOf(v) < 0) vals.push(v);
+            });
+            if (!vals.length) { alert('Mantenha ao menos uma área'); return; }
+            salvarAreasComuns(vals);
+            LOCAIS_PREDIO = carregarLocaisPredio();
+            overlay.remove();
+            mostrarToast('✅ Áreas comuns atualizadas!', 'success');
+        };
     }
-
-
-    function htmlSelectLocalPredio(valorSel) {
-        valorSel = (valorSel || '').trim();
-        let opts = '<option value="">Local / bloco...</option>';
-        getLocaisPredio().forEach(function(l) {
-            const sel = (valorSel === l) ? ' selected' : '';
-            opts += '<option value="' + l.replace(/"/g, '&quot;') + '"' + sel + '>' + l + '</option>';
-        });
-        return opts;
-    }
-
-    /** Junta local do prédio + complemento → destino final */
-    function obterDestinoDaLinha(row) {
-        if (!row) return '';
-        const sel = row.querySelector('.destino-local');
-        const comp = row.querySelector('.destino-complemento');
-        const local = sel ? (sel.value || '').trim() : '';
-        const extra = comp ? (comp.value || '').trim() : '';
-        // legado: só input .destino-input
-        const legado = row.querySelector('.destino-input:not(.destino-complemento)');
-        if (!sel && legado) return (legado.value || '').trim();
-        if (local && extra) return local + ' — ' + extra;
-        return local || extra || '';
-    }
-
-    function preencherDestinoNaLinha(row, destinoCompleto) {
-        if (!row) return;
-        const sel = row.querySelector('.destino-local');
-        const comp = row.querySelector('.destino-complemento');
-        const d = (destinoCompleto || '').trim();
-        if (!sel) {
-            const leg = row.querySelector('.destino-input');
-            if (leg) leg.value = d;
-            return;
-        }
-        // tenta casar com local conhecido
-        let achou = '';
-        const _locs = getLocaisPredio();
-        for (let i = 0; i < _locs.length; i++) {
-            const L = _locs[i];
-            if (d === L || d.indexOf(L + ' — ') === 0 || d.indexOf(L + ' - ') === 0 || d.indexOf(L + ',') === 0) {
-                achou = L;
-                break;
-            }
-        }
-        if (achou) {
-            sel.value = achou;
-            let resto = d;
-            if (resto.indexOf(achou + ' — ') === 0) resto = resto.slice(achou.length + 3);
-            else if (resto.indexOf(achou + ' - ') === 0) resto = resto.slice(achou.length + 3);
-            else if (resto === achou) resto = '';
-            else if (resto.indexOf(achou) === 0) resto = resto.slice(achou.length).replace(/^[\s—\-,]+/, '');
-            if (comp) comp.value = resto;
-        } else {
-            sel.value = d ? 'Outro' : '';
-            if (comp) comp.value = d;
-        }
-    }
-
 
     function adicionarLinha() {
         const tbody = document.getElementById('tabelaItensBody');
@@ -2649,20 +2775,14 @@ function mostrarToast(mensagem, tipo = 'success') {
                     <input type="text" class="item-input-manual" placeholder="✏️ Digite o nome do item..." style="display:none; width:100%; padding:0.5rem; border-radius:4px; border:2px solid #3498DB; background:var(--input-bg); color:var(--text-primary); font-weight:600;" />
                 </div>
             </td>
-            <td class="col-destino">
-                <div style="display:flex;flex-direction:column;gap:0.25rem;min-width:160px;">
-                    <select class="destino-local" style="width:100%;padding:0.4rem;border-radius:4px;border:1px solid var(--border-color);background:var(--input-bg);color:var(--text-primary);font-size:0.8rem;">
-                        ${htmlSelectLocalPredio('')}
-                    </select>
-                    <input type="text" class="destino-complemento destino-input" placeholder="Complemento (apto, sala...)" style="width:100%;padding:0.35rem 0.45rem;border-radius:4px;border:1px solid var(--border-color);background:var(--input-bg);color:var(--text-primary);font-size:0.78rem;" />
-                </div>
-            </td>
+            <td class="col-destino">${montarHtmlDestinoCell()}</td>
             <td class="col-acoes">
                 <span class="status-cell" style="display:none;"></span>
                 <span class="remove-item" onclick="removerLinha(this)" style="color:var(--danger); cursor:pointer; font-size:1rem;"><i class="fas fa-minus-circle"></i></span>
             </td>
         `;
         tbody.appendChild(tr);
+        ligarDestinoLinha(tr);
         
         carregarSelectItens();
         
@@ -3321,19 +3441,13 @@ function mostrarToast(mensagem, tipo = 'success') {
                             <input type="text" class="item-input-manual" placeholder="✏️ Digite o nome do item..." style="display:none; width:100%; padding:0.5rem; border-radius:4px; border:2px solid #3498DB; background:var(--input-bg); color:var(--text-primary); font-weight:600;" />
                         </div>
                     </td>
-                    <td class="col-destino">
-                <div style="display:flex;flex-direction:column;gap:0.25rem;min-width:160px;">
-                    <select class="destino-local" style="width:100%;padding:0.4rem;border-radius:4px;border:1px solid var(--border-color);background:var(--input-bg);color:var(--text-primary);font-size:0.8rem;">
-                        ${htmlSelectLocalPredio('')}
-                    </select>
-                    <input type="text" class="destino-complemento destino-input" placeholder="Complemento (apto, sala...)" style="width:100%;padding:0.35rem 0.45rem;border-radius:4px;border:1px solid var(--border-color);background:var(--input-bg);color:var(--text-primary);font-size:0.78rem;" />
-                </div>
-            </td>
+                    <td class="col-destino">${montarHtmlDestinoCell()}</td>
                     <td class="col-acoes">
                         <span class="remove-item" onclick="removerLinha(this)" style="color:var(--danger); cursor:pointer; font-size:1rem;"><i class="fas fa-minus-circle"></i></span>
                     </td>
                 `;
                 tbody.appendChild(tr);
+                ligarDestinoLinha(tr);
                 preencherDestinoNaLinha(tr, item.destino || '');
                 
                 carregarSelectItens();
