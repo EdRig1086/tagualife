@@ -2389,8 +2389,10 @@ function mostrarToast(mensagem, tipo = 'success') {
             return { status: 'vazio' };
         }
         
-        const estoque = JSON.parse(localStorage.getItem('estoqueTaguaLife') || '[]');
-        const item = estoque.find(i => i.nome.toLowerCase() === itemNome.toLowerCase());
+        const estoque = (cacheEstoqueDB && cacheEstoqueDB.length)
+            ? cacheEstoqueDB
+            : JSON.parse(localStorage.getItem('estoqueTaguaLife') || '[]');
+        const item = estoque.find(i => (i.nome || '').toLowerCase() === itemNome.toLowerCase());
         
         if (!item) {
             statusCell.textContent = '🆕';
@@ -2556,9 +2558,17 @@ function mostrarToast(mensagem, tipo = 'success') {
             }
             
             if (item && item !== '') {
-                const estoque = JSON.parse(localStorage.getItem('estoqueTaguaLife') || '[]');
-                const itemEstoque = estoque.find(i => i.nome.toLowerCase() === item.toLowerCase());
-                itens.push({ qtd, item, destino, cadastrado: !!itemEstoque });
+                const estoque = (cacheEstoqueDB && cacheEstoqueDB.length)
+                    ? cacheEstoqueDB
+                    : JSON.parse(localStorage.getItem('estoqueTaguaLife') || '[]');
+                const itemEstoque = estoque.find(i => (i.nome || '').toLowerCase() === item.toLowerCase());
+                itens.push({
+                    qtd,
+                    item,
+                    destino,
+                    cadastrado: !!itemEstoque,
+                    id: itemEstoque ? itemEstoque.id : null
+                });
             }
         });
         return {
@@ -2586,7 +2596,18 @@ function mostrarToast(mensagem, tipo = 'success') {
         }
         // novo registro: qualquer logado pode (Usuário só registra)
 
+        const btnSalvar = document.getElementById('btnSalvar');
+        if (btnSalvar && btnSalvar.disabled) return false;
+        if (btnSalvar) {
+            btnSalvar.disabled = true;
+            btnSalvar.dataset._html = btnSalvar.innerHTML;
+            btnSalvar.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Salvando...';
+        }
+
         try {
+            // Garante estoque do banco antes de validar/baixar
+            try { await carregarEstoqueDB(); } catch (e) { console.warn(e); }
+
             const dados = carregarDadosFormulario();
             
             if (!dados.colaborador || dados.colaborador.trim() === '') {
@@ -2845,17 +2866,37 @@ function mostrarToast(mensagem, tipo = 'success') {
                 mostrarToast(msgSucesso, 'success');
             }
             
-            await atualizarPainel();
-            await exibirListaProtocolos();
+            try { await atualizarPainel(); } catch (e) { console.warn('painel', e); }
+            // histórico em background (não trava a tela)
+            try {
+                const el = document.getElementById('listaProtocolos');
+                if (el && el.style.display !== 'none') {
+                    exibirListaProtocolos().catch(function(){});
+                } else {
+                    // só atualiza badge
+                    carregarSaidasDB().then(function(lista) {
+                        const b = document.getElementById('badgeHistorico');
+                        if (b) b.textContent = (lista || []).length;
+                    }).catch(function(){});
+                }
+            } catch (e) { console.warn(e); }
             limparCamposSilencioso();
+            setTimeout(function() { limparCamposSilencioso(); }, 50);
+            mostrarToast('✅ Saída salva com sucesso!', 'success');
             
             return true;
             
         } catch (error) {
             console.error('Erro ao salvar:', error);
             mostrarMensagem('❌ Erro ao salvar!', '#8B3A3A');
-            mostrarToast('❌ Erro: ' + error.message, 'danger');
+            mostrarToast('❌ Erro: ' + (error.message || error), 'danger');
             return false;
+        } finally {
+            const btn = document.getElementById('btnSalvar');
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = btn.dataset._html || '<i class="fas fa-save"></i> Salvar';
+            }
         }
     }
 
@@ -3200,31 +3241,65 @@ function mostrarToast(mensagem, tipo = 'success') {
     }
 
     function limparCamposSilencioso() {
-        window._protocoloEmEdicao = null;
-        
-        const btnSalvar = document.getElementById('btnSalvar');
-        if (btnSalvar) {
-            btnSalvar.innerHTML = '<i class="fas fa-save"></i> Salvar';
-            btnSalvar.style.background = '';
+        try {
+            window._protocoloEmEdicao = null;
+            window.protocoloEmEdicao = null;
+            window.editandoSaidaId = null;
+
+            const btnSalvar = document.getElementById('btnSalvar');
+            if (btnSalvar) {
+                btnSalvar.disabled = false;
+                btnSalvar.innerHTML = '<i class="fas fa-save"></i> Salvar';
+                btnSalvar.style.background = '';
+            }
+
+            // limpa campos principais por id
+            const colab = document.getElementById('colaborador');
+            if (colab) colab.value = '';
+            const ass = document.getElementById('assinatura');
+            if (ass) ass.value = '';
+            const alm = document.getElementById('almoxarife');
+            if (alm) alm.value = 'Ednaldo de Souza — Almoxarife';
+
+            // limpa qualquer input/select do formulário
+            document.querySelectorAll('.protocolo-body input, .protocolo-body select, #tabelaItensBody input, #tabelaItensBody select').forEach(el => {
+                if (['dataAtual','horaAtual','dataGeracao','almoxarife'].includes(el.id)) return;
+                if (el.id === 'almoxarife') return;
+                try {
+                    if (el.tagName === 'SELECT') el.selectedIndex = 0;
+                    else el.value = '';
+                } catch (e) {}
+            });
+
+            // data e hora atuais
+            try {
+                const horario = getHorarioBrasilia();
+                const ds = document.getElementById('dataSaida');
+                const hs = document.getElementById('horasSaida');
+                if (ds) ds.value = horario.data || new Date().toLocaleDateString('pt-BR');
+                if (hs) hs.value = horario.horaCompleta || new Date().toLocaleTimeString('pt-BR');
+            } catch (e) {
+                const now = new Date();
+                const ds = document.getElementById('dataSaida');
+                const hs = document.getElementById('horasSaida');
+                if (ds) ds.value = now.toLocaleDateString('pt-BR');
+                if (hs) hs.value = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            }
+
+            // recria linha de itens vazia
+            const tbody = document.getElementById('tabelaItensBody');
+            if (tbody) {
+                tbody.innerHTML = '';
+                try { adicionarLinha(); } catch (e) { console.warn(e); }
+            }
+            try { carregarSelectItens(); } catch (e) {}
+            try { carregarSelectColaboradores(); } catch (e) {}
+            // garante colaborador vazio após recriar options
+            if (colab) colab.value = '';
+            try { atualizarPainel(); } catch (e) {}
+        } catch (e) {
+            console.error('limparCamposSilencioso', e);
         }
-        
-        document.querySelectorAll('.protocolo-body input, .protocolo-body select').forEach(el => {
-            if (['dataAtual','horaAtual','dataGeracao'].includes(el.id)) return;
-            if (el.id === 'almoxarife') { el.value = 'Ednaldo de Souza — Almoxarife'; return; }
-            if (el.tagName === 'SELECT') el.value = '';
-            else el.value = '';
-        });
-        
-        const horario = getHorarioBrasilia();
-        document.getElementById('dataSaida').value = horario.data;
-        document.getElementById('horasSaida').value = horario.horaCompleta;
-        
-        const tbody = document.getElementById('tabelaItensBody');
-        tbody.innerHTML = '';
-        adicionarLinha();
-        carregarSelectItens();
-        carregarSelectColaboradores();
-        atualizarPainel();
     }
 
     function imprimirProtocolo() {
