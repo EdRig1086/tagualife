@@ -1473,15 +1473,12 @@
             function esc(s) { return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
             function fmtN(n) { return (Number(n) || 0).toLocaleString('pt-BR'); }
 
-            // Agrupa por categoria
             const porCat = {};
             itens.forEach(i => {
                 const cat = (i.categoria || 'Outros').trim() || 'Outros';
                 if (!porCat[cat]) porCat[cat] = [];
                 porCat[cat].push(i);
             });
-
-            // Ordena categorias por qtd de itens (maior primeiro); itens por urgência
             const cats = Object.keys(porCat).sort((a, b) => porCat[b].length - porCat[a].length);
             cats.forEach(cat => {
                 porCat[cat].sort((a, b) => {
@@ -1497,18 +1494,18 @@
 
             cats.forEach(cat => {
                 const lista = porCat[cat];
-                let subQtd = 0;
                 let subSug = 0;
                 const rows = lista.map(i => {
                     nGlobal++;
                     const q = parseInt(i.quantidade) || 0;
                     const lim = parseInt(i.limite_alerta) || 5;
                     const sugerido = Math.max(lim * 2 - q, lim);
-                    subQtd += q;
                     subSug += sugerido;
                     totalSugerido += sugerido;
-                    return `<tr>
-                      <td class="centro">${nGlobal}</td>
+                    const idRow = 'item_' + nGlobal;
+                    return `<tr class="linha-item" data-sug="${sugerido}" id="${idRow}">
+                      <td class="centro no-print-col"><input type="checkbox" class="chk-item" checked data-sug="${sugerido}" onchange="atualizarContadores()" /></td>
+                      <td class="centro num-col">${nGlobal}</td>
                       <td>${esc(i.nome)}</td>
                       <td class="centro">${q} ${esc(i.unidade || 'UN')}</td>
                       <td class="centro">${lim}</td>
@@ -1517,14 +1514,20 @@
                 }).join('');
 
                 corpo += `
-                <div class="cat-bloco">
+                <div class="cat-bloco" data-cat="${esc(cat)}">
                   <div class="cat-titulo">
-                    <span class="cat-nome">${esc(cat)}</span>
-                    <span class="cat-meta">${lista.length} item(ns) · sugerido repor ${fmtN(subSug)} unid.</span>
+                    <span class="cat-nome">
+                      <label class="no-print" style="cursor:pointer;margin-right:6px;">
+                        <input type="checkbox" class="chk-cat" checked onchange="toggleCategoria(this)" title="Marcar/desmarcar categoria" />
+                      </label>
+                      ${esc(cat)}
+                    </span>
+                    <span class="cat-meta"><span class="cat-count">${lista.length}</span> item(ns)</span>
                   </div>
                   <table>
                     <thead>
                       <tr>
+                        <th class="no-print-col" style="width:28px;"></th>
                         <th style="width:36px;">#</th>
                         <th>Item</th>
                         <th style="width:70px;" class="centro">Estoque</th>
@@ -1539,7 +1542,6 @@
                 </div>`;
             });
 
-            // resumo por categoria
             const resumoRows = cats.map((cat, i) => {
                 const lista = porCat[cat];
                 let sug = 0;
@@ -1548,11 +1550,11 @@
                     const lim = parseInt(it.limite_alerta) || 5;
                     sug += Math.max(lim * 2 - q, lim);
                 });
-                return `<tr>
+                return `<tr class="resumo-cat" data-cat="${esc(cat)}">
                   <td>${i + 1}</td>
                   <td><strong>${esc(cat)}</strong></td>
-                  <td class="centro">${lista.length}</td>
-                  <td class="centro sug">${fmtN(sug)}</td>
+                  <td class="centro resumo-itens">${lista.length}</td>
+                  <td class="centro sug resumo-sug">${fmtN(sug)}</td>
                 </tr>`;
             }).join('');
 
@@ -1568,8 +1570,12 @@
   * { box-sizing: border-box; }
   body { font-family: Inter, Arial, sans-serif; color: #191D1B; font-size: 10px; margin: 0; padding: 12px 14px; background: #fff; line-height: 1.35; }
   .no-print { text-align: center; margin-bottom: 12px; }
-  .no-print button { padding: 8px 16px; border: 0; border-radius: 8px; cursor: pointer; font-weight: 700; margin: 0 4px; font-family: inherit; }
+  .toolbar { background: #F0F2EA; border: 1px solid #D8DCCE; border-radius: 10px; padding: 10px 12px; margin-bottom: 12px; text-align: left; }
+  .toolbar p { margin: 0 0 8px; font-size: 11px; color: #5A614E; }
+  .toolbar button { padding: 7px 12px; border: 0; border-radius: 8px; cursor: pointer; font-weight: 700; margin: 0 4px 4px 0; font-family: inherit; font-size: 11px; }
   .btn-print { background: #191D1B; color: #fff; }
+  .btn-sec { background: #7A816E; color: #fff; }
+  .btn-outline { background: #fff; color: #191D1B; border: 1px solid #D8DCCE !important; }
   .topo { text-align: center; border-bottom: 3px solid #7A816E; padding-bottom: 10px; margin-bottom: 12px; }
   .topo .marca { font-size: 10px; font-weight: 700; color: #7A816E; text-transform: uppercase; letter-spacing: 0.4px; }
   .topo h1 { font-size: 16px; margin: 6px 0 3px; font-weight: 800; }
@@ -1581,6 +1587,7 @@
   .card .l { font-size: 8px; color: #7A816E; text-transform: uppercase; margin-top: 2px; font-weight: 600; }
   h2 { font-size: 11px; margin: 14px 0 8px; padding: 6px 10px; background: #E8EBE0; border-left: 4px solid #7A816E; border-radius: 0 6px 6px 0; font-weight: 700; page-break-after: avoid; }
   .cat-bloco { margin-bottom: 14px; page-break-inside: avoid; }
+  .cat-bloco.cat-vazia { display: none; }
   .cat-titulo { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 4px 10px; padding: 7px 10px; background: #7A816E; color: #FBFBF7; border-radius: 6px 6px 0 0; page-break-after: avoid; }
   .cat-nome { font-size: 11px; font-weight: 800; }
   .cat-meta { font-size: 9px; opacity: 0.95; }
@@ -1590,17 +1597,27 @@
   th { background: #5A614E; color: #fff; text-align: left; padding: 4px 6px; font-size: 8.5px; font-weight: 600; }
   td { border-bottom: 1px solid #E4E8DC; padding: 4px 6px; vertical-align: top; }
   tr:nth-child(even) td { background: #F7F8F3; }
+  tr.linha-item.excluida { display: none; }
   .centro { text-align: center; }
   .sug { font-weight: 800; color: #8B6914; }
   .subtotal td { background: #F0F2EA !important; font-weight: 700; border-top: 1px solid #C1CE83; }
   .legenda { font-size: 8.5px; color: #7A816E; margin: 8px 0 0; }
   .footer { margin-top: 14px; padding-top: 8px; border-top: 1px solid #D8DCCE; font-size: 8px; color: #7A816E; text-align: center; }
-  @media print { .no-print { display: none !important; } body { padding: 0; } }
+  @media print {
+    .no-print, .no-print-col, .toolbar { display: none !important; }
+    body { padding: 0; }
+    tr.linha-item.excluida { display: none !important; }
+    .cat-bloco.cat-vazia { display: none !important; }
+  }
 </style>
 </head>
 <body>
-  <div class="no-print">
-    <button class="btn-print" onclick="window.print()">Imprimir / PDF (A4 retrato)</button>
+  <div class="toolbar no-print">
+    <p><strong>Personalize o relatório:</strong> desmarque o item para tirar da impressão. Pode marcar/desmarcar categoria inteira.</p>
+    <button class="btn-print" onclick="window.print()">Imprimir / PDF (A4)</button>
+    <button class="btn-sec" onclick="marcarTodos(true)">Marcar todos</button>
+    <button class="btn-outline" onclick="marcarTodos(false)">Desmarcar todos</button>
+    <span style="margin-left:8px;font-size:11px;font-weight:700;">Selecionados: <span id="selCount">${itens.length}</span> · Qtd sugerida: <span id="selSug">${fmtN(totalSugerido)}</span></span>
   </div>
 
   <div class="topo">
@@ -1610,19 +1627,19 @@
   </div>
 
   <div class="info-bar">
-    <span><strong>Itens em baixa:</strong> ${fmtN(itens.length)}</span>
+    <span><strong>Itens listados:</strong> <span id="infoItens">${fmtN(itens.length)}</span></span>
     <span><strong>Categorias:</strong> ${fmtN(cats.length)}</span>
     <span><strong>Emitido em:</strong> ${geradoEm}</span>
   </div>
 
   <div class="cards">
-    <div class="card"><div class="n">${fmtN(itens.length)}</div><div class="l">Itens a repor</div></div>
+    <div class="card"><div class="n" id="cardItens">${fmtN(itens.length)}</div><div class="l">Itens selecionados</div></div>
     <div class="card"><div class="n">${fmtN(cats.length)}</div><div class="l">Categorias</div></div>
-    <div class="card"><div class="n">${fmtN(totalSugerido)}</div><div class="l">Unidades sugeridas</div></div>
+    <div class="card"><div class="n" id="cardSug">${fmtN(totalSugerido)}</div><div class="l">Unidades sugeridas</div></div>
   </div>
 
   <h2>1. Resumo por categoria</h2>
-  <table>
+  <table id="tabResumo">
     <thead>
       <tr>
         <th style="width:36px;">#</th>
@@ -1635,20 +1652,69 @@
       ${resumoRows}
       <tr class="subtotal">
         <td colspan="2"><strong>TOTAL</strong></td>
-        <td class="centro">${fmtN(itens.length)}</td>
-        <td class="centro sug">${fmtN(totalSugerido)}</td>
+        <td class="centro" id="totalItensResumo">${fmtN(itens.length)}</td>
+        <td class="centro sug" id="totalSugResumo">${fmtN(totalSugerido)}</td>
       </tr>
     </tbody>
   </table>
 
   <h2>2. Detalhe por categoria</h2>
-  <p class="legenda">Qtd sugerida = repor até cerca de 2× o limite mínimo (ajuste conforme consumo real).</p>
+  <p class="legenda">Qtd sugerida = repor até cerca de 2× o limite mínimo. Use as caixas para incluir ou tirar itens antes de imprimir.</p>
   ${corpo}
 
   <div class="footer">
     Sistema TaguáLife Center · Sugestão de Compra<br>
     Documento gerado em ${geradoEm} · Formato A4 retrato
   </div>
+
+<script>
+function fmtN(n) { return (Number(n) || 0).toLocaleString('pt-BR'); }
+function atualizarContadores() {
+  var n = 0, sug = 0;
+  document.querySelectorAll('.linha-item').forEach(function(tr) {
+    var chk = tr.querySelector('.chk-item');
+    if (chk && chk.checked) {
+      tr.classList.remove('excluida');
+      n++;
+      sug += parseInt(tr.getAttribute('data-sug'), 10) || 0;
+    } else {
+      tr.classList.add('excluida');
+    }
+  });
+  // esconde categoria sem itens marcados
+  document.querySelectorAll('.cat-bloco').forEach(function(bloco) {
+    var algum = false;
+    bloco.querySelectorAll('.chk-item').forEach(function(c) { if (c.checked) algum = true; });
+    if (algum) bloco.classList.remove('cat-vazia');
+    else bloco.classList.add('cat-vazia');
+    var cnt = bloco.querySelector('.cat-count');
+    if (cnt) {
+      var q = 0;
+      bloco.querySelectorAll('.chk-item').forEach(function(c) { if (c.checked) q++; });
+      cnt.textContent = q;
+    }
+  });
+  var el;
+  el = document.getElementById('selCount'); if (el) el.textContent = n;
+  el = document.getElementById('selSug'); if (el) el.textContent = fmtN(sug);
+  el = document.getElementById('cardItens'); if (el) el.textContent = fmtN(n);
+  el = document.getElementById('cardSug'); if (el) el.textContent = fmtN(sug);
+  el = document.getElementById('infoItens'); if (el) el.textContent = fmtN(n);
+  el = document.getElementById('totalItensResumo'); if (el) el.textContent = fmtN(n);
+  el = document.getElementById('totalSugResumo'); if (el) el.textContent = fmtN(sug);
+}
+function marcarTodos(v) {
+  document.querySelectorAll('.chk-item').forEach(function(c) { c.checked = v; });
+  document.querySelectorAll('.chk-cat').forEach(function(c) { c.checked = v; });
+  atualizarContadores();
+}
+function toggleCategoria(chkCat) {
+  var bloco = chkCat.closest('.cat-bloco');
+  if (!bloco) return;
+  bloco.querySelectorAll('.chk-item').forEach(function(c) { c.checked = chkCat.checked; });
+  atualizarContadores();
+}
+<\/script>
 </body>
 </html>`;
 
@@ -1659,7 +1725,7 @@
             }
             w.document.write(html);
             w.document.close();
-            mostrarToast('✅ Sugestão de compra por categoria gerada!', 'success');
+            mostrarToast('✅ Sugestão de compra — marque/desmarque itens antes de imprimir', 'success');
         } catch (e) {
             console.error(e);
             mostrarToast('❌ Erro: ' + (e.message || e), 'danger');
