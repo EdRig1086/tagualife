@@ -1360,7 +1360,6 @@
                 <span><strong id="usuarioLogado">—</strong> · <span id="cargoLogado">—</span></span>
             </div>
             <span class="badge" id="badgePrincipal"><i class="fas fa-check-circle"></i> Dashboard</span>
-            <span id="badgeLembreteTop" title="Há lembretes pendentes"><i class="fas fa-bell"></i> <span id="badgeLembreteTopN">0</span> lembrete(s)</span>
         </div>
 
         <!-- MENU -->
@@ -1447,39 +1446,6 @@
                 </div>
                 <!-- FIM CALENDÁRIO -->
 
-                <!-- BLOCO DE ANOTAÇÕES / LEMBRETES -->
-                <div class="alerta-lembrete-bar" id="alertaLembreteBar">
-                    <i class="fas fa-bell"></i>
-                    <span id="alertaLembreteTexto">Você tem lembretes pendentes!</span>
-                    <button type="button" onclick="document.querySelector('.bloco-notas').scrollIntoView({behavior:'smooth'})" style="margin-left:auto;padding:0.2rem 0.6rem;border-radius:6px;border:1px solid #C1A83C;background:#C1A83C;color:#191D1B;font-size:0.7rem;font-weight:700;cursor:pointer;font-family:inherit;">Ver lembretes</button>
-                </div>
-                <div class="bloco-notas" id="blocoNotas">
-                    <div class="notas-header">
-                        <span class="notas-titulo">
-                            <i class="fas fa-sticky-note"></i> Lembretes & Anotações
-                            <span class="badge-lembrete" id="badgeLembreteTitulo" style="display:none;"><i class="fas fa-exclamation"></i> <span id="badgeLembreteTituloN">0</span></span>
-                        </span>
-                        <div class="notas-botoes">
-                            <button onclick="limparNotas()" class="danger" title="Apagar todas as anotações">
-                                <i class="fas fa-trash-alt"></i> Apagar todas
-                            </button>
-                        </div>
-                    </div>
-                    <div class="notas-input-area">
-                        <input type="text" id="notaInput" placeholder="Digite seu lembrete aqui..." maxlength="200" onkeypress="if(event.key==='Enter') adicionarNota()">
-                        <button onclick="adicionarNota()"><i class="fas fa-plus"></i> Adicionar</button>
-                    </div>
-                    <div class="notas-lista" id="notasLista">
-                        <!-- As notas serão renderizadas aqui via JavaScript -->
-                    </div>
-                    <div class="notas-footer">
-                        <span class="notas-contador">
-                            <i class="fas fa-circle"></i> <span id="notasContador">0</span> anotação(ões)
-                        </span>
-                        <span>💾 Salvo automaticamente</span>
-                    </div>
-                </div>
-                <!-- FIM BLOCO DE ANOTAÇÕES -->
 
                 <!-- DASHBOARD COM GRÁFICOS -->
                 
