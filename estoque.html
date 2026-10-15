@@ -538,6 +538,14 @@
             <button type="button" class="btn-outline" onclick="fecharModalMovimentacoes()" style="padding:0.25rem 0.6rem;font-size:0.7rem;">✕ Fechar</button>
         </div>
         <div class="modal-body" style="padding:1rem;">
+            <div style="display:flex; flex-wrap:wrap; gap:0.35rem; margin-bottom:0.55rem; align-items:center;">
+                <span style="font-size:0.7rem;font-weight:700;color:var(--text-secondary);">Período:</span>
+                <button type="button" class="btn-outline mov-periodo ativo" data-periodo="dia" onclick="setMovPeriodo('dia')" style="padding:0.25rem 0.55rem;font-size:0.7rem;">Dia</button>
+                <button type="button" class="btn-outline mov-periodo" data-periodo="mes" onclick="setMovPeriodo('mes')" style="padding:0.25rem 0.55rem;font-size:0.7rem;">Mês</button>
+                <button type="button" class="btn-outline mov-periodo" data-periodo="ano" onclick="setMovPeriodo('ano')" style="padding:0.25rem 0.55rem;font-size:0.7rem;">Ano</button>
+                <button type="button" class="btn-outline mov-periodo" data-periodo="geral" onclick="setMovPeriodo('geral')" style="padding:0.25rem 0.55rem;font-size:0.7rem;">Geral</button>
+                <input type="date" id="movDataRef" onchange="carregarMovimentacoes()" style="padding:0.25rem 0.4rem;border-radius:6px;border:1px solid var(--border-color);font-size:0.72rem;background:var(--bg-card);color:var(--text-primary);" />
+            </div>
             <div style="display:flex; flex-wrap:wrap; gap:0.4rem; margin-bottom:0.8rem; align-items:center;">
                 <select id="movFiltroTipo" onchange="carregarMovimentacoes()" style="padding:0.3rem 0.5rem;border-radius:6px;border:1px solid var(--border-color);font-size:0.75rem;background:var(--bg-card);color:var(--text-primary);">
                     <option value="">Todos os tipos</option>
@@ -1349,55 +1357,24 @@
             </div>
         `;
 
-        if (tipo === 'categoria') {
-            catsOrdenadas.forEach(([cat]) => {
-                const itensCat = lista.filter(i => (i.categoria || 'Outros') === cat)
-                    .sort((a, b) => (a.nome || '').localeCompare(b.nome || ''));
-                html += `
-                    <div class="secao-relatorio">
-                        <div class="titulo-secao">${cat} (${itensCat.length})</div>
-                        <table class="tabela-relatorio">
-                            <thead>
-                                <tr>
-                                    <th>#</th><th>Item</th><th>Fabricante</th>
-                                    <th style="text-align:center;">Qtd</th>
-                                    <th style="text-align:center;">Limite</th><th>Status</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                ${itensCat.map((item, idx) => {
-                                    const qtd = item.quantidade != null ? item.quantidade : 0;
-                                    const lim = item.limite_alerta != null ? item.limite_alerta : 5;
-                                    const bf = qtd < lim;
-                                    return `<tr class="${bf ? 'baixo' : ''}">
-                                        <td>${idx + 1}</td>
-                                        <td>${item.nome || '—'}</td>
-                                        <td>${item.fabricante || '—'}</td>
-                                        <td style="text-align:center;font-weight:600;">${qtd} ${item.unidade || 'UN'}</td>
-                                        <td style="text-align:center;">${lim}</td>
-                                        <td>${bf ? '⚠️ BAIXO' : 'OK'}</td>
-                                    </tr>`;
-                                }).join('')}
-                            </tbody>
-                        </table>
-                    </div>`;
-            });
-        } else {
-            const ordenada = lista.slice().sort((a, b) => (a.nome || '').localeCompare(b.nome || ''));
+        // Sempre detalha separado por categoria
+        html += `<div class="secao-relatorio"><div class="titulo-secao"><i class="fas fa-boxes"></i> Detalhamento por categoria</div></div>`;
+        catsOrdenadas.forEach(([cat]) => {
+            const itensCat = lista.filter(i => (i.categoria || 'Outros') === cat)
+                .sort((a, b) => (a.nome || '').localeCompare(b.nome || ''));
             html += `
-                <div class="secao-relatorio">
-                    <div class="titulo-secao"><i class="fas fa-boxes"></i> Detalhamento dos itens</div>
+                <div class="secao-relatorio" style="page-break-inside:avoid;">
+                    <div class="titulo-secao" style="background:#7A816E;color:#fff;padding:0.4rem 0.7rem;border-radius:6px 6px 0 0;">${cat} (${itensCat.length})</div>
                     <table class="tabela-relatorio">
                         <thead>
                             <tr>
                                 <th>#</th><th>Item</th><th>Descrição</th><th>Fabricante</th>
-                                <th>Categoria</th>
                                 <th style="text-align:center;">Qtd</th>
                                 <th style="text-align:center;">Limite</th><th>Status</th>
                             </tr>
                         </thead>
                         <tbody>
-                            ${ordenada.map((item, idx) => {
+                            ${itensCat.map((item, idx) => {
                                 const qtd = item.quantidade != null ? item.quantidade : 0;
                                 const lim = item.limite_alerta != null ? item.limite_alerta : 5;
                                 const bf = qtd < lim;
@@ -1406,7 +1383,6 @@
                                     <td><strong>${item.nome || '—'}</strong></td>
                                     <td>${item.descricao || '—'}</td>
                                     <td>${item.fabricante || '—'}</td>
-                                    <td>${item.categoria || 'Outros'}</td>
                                     <td style="text-align:center;font-weight:600;${bf ? 'color:#E65100;' : ''}">${qtd} ${item.unidade || 'UN'}</td>
                                     <td style="text-align:center;">${lim}</td>
                                     <td>${bf ? '⚠️ BAIXO' : 'OK'}</td>
@@ -1415,7 +1391,7 @@
                         </tbody>
                     </table>
                 </div>`;
-        }
+        });
         container.innerHTML = html;
     }
 
@@ -2378,8 +2354,53 @@ table.tabela-relatorio tr.baixo td { border-bottom-color: #FFE0B2; }
             return;
         }
         m.classList.add('ativo');
-        await carregarMovimentacoes();
+        var ref = document.getElementById('movDataRef');
+        if (ref && !ref.value) ref.value = new Date().toISOString().slice(0, 10);
+        if (typeof setMovPeriodo === 'function') setMovPeriodo(movPeriodoAtual || 'dia');
+        else await carregarMovimentacoes();
     };
+
+    var movPeriodoAtual = 'dia';
+
+    function setMovPeriodo(p) {
+        movPeriodoAtual = p || 'geral';
+        document.querySelectorAll('.mov-periodo').forEach(function(btn) {
+            if (btn.getAttribute('data-periodo') === movPeriodoAtual) {
+                btn.style.background = '#191D1B';
+                btn.style.color = '#fff';
+                btn.style.borderColor = '#191D1B';
+            } else {
+                btn.style.background = '';
+                btn.style.color = '';
+                btn.style.borderColor = '';
+            }
+        });
+        var ref = document.getElementById('movDataRef');
+        if (ref && !ref.value) {
+            ref.value = new Date().toISOString().slice(0, 10);
+        }
+        carregarMovimentacoes();
+    }
+
+    function passaFiltroPeriodoMov(criadoEm) {
+        if (!criadoEm || movPeriodoAtual === 'geral') return true;
+        var d = new Date(criadoEm);
+        if (isNaN(d.getTime())) return true;
+        var refEl = document.getElementById('movDataRef');
+        var refStr = (refEl && refEl.value) ? refEl.value : new Date().toISOString().slice(0, 10);
+        var partes = refStr.split('-');
+        var ry = parseInt(partes[0], 10), rm = parseInt(partes[1], 10) - 1, rd = parseInt(partes[2], 10);
+        if (movPeriodoAtual === 'dia') {
+            return d.getFullYear() === ry && d.getMonth() === rm && d.getDate() === rd;
+        }
+        if (movPeriodoAtual === 'mes') {
+            return d.getFullYear() === ry && d.getMonth() === rm;
+        }
+        if (movPeriodoAtual === 'ano') {
+            return d.getFullYear() === ry;
+        }
+        return true;
+    }
 
     async function carregarMovimentacoes() {
         const tbody = document.getElementById('movTabelaBody');
@@ -2391,7 +2412,7 @@ table.tabela-relatorio tr.baixo td { border-bottom-color: #FFE0B2; }
             let q = sb.from('estoque_movimentacoes')
                 .select('id,item_nome,tipo,quantidade,quantidade_antes,quantidade_depois,colaborador,usuario,observacao,criado_em,referencia')
                 .order('criado_em', { ascending: false })
-                .limit(300);
+                .limit(movPeriodoAtual === 'geral' ? 2000 : 800);
             if (typeof comCondominio === 'function') q = comCondominio(q);
             const tipo = document.getElementById('movFiltroTipo')?.value || '';
             if (tipo) q = q.eq('tipo', tipo);
@@ -2400,6 +2421,7 @@ table.tabela-relatorio tr.baixo td { border-bottom-color: #FFE0B2; }
             let lista = data || [];
             const filtro = (document.getElementById('movFiltroItem')?.value || '').trim().toLowerCase();
             if (filtro) lista = lista.filter(m => (m.item_nome || '').toLowerCase().includes(filtro));
+            lista = lista.filter(m => passaFiltroPeriodoMov(m.criado_em));
             if (resumo) resumo.textContent = lista.length + ' registro(s)';
             if (!lista.length) {
                 tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:1.2rem;color:var(--text-secondary);">Nenhuma movimentação ainda. Use Saída/Estorno ou ajuste quantidade no estoque.</td></tr>';
