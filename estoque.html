@@ -1464,60 +1464,214 @@
                 const q = parseInt(i.quantidade) || 0;
                 const lim = parseInt(i.limite_alerta) || 5;
                 return q <= lim;
-            }).sort((a, b) => {
-                const da = (parseInt(a.limite_alerta) || 5) - (parseInt(a.quantidade) || 0);
-                const db = (parseInt(b.limite_alerta) || 5) - (parseInt(b.quantidade) || 0);
-                return db - da;
             });
             if (!itens.length) {
                 mostrarToast('✅ Nenhum item abaixo do limite — sem sugestão de compra', 'success');
                 return;
             }
-            function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;'); }
-            const rows = itens.map((i, n) => {
-                const q = parseInt(i.quantidade) || 0;
-                const lim = parseInt(i.limite_alerta) || 5;
-                const sugerido = Math.max(lim * 2 - q, lim); // repor até 2x o limite
+
+            function esc(s) { return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+            function fmtN(n) { return (Number(n) || 0).toLocaleString('pt-BR'); }
+
+            // Agrupa por categoria
+            const porCat = {};
+            itens.forEach(i => {
+                const cat = (i.categoria || 'Outros').trim() || 'Outros';
+                if (!porCat[cat]) porCat[cat] = [];
+                porCat[cat].push(i);
+            });
+
+            // Ordena categorias por qtd de itens (maior primeiro); itens por urgência
+            const cats = Object.keys(porCat).sort((a, b) => porCat[b].length - porCat[a].length);
+            cats.forEach(cat => {
+                porCat[cat].sort((a, b) => {
+                    const da = (parseInt(a.limite_alerta) || 5) - (parseInt(a.quantidade) || 0);
+                    const db = (parseInt(b.limite_alerta) || 5) - (parseInt(b.quantidade) || 0);
+                    return db - da;
+                });
+            });
+
+            let nGlobal = 0;
+            let totalSugerido = 0;
+            let corpo = '';
+
+            cats.forEach(cat => {
+                const lista = porCat[cat];
+                let subQtd = 0;
+                let subSug = 0;
+                const rows = lista.map(i => {
+                    nGlobal++;
+                    const q = parseInt(i.quantidade) || 0;
+                    const lim = parseInt(i.limite_alerta) || 5;
+                    const sugerido = Math.max(lim * 2 - q, lim);
+                    subQtd += q;
+                    subSug += sugerido;
+                    totalSugerido += sugerido;
+                    return `<tr>
+                      <td class="centro">${nGlobal}</td>
+                      <td>${esc(i.nome)}</td>
+                      <td class="centro">${q} ${esc(i.unidade || 'UN')}</td>
+                      <td class="centro">${lim}</td>
+                      <td class="centro sug">${sugerido}</td>
+                    </tr>`;
+                }).join('');
+
+                corpo += `
+                <div class="cat-bloco">
+                  <div class="cat-titulo">
+                    <span class="cat-nome">${esc(cat)}</span>
+                    <span class="cat-meta">${lista.length} item(ns) · sugerido repor ${fmtN(subSug)} unid.</span>
+                  </div>
+                  <table>
+                    <thead>
+                      <tr>
+                        <th style="width:36px;">#</th>
+                        <th>Item</th>
+                        <th style="width:70px;" class="centro">Estoque</th>
+                        <th style="width:55px;" class="centro">Limite</th>
+                        <th style="width:70px;" class="centro">Qtd sugerida</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      ${rows}
+                      <tr class="subtotal">
+                        <td colspan="2"><strong>Subtotal · ${esc(cat)}</strong></td>
+                        <td class="centro">${fmtN(subQtd)}</td>
+                        <td></td>
+                        <td class="centro sug">${fmtN(subSug)}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>`;
+            });
+
+            // resumo por categoria
+            const resumoRows = cats.map((cat, i) => {
+                const lista = porCat[cat];
+                let sug = 0;
+                lista.forEach(it => {
+                    const q = parseInt(it.quantidade) || 0;
+                    const lim = parseInt(it.limite_alerta) || 5;
+                    sug += Math.max(lim * 2 - q, lim);
+                });
                 return `<tr>
-                  <td>${n+1}</td>
-                  <td>${esc(i.nome)}</td>
-                  <td>${esc(i.categoria||'—')}</td>
-                  <td style="text-align:center;">${q} ${esc(i.unidade||'UN')}</td>
-                  <td style="text-align:center;">${lim}</td>
-                  <td style="text-align:center;font-weight:700;">${sugerido}</td>
+                  <td>${i + 1}</td>
+                  <td><strong>${esc(cat)}</strong></td>
+                  <td class="centro">${lista.length}</td>
+                  <td class="centro sug">${fmtN(sug)}</td>
                 </tr>`;
             }).join('');
-            const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Sugestão de Compra · TaguáLife</title>
+
+            const geradoEm = new Date().toLocaleString('pt-BR');
+            const html = `<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<title>Sugestão de Compra · TaguáLife</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet" />
 <style>
-body{font-family:Inter,Arial,sans-serif;color:#191D1B;padding:16px;font-size:12px;background:#FBFBF7;}
-h1{font-size:18px;margin:0 0 4px;} .sub{color:#7A816E;margin-bottom:12px;}
-table{width:100%;border-collapse:collapse;} th{background:#7A816E;color:#fff;padding:6px 8px;text-align:left;}
-td{border-bottom:1px solid #D8DCCE;padding:5px 8px;} tr:nth-child(even) td{background:#F0F2EA;}
-@media print{.no-print{display:none;}}
-</style></head><body>
-<div class="no-print" style="margin-bottom:10px;">
-<button onclick="window.print()" style="padding:8px 14px;background:#191D1B;color:#fff;border:0;border-radius:8px;cursor:pointer;">🖨 Imprimir</button>
-</div>
-<h1>Sugestão de compra / reposição</h1>
-<div class="sub">Condomínio TaguáLife · ${itens.length} itens abaixo ou no limite · ${new Date().toLocaleString('pt-BR')}</div>
-<table>
-<thead><tr><th>#</th><th>Item</th><th>Categoria</th><th>Estoque</th><th>Limite</th><th>Qtd sugerida</th></tr></thead>
-<tbody>${rows}</tbody>
-</table>
-<p class="sub" style="margin-top:12px;">Qtd sugerida = repor até cerca de 2× o limite mínimo (ajuste conforme consumo real).</p>
-</body></html>`;
+  @page { size: A4 portrait; margin: 12mm 10mm; }
+  * { box-sizing: border-box; }
+  body { font-family: Inter, Arial, sans-serif; color: #191D1B; font-size: 10px; margin: 0; padding: 12px 14px; background: #fff; line-height: 1.35; }
+  .no-print { text-align: center; margin-bottom: 12px; }
+  .no-print button { padding: 8px 16px; border: 0; border-radius: 8px; cursor: pointer; font-weight: 700; margin: 0 4px; font-family: inherit; }
+  .btn-print { background: #191D1B; color: #fff; }
+  .topo { text-align: center; border-bottom: 3px solid #7A816E; padding-bottom: 10px; margin-bottom: 12px; }
+  .topo .marca { font-size: 10px; font-weight: 700; color: #7A816E; text-transform: uppercase; letter-spacing: 0.4px; }
+  .topo h1 { font-size: 16px; margin: 6px 0 3px; font-weight: 800; }
+  .topo .sub { font-size: 10px; color: #7A816E; margin: 0; }
+  .info-bar { display: flex; flex-wrap: wrap; gap: 6px 14px; justify-content: center; background: #F0F2EA; border: 1px solid #D8DCCE; border-radius: 8px; padding: 8px 12px; margin-bottom: 12px; font-size: 9.5px; }
+  .cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 14px; }
+  .card { text-align: center; background: #FBFBF7; border: 1px solid #D8DCCE; border-radius: 8px; padding: 10px 6px; }
+  .card .n { font-size: 18px; font-weight: 800; }
+  .card .l { font-size: 8px; color: #7A816E; text-transform: uppercase; margin-top: 2px; font-weight: 600; }
+  h2 { font-size: 11px; margin: 14px 0 8px; padding: 6px 10px; background: #E8EBE0; border-left: 4px solid #7A816E; border-radius: 0 6px 6px 0; font-weight: 700; page-break-after: avoid; }
+  .cat-bloco { margin-bottom: 14px; page-break-inside: avoid; }
+  .cat-titulo { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 4px 10px; padding: 7px 10px; background: #7A816E; color: #FBFBF7; border-radius: 6px 6px 0 0; page-break-after: avoid; }
+  .cat-nome { font-size: 11px; font-weight: 800; }
+  .cat-meta { font-size: 9px; opacity: 0.95; }
+  table { width: 100%; border-collapse: collapse; margin: 0 0 4px; font-size: 9.5px; }
+  thead { display: table-header-group; }
+  tr { page-break-inside: avoid; }
+  th { background: #5A614E; color: #fff; text-align: left; padding: 4px 6px; font-size: 8.5px; font-weight: 600; }
+  td { border-bottom: 1px solid #E4E8DC; padding: 4px 6px; vertical-align: top; }
+  tr:nth-child(even) td { background: #F7F8F3; }
+  .centro { text-align: center; }
+  .sug { font-weight: 800; color: #8B6914; }
+  .subtotal td { background: #F0F2EA !important; font-weight: 700; border-top: 1px solid #C1CE83; }
+  .legenda { font-size: 8.5px; color: #7A816E; margin: 8px 0 0; }
+  .footer { margin-top: 14px; padding-top: 8px; border-top: 1px solid #D8DCCE; font-size: 8px; color: #7A816E; text-align: center; }
+  @media print { .no-print { display: none !important; } body { padding: 0; } }
+</style>
+</head>
+<body>
+  <div class="no-print">
+    <button class="btn-print" onclick="window.print()">Imprimir / PDF (A4 retrato)</button>
+  </div>
+
+  <div class="topo">
+    <div class="marca">TaguáLife Center · Almoxarifado</div>
+    <h1>Sugestão de compra / reposição</h1>
+    <p class="sub">Condomínio TaguáLife · Itens agrupados por categoria</p>
+  </div>
+
+  <div class="info-bar">
+    <span><strong>Itens em baixa:</strong> ${fmtN(itens.length)}</span>
+    <span><strong>Categorias:</strong> ${fmtN(cats.length)}</span>
+    <span><strong>Emitido em:</strong> ${geradoEm}</span>
+  </div>
+
+  <div class="cards">
+    <div class="card"><div class="n">${fmtN(itens.length)}</div><div class="l">Itens a repor</div></div>
+    <div class="card"><div class="n">${fmtN(cats.length)}</div><div class="l">Categorias</div></div>
+    <div class="card"><div class="n">${fmtN(totalSugerido)}</div><div class="l">Unidades sugeridas</div></div>
+  </div>
+
+  <h2>1. Resumo por categoria</h2>
+  <table>
+    <thead>
+      <tr>
+        <th style="width:36px;">#</th>
+        <th>Categoria</th>
+        <th class="centro" style="width:80px;">Itens</th>
+        <th class="centro" style="width:100px;">Qtd sugerida</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${resumoRows}
+      <tr class="subtotal">
+        <td colspan="2"><strong>TOTAL</strong></td>
+        <td class="centro">${fmtN(itens.length)}</td>
+        <td class="centro sug">${fmtN(totalSugerido)}</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>2. Detalhe por categoria</h2>
+  <p class="legenda">Qtd sugerida = repor até cerca de 2× o limite mínimo (ajuste conforme consumo real).</p>
+  ${corpo}
+
+  <div class="footer">
+    Sistema TaguáLife Center · Sugestão de Compra<br>
+    Documento gerado em ${geradoEm} · Formato A4 retrato
+  </div>
+</body>
+</html>`;
+
             const w = window.open('', '_blank');
-            if (!w) { mostrarToast('⚠️ Permita pop-up', 'warning'); return; }
+            if (!w) {
+                mostrarToast('⚠️ Permita pop-up para abrir o relatório', 'warning');
+                return;
+            }
             w.document.write(html);
             w.document.close();
-            mostrarToast('🛒 Sugestão de compra gerada!', 'success');
+            mostrarToast('✅ Sugestão de compra por categoria gerada!', 'success');
         } catch (e) {
-            mostrarToast('❌ ' + (e.message || e), 'danger');
+            console.error(e);
+            mostrarToast('❌ Erro: ' + (e.message || e), 'danger');
         }
     }
 
-
-    
     async function gerarCurvaABC() {
         try {
             mostrarToast('📊 Gerando Curva ABC...', 'info');
