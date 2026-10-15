@@ -1,0 +1,19 @@
+{
+  "name": "TaguáLife Center",
+  "short_name": "TaguáLife",
+  "description": "Sistema de almoxarifado e gestão do Condomínio TaguáLife",
+  "start_url": "/index.html",
+  "display": "standalone",
+  "background_color": "#E8EBE0",
+  "theme_color": "#191D1B",
+  "orientation": "any",
+  "lang": "pt-BR",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
