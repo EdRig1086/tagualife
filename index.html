@@ -7,6 +7,14 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>TaguáLife Center · Dashboard</title>
+
+    <link rel="manifest" href="manifest.json" />
+    <meta name="theme-color" content="#191D1B" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="TaguáLife" />
+    <link rel="apple-touch-icon" href="favicon.svg" />
+
     <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate" />
     <meta http-equiv="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="0" />
@@ -2652,7 +2660,9 @@
         var box = document.getElementById('listaQuadroAvisos');
         if (!box) return;
         if (!lista || !lista.length) {
-            box.innerHTML = '<div style="color:var(--text-secondary);padding:0.4rem 0;">Nenhum aviso publicado no momento.</div>';
+            var admin = isAdminAvisos();
+            box.innerHTML = '<div style="color:var(--text-secondary);padding:0.4rem 0;">Nenhum aviso publicado no momento.' +
+                (admin ? ' Clique em <strong>Novo aviso</strong> para publicar.' : '') + '</div>';
             return;
         }
         var admin = isAdminAvisos();
@@ -2971,6 +2981,17 @@
             }
         }, 500);
     });
+</script>
+
+
+
+
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function() {
+    navigator.serviceWorker.register('sw.js').catch(function(){});
+  });
+}
 </script>
 
 </body>
