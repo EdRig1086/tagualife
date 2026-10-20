@@ -2969,20 +2969,44 @@ function mostrarToast(mensagem, tipo = 'success') {
             
             if (!dados.colaborador || dados.colaborador.trim() === '') {
                 mostrarMensagem('⚠️ Selecione o COLABORADOR!', '#8B3A3A');
-                mostrarToast('⚠️ Selecione o colaborador!', 'warning');
+                mostrarToast('⚠️ Selecione o colaborador no campo COLABORADOR!', 'warning');
+                try { document.getElementById('colaborador').focus(); } catch(e) {}
                 return false;
             }
             
             if (dados.itens.length === 0) {
-                mostrarMensagem('⚠️ Adicione pelo menos um ITEM!', '#8B3A3A');
-                mostrarToast('⚠️ Adicione pelo menos um item!', 'warning');
+                mostrarMensagem('⚠️ Selecione o ITEM na lista (não basta buscar)!', '#8B3A3A');
+                mostrarToast('⚠️ Falta selecionar o ITEM na lista suspensa!', 'warning');
+                // destaca linhas vazias
+                document.querySelectorAll('#tabelaItensBody tr').forEach(function(tr) {
+                    var sel = tr.querySelector('.item-select');
+                    var man = tr.querySelector('.item-input-manual');
+                    var ok = (man && man.style.display !== 'none' && man.value.trim()) ||
+                             (sel && sel.value && sel.value !== '__custom__');
+                    if (!ok) {
+                        tr.style.outline = '2px solid #8B3A3A';
+                        if (sel) sel.style.borderColor = '#8B3A3A';
+                    }
+                });
+                try {
+                    var s = document.querySelector('#tabelaItensBody .item-select');
+                    if (s) s.focus();
+                } catch(e) {}
                 return false;
             }
             
             const semDestino = dados.itens.filter(i => !i.destino || i.destino.trim() === '');
             if (semDestino.length > 0) {
-                mostrarMensagem('⚠️ Preencha o DESTINO de todos os itens!', '#8B3A3A');
-                mostrarToast('⚠️ Preencha o destino dos itens!', 'warning');
+                mostrarMensagem('⚠️ Preencha BLOCO e ANDAR (ou área comum) em todos os itens!', '#8B3A3A');
+                mostrarToast('⚠️ Falta o DESTINO: escolha Bloco/área e Andar/local!', 'warning');
+                document.querySelectorAll('#tabelaItensBody tr').forEach(function(tr) {
+                    var dest = obterDestinoDaLinha(tr);
+                    if (!dest) {
+                        tr.style.outline = '2px solid #C1A83C';
+                        var b = tr.querySelector('.destino-bloco');
+                        if (b) b.style.borderColor = '#C1A83C';
+                    }
+                });
                 return false;
             }
             
@@ -3151,7 +3175,13 @@ function mostrarToast(mensagem, tipo = 'success') {
                         const { data: saved, error } = await sb.from('saidas').insert([row]).select();
                         if (error) {
                             console.error('❌ saidas', error);
-                            mostrarToast('❌ Banco saidas: ' + error.message, 'danger');
+                            // remove do localStorage o que acabou de empurrar (não gravou no banco)
+                            try {
+                                const limpo = (JSON.parse(localStorage.getItem('saidaMaterialTaguaLife') || '[]') || [])
+                                    .filter(function(x) { return String(x.id) !== String(novoProtocolo.id); });
+                                localStorage.setItem('saidaMaterialTaguaLife', JSON.stringify(limpo));
+                            } catch (e) {}
+                            throw new Error('Não gravou no banco (saidas): ' + error.message);
                         } else if (saved && saved[0]) {
                             novoProtocolo.id = saved[0].id;
                             console.log('✅ saidas id', saved[0].id);
@@ -3199,7 +3229,7 @@ function mostrarToast(mensagem, tipo = 'success') {
                             }
                             if (res.error) {
                                 console.error('❌ saida_itens', res.error);
-                                mostrarToast('❌ Itens DB: ' + res.error.message, 'danger');
+                                throw new Error('Saída criada, mas itens não gravaram: ' + res.error.message);
                             } else {
                                 console.log('✅ saida_itens ok');
                                 mostrarToast('☁️ Gravado no banco de dados!', 'success');
@@ -3208,7 +3238,7 @@ function mostrarToast(mensagem, tipo = 'success') {
                         }
                     } catch (eDB) {
                         console.error(eDB);
-                        mostrarToast('❌ Erro DB: ' + eDB.message, 'danger');
+                        throw eDB;
                     }
                 }
 
