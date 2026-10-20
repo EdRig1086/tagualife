@@ -1416,9 +1416,9 @@
             return cacheEstoqueDB;
         }
         try {
-            // SEMPRE busca do banco (evita quantidade zerada vinda de cache/localStorage antigo)
+            // SEMPRE busca do banco (sem filtro condominio_id — coluna ainda não existe na tabela estoque)
+            // O filtro comCondominio quebrava a query e caía no localStorage com qtd desatualizada (ex.: 0)
             let qEst = sb.from('estoque').select('id,nome,quantidade,categoria,limite_alerta,unidade').order('nome');
-            if (typeof comCondominio === 'function') qEst = comCondominio(qEst);
             const { data, error } = await qEst;
             if (error) throw error;
             cacheEstoqueDB = (data || []).map(function(e) {
