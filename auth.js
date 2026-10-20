@@ -88,9 +88,17 @@ function getCondominioNome() {
  * Uso: let q = sb.from('estoque').select('*'); q = comCondominio(q); 
  */
 function comCondominio(query) {
-    const id = getCondominioId();
-    if (id) return query.eq('condominio_id', id);
-    return query;
+    // Multi-condomínio: só filtra se a sessão tiver condominio_id E o sistema estiver em modo multi
+    // (hoje a maioria das tabelas ainda NÃO tem a coluna condominio_id — filtrar quebra a query)
+    try {
+        const id = getCondominioId();
+        if (!id) return query;
+        // Desativado até as tabelas terem a coluna. Para reativar: localStorage.setItem('tagualife_multi', '1')
+        if (localStorage.getItem('tagualife_multi') !== '1') return query;
+        return query.eq('condominio_id', id);
+    } catch (e) {
+        return query;
+    }
 }
 
 /** Payload padrão para INSERT com condomínio */
