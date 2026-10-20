@@ -1404,40 +1404,61 @@
     let cacheEstoqueDB = []; // [{id, nome, quantidade, categoria, limite_alerta}]
     let cacheSaidasDB = [];
 
-    async function carregarEstoqueDB() {
+    async function carregarEstoqueDB(forcar) {
         if (!sb) {
             cacheEstoqueDB = JSON.parse(localStorage.getItem('estoqueTaguaLife') || '[]').map((e, i) => ({
                 id: e.id || ('local-' + i),
                 nome: e.nome,
-                quantidade: e.quantidade || 0,
+                quantidade: parseInt(e.quantidade, 10) || 0,
                 categoria: e.categoria || '',
                 limite_alerta: e.limite_alerta != null ? e.limite_alerta : 5
             }));
             return cacheEstoqueDB;
         }
         try {
-            let qEst = sb.from('estoque').select('id,nome,quantidade,categoria,limite_alerta').order('nome');
+            // SEMPRE busca do banco (evita quantidade zerada vinda de cache/localStorage antigo)
+            let qEst = sb.from('estoque').select('id,nome,quantidade,categoria,limite_alerta,unidade').order('nome');
             if (typeof comCondominio === 'function') qEst = comCondominio(qEst);
             const { data, error } = await qEst;
             if (error) throw error;
-            cacheEstoqueDB = data || [];
-            // espelho local para trechos legados
+            cacheEstoqueDB = (data || []).map(function(e) {
+                return {
+                    id: e.id,
+                    nome: e.nome,
+                    quantidade: parseInt(e.quantidade, 10) || 0,
+                    categoria: e.categoria || '',
+                    limite_alerta: e.limite_alerta != null ? e.limite_alerta : 5,
+                    unidade: e.unidade || 'UN'
+                };
+            });
+            // espelho local atualizado com dados REAIS do banco
             localStorage.setItem('estoqueTaguaLife', JSON.stringify(cacheEstoqueDB.map(e => ({
                 id: e.id, nome: e.nome, quantidade: e.quantidade, categoria: e.categoria, limite_alerta: e.limite_alerta
             }))));
+            console.log('📦 Estoque do banco:', cacheEstoqueDB.length, 'itens');
             return cacheEstoqueDB;
         } catch (err) {
             console.warn('Estoque DB:', err);
-            cacheEstoqueDB = JSON.parse(localStorage.getItem('estoqueTaguaLife') || '[]');
+            // só usa local se o banco falhar de verdade
+            try {
+                cacheEstoqueDB = JSON.parse(localStorage.getItem('estoqueTaguaLife') || '[]').map(function(e, i) {
+                    return {
+                        id: e.id || ('local-' + i),
+                        nome: e.nome,
+                        quantidade: parseInt(e.quantidade, 10) || 0,
+                        categoria: e.categoria || '',
+                        limite_alerta: e.limite_alerta != null ? e.limite_alerta : 5
+                    };
+                });
+            } catch (e2) { cacheEstoqueDB = []; }
             return cacheEstoqueDB;
         }
     }
 
     async function carregarSelectItens() {
         try {
-            if (!cacheEstoqueDB || !cacheEstoqueDB.length) {
-                await carregarEstoqueDB();
-            }
+            // sempre atualiza do banco para refletir quantidade correta
+            await carregarEstoqueDB(true);
         } catch (e) {
             console.warn('carregarSelectItens estoque:', e);
         }
@@ -4737,6 +4758,15 @@ ${secInt}
 window.addEventListener('pageshow', function() {
     if (!localStorage.getItem('tagualife_sessao')) {
         window.location.replace('login.html');
+    }
+    // atualiza quantidades do estoque ao voltar para a página
+    if (typeof carregarSelectItens === 'function') {
+        carregarSelectItens().catch(function(){});
+    }
+});
+document.addEventListener('visibilitychange', function() {
+    if (document.visibilityState === 'visible' && typeof carregarSelectItens === 'function') {
+        carregarSelectItens().catch(function(){});
     }
 });
 </script>
