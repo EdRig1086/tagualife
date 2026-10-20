@@ -588,10 +588,11 @@
                             <th>Antes → Depois</th>
                             <th>Colaborador</th>
                             <th>Usuário</th>
+                            <th style="width:90px;">Ações</th>
                         </tr>
                     </thead>
                     <tbody id="movTabelaBody">
-                        <tr><td colspan="7" style="text-align:center;padding:1rem;">Carregando...</td></tr>
+                        <tr><td colspan="8" style="text-align:center;padding:1rem;">Carregando...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -2590,18 +2591,29 @@ function exportarCSVEstoque() {
         return true;
     }
 
+    function isAdminMov() {
+        try {
+            if (typeof ehAdministrador === 'function') return ehAdministrador();
+            if (typeof getCargo === 'function') return getCargo() === 'Administrador';
+            var s = JSON.parse(localStorage.getItem('tagualife_sessao') || 'null');
+            return !!(s && s.cargo === 'Administrador');
+        } catch (e) { return false; }
+    }
+
+    window._cacheMovimentacoes = [];
+
     async function carregarMovimentacoes() {
         const tbody = document.getElementById('movTabelaBody');
         const resumo = document.getElementById('movResumo');
         if (!tbody) return;
-        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:1rem;">Carregando...</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:1rem;">Carregando...</td></tr>';
         try {
             if (!sb) throw new Error('Supabase não conectado');
             let q = sb.from('estoque_movimentacoes')
-                .select('id,item_nome,tipo,quantidade,quantidade_antes,quantidade_depois,colaborador,usuario,observacao,criado_em,referencia')
+                .select('id,estoque_id,item_nome,tipo,quantidade,quantidade_antes,quantidade_depois,colaborador,usuario,observacao,criado_em,referencia')
                 .order('criado_em', { ascending: false })
                 .limit(movPeriodoAtual === 'geral' ? 2000 : 800);
-            if (typeof comCondominio === 'function') q = comCondominio(q);
+            // sem comCondominio (coluna pode não existir)
             const tipo = document.getElementById('movFiltroTipo')?.value || '';
             if (tipo) q = q.eq('tipo', tipo);
             const { data, error } = await q;
@@ -2610,11 +2622,13 @@ function exportarCSVEstoque() {
             const filtro = (document.getElementById('movFiltroItem')?.value || '').trim().toLowerCase();
             if (filtro) lista = lista.filter(m => (m.item_nome || '').toLowerCase().includes(filtro));
             lista = lista.filter(m => passaFiltroPeriodoMov(m.criado_em));
+            window._cacheMovimentacoes = lista;
             if (resumo) resumo.textContent = lista.length + ' registro(s)';
             if (!lista.length) {
-                tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:1.2rem;color:var(--text-secondary);">Nenhuma movimentação ainda. Use Saída/Estorno ou ajuste quantidade no estoque.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:1.2rem;color:var(--text-secondary);">Nenhuma movimentação ainda. Use Saída/Estorno ou ajuste quantidade no estoque.</td></tr>';
                 return;
             }
+            const admin = isAdminMov();
             const corTipo = { saida: '#8B3A3A', estorno: '#2E7D32', entrada: '#1565C0', ajuste: '#C1A83C' };
             tbody.innerHTML = lista.map(function(m) {
                 const dt = m.criado_em ? new Date(m.criado_em).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' }) : '—';
@@ -2622,6 +2636,13 @@ function exportarCSVEstoque() {
                 const badge = '<span style="background:' + (corTipo[tipoL] || '#777') + ';color:#fff;padding:0.1rem 0.45rem;border-radius:40px;font-size:0.65rem;font-weight:600;text-transform:uppercase;">' + tipoL + '</span>';
                 const antes = m.quantidade_antes != null ? m.quantidade_antes : '—';
                 const depois = m.quantidade_depois != null ? m.quantidade_depois : '—';
+                const idEsc = String(m.id || '').replace(/'/g, '');
+                const acoes = admin
+                    ? ('<td style="white-space:nowrap;">' +
+                       '<button type="button" title="Editar" onclick="editarMovimentacao(\'' + idEsc + '\')" style="border:0;background:transparent;color:#1565C0;cursor:pointer;padding:0.15rem 0.3rem;"><i class="fas fa-edit"></i></button>' +
+                       '<button type="button" title="Excluir" onclick="excluirMovimentacao(\'' + idEsc + '\')" style="border:0;background:transparent;color:#8B3A3A;cursor:pointer;padding:0.15rem 0.3rem;"><i class="fas fa-trash"></i></button>' +
+                       '</td>')
+                    : '<td style="color:var(--text-secondary);font-size:0.65rem;">—</td>';
                 return '<tr class="' + (tipoL === 'saida' ? 'baixo' : '') + '">' +
                     '<td style="white-space:nowrap;font-size:0.72rem;">' + dt + '</td>' +
                     '<td>' + badge + '</td>' +
@@ -2630,14 +2651,150 @@ function exportarCSVEstoque() {
                     '<td style="font-size:0.72rem;">' + antes + ' → ' + depois + '</td>' +
                     '<td style="font-size:0.72rem;">' + (m.colaborador || '—') + '</td>' +
                     '<td style="font-size:0.72rem;">' + (m.usuario || '—') + '</td>' +
+                    acoes +
                     '</tr>';
             }).join('');
         } catch (e) {
             console.error(e);
             const msg = (e && e.message) ? e.message : String(e);
-            tbody.innerHTML = '<tr><td colspan="7" style="color:#8B3A3A;padding:1rem;">Erro: ' + msg + '. Confira se a tabela <b>estoque_movimentacoes</b> existe no Supabase.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="8" style="color:#8B3A3A;padding:1rem;">Erro: ' + msg + '. Confira se a tabela <b>estoque_movimentacoes</b> existe no Supabase.</td></tr>';
             if (resumo) resumo.textContent = 'erro';
         }
+    }
+
+    async function excluirMovimentacao(id) {
+        if (!isAdminMov()) {
+            mostrarToast('⛔ Só Administrador pode excluir movimentação', 'danger');
+            return;
+        }
+        const mov = (window._cacheMovimentacoes || []).find(function(m) { return String(m.id) === String(id); });
+        if (!mov) {
+            mostrarToast('Registro não encontrado', 'warning');
+            return;
+        }
+        const reverter = confirm(
+            'Excluir esta movimentação?\n\n' +
+            'Item: ' + (mov.item_nome || '—') + '\n' +
+            'Tipo: ' + (mov.tipo || '') + ' · Qtd: ' + (mov.quantidade || 0) + '\n\n' +
+            'OK = excluir E reverter o efeito no estoque\n' +
+            'Cancelar = não excluir'
+        );
+        if (!reverter) return;
+        try {
+            // Reverte estoque: saída devolve, entrada retira
+            const qtd = parseInt(mov.quantidade, 10) || 0;
+            const tipo = (mov.tipo || '').toLowerCase();
+            let delta = 0;
+            if (tipo === 'saida') delta = qtd;           // devolve
+            else if (tipo === 'entrada' || tipo === 'estorno') delta = -qtd; // tira
+            // ajuste: não reverte automaticamente
+
+            if (delta !== 0 && qtd > 0) {
+                let item = null;
+                if (mov.estoque_id) {
+                    const { data } = await sb.from('estoque').select('id,nome,quantidade').eq('id', mov.estoque_id).maybeSingle();
+                    item = data;
+                }
+                if (!item && mov.item_nome) {
+                    const { data } = await sb.from('estoque').select('id,nome,quantidade').ilike('nome', mov.item_nome).limit(1);
+                    item = (data && data[0]) || null;
+                }
+                if (item) {
+                    const nova = Math.max(0, (parseInt(item.quantidade, 10) || 0) + delta);
+                    await sb.from('estoque').update({ quantidade: nova, atualizado_em: new Date().toISOString() }).eq('id', item.id);
+                }
+            }
+
+            const { error } = await sb.from('estoque_movimentacoes').delete().eq('id', id);
+            if (error) throw error;
+            mostrarToast('✅ Movimentação excluída', 'success');
+            await carregarMovimentacoes();
+            if (typeof carregarEstoque === 'function') await carregarEstoque();
+        } catch (e) {
+            console.error(e);
+            mostrarToast('❌ Erro: ' + (e.message || e), 'danger');
+        }
+    }
+
+    async function editarMovimentacao(id) {
+        if (!isAdminMov()) {
+            mostrarToast('⛔ Só Administrador pode editar movimentação', 'danger');
+            return;
+        }
+        const mov = (window._cacheMovimentacoes || []).find(function(m) { return String(m.id) === String(id); });
+        if (!mov) {
+            mostrarToast('Registro não encontrado', 'warning');
+            return;
+        }
+        // remove modal anterior
+        var old = document.getElementById('modalEditMov');
+        if (old) old.remove();
+
+        var overlay = document.createElement('div');
+        overlay.id = 'modalEditMov';
+        overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:10090;display:flex;align-items:center;justify-content:center;padding:1rem;';
+        overlay.innerHTML =
+            '<div style="background:var(--bg-card,#FBFBF7);color:var(--text-primary,#191D1B);border-radius:12px;width:100%;max-width:420px;border:1px solid var(--border-color,#D8DCCE);font-family:Inter,sans-serif;box-shadow:0 12px 40px rgba(0,0,0,.2);">' +
+            '<div style="display:flex;justify-content:space-between;align-items:center;padding:.75rem 1rem;border-bottom:1px solid var(--border-color);font-weight:700;">' +
+            '<span><i class="fas fa-edit"></i> Editar movimentação</span>' +
+            '<button type="button" id="emClose" style="border:0;background:transparent;font-size:1.1rem;cursor:pointer;">✕</button></div>' +
+            '<div style="padding:1rem;display:grid;gap:.5rem;font-size:.85rem;">' +
+            '<div><label style="font-size:.7rem;font-weight:600;">Item</label>' +
+            '<input type="text" id="emItem" value="' + String(mov.item_nome || '').replace(/"/g, '&quot;') + '" style="width:100%;padding:.4rem;border-radius:8px;border:1px solid var(--border-color);font-family:inherit;" /></div>' +
+            '<div><label style="font-size:.7rem;font-weight:600;">Tipo</label>' +
+            '<select id="emTipo" style="width:100%;padding:.4rem;border-radius:8px;border:1px solid var(--border-color);font-family:inherit;">' +
+            ['saida','entrada','estorno','ajuste'].map(function(tp) {
+                return '<option value="' + tp + '"' + ((mov.tipo || '') === tp ? ' selected' : '') + '>' + tp + '</option>';
+            }).join('') +
+            '</select></div>' +
+            '<div><label style="font-size:.7rem;font-weight:600;">Quantidade</label>' +
+            '<input type="number" id="emQtd" min="0" value="' + (mov.quantidade != null ? mov.quantidade : 0) + '" style="width:100%;padding:.4rem;border-radius:8px;border:1px solid var(--border-color);font-family:inherit;" /></div>' +
+            '<div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem;">' +
+            '<div><label style="font-size:.7rem;font-weight:600;">Antes</label>' +
+            '<input type="number" id="emAntes" value="' + (mov.quantidade_antes != null ? mov.quantidade_antes : '') + '" style="width:100%;padding:.4rem;border-radius:8px;border:1px solid var(--border-color);font-family:inherit;" /></div>' +
+            '<div><label style="font-size:.7rem;font-weight:600;">Depois</label>' +
+            '<input type="number" id="emDepois" value="' + (mov.quantidade_depois != null ? mov.quantidade_depois : '') + '" style="width:100%;padding:.4rem;border-radius:8px;border:1px solid var(--border-color);font-family:inherit;" /></div>' +
+            '</div>' +
+            '<div><label style="font-size:.7rem;font-weight:600;">Colaborador</label>' +
+            '<input type="text" id="emColab" value="' + String(mov.colaborador || '').replace(/"/g, '&quot;') + '" style="width:100%;padding:.4rem;border-radius:8px;border:1px solid var(--border-color);font-family:inherit;" /></div>' +
+            '<div><label style="font-size:.7rem;font-weight:600;">Observação</label>' +
+            '<input type="text" id="emObs" value="' + String(mov.observacao || '').replace(/"/g, '&quot;') + '" style="width:100%;padding:.4rem;border-radius:8px;border:1px solid var(--border-color);font-family:inherit;" /></div>' +
+            '<p style="font-size:.68rem;color:#7A816E;margin:0;">A edição altera só o histórico. O estoque atual não muda automaticamente.</p>' +
+            '<div style="display:flex;gap:.5rem;justify-content:flex-end;margin-top:.3rem;">' +
+            '<button type="button" id="emCancel" style="padding:.4rem .8rem;border-radius:8px;border:1px solid var(--border-color);background:#F0F2EA;cursor:pointer;font-family:inherit;">Cancelar</button>' +
+            '<button type="button" id="emSave" style="padding:.4rem .9rem;border-radius:8px;border:0;background:#191D1B;color:#fff;font-weight:700;cursor:pointer;font-family:inherit;">Salvar</button>' +
+            '</div></div></div>';
+        document.body.appendChild(overlay);
+        function fechar() { try { overlay.remove(); } catch (e) {} }
+        overlay.querySelector('#emClose').onclick = fechar;
+        overlay.querySelector('#emCancel').onclick = fechar;
+        overlay.addEventListener('click', function(e) { if (e.target === overlay) fechar(); });
+        overlay.querySelector('#emSave').onclick = async function() {
+            var btn = overlay.querySelector('#emSave');
+            btn.disabled = true;
+            btn.textContent = 'Salvando...';
+            try {
+                var payload = {
+                    item_nome: (document.getElementById('emItem').value || '').trim(),
+                    tipo: document.getElementById('emTipo').value || 'ajuste',
+                    quantidade: parseInt(document.getElementById('emQtd').value, 10) || 0,
+                    quantidade_antes: document.getElementById('emAntes').value === '' ? null : parseInt(document.getElementById('emAntes').value, 10),
+                    quantidade_depois: document.getElementById('emDepois').value === '' ? null : parseInt(document.getElementById('emDepois').value, 10),
+                    colaborador: (document.getElementById('emColab').value || '').trim() || null,
+                    observacao: (document.getElementById('emObs').value || '').trim() || null
+                };
+                if (!payload.item_nome) { alert('Informe o item'); btn.disabled = false; btn.textContent = 'Salvar'; return; }
+                const { error } = await sb.from('estoque_movimentacoes').update(payload).eq('id', id);
+                if (error) throw error;
+                fechar();
+                mostrarToast('✅ Movimentação atualizada', 'success');
+                await carregarMovimentacoes();
+            } catch (e) {
+                alert('Erro: ' + (e.message || e));
+                btn.disabled = false;
+                btn.textContent = 'Salvar';
+            }
+        };
     }
 
     async function registrarMovimentacaoEstoqueLocal(lista) {
