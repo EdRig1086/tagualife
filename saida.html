@@ -1406,102 +1406,101 @@
 
     async function carregarEstoqueDB(forcar) {
         if (!sb) {
-            cacheEstoqueDB = JSON.parse(localStorage.getItem('estoqueTaguaLife') || '[]').map((e, i) => ({
-                id: e.id || ('local-' + i),
-                nome: e.nome,
-                quantidade: parseInt(e.quantidade, 10) || 0,
-                categoria: e.categoria || '',
-                limite_alerta: e.limite_alerta != null ? e.limite_alerta : 5
-            }));
+            console.warn('📦 sb null — usando localStorage');
+            try {
+                cacheEstoqueDB = JSON.parse(localStorage.getItem('estoqueTaguaLife') || '[]');
+            } catch (e) { cacheEstoqueDB = []; }
             return cacheEstoqueDB;
         }
         try {
-            // SEMPRE busca do banco (sem filtro condominio_id — coluna ainda não existe na tabela estoque)
-            // O filtro comCondominio quebrava a query e caía no localStorage com qtd desatualizada (ex.: 0)
-            let qEst = sb.from('estoque').select('id,nome,quantidade,categoria,limite_alerta,unidade').order('nome');
-            const { data, error } = await qEst;
+            // Igual à página estoque.html: select * sem filtros extras
+            const { data, error } = await sb
+                .from('estoque')
+                .select('*')
+                .order('nome', { ascending: true })
+                .limit(5000);
             if (error) throw error;
             cacheEstoqueDB = (data || []).map(function(e) {
                 return {
                     id: e.id,
-                    nome: e.nome,
-                    quantidade: parseInt(e.quantidade, 10) || 0,
+                    nome: (e.nome || '').toString().trim(),
+                    quantidade: Number(e.quantidade) || 0,
                     categoria: e.categoria || '',
-                    limite_alerta: e.limite_alerta != null ? e.limite_alerta : 5,
-                    unidade: e.unidade || 'UN'
+                    limite_alerta: e.limite_alerta != null ? Number(e.limite_alerta) : 5,
+                    unidade: e.unidade || 'UN',
+                    descricao: e.descricao || '',
+                    fabricante: e.fabricante || ''
                 };
             });
-            // espelho local atualizado com dados REAIS do banco
-            localStorage.setItem('estoqueTaguaLife', JSON.stringify(cacheEstoqueDB.map(e => ({
-                id: e.id, nome: e.nome, quantidade: e.quantidade, categoria: e.categoria, limite_alerta: e.limite_alerta
-            }))));
-            console.log('📦 Estoque do banco:', cacheEstoqueDB.length, 'itens');
+            // NÃO deixa QuotaExceeded derrubar o cache em memória (causa qtd 0 na tela)
+            try {
+                localStorage.setItem('estoqueTaguaLife', JSON.stringify(cacheEstoqueDB.map(function(e) {
+                    return { id: e.id, nome: e.nome, quantidade: e.quantidade, categoria: e.categoria, limite_alerta: e.limite_alerta };
+                })));
+            } catch (eLs) {
+                console.warn('localStorage cheio — limpando chaves grandes e seguindo só com memória');
+                try {
+                    localStorage.removeItem('saidaMaterialTaguaLife');
+                    localStorage.removeItem('estoqueTaguaLife');
+                    localStorage.removeItem('protocolosTaguaLife');
+                    // tenta de novo só o estoque enxuto
+                    localStorage.setItem('estoqueTaguaLife', JSON.stringify(cacheEstoqueDB.map(function(e) {
+                        return { id: e.id, nome: e.nome, quantidade: e.quantidade };
+                    })));
+                } catch (e2) {
+                    console.warn('localStorage indisponível — OK, usa só memória', e2);
+                }
+            }
+            console.log('TAGUALIFE_SAIDA_VER','2026-10-20-quota-fix');
+            console.log('📦 Estoque banco OK:', cacheEstoqueDB.length, 'itens');
+            var g = cacheEstoqueDB.find(function(x) { return (x.nome || '').toUpperCase().indexOf('GRELHA QUADRADA RALO 100') >= 0; });
+            if (g) console.log('🔎 GRELHA 100MM qtd=', g.quantidade);
             return cacheEstoqueDB;
         } catch (err) {
-            console.warn('Estoque DB:', err);
-            // só usa local se o banco falhar de verdade
+            // Só usa localStorage se a consulta ao BANCO realmente falhou
+            console.error('❌ Estoque DB falhou:', err);
+            if (cacheEstoqueDB && cacheEstoqueDB.length) return cacheEstoqueDB;
             try {
-                cacheEstoqueDB = JSON.parse(localStorage.getItem('estoqueTaguaLife') || '[]').map(function(e, i) {
-                    return {
-                        id: e.id || ('local-' + i),
-                        nome: e.nome,
-                        quantidade: parseInt(e.quantidade, 10) || 0,
-                        categoria: e.categoria || '',
-                        limite_alerta: e.limite_alerta != null ? e.limite_alerta : 5
-                    };
-                });
+                cacheEstoqueDB = JSON.parse(localStorage.getItem('estoqueTaguaLife') || '[]');
             } catch (e2) { cacheEstoqueDB = []; }
             return cacheEstoqueDB;
         }
     }
 
     async function carregarSelectItens() {
-        try {
-            // sempre atualiza do banco para refletir quantidade correta
-            await carregarEstoqueDB(true);
-        } catch (e) {
-            console.warn('carregarSelectItens estoque:', e);
-        }
-        let lista = (cacheEstoqueDB || []).slice();
-        if (!lista.length) {
-            try {
-                lista = JSON.parse(localStorage.getItem('estoqueTaguaLife') || '[]');
-            } catch (e) { lista = []; }
-        }
-        // ordena por nome
-        lista = lista.filter(i => i && i.nome).sort(function(a, b) {
+        await carregarEstoqueDB(true);
+        var lista = (cacheEstoqueDB || []).slice();
+        lista = lista.filter(function(i) { return i && i.nome; }).sort(function(a, b) {
             return String(a.nome).localeCompare(String(b.nome), 'pt-BR');
         });
 
-        const optionsHtml = ['<option value="">Selecione um item...</option>']
+        var optionsHtml = ['<option value="">Selecione um item...</option>']
             .concat(lista.map(function(item) {
-                const nome = String(item.nome || '').replace(/"/g, '&quot;');
-                const qtd = item.quantidade != null ? item.quantidade : 0;
-                const label = nome + ' (' + qtd + ' unid.)';
-                return '<option value="' + nome + '">' + label + '</option>';
+                var nome = String(item.nome || '').replace(/"/g, '&quot;');
+                var qtd = Number(item.quantidade) || 0;
+                var label = nome + ' (' + qtd + ' unid.)';
+                return '<option value="' + nome + '" data-qtd="' + qtd + '">' + label + '</option>';
             }))
             .concat(['<option value="__custom__">➕ Digitar item não cadastrado...</option>'])
             .join('');
 
-        // preenche todos os selects de item nas linhas
         document.querySelectorAll('#tabelaItensBody select.item-select, #tabelaItensBody select.select-item, select.item-select').forEach(function(sel) {
-            const atual = sel.value;
+            var atual = sel.value;
             sel.innerHTML = optionsHtml;
-            if (atual && [...sel.options].some(o => o.value === atual)) {
+            if (atual && Array.prototype.some.call(sel.options, function(o) { return o.value === atual; })) {
                 sel.value = atual;
             }
         });
 
-        // se existir select global
-        const globalSel = document.getElementById('selectItemGlobal');
+        var globalSel = document.getElementById('selectItemGlobal');
         if (globalSel) {
-            const atual = globalSel.value;
+            var atualG = globalSel.value;
             globalSel.innerHTML = optionsHtml;
-            if (atual) globalSel.value = atual;
+            if (atualG) globalSel.value = atualG;
         }
-
         return lista;
     }
+
 
 
 
@@ -1602,7 +1601,15 @@
                 };
             });
             try {
-                localStorage.setItem('saidaMaterialTaguaLife', JSON.stringify(cacheSaidasDB));
+                try {
+                // só guarda resumo leve (evita QuotaExceeded)
+                var leve = (cacheSaidasDB || []).slice(0, 50).map(function(p) {
+                    return { id: p.id, colaborador: p.colaborador, dataSaida: p.dataSaida, itens: (p.itens || []).slice(0, 5) };
+                });
+                localStorage.setItem('saidaMaterialTaguaLife', JSON.stringify(leve));
+            } catch (eQuota) {
+                try { localStorage.removeItem('saidaMaterialTaguaLife'); } catch (e) {}
+            }
             } catch (eLs) {}
             return cacheSaidasDB;
         } catch (err) {
@@ -3122,7 +3129,7 @@ function mostrarToast(mensagem, tipo = 'success') {
                     dataEdicao: new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })
                 };
                 
-                localStorage.setItem('saidaMaterialTaguaLife', JSON.stringify(protocolos));
+                try { localStorage.setItem('saidaMaterialTaguaLife', JSON.stringify((protocolos || []).slice(-30))); } catch (eQ) { try { localStorage.removeItem('saidaMaterialTaguaLife'); } catch(e){} }
                 
                 window._protocoloEmEdicao = null;
 
@@ -3169,7 +3176,7 @@ function mostrarToast(mensagem, tipo = 'success') {
                 };
                 
                 protocolos.push(novoProtocolo);
-                localStorage.setItem('saidaMaterialTaguaLife', JSON.stringify(protocolos));
+                try { localStorage.setItem('saidaMaterialTaguaLife', JSON.stringify((protocolos || []).slice(-30))); } catch (eQ) { try { localStorage.removeItem('saidaMaterialTaguaLife'); } catch(e){} }
 
                 // Estoque já baixado via baixarEstoqueDB()
 
@@ -3196,7 +3203,7 @@ function mostrarToast(mensagem, tipo = 'success') {
                             try {
                                 const limpo = (JSON.parse(localStorage.getItem('saidaMaterialTaguaLife') || '[]') || [])
                                     .filter(function(x) { return String(x.id) !== String(novoProtocolo.id); });
-                                localStorage.setItem('saidaMaterialTaguaLife', JSON.stringify(limpo));
+                                try { localStorage.setItem('saidaMaterialTaguaLife', JSON.stringify((limpo || []).slice(-30))); } catch (eQ) { try { localStorage.removeItem('saidaMaterialTaguaLife'); } catch(e){} }
                             } catch (e) {}
                             throw new Error('Não gravou no banco (saidas): ' + error.message);
                         } else if (saved && saved[0]) {
@@ -3251,7 +3258,7 @@ function mostrarToast(mensagem, tipo = 'success') {
                                 console.log('✅ saida_itens ok');
                                 mostrarToast('☁️ Gravado no banco de dados!', 'success');
                             }
-                            localStorage.setItem('saidaMaterialTaguaLife', JSON.stringify(protocolos));
+                            try { localStorage.setItem('saidaMaterialTaguaLife', JSON.stringify((protocolos || []).slice(-30))); } catch (eQ) { try { localStorage.removeItem('saidaMaterialTaguaLife'); } catch(e){} }
                         }
                     } catch (eDB) {
                         console.error(eDB);
@@ -3609,7 +3616,15 @@ function mostrarToast(mensagem, tipo = 'success') {
         }
 
         cacheSaidasDB = (cacheSaidasDB || []).filter(x => String(x.id) !== String(id));
-        localStorage.setItem('saidaMaterialTaguaLife', JSON.stringify(cacheSaidasDB));
+        try {
+                // só guarda resumo leve (evita QuotaExceeded)
+                var leve = (cacheSaidasDB || []).slice(0, 50).map(function(p) {
+                    return { id: p.id, colaborador: p.colaborador, dataSaida: p.dataSaida, itens: (p.itens || []).slice(0, 5) };
+                });
+                localStorage.setItem('saidaMaterialTaguaLife', JSON.stringify(leve));
+            } catch (eQuota) {
+                try { localStorage.removeItem('saidaMaterialTaguaLife'); } catch (e) {}
+            }
         await exibirListaProtocolos();
         await atualizarPainel();
         await carregarSelectItens();
@@ -3634,7 +3649,15 @@ function mostrarToast(mensagem, tipo = 'success') {
         }
 
         cacheSaidasDB = (cacheSaidasDB || []).filter(x => String(x.id) !== String(id));
-        localStorage.setItem('saidaMaterialTaguaLife', JSON.stringify(cacheSaidasDB));
+        try {
+                // só guarda resumo leve (evita QuotaExceeded)
+                var leve = (cacheSaidasDB || []).slice(0, 50).map(function(p) {
+                    return { id: p.id, colaborador: p.colaborador, dataSaida: p.dataSaida, itens: (p.itens || []).slice(0, 5) };
+                });
+                localStorage.setItem('saidaMaterialTaguaLife', JSON.stringify(leve));
+            } catch (eQuota) {
+                try { localStorage.removeItem('saidaMaterialTaguaLife'); } catch (e) {}
+            }
         await exibirListaProtocolos();
         await atualizarPainel();
         mostrarToast('🗑️ Registro excluído!', 'danger');
@@ -4755,11 +4778,24 @@ window.addEventListener('pageshow', function() {
     if (!localStorage.getItem('tagualife_sessao')) {
         window.location.replace('login.html');
     }
-    // atualiza quantidades do estoque ao voltar para a página
     if (typeof carregarSelectItens === 'function') {
         carregarSelectItens().catch(function(){});
     }
 });
+// Libera espaço se localStorage estiver estourado
+(function limparStorageSeCheio() {
+    try {
+        localStorage.setItem('__tl_ping', '1');
+        localStorage.removeItem('__tl_ping');
+    } catch (e) {
+        try {
+            localStorage.removeItem('saidaMaterialTaguaLife');
+            localStorage.removeItem('estoqueTaguaLife');
+            localStorage.removeItem('protocolosTaguaLife');
+            console.warn('Storage cheio — chaves grandes removidas');
+        } catch (e2) {}
+    }
+})();
 document.addEventListener('visibilitychange', function() {
     if (document.visibilityState === 'visible' && typeof carregarSelectItens === 'function') {
         carregarSelectItens().catch(function(){});
