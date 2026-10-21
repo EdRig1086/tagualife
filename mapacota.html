@@ -1924,20 +1924,69 @@ function inicializarFornecedoresPadrao() {
     fornecedorAprovadoId = null;
 }
 
-function renderizarTabela() {
-    // Preservar campos que ficam fora do estado JS
-    const _obsGeral = document.getElementById('observacao')?.value || '';
-    const _nomeCot = document.getElementById('nomeCotacao')?.value || '';
-    const _usoCot = document.getElementById('usoCotacao')?.value || '';
-    // sincronizar obs dos fornecedores a partir da tela
+function capturarEstadoTabela() {
+    // Lê tudo que está na tela ANTES de recriar o HTML
+    const estado = {
+        obsGeral: document.getElementById('observacao')?.value || '',
+        nomeCot: document.getElementById('nomeCotacao')?.value || '',
+        usoCot: document.getElementById('usoCotacao')?.value || '',
+        itens: [],
+        fornecedoresExtra: {} // por id: {contato, telefone, pag, prazo, resp, frete, obs, nome}
+    };
+
     fornecedores.forEach((f, index) => {
-        const obsInput = document.getElementById('obsF' + f.id);
-        if (obsInput) f.obs = obsInput.value || '';
-        const freteInput = document.getElementById('freteF' + f.id);
-        if (freteInput) f.frete = textoParaNumero(freteInput.value);
-        const nomeInput = document.getElementById('f' + index + 'Nome');
-        if (nomeInput) f.nome = nomeInput.value || f.nome || '';
+        const extra = {
+            nome: (document.getElementById('f' + index + 'Nome')?.value || f.nome || '').trim(),
+            contato: (document.getElementById('f' + index + 'Contato')?.value || f.contato || '').trim(),
+            telefone: (document.getElementById('f' + index + 'Telefone')?.value || f.telefone || '').trim(),
+            frete: document.getElementById('freteF' + f.id)
+                ? textoParaNumero(document.getElementById('freteF' + f.id).value)
+                : (f.frete || 0),
+            obs: document.getElementById('obsF' + f.id)?.value || f.obs || '',
+            pag: document.getElementById('p' + f.id)?.value || 'À VISTA',
+            prazo: document.getElementById('e' + f.id)?.value || 'IMEDIATO',
+            resp: document.getElementById('r' + f.id)?.value || 'EDNALDO'
+        };
+        f.nome = extra.nome;
+        f.contato = extra.contato;
+        f.telefone = extra.telefone;
+        f.frete = extra.frete;
+        f.obs = extra.obs;
+        f.pag = extra.pag;
+        f.prazo = extra.prazo;
+        f.resp = extra.resp;
+        estado.fornecedoresExtra[f.id] = extra;
     });
+
+    document.querySelectorAll('#corpoTabela tr.item-row').forEach(function(row) {
+        const desc = row.querySelector('.item-desc')?.value || '';
+        const qtd = row.querySelector('.item-qtd')?.value || '1';
+        const precos = {};
+        fornecedores.forEach(function(f) {
+            // ids antigos na tela (antes do push do novo fornecedor)
+            const und = row.querySelector('.f' + f.id + '-und')?.value || '';
+            const tot = row.querySelector('.f' + f.id + '-total')?.value || '';
+            precos[f.id] = { und: und, total: tot };
+        });
+        // se a linha tem algum conteúdo, guarda
+        if (desc.trim() || Object.keys(precos).some(function(k) { return (precos[k].und || precos[k].total); })) {
+            estado.itens.push({ desc: desc, qtd: qtd, precos: precos });
+        }
+    });
+
+    // se não tinha item preenchido, mantém pelo menos estrutura vazia se já existia linha
+    if (!estado.itens.length && document.querySelector('#corpoTabela tr.item-row')) {
+        estado.itens.push({ desc: '', qtd: '1', precos: {} });
+    }
+    return estado;
+}
+
+function renderizarTabela() {
+    const _estado = capturarEstadoTabela();
+    const _obsGeral = _estado.obsGeral;
+    const _nomeCot = _estado.nomeCot;
+    const _usoCot = _estado.usoCot;
+    const _itensSalvos = _estado.itens;
 
     console.log('🔄 Renderizando tabela...');
     const thead = document.getElementById('headerFornecedores');
@@ -1977,9 +2026,11 @@ function renderizarTabela() {
         const tr = document.createElement('tr');
         tr.innerHTML = `
             <td colspan="3" style="background:var(--bg-body); font-weight:700; font-size:0.5rem; text-align:right; padding-right:0.8rem; color:var(--verde-oliva);">${info.label}</td>
-            ${fornecedores.map((f, idx) => `
-                <td><input type="text" id="${info.fields[idx]}" value="${f[info.label.replace(':', '').toLowerCase().trim()] || ''}" placeholder="${info.label.replace(':', '')}" class="fornecedor-field" /></td>
-            `).join('')}
+            ${fornecedores.map((f, idx) => {
+                const val = info.label.indexOf('CONTATO') >= 0 ? (f.contato || '') : (f.telefone || '');
+                const safe = String(val).replace(/"/g, '&quot;');
+                return '<td><input type="text" id="' + info.fields[idx] + '" value="' + safe + '" placeholder="' + info.label.replace(':', '') + '" class="fornecedor-field" /></td>';
+            }).join('')}
             <td></td>
         `;
         tbody.appendChild(tr);
@@ -2003,7 +2054,14 @@ function renderizarTabela() {
     `;
     tbody.appendChild(trHeader);
 
-    adicionarLinhaItemPadrao();
+    // Restaura itens preenchidos (ou cria 1 linha vazia)
+    if (_itensSalvos && _itensSalvos.length) {
+        _itensSalvos.forEach(function(item, idx) {
+            adicionarLinhaItemComDados(item, idx + 1);
+        });
+    } else {
+        adicionarLinhaItemPadrao();
+    }
 
     const trAdd = document.createElement('tr');
     trAdd.className = 'add-item-row';
@@ -2061,7 +2119,7 @@ function renderizarTabela() {
     trPag.innerHTML = `
         <td class="label-cell-left" colspan="3" style="font-size:0.6rem;">CONDIÇÕES DE PAGAMENTO</td>
         ${fornecedores.map(f => `
-            <td><input type="text" id="p${f.id}" value="À VISTA" placeholder="Pagamento" style="font-weight:500; font-size:0.65rem;" /></td>
+            <td><input type="text" id="p${f.id}" value="${(f.pag || 'À VISTA').replace(/"/g, '&quot;')}" placeholder="Pagamento" style="font-weight:500; font-size:0.65rem;" /></td>
         `).join('')}
         <td></td>
     `;
@@ -2072,7 +2130,7 @@ function renderizarTabela() {
     trEntrega.innerHTML = `
         <td class="label-cell-left" colspan="3" style="font-size:0.6rem;">PRAZO DE ENTREGA</td>
         ${fornecedores.map(f => `
-            <td><input type="text" id="e${f.id}" value="IMEDIATO" placeholder="Prazo" style="font-weight:500; font-size:0.65rem;" /></td>
+            <td><input type="text" id="e${f.id}" value="${(f.prazo || 'IMEDIATO').replace(/"/g, '&quot;')}" placeholder="Prazo" style="font-weight:500; font-size:0.65rem;" /></td>
         `).join('')}
         <td></td>
     `;
@@ -2083,7 +2141,7 @@ function renderizarTabela() {
     trResp.innerHTML = `
         <td class="label-cell-left" colspan="3" style="font-size:0.6rem;">RESPONSÁVEL</td>
         ${fornecedores.map(f => `
-            <td><input type="text" id="r${f.id}" value="EDNALDO" placeholder="Responsável" style="font-weight:600; font-size:0.65rem; text-transform:uppercase;" /></td>
+            <td><input type="text" id="r${f.id}" value="${(f.resp || 'EDNALDO').replace(/"/g, '&quot;')}" placeholder="Responsável" style="font-weight:600; font-size:0.65rem; text-transform:uppercase;" /></td>
         `).join('')}
         <td></td>
     `;
@@ -2119,16 +2177,55 @@ function renderizarTabela() {
     setTimeout(() => {
         const obsEl = document.getElementById('observacao');
         if (obsEl && typeof _obsGeral !== 'undefined') obsEl.value = _obsGeral;
-        if (document.getElementById('nomeCotacao') && typeof _nomeCot !== 'undefined') {
-            // nome/uso ficam fora da tabela; só garantimos se precisarem
-        }
+        try {
+            if (document.getElementById('nomeCotacao') && _nomeCot) document.getElementById('nomeCotacao').value = _nomeCot;
+            if (document.getElementById('usoCotacao') && _usoCot) document.getElementById('usoCotacao').value = _usoCot;
+        } catch (e) {}
         configurarEventos();
         initSortable();
         atualizarTotais();
     }, 200);
 }
 
+function adicionarLinhaItemComDados(item, num) {
+    item = item || { desc: '', qtd: '1', precos: {} };
+    const tbody = document.getElementById('corpoTabela');
+    const tr = document.createElement('tr');
+    tr.className = 'item-row';
+    const descSafe = String(item.desc || '').replace(/"/g, '&quot;');
+    const qtdSafe = String(item.qtd || '1').replace(/"/g, '&quot;');
+    let html = `
+        <td class="label-cell"><span class="drag-handle"><i class="fas fa-grip-vertical"></i></span> ${num || 1}</td>
+        <td><input type="text" class="text-left item-desc" placeholder="Descreva o material" value="${descSafe}" style="font-size:0.8rem; width:100%;" /></td>
+        <td><input type="text" class="item-qtd" value="${qtdSafe}" style="text-align:center; font-size:0.75rem;" /></td>
+    `;
+    fornecedores.forEach(function(f) {
+        const p = (item.precos && item.precos[f.id]) ? item.precos[f.id] : { und: '', total: '' };
+        const und = String(p.und || '').replace(/"/g, '&quot;');
+        const tot = String(p.total || '').replace(/"/g, '&quot;');
+        html += `
+            <td>
+                <div class="campo-moeda">
+                    <span class="simbolo-moeda">R$</span>
+                    <input type="text" class="currency currency-und f${f.id}-und" value="${und}" placeholder="0,00" style="font-size:0.72rem;" />
+                </div>
+                <div class="campo-moeda">
+                    <span class="simbolo-moeda">R$</span>
+                    <input type="text" class="currency currency-total f${f.id}-total" value="${tot}" placeholder="0,00" style="font-size:0.7rem;" />
+                </div>
+            </td>
+        `;
+    });
+    html += `<td><span class="remove-item" onclick="removerItem(this)"><i class="fas fa-times-circle"></i></span></td>`;
+    tr.innerHTML = html;
+    tbody.appendChild(tr);
+}
+
 function adicionarLinhaItemPadrao() {
+    adicionarLinhaItemComDados({ desc: '', qtd: '1', precos: {} }, 1);
+}
+
+function __adicionarLinhaItemPadrao_OLD() {
     const tbody = document.getElementById('corpoTabela');
     const tr = document.createElement('tr');
     tr.className = 'item-row';
