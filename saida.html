@@ -1404,22 +1404,55 @@
     let cacheEstoqueDB = []; // [{id, nome, quantidade, categoria, limite_alerta}]
     let cacheSaidasDB = [];
 
-    async function carregarEstoqueDB(forcar) {
-        if (!sb) {
-            console.warn('📦 sb null — usando localStorage');
+    // ===== Storage seguro (evita QuotaExceeded zerar quantidades) =====
+    var TL_STORAGE_KEYS_PESADAS = ['saidaMaterialTaguaLife', 'estoqueTaguaLife', 'protocolosTaguaLife', 'estoque_movimentacoes_cache'];
+    function tlStorageFree() {
+        TL_STORAGE_KEYS_PESADAS.forEach(function(k) {
+            try { localStorage.removeItem(k); } catch (e) {}
+        });
+    }
+    function tlStorageSet(key, value) {
+        var str = typeof value === 'string' ? value : JSON.stringify(value);
+        try {
+            localStorage.setItem(key, str);
+            return true;
+        } catch (e1) {
+            // Storage cheio: limpa chaves grandes e tenta 1x
+            try { tlStorageFree(); } catch (e) {}
             try {
-                cacheEstoqueDB = JSON.parse(localStorage.getItem('estoqueTaguaLife') || '[]');
-            } catch (e) { cacheEstoqueDB = []; }
+                localStorage.setItem(key, str);
+                return true;
+            } catch (e2) {
+                console.warn('tlStorageSet: sem espaço para', key, '— seguindo só em memória');
+                return false;
+            }
+        }
+    }
+    function tlStorageGetJSON(key, fallback) {
+        try {
+            var raw = localStorage.getItem(key);
+            if (raw == null || raw === '') return fallback;
+            return JSON.parse(raw);
+        } catch (e) {
+            return fallback;
+        }
+    }
+
+
+    async function carregarEstoqueDB(forcar) {
+        // Fonte da verdade = Supabase. localStorage é só cache opcional.
+        if (!sb) {
+            cacheEstoqueDB = tlStorageGetJSON('estoqueTaguaLife', []) || [];
             return cacheEstoqueDB;
         }
         try {
-            // Igual à página estoque.html: select * sem filtros extras
             const { data, error } = await sb
                 .from('estoque')
                 .select('*')
                 .order('nome', { ascending: true })
                 .limit(5000);
             if (error) throw error;
+
             cacheEstoqueDB = (data || []).map(function(e) {
                 return {
                     id: e.id,
@@ -1432,37 +1465,20 @@
                     fabricante: e.fabricante || ''
                 };
             });
-            // NÃO deixa QuotaExceeded derrubar o cache em memória (causa qtd 0 na tela)
-            try {
-                localStorage.setItem('estoqueTaguaLife', JSON.stringify(cacheEstoqueDB.map(function(e) {
-                    return { id: e.id, nome: e.nome, quantidade: e.quantidade, categoria: e.categoria, limite_alerta: e.limite_alerta };
-                })));
-            } catch (eLs) {
-                console.warn('localStorage cheio — limpando chaves grandes e seguindo só com memória');
-                try {
-                    localStorage.removeItem('saidaMaterialTaguaLife');
-                    localStorage.removeItem('estoqueTaguaLife');
-                    localStorage.removeItem('protocolosTaguaLife');
-                    // tenta de novo só o estoque enxuto
-                    localStorage.setItem('estoqueTaguaLife', JSON.stringify(cacheEstoqueDB.map(function(e) {
-                        return { id: e.id, nome: e.nome, quantidade: e.quantidade };
-                    })));
-                } catch (e2) {
-                    console.warn('localStorage indisponível — OK, usa só memória', e2);
-                }
-            }
-            console.log('TAGUALIFE_SAIDA_VER','2026-10-20-quota-fix');
+
+            // Cache leve opcional (se encher, ignora — memória já tem os dados certos)
+            tlStorageSet('estoqueTaguaLife', cacheEstoqueDB.map(function(e) {
+                return { id: e.id, nome: e.nome, quantidade: e.quantidade, categoria: e.categoria, limite_alerta: e.limite_alerta };
+            }));
+
+            console.log('TAGUALIFE_SAIDA_VER', '2026-10-20-storage-safe');
             console.log('📦 Estoque banco OK:', cacheEstoqueDB.length, 'itens');
-            var g = cacheEstoqueDB.find(function(x) { return (x.nome || '').toUpperCase().indexOf('GRELHA QUADRADA RALO 100') >= 0; });
-            if (g) console.log('🔎 GRELHA 100MM qtd=', g.quantidade);
             return cacheEstoqueDB;
         } catch (err) {
-            // Só usa localStorage se a consulta ao BANCO realmente falhou
             console.error('❌ Estoque DB falhou:', err);
+            // Nunca descarta memória boa por causa de erro de storage
             if (cacheEstoqueDB && cacheEstoqueDB.length) return cacheEstoqueDB;
-            try {
-                cacheEstoqueDB = JSON.parse(localStorage.getItem('estoqueTaguaLife') || '[]');
-            } catch (e2) { cacheEstoqueDB = []; }
+            cacheEstoqueDB = tlStorageGetJSON('estoqueTaguaLife', []) || [];
             return cacheEstoqueDB;
         }
     }
@@ -1601,15 +1617,11 @@
                 };
             });
             try {
-                try {
-                // só guarda resumo leve (evita QuotaExceeded)
-                var leve = (cacheSaidasDB || []).slice(0, 50).map(function(p) {
-                    return { id: p.id, colaborador: p.colaborador, dataSaida: p.dataSaida, itens: (p.itens || []).slice(0, 5) };
-                });
-                localStorage.setItem('saidaMaterialTaguaLife', JSON.stringify(leve));
-            } catch (eQuota) {
-                try { localStorage.removeItem('saidaMaterialTaguaLife'); } catch (e) {}
-            }
+                // Cache mínimo opcional — histórico real está no Supabase
+            var leve = (cacheSaidasDB || []).slice(0, 30).map(function(p) {
+                return { id: p.id, colaborador: p.colaborador, dataSaida: p.dataSaida };
+            });
+            tlStorageSet('saidaMaterialTaguaLife', leve);
             } catch (eLs) {}
             return cacheSaidasDB;
         } catch (err) {
@@ -1703,9 +1715,7 @@
                 observacao: meta.observacao || null
             });
         }
-        localStorage.setItem('estoqueTaguaLife', JSON.stringify(cacheEstoqueDB.map(e => ({
-            id: e.id, nome: e.nome, quantidade: e.quantidade, categoria: e.categoria, limite_alerta: e.limite_alerta
-        }))));
+        tlStorageSet('estoqueTaguaLife', cacheEstoqueDB.map(e => ({ id: e.id, nome: e.nome, quantidade: e.quantidade, categoria: e.categoria, limite_alerta: e.limite_alerta })));
         await registrarMovimentacaoEstoque(movs);
         if (ok > 0) mostrarToast('📦 ' + ok + ' item(ns) baixado(s) no estoque', 'success');
         if (falhas.length) console.warn('Falhas na baixa:', falhas);
@@ -1740,7 +1750,7 @@
                 observacao: meta.observacao || 'Estorno de saída'
             });
         }
-        localStorage.setItem('estoqueTaguaLife', JSON.stringify(cacheEstoqueDB));
+        tlStorageSet('estoqueTaguaLife', cacheEstoqueDB.map(function(e){ return { id: e.id, nome: e.nome, quantidade: e.quantidade, categoria: e.categoria, limite_alerta: e.limite_alerta }; }));
         await registrarMovimentacaoEstoque(movs);
     }
 
@@ -3616,15 +3626,11 @@ function mostrarToast(mensagem, tipo = 'success') {
         }
 
         cacheSaidasDB = (cacheSaidasDB || []).filter(x => String(x.id) !== String(id));
-        try {
-                // só guarda resumo leve (evita QuotaExceeded)
-                var leve = (cacheSaidasDB || []).slice(0, 50).map(function(p) {
-                    return { id: p.id, colaborador: p.colaborador, dataSaida: p.dataSaida, itens: (p.itens || []).slice(0, 5) };
-                });
-                localStorage.setItem('saidaMaterialTaguaLife', JSON.stringify(leve));
-            } catch (eQuota) {
-                try { localStorage.removeItem('saidaMaterialTaguaLife'); } catch (e) {}
-            }
+        // Cache mínimo opcional — histórico real está no Supabase
+            var leve = (cacheSaidasDB || []).slice(0, 30).map(function(p) {
+                return { id: p.id, colaborador: p.colaborador, dataSaida: p.dataSaida };
+            });
+            tlStorageSet('saidaMaterialTaguaLife', leve);
         await exibirListaProtocolos();
         await atualizarPainel();
         await carregarSelectItens();
@@ -3649,15 +3655,11 @@ function mostrarToast(mensagem, tipo = 'success') {
         }
 
         cacheSaidasDB = (cacheSaidasDB || []).filter(x => String(x.id) !== String(id));
-        try {
-                // só guarda resumo leve (evita QuotaExceeded)
-                var leve = (cacheSaidasDB || []).slice(0, 50).map(function(p) {
-                    return { id: p.id, colaborador: p.colaborador, dataSaida: p.dataSaida, itens: (p.itens || []).slice(0, 5) };
-                });
-                localStorage.setItem('saidaMaterialTaguaLife', JSON.stringify(leve));
-            } catch (eQuota) {
-                try { localStorage.removeItem('saidaMaterialTaguaLife'); } catch (e) {}
-            }
+        // Cache mínimo opcional — histórico real está no Supabase
+            var leve = (cacheSaidasDB || []).slice(0, 30).map(function(p) {
+                return { id: p.id, colaborador: p.colaborador, dataSaida: p.dataSaida };
+            });
+            tlStorageSet('saidaMaterialTaguaLife', leve);
         await exibirListaProtocolos();
         await atualizarPainel();
         mostrarToast('🗑️ Registro excluído!', 'danger');
@@ -4628,7 +4630,7 @@ ${secInt}
         await atualizarPainel();
         await exibirListaProtocolos();
 
-        if (!localStorage.getItem('estoqueTaguaLife')) {
+        if (!sb && !localStorage.getItem('estoqueTaguaLife')) { // nunca semente falsa com Supabase ativo
             const estoqueInicial = [
                 { nome: 'REFLETOR 7X8 30W', quantidade: 25, categoria: 'Iluminação' },
                 { nome: 'ADAPTADOR SOLDAVEL 32MM', quantidade: 10, categoria: 'Hidráulica' },
@@ -4789,10 +4791,10 @@ window.addEventListener('pageshow', function() {
         localStorage.removeItem('__tl_ping');
     } catch (e) {
         try {
-            localStorage.removeItem('saidaMaterialTaguaLife');
-            localStorage.removeItem('estoqueTaguaLife');
-            localStorage.removeItem('protocolosTaguaLife');
-            console.warn('Storage cheio — chaves grandes removidas');
+            ['saidaMaterialTaguaLife','estoqueTaguaLife','protocolosTaguaLife','estoque_movimentacoes_cache'].forEach(function(k) {
+                try { localStorage.removeItem(k); } catch (x) {}
+            });
+            console.warn('Storage cheio — chaves grandes removidas automaticamente');
         } catch (e2) {}
     }
 })();
