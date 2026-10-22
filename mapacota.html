@@ -326,7 +326,7 @@
             font-size: 0.78rem;
             border: 1px solid var(--border-color);
             border-radius: 10px;
-            overflow: hidden;
+            overflow: visible;
         }
 
         .tabela-cotacao th,
@@ -464,11 +464,13 @@
             text-align: left !important;
         }
         .tabela-cotacao td .item-desc {
-            font-size: 0.82rem !important;
+            font-size: 0.8rem !important;
             font-weight: 600 !important;
             white-space: normal !important;
             word-break: break-word !important;
             line-height: 1.25 !important;
+            overflow: visible !important;
+            text-overflow: clip !important;
         }
 
         .tabela-cotacao .total-cell {
@@ -914,41 +916,45 @@
             .campo-moeda input { padding-left: 16px !important; font-size: 0.6rem !important; }
         }
 
-        /* ===== IMPRESSÃO A4 HORIZONTAL — legível, sem cortar texto ===== */
+        /* ===== IMPRESSÃO = visual da tela (A4 horizontal) ===== */
         @page {
             size: A4 landscape;
-            margin: 6mm 7mm;
+            margin: 5mm 6mm;
         }
 
         @media print {
+            * {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+
             html, body {
                 width: 297mm !important;
                 height: auto !important;
                 margin: 0 !important;
                 padding: 0 !important;
-                background: #fff !important;
-                color: #111 !important;
-                font-family: Arial, Helvetica, "Segoe UI", sans-serif !important;
+                background: #E8EBE0 !important;
+                color: #191D1B !important;
+                font-family: 'Inter', Arial, Helvetica, sans-serif !important;
                 font-size: 9pt !important;
                 line-height: 1.25 !important;
-                -webkit-print-color-adjust: exact !important;
-                print-color-adjust: exact !important;
             }
 
-            body { display: block !important; padding: 0 !important; }
+            body { display: block !important; }
 
             .app-container {
                 max-width: 100% !important;
                 width: 100% !important;
                 margin: 0 !important;
                 padding: 0 !important;
+                background: transparent !important;
                 box-shadow: none !important;
-                background: #fff !important;
             }
 
+            /* Esconde só navegação e botões — mantém o card igual à tela */
             .no-print,
+            .app-topbar,
             .nav-menu,
-            .top-bar,
             .btn,
             .botoes,
             .btn-theme,
@@ -959,115 +965,133 @@
             .remove-item,
             .drag-handle,
             .dica-digitacao,
-            .grafico-comparativo,
-            .melhor-preco-badge,
-            nav, header .user-menu {
+            .grafico-comparativo {
                 display: none !important;
             }
 
+            /* Cabeçalho verde igual à tela */
             .card-header {
+                display: flex !important;
+                justify-content: space-between !important;
+                align-items: center !important;
                 background: #C1CE83 !important;
                 color: #191D1B !important;
-                padding: 4px 8px !important;
+                padding: 6px 10px !important;
                 margin: 0 0 4px 0 !important;
-                border: 1px solid #7A816E !important;
-                -webkit-print-color-adjust: exact !important;
-                print-color-adjust: exact !important;
+                border-radius: 8px !important;
+                border: none !important;
+            }
+            .card-header .left h2 {
+                font-size: 11pt !important;
+                font-weight: 800 !important;
+                margin: 0 !important;
+                color: #191D1B !important;
+            }
+            .card-header .left span {
+                font-size: 8pt !important;
+                color: #191D1B !important;
+                opacity: 0.85 !important;
+            }
+            .card-header .right {
+                font-size: 8pt !important;
+                color: #191D1B !important;
+            }
+            .card-header .left i { color: #191D1B !important; }
+
+            .card-body {
+                padding: 0 !important;
+                background: #FBFBF7 !important;
+                border-radius: 8px !important;
             }
 
-            .card-header h2 { font-size: 11pt !important; font-weight: 800 !important; margin: 0 !important; }
-            .card-header span { font-size: 8pt !important; }
-
-            .card-body { padding: 2px 0 !important; }
-
-            .info-empresa, .objetivo {
+            /* Barras de info do condomínio */
+            .info-empresa, .objetivo,
+            [class*="info-empresa"], [class*="objetivo"] {
                 font-size: 7.5pt !important;
-                padding: 2px 6px !important;
-                margin-bottom: 3px !important;
-                border: 1px solid #ccc !important;
-                background: #fafafa !important;
-                line-height: 1.3 !important;
+                padding: 3px 8px !important;
+                margin: 0 0 3px 0 !important;
+                border: 1px solid #D8DCCE !important;
+                border-radius: 6px !important;
+                background: #F0F2EA !important;
+                color: #191D1B !important;
             }
 
+            /* NOME / USO / DATA / HORA — igual à faixa da tela */
             .info-topo {
                 display: flex !important;
-                flex-wrap: wrap !important;
-                align-items: flex-end !important;
-                gap: 6px 12px !important;
-                margin-bottom: 4px !important;
-                padding: 4px 6px !important;
-                border: 1px solid #999 !important;
-                background: #f7f7f7 !important;
-                -webkit-print-color-adjust: exact !important;
-                print-color-adjust: exact !important;
+                flex-wrap: nowrap !important;
+                align-items: center !important;
+                gap: 10px !important;
+                margin: 0 0 5px 0 !important;
+                padding: 6px 10px !important;
+                border: 1px solid #D8DCCE !important;
+                border-radius: 8px !important;
+                background: #FBFBF7 !important;
             }
-
             .info-topo .campo {
                 display: flex !important;
                 flex-direction: row !important;
-                align-items: baseline !important;
+                align-items: center !important;
                 gap: 4px !important;
                 flex: 1 1 auto !important;
-                min-width: 120px !important;
-                max-width: none !important;
+                min-width: 0 !important;
             }
-
             .info-topo .campo label {
                 font-size: 7.5pt !important;
                 font-weight: 700 !important;
-                color: #333 !important;
+                color: #7A816E !important;
                 white-space: nowrap !important;
             }
-            .info-topo .campo label i { display: none !important; }
-
+            .info-topo .campo label i { font-size: 7pt !important; color: #7A816E !important; }
             .info-topo .campo input {
-                font-family: Arial, Helvetica, sans-serif !important;
+                font-family: inherit !important;
                 font-size: 9pt !important;
                 font-weight: 700 !important;
                 border: none !important;
-                border-bottom: 1px solid #333 !important;
-                color: #000 !important;
+                border-bottom: 1.5px solid #C1CE83 !important;
+                color: #191D1B !important;
                 background: transparent !important;
                 padding: 0 2px !important;
-                min-width: 80px !important;
                 width: 100% !important;
                 overflow: visible !important;
                 text-overflow: clip !important;
-                white-space: normal !important;
+                white-space: nowrap !important;
             }
-            .info-topo .campo input::placeholder { color: transparent !important; opacity: 0 !important; }
+            .info-topo .campo input::placeholder { color: transparent !important; }
 
+            /* TABELA — visual da tela */
             .tabela-cotacao {
                 width: 100% !important;
                 border-collapse: collapse !important;
                 table-layout: fixed !important;
-                font-family: Arial, Helvetica, sans-serif !important;
                 font-size: 8pt !important;
-                border: 1px solid #333 !important;
+                border: 1px solid #D8DCCE !important;
+                border-radius: 6px !important;
                 overflow: visible !important;
+                background: #fff !important;
             }
 
             .tabela-cotacao th,
             .tabela-cotacao td {
-                border: 0.5pt solid #444 !important;
-                padding: 2px 3px !important;
+                border: 0.6pt solid #D8DCCE !important;
+                padding: 3px 4px !important;
                 vertical-align: middle !important;
-                color: #000 !important;
+                color: #191D1B !important;
                 background: #fff !important;
-                overflow: visible !important;
                 word-wrap: break-word !important;
-                overflow-wrap: break-word !important;
+                overflow-wrap: anywhere !important;
             }
 
-            .tabela-cotacao th {
+            /* Cabeçalho dos fornecedores — verde oliva */
+            .tabela-cotacao thead th,
+            .tabela-cotacao th.col-fornecedor,
+            .tabela-cotacao th.fornecedor-header {
                 background: #7A816E !important;
                 color: #fff !important;
                 font-size: 7.5pt !important;
                 font-weight: 700 !important;
-                -webkit-print-color-adjust: exact !important;
-                print-color-adjust: exact !important;
+                text-align: center !important;
             }
-
             .tabela-cotacao th input {
                 color: #fff !important;
                 font-size: 7.5pt !important;
@@ -1078,49 +1102,46 @@
                 width: 100% !important;
                 text-align: center !important;
                 white-space: normal !important;
-                overflow: visible !important;
             }
 
             .tabela-cotacao .label-cell,
             .tabela-cotacao .label-cell-left {
                 font-size: 7pt !important;
                 font-weight: 700 !important;
-                background: #eee !important;
-                padding: 2px 3px !important;
+                background: #F0F2EA !important;
+                color: #191D1B !important;
                 white-space: normal !important;
             }
 
-            /* ITEM estreito | MATERIAL largo | QTD estreito | fornecedores dividem o resto */
+            /* Colunas: ITEM | MATERIAL (maior) | QTD | fornecedores */
             .tabela-cotacao .col-item,
             .tabela-cotacao tbody tr.item-row td:nth-child(1) {
-                width: 18px !important;
-                max-width: 20px !important;
-                font-size: 7.5pt !important;
+                width: 22px !important;
+                max-width: 24px !important;
+                text-align: center !important;
             }
             .tabela-cotacao .col-qtd,
             .tabela-cotacao tbody tr.item-row td:nth-child(3) {
-                width: 28px !important;
-                max-width: 32px !important;
+                width: 30px !important;
+                max-width: 34px !important;
+                text-align: center !important;
             }
             .tabela-cotacao .col-material,
             .tabela-cotacao tbody tr.item-row td:nth-child(2) {
-                width: 28% !important;
+                width: 26% !important;
                 text-align: left !important;
             }
 
             .tabela-cotacao td input {
                 border: none !important;
                 background: transparent !important;
-                color: #000 !important;
-                font-family: Arial, Helvetica, sans-serif !important;
+                color: #191D1B !important;
+                font-family: inherit !important;
                 font-size: 8pt !important;
                 padding: 0 !important;
                 width: 100% !important;
-                min-width: 0 !important;
                 overflow: visible !important;
                 text-overflow: clip !important;
-                white-space: normal !important;
-                word-break: break-word !important;
             }
 
             .tabela-cotacao td .item-desc {
@@ -1131,52 +1152,53 @@
                 word-break: break-word !important;
                 line-height: 1.2 !important;
             }
-
             .tabela-cotacao .item-qtd {
                 font-size: 8pt !important;
                 font-weight: 700 !important;
                 text-align: center !important;
             }
 
-            .tabela-cotacao td input.currency-und {
-                font-size: 7.5pt !important;
-                color: #222 !important;
-            }
-            .tabela-cotacao td input.currency-total {
-                font-size: 8pt !important;
-                font-weight: 700 !important;
-            }
-
+            .tabela-cotacao td input.currency-und { font-size: 7.5pt !important; }
+            .tabela-cotacao td input.currency-total { font-size: 8pt !important; font-weight: 700 !important; }
             .tabela-cotacao td input.fornecedor-field {
                 font-size: 7.5pt !important;
                 font-weight: 700 !important;
                 text-transform: uppercase !important;
-                white-space: normal !important;
             }
 
-            .tabela-cotacao .item-row td {
-                height: auto !important;
-                min-height: 16px !important;
+            /* Célula de menor preço — verde como na tela */
+            .tabela-cotacao .melhor-preco-item {
+                background: #E8F5C8 !important;
+            }
+            .tabela-cotacao .melhor-preco-badge {
+                display: inline-block !important;
+                font-size: 6pt !important;
+                font-weight: 700 !important;
+                background: #7A816E !important;
+                color: #fff !important;
+                padding: 1px 4px !important;
+                border-radius: 8px !important;
+                margin-top: 1px !important;
             }
 
             .tabela-cotacao .total-cell {
-                font-size: 8.5pt !important;
+                font-size: 9pt !important;
                 font-weight: 800 !important;
                 background: #fff !important;
-                padding: 3px !important;
             }
 
+            /* Melhor proposta — faixa verde igual à tela */
             .tabela-cotacao .best-cell {
                 background: #C1CE83 !important;
-                border: 1.5pt solid #000 !important;
+                border: 2px solid #191D1B !important;
                 font-size: 9pt !important;
-                padding: 4px !important;
-                -webkit-print-color-adjust: exact !important;
-                print-color-adjust: exact !important;
+                padding: 5px !important;
+                text-align: center !important;
             }
             .tabela-cotacao .best-cell .melhor-valor {
-                font-size: 12pt !important;
+                font-size: 13pt !important;
                 font-weight: 900 !important;
+                color: #191D1B !important;
             }
             .tabela-cotacao .best-cell .melhor-fornecedor-nome {
                 font-size: 8.5pt !important;
@@ -1186,38 +1208,34 @@
                 font-size: 7pt !important;
             }
 
-            .tabela-cotacao .melhor-preco-item {
-                background: #e8f5c8 !important;
-                -webkit-print-color-adjust: exact !important;
-                print-color-adjust: exact !important;
-            }
-
             .campo-moeda { position: relative !important; }
             .campo-moeda .simbolo-moeda {
                 font-size: 6.5pt !important;
-                left: 1px !important;
+                color: #7A816E !important;
             }
-            .campo-moeda input { padding-left: 12px !important; }
+            .campo-moeda input { padding-left: 11px !important; }
 
-            .frete-row input, .meta-row input, .obs-input input, .obs-input textarea {
+            .frete-row td, .meta-row td, .obs-individual-row td, .obs-row td {
                 font-size: 7.5pt !important;
-                white-space: normal !important;
-                overflow: visible !important;
             }
-
+            .frete-row input, .meta-row input, .obs-input input {
+                font-size: 7.5pt !important;
+            }
             #observacao, textarea#observacao {
                 font-size: 8pt !important;
-                min-height: 28px !important;
+                min-height: 24px !important;
                 white-space: pre-wrap !important;
                 border: none !important;
                 background: transparent !important;
+                color: #191D1B !important;
             }
 
             thead { display: table-header-group !important; }
-            tfoot { display: table-footer-group !important; }
             tr { page-break-inside: avoid !important; }
             a[href]:after { content: none !important; }
         }
+
+
 
 
 
