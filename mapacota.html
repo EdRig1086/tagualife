@@ -905,7 +905,7 @@
             .tabela-cotacao th,
             .tabela-cotacao td { padding: 0.15rem 0.2rem; }
             .tabela-cotacao td input { font-size: 0.6rem; }
-            .info-topo { flex-direction: column; gap: 0.2rem; }
+            .info-topo { flex-direction: row; flex-wrap: wrap; gap: 0.35rem; }
             .info-topo .campo input { width: 100%; }
             .info-topo .campo.nome-campo input,
             .info-topo .campo.uso-campo input { min-width: 100px; font-size: 0.85rem; }
@@ -1016,48 +1016,71 @@
                 color: #191D1B !important;
             }
 
-            /* NOME / USO / DATA / HORA — igual à faixa da tela */
+            /* NOME | USO | DATA | HORA — TUDO NA MESMA LINHA (como na tela) */
             .info-topo {
                 display: flex !important;
+                flex-direction: row !important;
                 flex-wrap: nowrap !important;
                 align-items: center !important;
-                gap: 10px !important;
+                justify-content: space-between !important;
+                gap: 8px !important;
                 margin: 0 0 5px 0 !important;
-                padding: 6px 10px !important;
+                padding: 5px 8px !important;
                 border: 1px solid #D8DCCE !important;
                 border-radius: 8px !important;
                 background: #FBFBF7 !important;
+                width: 100% !important;
+                box-sizing: border-box !important;
             }
             .info-topo .campo {
                 display: flex !important;
                 flex-direction: row !important;
+                flex-wrap: nowrap !important;
                 align-items: center !important;
-                gap: 4px !important;
-                flex: 1 1 auto !important;
+                gap: 3px !important;
+                flex: 1 1 0 !important;
                 min-width: 0 !important;
+                max-width: none !important;
+                width: auto !important;
+            }
+            .info-topo .campo.nome-campo { flex: 1.3 1 0 !important; }
+            .info-topo .campo.uso-campo { flex: 1.5 1 0 !important; }
+            .info-topo .campo[style*="margin-left"],
+            .info-topo .campo:nth-child(3),
+            .info-topo .campo:nth-child(4) {
+                flex: 0 0 auto !important;
+                min-width: 90px !important;
+                max-width: 120px !important;
             }
             .info-topo .campo label {
-                font-size: 7.5pt !important;
+                display: inline-flex !important;
+                align-items: center !important;
+                font-size: 7pt !important;
                 font-weight: 700 !important;
                 color: #7A816E !important;
                 white-space: nowrap !important;
+                margin: 0 !important;
             }
             .info-topo .campo label i { font-size: 7pt !important; color: #7A816E !important; }
             .info-topo .campo input {
+                display: inline-block !important;
                 font-family: inherit !important;
-                font-size: 9pt !important;
+                font-size: 8.5pt !important;
                 font-weight: 700 !important;
                 border: none !important;
                 border-bottom: 1.5px solid #C1CE83 !important;
                 color: #191D1B !important;
                 background: transparent !important;
                 padding: 0 2px !important;
-                width: 100% !important;
+                margin: 0 !important;
+                width: auto !important;
+                min-width: 50px !important;
+                flex: 1 1 auto !important;
                 overflow: visible !important;
                 text-overflow: clip !important;
                 white-space: nowrap !important;
             }
-            .info-topo .campo input::placeholder { color: transparent !important; }
+            .info-topo .campo input::placeholder { color: transparent !important; opacity: 0 !important; }
 
             /* TABELA — visual da tela */
             .tabela-cotacao {
