@@ -1536,11 +1536,13 @@
         });
 
         var optionsHtml = ['<option value="">Selecione um item...</option>']
-            .concat(lista.map(function(item) {
+                        .concat(lista.map(function(item) {
                 var nome = String(item.nome || '').replace(/"/g, '&quot;');
                 var qtd = Number(item.quantidade) || 0;
-                var label = nome + ' (' + qtd + ' unid.)';
-                return '<option value="' + nome + '" data-qtd="' + qtd + '">' + label + '</option>';
+                var cod = item.codigo != null ? String(item.codigo) : '';
+                var label = (cod ? ('[' + cod + '] ') : '') + nome + ' (' + qtd + ' unid.)';
+                return '<option value="' + nome + '" data-qtd="' + qtd + '" data-codigo="' + cod + '">' + label + '</option>';
+
             }))
             .concat(['<option value="__custom__">➕ Digitar item não cadastrado...</option>'])
             .join('');
