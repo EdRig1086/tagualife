@@ -1241,10 +1241,33 @@
                         unidade: unidade
                     };
                 if (proxCodigo != null) payloadNovo.codigo = proxCodigo;
-                const { data: inserted, error } = await sb
-                    .from('estoque')
-                    .insert((typeof payloadComCondominio === 'function' ? payloadComCondominio : (x=>x))(payloadNovo))
-                    .select('id,nome,quantidade,codigo');
+                let inserted = null, error = null;
+                {
+                    const r1 = await sb
+                        .from('estoque')
+                        .insert((typeof payloadComCondominio === 'function' ? payloadComCondominio : (x=>x))(payloadNovo))
+                        .select('id,nome,quantidade,codigo');
+                    inserted = r1.data; error = r1.error;
+                }
+                // Se a coluna codigo não existir, tenta de novo sem codigo
+                if (error && /codigo/i.test(error.message || '') && payloadNovo.codigo != null) {
+                    delete payloadNovo.codigo;
+                    const r2 = await sb
+                        .from('estoque')
+                        .insert((typeof payloadComCondominio === 'function' ? payloadComCondominio : (x=>x))(payloadNovo))
+                        .select('id,nome,quantidade');
+                    inserted = r2.data; error = r2.error;
+                    if (!error) {
+                        console.warn('Coluna codigo ausente — item salvo sem código. Rode o SQL no Supabase.');
+                    }
+                }
+                // Se condominio_id quebrou o insert, tenta payload limpo
+                if (error && /condominio/i.test(error.message || '')) {
+                    const limpo = Object.assign({}, payloadNovo);
+                    delete limpo.condominio_id;
+                    const r3 = await sb.from('estoque').insert(limpo).select('id,nome,quantidade,codigo');
+                    inserted = r3.data; error = r3.error;
+                }
 
                 if (error) throw error;
                 const novoId = inserted && inserted[0] ? inserted[0].id : null;
