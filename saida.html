@@ -1357,6 +1357,48 @@
     </div>
 </div>
 
+
+<div class="modal-overlay" id="modalRelatorioItem">
+    <div class="modal-content" style="max-width:520px;">
+        <div class="modal-header">
+            <h3><i class="fas fa-box-open"></i> Relatório por item</h3>
+            <button class="modal-close" onclick="fecharModal('modalRelatorioItem')"><i class="fas fa-times"></i> Fechar</button>
+        </div>
+        <div class="modal-body" style="padding:0.8rem 1rem 1rem;">
+            <label style="display:block;font-size:0.72rem;font-weight:700;color:var(--text-secondary);margin-bottom:0.35rem;">
+                <i class="fas fa-search"></i> Buscar item cadastrado
+            </label>
+            <input type="text" id="relItemBusca" placeholder="Digite as primeiras letras... Ex: CAFE, LAMPADA"
+                autocomplete="off"
+                style="width:100%;padding:0.55rem 0.7rem;border:1px solid var(--border-color);border-radius:8px;font-size:0.85rem;background:var(--input-bg);color:var(--text-primary);margin-bottom:0.4rem;"
+                oninput="filtrarListaRelatorioItem()"
+                onkeydown="if(event.key==='Enter'){event.preventDefault(); confirmarRelatorioPorItem();}" />
+            <div id="relItemLista" style="max-height:240px;overflow-y:auto;border:1px solid var(--border-color);border-radius:8px;background:var(--bg-card);margin-bottom:0.75rem;">
+                <div style="padding:0.6rem;font-size:0.75rem;color:var(--text-secondary);">Carregando itens...</div>
+            </div>
+            <input type="hidden" id="relItemSelecionado" value="" />
+            <div id="relItemSelecionadoLabel" style="font-size:0.75rem;margin-bottom:0.7rem;color:var(--verde-oliva);min-height:1.2em;"></div>
+
+            <label style="display:block;font-size:0.72rem;font-weight:700;color:var(--text-secondary);margin-bottom:0.35rem;">
+                <i class="fas fa-calendar-alt"></i> Período
+            </label>
+            <div style="display:flex;flex-wrap:wrap;gap:0.35rem;margin-bottom:0.9rem;">
+                <button type="button" class="btn-filtro-periodo active" data-rel-periodo="mes" onclick="setPeriodoRelItem(this,'mes')">Este mês</button>
+                <button type="button" class="btn-filtro-periodo" data-rel-periodo="mes_escolhido" onclick="setPeriodoRelItem(this,'mes_escolhido')">Mês...</button>
+                <button type="button" class="btn-filtro-periodo" data-rel-periodo="ano" onclick="setPeriodoRelItem(this,'ano')">Ano</button>
+                <button type="button" class="btn-filtro-periodo" data-rel-periodo="dia" onclick="setPeriodoRelItem(this,'dia')">Dia</button>
+                <button type="button" class="btn-filtro-periodo" data-rel-periodo="geral" onclick="setPeriodoRelItem(this,'geral')">Geral</button>
+            </div>
+            <div style="display:flex;gap:0.5rem;justify-content:flex-end;">
+                <button type="button" class="btn btn-outline" onclick="fecharModal('modalRelatorioItem')">Cancelar</button>
+                <button type="button" class="btn btn-primary" onclick="confirmarRelatorioPorItem()">
+                    <i class="fas fa-file-alt"></i> Gerar relatório
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="modal-overlay" id="modalRelatorio">
     <div class="modal-content relatorio-modal-content">
         <div class="relatorio-topbar">
@@ -4052,7 +4094,10 @@ ${secInt}
 
 
 
-    // ===== RELATÓRIO POR NOME DO ITEM (ex: CAFÉ no mês) =====
+    // ===== RELATÓRIO POR NOME DO ITEM (busca tipo estoque) =====
+    var _relItemPeriodo = 'mes';
+    var _relItemListaCache = [];
+
     function normalizarBuscaItem(s) {
         return String(s || '')
             .toLowerCase()
@@ -4061,153 +4106,208 @@ ${secInt}
             .trim();
     }
 
-    async function gerarRelatorioPorItem() {
-        try {
-            mostrarToast('📦 Carregando saídas...', 'info');
-            const protocolos = (await carregarSaidasDB()).map(p => ({
-                ...p,
-                itens: Array.isArray(p.itens) ? p.itens : []
-            }));
-            if (!protocolos.length) {
-                mostrarToast('⚠️ Nenhum registro de saída!', 'warning');
-                return;
-            }
+    function setPeriodoRelItem(btn, periodo) {
+        _relItemPeriodo = periodo || 'mes';
+        document.querySelectorAll('#modalRelatorioItem [data-rel-periodo]').forEach(function(b) {
+            b.classList.toggle('active', b.getAttribute('data-rel-periodo') === _relItemPeriodo);
+        });
+    }
 
-            const nomeBusca = prompt('📦 Digite o nome (ou parte) do item:\n\nExemplo: CAFE, LAMPADA, COPO, GRELHA...');
-            if (!nomeBusca || !nomeBusca.trim()) {
-                mostrarToast('ℹ️ Relatório cancelado', 'info');
+    async function carregarListaItensRelatorio() {
+        var listaEl = document.getElementById('relItemLista');
+        if (listaEl) listaEl.innerHTML = '<div style="padding:0.6rem;font-size:0.75rem;color:var(--text-secondary);">Carregando itens do estoque...</div>';
+        try {
+            var estoque = await carregarEstoqueDB(true);
+            var nomes = {};
+            (estoque || []).forEach(function(e) {
+                var n = (e.nome || '').trim();
+                if (!n) return;
+                var key = normalizarBuscaItem(n);
+                if (!nomes[key]) nomes[key] = { nome: n, qtd: Number(e.quantidade) || 0, categoria: e.categoria || '' };
+            });
+            // também inclui nomes que já saíram (mesmo se sumiram do estoque)
+            try {
+                var saidas = await carregarSaidasDB();
+                (saidas || []).forEach(function(p) {
+                    (p.itens || []).forEach(function(it) {
+                        var n = (it.item || it.item_nome || it.nome || '').trim();
+                        if (!n) return;
+                        var key = normalizarBuscaItem(n);
+                        if (!nomes[key]) nomes[key] = { nome: n, qtd: null, categoria: 'Saídas' };
+                    });
+                });
+            } catch (e2) {}
+
+            _relItemListaCache = Object.keys(nomes).map(function(k) { return nomes[k]; })
+                .sort(function(a, b) { return a.nome.localeCompare(b.nome, 'pt-BR'); });
+            filtrarListaRelatorioItem();
+        } catch (err) {
+            console.error(err);
+            if (listaEl) listaEl.innerHTML = '<div style="padding:0.6rem;color:#8B3A3A;">Erro ao carregar itens</div>';
+        }
+    }
+
+    function filtrarListaRelatorioItem() {
+        var listaEl = document.getElementById('relItemLista');
+        if (!listaEl) return;
+        var termo = normalizarBuscaItem(document.getElementById('relItemBusca')?.value || '');
+        var filtrados = !_relItemListaCache.length ? [] : _relItemListaCache.filter(function(it) {
+            if (!termo) return true;
+            return normalizarBuscaItem(it.nome).indexOf(termo) >= 0;
+        });
+        if (!filtrados.length) {
+            listaEl.innerHTML = '<div style="padding:0.65rem;font-size:0.75rem;color:var(--text-secondary);">Nenhum item encontrado' + (termo ? ' para "' + (document.getElementById('relItemBusca').value || '') + '"' : '') + '</div>';
+            return;
+        }
+        // limita visual a 80 para performance
+        var slice = filtrados.slice(0, 80);
+        listaEl.innerHTML = slice.map(function(it) {
+            var qtdTxt = it.qtd == null ? '' : (' · ' + it.qtd + ' unid.');
+            var cat = it.categoria ? (' <span style="color:var(--text-secondary);font-size:0.68rem;">(' + String(it.categoria).replace(/</g,'') + ')</span>') : '';
+            var nomeEsc = String(it.nome).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');
+            return '<div class="rel-item-opcao" onclick="selecionarItemRelatorio(this)" data-nome="' + nomeEsc + '" style="padding:0.45rem 0.65rem;cursor:pointer;border-bottom:1px solid var(--border-color);font-size:0.8rem;" onmouseover="this.style.background=\'var(--bg-body)\'" onmouseout="this.style.background=\'\'">' +
+                '<strong>' + nomeEsc + '</strong>' + cat + '<span style="color:var(--text-secondary);font-size:0.7rem;">' + qtdTxt + '</span></div>';
+        }).join('') + (filtrados.length > 80 ? '<div style="padding:0.4rem;font-size:0.68rem;color:var(--text-secondary);text-align:center;">Mostrando 80 de ' + filtrados.length + ' — refine a busca</div>' : '');
+    }
+
+    function selecionarItemRelatorio(el) {
+        var nome = el.getAttribute('data-nome') || '';
+        // decode entities roughly
+        var tmp = document.createElement('textarea');
+        tmp.innerHTML = nome;
+        nome = tmp.value;
+        document.getElementById('relItemSelecionado').value = nome;
+        document.getElementById('relItemBusca').value = nome;
+        document.getElementById('relItemSelecionadoLabel').innerHTML = '✓ Selecionado: <strong>' + nome.replace(/</g,'&lt;') + '</strong>';
+        document.querySelectorAll('#relItemLista .rel-item-opcao').forEach(function(n) {
+            n.style.background = (n === el) ? 'var(--verde-claro)' : '';
+        });
+    }
+
+    async function gerarRelatorioPorItem() {
+        _relItemPeriodo = 'mes';
+        document.getElementById('relItemBusca').value = '';
+        document.getElementById('relItemSelecionado').value = '';
+        document.getElementById('relItemSelecionadoLabel').textContent = '';
+        document.querySelectorAll('#modalRelatorioItem [data-rel-periodo]').forEach(function(b) {
+            b.classList.toggle('active', b.getAttribute('data-rel-periodo') === 'mes');
+        });
+        abrirModal('modalRelatorioItem');
+        setTimeout(function() {
+            var inp = document.getElementById('relItemBusca');
+            if (inp) inp.focus();
+        }, 150);
+        await carregarListaItensRelatorio();
+    }
+
+    async function confirmarRelatorioPorItem() {
+        try {
+            var nomeBusca = (document.getElementById('relItemSelecionado')?.value || document.getElementById('relItemBusca')?.value || '').trim();
+            if (!nomeBusca) {
+                mostrarToast('⚠️ Digite ou selecione um item', 'warning');
                 return;
             }
-            const termo = normalizarBuscaItem(nomeBusca);
+            var termo = normalizarBuscaItem(nomeBusca);
             if (termo.length < 2) {
                 mostrarToast('⚠️ Digite pelo menos 2 letras', 'warning');
                 return;
             }
 
-            // Período: mês atual por padrão, ou escolher
-            const opPeriodo = prompt(
-                '📅 Período do relatório:\n\n' +
-                '1 = Este mês\n' +
-                '2 = Mês específico\n' +
-                '3 = Este ano\n' +
-                '4 = Dia específico\n' +
-                '5 = Todo o histórico (geral)\n\n' +
-                'Digite o número (1 a 5):',
-                '1'
-            );
-            if (opPeriodo === null) return;
+            var agora = new Date();
+            var tituloPeriodo = '';
+            var filtraData = function() { return true; };
+            var periodo = _relItemPeriodo || 'mes';
 
-            const agora = new Date();
-            let tituloPeriodo = '';
-            let filtraData = function() { return true; };
-
-            const op = String(opPeriodo).trim();
-            if (op === '1') {
-                const m = agora.getMonth();
-                const y = agora.getFullYear();
-                filtraData = function(d) {
-                    return d && d.getMonth() === m && d.getFullYear() === y;
-                };
+            if (periodo === 'mes') {
+                var m = agora.getMonth();
+                var y = agora.getFullYear();
+                filtraData = function(d) { return d && d.getMonth() === m && d.getFullYear() === y; };
                 tituloPeriodo = agora.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
-            } else if (op === '2') {
-                const mesEscolhido = await abrirSeletorData('mes');
+            } else if (periodo === 'mes_escolhido') {
+                var mesEscolhido = await abrirSeletorData('mes');
                 if (!mesEscolhido) return;
-                const partes = mesEscolhido.split('-');
-                const y = parseInt(partes[0], 10);
-                const m = parseInt(partes[1], 10) - 1;
-                filtraData = function(d) {
-                    return d && d.getMonth() === m && d.getFullYear() === y;
-                };
-                const ref = new Date(y, m, 1);
-                tituloPeriodo = ref.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
-            } else if (op === '3') {
-                const y = agora.getFullYear();
-                filtraData = function(d) { return d && d.getFullYear() === y; };
-                tituloPeriodo = 'Ano ' + y;
-            } else if (op === '4') {
-                const dataEscolhida = await abrirSeletorData('dia');
+                var partes = mesEscolhido.split('-');
+                var y2 = parseInt(partes[0], 10);
+                var m2 = parseInt(partes[1], 10) - 1;
+                filtraData = function(d) { return d && d.getMonth() === m2 && d.getFullYear() === y2; };
+                tituloPeriodo = new Date(y2, m2, 1).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+            } else if (periodo === 'ano') {
+                var y3 = agora.getFullYear();
+                filtraData = function(d) { return d && d.getFullYear() === y3; };
+                tituloPeriodo = 'Ano ' + y3;
+            } else if (periodo === 'dia') {
+                var dataEscolhida = await abrirSeletorData('dia');
                 if (!dataEscolhida) return;
-                const partes = dataEscolhida.split('-');
-                const y = parseInt(partes[0], 10);
-                const m = parseInt(partes[1], 10) - 1;
-                const day = parseInt(partes[2], 10);
-                filtraData = function(d) {
-                    return d && d.getFullYear() === y && d.getMonth() === m && d.getDate() === day;
-                };
-                tituloPeriodo = new Date(y, m, day).toLocaleDateString('pt-BR');
+                var p3 = dataEscolhida.split('-');
+                var y4 = parseInt(p3[0], 10);
+                var m4 = parseInt(p3[1], 10) - 1;
+                var day = parseInt(p3[2], 10);
+                filtraData = function(d) { return d && d.getFullYear() === y4 && d.getMonth() === m4 && d.getDate() === day; };
+                tituloPeriodo = new Date(y4, m4, day).toLocaleDateString('pt-BR');
             } else {
                 tituloPeriodo = 'Todo o histórico';
-                filtraData = function() { return true; };
             }
 
-            // Expande linhas: uma por item que bate com a busca
-            const linhas = [];
+            mostrarToast('📦 Gerando relatório...', 'info');
+            var protocolos = (await carregarSaidasDB()).map(function(p) {
+                return Object.assign({}, p, { itens: Array.isArray(p.itens) ? p.itens : [] });
+            });
+
+            var linhas = [];
             protocolos.forEach(function(p) {
-                const data = parseDataSaida(p);
+                var data = parseDataSaida(p);
                 if (!filtraData(data)) return;
-                const dataBR = data
-                    ? data.toLocaleDateString('pt-BR')
-                    : (p.dataSaida || '—');
-                const colab = (p.colaborador || '—').trim();
+                var dataBR = data ? data.toLocaleDateString('pt-BR') : (p.dataSaida || '—');
+                var colab = (p.colaborador || '—').trim();
                 (p.itens || []).forEach(function(it) {
-                    const nomeItem = (it.item || it.item_nome || it.nome || it.descricao || '').trim();
+                    var nomeItem = (it.item || it.item_nome || it.nome || it.descricao || '').trim();
                     if (!nomeItem) return;
                     if (normalizarBuscaItem(nomeItem).indexOf(termo) === -1) return;
-                    const qtd = parseInt(it.qtd != null ? it.qtd : it.quantidade, 10) || 0;
+                    var qtd = parseInt(it.qtd != null ? it.qtd : it.quantidade, 10) || 0;
                     linhas.push({
                         dataBR: dataBR,
                         dataObj: data,
                         colaborador: colab,
                         item: nomeItem,
                         qtd: qtd,
-                        destino: (it.destino || it.uso || '—').trim(),
-                        id: p.id
+                        destino: (it.destino || it.uso || '—').trim()
                     });
                 });
             });
 
-            // Ordena por data (mais recente primeiro)
             linhas.sort(function(a, b) {
-                const ta = a.dataObj ? a.dataObj.getTime() : 0;
-                const tb = b.dataObj ? b.dataObj.getTime() : 0;
-                return tb - ta;
+                return (b.dataObj ? b.dataObj.getTime() : 0) - (a.dataObj ? a.dataObj.getTime() : 0);
             });
 
             if (!linhas.length) {
-                mostrarToast('⚠️ Nenhuma saída de "' + nomeBusca.trim() + '" em ' + tituloPeriodo, 'warning');
+                mostrarToast('⚠️ Nenhuma saída de "' + nomeBusca + '" em ' + tituloPeriodo, 'warning');
                 return;
             }
 
-            const totalUnid = linhas.reduce(function(s, l) { return s + (l.qtd || 0); }, 0);
-            const porColab = {};
-            const porDestino = {};
-            const porItem = {};
+            fecharModal('modalRelatorioItem');
+
+            var totalUnid = linhas.reduce(function(s, l) { return s + (l.qtd || 0); }, 0);
+            var porColab = {}, porDestino = {}, porItem = {};
             linhas.forEach(function(l) {
                 porColab[l.colaborador] = (porColab[l.colaborador] || 0) + l.qtd;
                 porDestino[l.destino] = (porDestino[l.destino] || 0) + l.qtd;
                 porItem[l.item] = (porItem[l.item] || 0) + l.qtd;
             });
+            function esc(s) { return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+            var rankingColab = Object.entries(porColab).sort(function(a,b){ return b[1]-a[1]; });
+            var rankingDest = Object.entries(porDestino).sort(function(a,b){ return b[1]-a[1]; });
+            var rankingItem = Object.entries(porItem).sort(function(a,b){ return b[1]-a[1]; });
+            var gerado = agora.toLocaleString('pt-BR');
 
-            function esc(s) {
-                return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-            }
-
-            const rankingColab = Object.entries(porColab).sort(function(a,b){ return b[1]-a[1]; });
-            const rankingDest = Object.entries(porDestino).sort(function(a,b){ return b[1]-a[1]; });
-            const rankingItem = Object.entries(porItem).sort(function(a,b){ return b[1]-a[1]; });
-
-            const gerado = agora.toLocaleString('pt-BR');
-            let html = '';
+            var html = '';
             html += '<div class="cabecalho-relatorio" style="margin-bottom:0.8rem;">';
             html += '<h2 style="margin:0 0 0.3rem;font-size:1.05rem;">📦 RELATÓRIO DE SAÍDAS POR ITEM</h2>';
-            html += '<div style="font-size:0.8rem;color:var(--text-secondary);">Busca: <strong>' + esc(nomeBusca.trim().toUpperCase()) + '</strong> · Período: <strong>' + esc(tituloPeriodo) + '</strong></div>';
+            html += '<div style="font-size:0.8rem;color:var(--text-secondary);">Item: <strong>' + esc(nomeBusca.toUpperCase()) + '</strong> · Período: <strong>' + esc(tituloPeriodo) + '</strong></div>';
             html += '<div style="font-size:0.72rem;color:var(--text-secondary);">Gerado em ' + esc(gerado) + ' · Condomínio TaguáLife</div>';
             html += '</div>';
-
             html += '<div style="display:flex;flex-wrap:wrap;gap:0.5rem;margin-bottom:0.8rem;">';
             html += '<div style="background:#E8F5C8;border:1px solid #C1CE83;border-radius:8px;padding:0.45rem 0.7rem;font-size:0.78rem;"><strong>' + linhas.length + '</strong> registro(s)</div>';
             html += '<div style="background:#F0F2EA;border:1px solid #D8DCCE;border-radius:8px;padding:0.45rem 0.7rem;font-size:0.78rem;"><strong>' + totalUnid + '</strong> unidade(s)</div>';
-            html += '<div style="background:#F0F2EA;border:1px solid #D8DCCE;border-radius:8px;padding:0.45rem 0.7rem;font-size:0.78rem;"><strong>' + rankingItem.length + '</strong> item(ns) distinto(s)</div>';
             html += '</div>';
 
             if (rankingItem.length > 1) {
@@ -4220,17 +4320,9 @@ ${secInt}
             }
 
             html += '<div class="secao-relatorio"><div class="titulo-secao">Detalhamento das saídas</div>';
-            html += '<table class="tabela-relatorio"><thead><tr>';
-            html += '<th>Data</th><th>Colaborador</th><th>Item</th><th style="text-align:center;">Qtd</th><th>Destino</th>';
-            html += '</tr></thead><tbody>';
+            html += '<table class="tabela-relatorio"><thead><tr><th>Data</th><th>Colaborador</th><th>Item</th><th style="text-align:center;">Qtd</th><th>Destino</th></tr></thead><tbody>';
             linhas.forEach(function(l) {
-                html += '<tr>';
-                html += '<td style="white-space:nowrap;">' + esc(l.dataBR) + '</td>';
-                html += '<td>' + esc(l.colaborador) + '</td>';
-                html += '<td><strong>' + esc(l.item) + '</strong></td>';
-                html += '<td style="text-align:center;font-weight:700;">' + l.qtd + '</td>';
-                html += '<td>' + esc(l.destino) + '</td>';
-                html += '</tr>';
+                html += '<tr><td style="white-space:nowrap;">' + esc(l.dataBR) + '</td><td>' + esc(l.colaborador) + '</td><td><strong>' + esc(l.item) + '</strong></td><td style="text-align:center;font-weight:700;">' + l.qtd + '</td><td>' + esc(l.destino) + '</td></tr>';
             });
             html += '</tbody></table></div>';
 
@@ -4242,7 +4334,6 @@ ${secInt}
                 });
                 html += '</tbody></table></div>';
             }
-
             if (rankingDest.length) {
                 html += '<div class="secao-relatorio" style="margin-top:0.7rem;"><div class="titulo-secao">Por destino</div>';
                 html += '<table class="tabela-relatorio"><thead><tr><th>Destino</th><th style="text-align:center;">Unidades</th></tr></thead><tbody>';
@@ -4252,19 +4343,15 @@ ${secInt}
                 html += '</tbody></table></div>';
             }
 
-            const container = document.getElementById('relatorioConteudo');
-            if (!container) {
-                mostrarToast('❌ Área de relatório não encontrada', 'danger');
-                return;
-            }
+            var container = document.getElementById('relatorioConteudo');
+            if (!container) { mostrarToast('❌ Área de relatório não encontrada', 'danger'); return; }
             container.innerHTML = html;
-            // título do modal se existir
             try {
-                const tit = document.querySelector('#modalRelatorio .modal-header h3, #modalRelatorio h3');
-                if (tit) tit.innerHTML = '<i class="fas fa-box-open"></i> Saídas por item: ' + esc(nomeBusca.trim().toUpperCase());
+                var tit = document.querySelector('#modalRelatorio .modal-header h3, #modalRelatorio h3');
+                if (tit) tit.innerHTML = '<i class="fas fa-box-open"></i> Saídas: ' + esc(nomeBusca.toUpperCase());
             } catch (e) {}
             abrirModal('modalRelatorio');
-            mostrarToast('✅ ' + linhas.length + ' saída(s) de "' + nomeBusca.trim() + '"', 'success');
+            mostrarToast('✅ ' + linhas.length + ' saída(s) de "' + nomeBusca + '"', 'success');
         } catch (err) {
             console.error(err);
             mostrarToast('❌ Erro: ' + (err.message || err), 'danger');
@@ -4272,7 +4359,7 @@ ${secInt}
     }
 
 
-    async function gerarRelatorioPDF(filtro = 'geral') {
+        async function gerarRelatorioPDF(filtro = 'geral') {
         try {
             const protocolos = (await carregarSaidasDB()).map(p => ({
                 ...p,
