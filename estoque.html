@@ -356,6 +356,10 @@
 
             <div class="form-grid" id="formCadastro" >
                 <div class="campo">
+                    <label><i class="fas fa-barcode"></i> CÓDIGO</label>
+                    <input type="text" id="itemCodigo" placeholder="Automático" readonly style="background:var(--bg-body);font-weight:700;letter-spacing:0.5px;" title="Gerado automaticamente pelo sistema" />
+                </div>
+                <div class="campo">
                     <label><i class="fas fa-tag"></i> ITEM</label>
                     <input type="text" id="itemNome" placeholder="Nome do item" />
                 </div>
@@ -476,6 +480,9 @@
                 </select>
                 <button class="btn-limpar-filtro" id="btnLimparFiltro"><i class="fas fa-times"></i> Limpar</button>
                 <button class="btn-outline" id="btnRecarregar"><i class="fas fa-sync"></i> Atualizar</button>
+                <button type="button" class="btn btn-outline" onclick="gerarCodigosFaltantes()" title="Gerar código numérico nos itens sem código" style="font-size:0.7rem;">
+                    <i class="fas fa-barcode"></i> Gerar códigos
+
                 <a href="index.html" class="btn-voltar"><i class="fas fa-arrow-left"></i> Voltar</a>
             </div>
 
@@ -483,7 +490,7 @@
                 <table class="tabela-items">
                     <thead>
                         <tr>
-                            <th>#</th>
+                            <th>Cód.</th>
                             <th>Item</th>
                             <th>Descrição</th>
                             <th>Fabricante</th>
@@ -977,9 +984,10 @@
         const filtroEstoque = document.getElementById('filtroEstoque').value;
 
         let filtrados = itensCache.filter(function(item) {
-            const matchBusca = (item.nome || '').toLowerCase().includes(busca) ||
+            const matchBusca = !busca || (item.nome || '').toLowerCase().includes(busca) ||
                 (item.descricao || '').toLowerCase().includes(busca) ||
-                (item.fabricante || '').toLowerCase().includes(busca);
+                (item.fabricante || '').toLowerCase().includes(busca) ||
+                String(item.codigo != null ? item.codigo : '').includes(busca);
             const matchCat = !categoria || item.categoria === categoria;
             const limite = item.limite_alerta != null ? item.limite_alerta : 5;
             const qtd = item.quantidade != null ? item.quantidade : 0;
@@ -1007,7 +1015,7 @@
                 if (!botoes) botoes = '<span style="font-size:0.6rem;color:var(--gray-400);">—</span>';
 
                 html += '<tr class="' + (isBaixo ? 'estoque-baixo' : '') + '">' +
-                    '<td>' + (index + 1) + '</td>' +
+                    '<td style="font-weight:800;color:var(--verde-oliva);text-align:center;">' + formatarCodigo(item.codigo) + '</td>' +
                     '<td><strong>' + (item.nome || '—') + '</strong></td>' +
                     '<td>' + (item.descricao || '—') + '</td>' +
                     '<td>' + (item.fabricante || '—') + '</td>' +
@@ -1028,6 +1036,75 @@
         document.getElementById('totalBaixoEstoque').textContent = baixo;
         document.getElementById('totalBaixoEstoque').style.color = baixo > 0 ? '#E65100' : '';
     }
+
+
+    // ===== CÓDIGO SIMPLES DO ITEM (147, 148, ...) =====
+    async function obterProximoCodigo() {
+        if (!sb) return 1;
+        try {
+            const { data, error } = await sb
+                .from('estoque')
+                .select('codigo')
+                .not('codigo', 'is', null)
+                .order('codigo', { ascending: false })
+                .limit(1);
+            if (error) {
+                // coluna pode não existir ainda
+                console.warn('codigo:', error.message);
+                return null;
+            }
+            const max = data && data[0] && data[0].codigo != null ? parseInt(data[0].codigo, 10) : 0;
+            return (isNaN(max) ? 0 : max) + 1;
+        } catch (e) {
+            console.warn(e);
+            return null;
+        }
+    }
+
+    function formatarCodigo(c) {
+        if (c == null || c === '') return '—';
+        const n = parseInt(c, 10);
+        if (isNaN(n)) return String(c);
+        return String(n);
+    }
+
+    async function gerarCodigosFaltantes() {
+        if (!ehAdministrador()) {
+            mostrarToast('⛔ Só Administrador pode gerar códigos', 'danger');
+            return;
+        }
+        if (!confirm('Gerar código numérico simples para todos os itens que ainda não têm?\n\nEx.: 1, 2, 3… (ou continua do maior já existente)')) return;
+        try {
+            mostrarToast('⏳ Gerando códigos...', 'info');
+            const { data: todos, error } = await sb.from('estoque').select('id,codigo,nome').order('nome');
+            if (error) throw error;
+            let max = 0;
+            (todos || []).forEach(function(i) {
+                const c = parseInt(i.codigo, 10);
+                if (!isNaN(c) && c > max) max = c;
+            });
+            const sem = (todos || []).filter(function(i) { return i.codigo == null || i.codigo === ''; });
+            let ok = 0, falha = 0;
+            for (let i = 0; i < sem.length; i++) {
+                max += 1;
+                const { error: e2 } = await sb.from('estoque').update({ codigo: max, atualizado_em: new Date().toISOString() }).eq('id', sem[i].id);
+                if (e2) { falha++; console.warn(e2); }
+                else ok++;
+            }
+            await carregarEstoque();
+            if (falha && !ok) {
+                mostrarToast('❌ Coluna "codigo" não existe no banco. Rode o SQL no Supabase (veja console).', 'danger');
+                console.error('Execute no SQL Editor do Supabase:\nALTER TABLE public.estoque ADD COLUMN IF NOT EXISTS codigo integer UNIQUE;\nCREATE INDEX IF NOT EXISTS idx_estoque_codigo ON public.estoque(codigo);');
+            } else {
+                mostrarToast('✅ Códigos gerados: ' + ok + (falha ? ' · falhas: ' + falha : ''), 'success');
+            }
+        } catch (err) {
+            console.error(err);
+            mostrarToast('❌ Erro: ' + (err.message || err), 'danger');
+            console.error('SQL necessário:\nALTER TABLE public.estoque ADD COLUMN IF NOT EXISTS codigo integer UNIQUE;');
+        }
+    }
+
 
     async function salvarItem() {
         // Usuário comum: só cadastra item NOVO. Atualizar/excluir = só Administrador
@@ -1091,9 +1168,8 @@
                 mostrarMensagem('✅ Item atualizado no banco!', '#7A816E');
                 mostrarToast('✅ Atualizado: ' + nome, 'success');
             } else {
-                const { data: inserted, error } = await sb
-                    .from('estoque')
-                    .insert((typeof payloadComCondominio === 'function' ? payloadComCondominio : (x=>x))({
+                let proxCodigo = await obterProximoCodigo();
+                const payloadNovo = {
                         nome: nome,
                         descricao: descricao,
                         fabricante: fabricante,
@@ -1101,8 +1177,12 @@
                         categoria: categoria,
                         limite_alerta: limite_alerta,
                         unidade: unidade
-                    }))
-                    .select('id,nome,quantidade');
+                    };
+                if (proxCodigo != null) payloadNovo.codigo = proxCodigo;
+                const { data: inserted, error } = await sb
+                    .from('estoque')
+                    .insert((typeof payloadComCondominio === 'function' ? payloadComCondominio : (x=>x))(payloadNovo))
+                    .select('id,nome,quantidade,codigo');
 
                 if (error) throw error;
                 const novoId = inserted && inserted[0] ? inserted[0].id : null;
@@ -1118,7 +1198,8 @@
                     }]);
                 }
                 mostrarMensagem('✅ Item salvo no Supabase!', '#7A816E');
-                mostrarToast('✅ Cadastrado: ' + nome, 'success');
+                const codShow = (inserted && inserted[0] && inserted[0].codigo != null) ? (' [' + inserted[0].codigo + ']') : (proxCodigo != null ? (' [' + proxCodigo + ']') : '');
+                mostrarToast('✅ Cadastrado: ' + nome + codShow, 'success');
             }
 
             limparFormulario();
@@ -1136,6 +1217,7 @@
     }
 
     function limparFormulario() {
+        const _elC = document.getElementById('itemCodigo'); if (_elC) _elC.value = '';
         document.getElementById('itemNome').value = '';
         document.getElementById('itemDescricao').value = '';
         document.getElementById('itemFabricante').value = '';
@@ -1155,6 +1237,8 @@
         const item = itensCache.find(function(i) { return i.id === id; });
         if (!item) return;
 
+        const elCod = document.getElementById('itemCodigo');
+        if (elCod) elCod.value = item.codigo != null ? formatarCodigo(item.codigo) : '';
         document.getElementById('itemNome').value = item.nome || '';
         document.getElementById('itemDescricao').value = item.descricao || '';
         document.getElementById('itemFabricante').value = item.fabricante || '';
