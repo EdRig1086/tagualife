@@ -827,7 +827,16 @@
             if (!lista.some(c => c.toLowerCase() === n.toLowerCase())) lista.push(n);
             localStorage.setItem(CHAVE_CATS, JSON.stringify(lista));
 
-            await carregarEstoque();
+            await carregarEstoque().then(async function() {
+            try {
+                if (typeof colunaCodigoExiste === 'function') {
+                    const okCol = await colunaCodigoExiste();
+                    if (!okCol && typeof mostrarToast === 'function') {
+                        mostrarToast('ℹ️ Códigos: rode o SQL no Supabase e depois clique em Gerar códigos', 'warning');
+                    }
+                }
+            } catch (e) {}
+        });
             await carregarCategoriasDB();
             atualizarSelectsCategoria(n);
             renderizarListaCategoriasAdmin();
@@ -1068,40 +1077,93 @@
         return String(n);
     }
 
+    function sqlCodigoEstoque() {
+        return "ALTER TABLE public.estoque ADD COLUMN IF NOT EXISTS codigo integer;\nCREATE UNIQUE INDEX IF NOT EXISTS idx_estoque_codigo ON public.estoque (codigo) WHERE codigo IS NOT NULL;";
+    }
+
+    function mostrarAvisoSqlCodigo(motivo) {
+        const sql = sqlCodigoEstoque();
+        const msg =
+            'Para o código dos itens funcionar, rode este SQL no Supabase uma vez:\n\n' +
+            '1) Abra https://supabase.com/dashboard\n' +
+            '2) Projeto TaguáLife → SQL Editor → New query\n' +
+            '3) Cole o texto abaixo e clique RUN\n\n' +
+            sql +
+            '\n\nDepois volte aqui e clique em "Gerar códigos".\n' +
+            (motivo ? ('\nDetalhe: ' + motivo) : '');
+        try {
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(sql);
+            }
+        } catch (e) {}
+        alert(msg + '\n\n(O SQL já foi copiado para a área de transferência, se o navegador permitir.)');
+        console.log('%cSQL CÓDIGO ESTOQUE', 'font-weight:bold;font-size:14px;color:#2E5A3C');
+        console.log(sql);
+    }
+
+    async function colunaCodigoExiste() {
+        if (!sb) return false;
+        try {
+            const { error } = await sb.from('estoque').select('codigo').limit(1);
+            if (error) {
+                const m = (error.message || '') + ' ' + (error.code || '');
+                if (/codigo|column|schema/i.test(m)) return false;
+                // outro erro: assume que pode existir
+                return false;
+            }
+            return true;
+        } catch (e) {
+            return false;
+        }
+    }
+
     async function gerarCodigosFaltantes() {
-        if (!ehAdministrador()) {
+        if (typeof ehAdministrador === 'function' && !ehAdministrador()) {
             mostrarToast('⛔ Só Administrador pode gerar códigos', 'danger');
             return;
         }
-        if (!confirm('Gerar código numérico simples para todos os itens que ainda não têm?\n\nEx.: 1, 2, 3… (ou continua do maior já existente)')) return;
+        if (!confirm('Gerar código numérico simples para todos os itens que ainda não têm?\n\nComeça do 1 (ou do próximo após o maior já existente).')) return;
         try {
             mostrarToast('⏳ Gerando códigos...', 'info');
+            const existe = await colunaCodigoExiste();
+            if (!existe) {
+                mostrarAvisoSqlCodigo('A coluna codigo ainda não existe na tabela estoque.');
+                mostrarToast('❌ Falta criar a coluna codigo no Supabase', 'danger');
+                return;
+            }
             const { data: todos, error } = await sb.from('estoque').select('id,codigo,nome').order('nome');
-            if (error) throw error;
+            if (error) {
+                mostrarAvisoSqlCodigo(error.message || String(error));
+                throw error;
+            }
             let max = 0;
             (todos || []).forEach(function(i) {
                 const c = parseInt(i.codigo, 10);
                 if (!isNaN(c) && c > max) max = c;
             });
             const sem = (todos || []).filter(function(i) { return i.codigo == null || i.codigo === ''; });
-            let ok = 0, falha = 0;
+            if (!sem.length) {
+                mostrarToast('✅ Todos os itens já têm código (maior: ' + max + ')', 'success');
+                return;
+            }
+            let ok = 0, falha = 0, ultimoErro = '';
             for (let i = 0; i < sem.length; i++) {
                 max += 1;
                 const { error: e2 } = await sb.from('estoque').update({ codigo: max, atualizado_em: new Date().toISOString() }).eq('id', sem[i].id);
-                if (e2) { falha++; console.warn(e2); }
+                if (e2) { falha++; ultimoErro = e2.message || String(e2); console.warn(e2); }
                 else ok++;
             }
             await carregarEstoque();
             if (falha && !ok) {
-                mostrarToast('❌ Coluna "codigo" não existe no banco. Rode o SQL no Supabase (veja console).', 'danger');
-                console.error('Execute no SQL Editor do Supabase:\nALTER TABLE public.estoque ADD COLUMN IF NOT EXISTS codigo integer UNIQUE;\nCREATE INDEX IF NOT EXISTS idx_estoque_codigo ON public.estoque(codigo);');
+                mostrarAvisoSqlCodigo(ultimoErro);
+                mostrarToast('❌ Não foi possível gravar códigos', 'danger');
             } else {
-                mostrarToast('✅ Códigos gerados: ' + ok + (falha ? ' · falhas: ' + falha : ''), 'success');
+                mostrarToast('✅ Códigos gerados: ' + ok + (falha ? ' · falhas: ' + falha : '') + ' · sequência até ' + max, 'success');
             }
         } catch (err) {
             console.error(err);
             mostrarToast('❌ Erro: ' + (err.message || err), 'danger');
-            console.error('SQL necessário:\nALTER TABLE public.estoque ADD COLUMN IF NOT EXISTS codigo integer UNIQUE;');
+            mostrarAvisoSqlCodigo(err.message || String(err));
         }
     }
 
