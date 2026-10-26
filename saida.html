@@ -1507,7 +1507,8 @@
                     limite_alerta: e.limite_alerta != null ? Number(e.limite_alerta) : 5,
                     unidade: e.unidade || 'UN',
                     descricao: e.descricao || '',
-                    fabricante: e.fabricante || ''
+                    fabricante: e.fabricante || '',
+                    codigo: e.codigo != null ? e.codigo : null
                 };
             });
 
@@ -3507,7 +3508,7 @@ function mostrarToast(mensagem, tipo = 'success') {
                         </div>
                         <div class="detalhes">
                             ${p.itens.map(i => 
-                                `${i.qtd || '?'}x ${i.item || 'sem descrição'} → ${i.destino || 'sem destino'}${!i.cadastrado ? ' 🆕' : ''}`
+                                `${i.qtd || '?'}x ${formatarItemComCodigo(i.item || 'sem descrição', i.codigo)} → ${i.destino || 'sem destino'}${!i.cadastrado ? ' 🆕' : ''}`
                             ).join(' | ')}
                         </div>
                         <div class="acoes">
@@ -3823,6 +3824,7 @@ function mostrarToast(mensagem, tipo = 'success') {
     }
 
 async function gerarRelatorioDetalhadoSaidas() {
+        try { await carregarEstoqueDB(); } catch (eE) {}
         try {
             mostrarToast('📊 Gerando relatório detalhado de saídas...', 'info');
             let protocolos = (await carregarSaidasDB()).map(p => ({
@@ -3885,6 +3887,7 @@ async function gerarRelatorioDetalhadoSaidas() {
                         dataObj: data,
                         colaborador: colab,
                         item: nomeItem,
+                        codigo: (it.codigo != null ? it.codigo : buscarCodigoPorNomeItem(nomeItem)),
                         qtd: isNaN(qtdItem) ? 0 : qtdItem,
                         destino: (it.destino || it.uso || destPadrao || 'sem destino').trim()
                     });
@@ -3943,14 +3946,14 @@ async function gerarRelatorioDetalhadoSaidas() {
                 const head = `<tr>
                   <th class="c-nro">Nº</th><th class="c-data">Data</th>
                   <th class="c-colab">Colaborador / Empresa</th>
-                  <th class="c-item">Item retirado</th>
+                  <th class="c-item">Cód. / Item</th>
                   <th class="c-qtd">Qtd.</th><th class="c-dest">Destino</th>
                 </tr>`;
                 const body = arr.map(l => `<tr>
                   <td class="c-nro">#${esc(String(l.nro).slice(0,8))}</td>
                   <td class="c-data">${esc(l.dataBR)}</td>
                   <td class="c-colab">${esc(l.colaborador)}</td>
-                  <td class="c-item">${esc(l.item)}</td>
+                  <td class="c-item">${esc(formatarItemComCodigo(l.item, l.codigo))}</td>
                   <td class="c-qtd">${fmtN(l.qtd)}</td>
                   <td class="c-dest">${esc(l.destino)}</td>
                 </tr>`).join('');
@@ -3964,13 +3967,13 @@ async function gerarRelatorioDetalhadoSaidas() {
                 </colgroup>`;
                 const head = `<tr>
                   <th class="c-nro">Nº</th><th class="c-data">Data</th>
-                  <th class="c-item">Item retirado</th>
+                  <th class="c-item">Cód. / Item</th>
                   <th class="c-qtd">Qtd.</th><th class="c-dest">Destino</th>
                 </tr>`;
                 const body = arr.map(l => `<tr>
                   <td class="c-nro">#${esc(String(l.nro).slice(0,8))}</td>
                   <td class="c-data">${esc(l.dataBR)}</td>
-                  <td class="c-item">${esc(l.item)}</td>
+                  <td class="c-item">${esc(formatarItemComCodigo(l.item, l.codigo))}</td>
                   <td class="c-qtd">${fmtN(l.qtd)}</td>
                   <td class="c-dest">${esc(l.destino)}</td>
                 </tr>`).join('');
@@ -4099,6 +4102,30 @@ ${secInt}
     // ===== RELATÓRIO POR NOME DO ITEM (busca tipo estoque) =====
     var _relItemPeriodo = 'mes';
     var _relItemListaCache = [];
+
+    
+    function buscarCodigoPorNomeItem(nomeItem) {
+        const nome = String(nomeItem || '').trim().toLowerCase();
+        if (!nome) return null;
+        const lista = cacheEstoqueDB || [];
+        let hit = lista.find(function(e) { return String(e.nome || '').trim().toLowerCase() === nome; });
+        if (!hit) {
+            hit = lista.find(function(e) {
+                const n = String(e.nome || '').trim().toLowerCase();
+                return n && (n.indexOf(nome) >= 0 || nome.indexOf(n) >= 0);
+            });
+        }
+        if (hit && hit.codigo != null && hit.codigo !== '') return hit.codigo;
+        return null;
+    }
+
+    function formatarItemComCodigo(nomeItem, codigoOpcional) {
+        const nome = String(nomeItem || '').trim() || '—';
+        let cod = codigoOpcional;
+        if (cod == null || cod === '') cod = buscarCodigoPorNomeItem(nome);
+        if (cod == null || cod === '') return nome;
+        return '[' + cod + '] ' + nome;
+    }
 
     function normalizarBuscaItem(s) {
         return String(s || '')
@@ -4251,6 +4278,7 @@ ${secInt}
             }
 
             mostrarToast('📦 Gerando relatório...', 'info');
+            try { await carregarEstoqueDB(); } catch (eE) {}
             var protocolos = (await carregarSaidasDB()).map(function(p) {
                 return Object.assign({}, p, { itens: Array.isArray(p.itens) ? p.itens : [] });
             });
@@ -4271,6 +4299,7 @@ ${secInt}
                         dataObj: data,
                         colaborador: colab,
                         item: nomeItem,
+                        codigo: (it.codigo != null ? it.codigo : buscarCodigoPorNomeItem(nomeItem)),
                         qtd: qtd,
                         destino: (it.destino || it.uso || '—').trim()
                     });
@@ -4324,7 +4353,7 @@ ${secInt}
             html += '<div class="secao-relatorio"><div class="titulo-secao">Detalhamento das saídas</div>';
             html += '<table class="tabela-relatorio"><thead><tr><th>Data</th><th>Colaborador</th><th>Item</th><th style="text-align:center;">Qtd</th><th>Destino</th></tr></thead><tbody>';
             linhas.forEach(function(l) {
-                html += '<tr><td style="white-space:nowrap;">' + esc(l.dataBR) + '</td><td>' + esc(l.colaborador) + '</td><td><strong>' + esc(l.item) + '</strong></td><td style="text-align:center;font-weight:700;">' + l.qtd + '</td><td>' + esc(l.destino) + '</td></tr>';
+                html += '<tr><td style="white-space:nowrap;">' + esc(l.dataBR) + '</td><td>' + esc(l.colaborador) + '</td><td><strong>' + esc(formatarItemComCodigo(l.item, l.codigo)) + '</strong></td><td style="text-align:center;font-weight:700;">' + l.qtd + '</td><td>' + esc(l.destino) + '</td></tr>';
             });
             html += '</tbody></table></div>';
 
@@ -4363,6 +4392,7 @@ ${secInt}
 
         async function gerarRelatorioPDF(filtro = 'geral') {
         try {
+            try { await carregarEstoqueDB(); } catch (eEst) {}
             const protocolos = (await carregarSaidasDB()).map(p => ({
                 ...p,
                 itens: Array.isArray(p.itens) ? p.itens : []
@@ -4668,7 +4698,7 @@ ${secInt}
                             <button class="badge-regularizar" onclick="regularizarItem('${i.nome.replace(/'/g, "\\'")}')">
                                 <i class="fas fa-plus-circle"></i> Regularizar
                             </button>
-                            <span style="font-size:0.8rem; color:var(--text-primary);">${i.nome} · ${i.qtd} un.</span>
+                            <span style="font-size:0.8rem; color:var(--text-primary);">${formatarItemComCodigo(i.nome, i.codigo)} · ${i.qtd} un.</span>
                         </div>
                     `).join('')}
                 </div>
@@ -4692,7 +4722,7 @@ ${secInt}
                     </div>
                     <div class="itens">
                         ${(Array.isArray(p.itens) ? p.itens : []).map(i => 
-                            `${i.qtd || '?'}x ${i.item || 'sem descrição'} (${i.destino || 'sem destino'})${i.cadastrado === false ? ' <span class="badge-nao-cadastrado">Não cadastrado</span>' : ''}`
+                            `${i.qtd || '?'}x ${formatarItemComCodigo(i.item || 'sem descrição', i.codigo)} (${i.destino || 'sem destino'})${i.cadastrado === false ? ' <span class="badge-nao-cadastrado">Não cadastrado</span>' : ''}`
                         ).join(' • ') || 'Sem itens'}
                     </div>
                     <div class="rodape">Ass: ${p.assinatura || 'N/I'} • Almox: ${p.almoxarife || 'N/I'}</div>
