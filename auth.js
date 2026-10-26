@@ -101,11 +101,15 @@ function comCondominio(query) {
     }
 }
 
-/** Payload padrão para INSERT com condomínio */
+/** Payload padrão para INSERT com condomínio (só se multi ativo) */
 function payloadComCondominio(obj) {
-    const id = getCondominioId();
-    const base = obj || {};
-    if (id) base.condominio_id = id;
+    const base = Object.assign({}, obj || {});
+    try {
+        // Mesma trava do comCondominio: não manda condominio_id se as tabelas ainda não têm a coluna
+        if (localStorage.getItem('tagualife_multi') !== '1') return base;
+        const id = getCondominioId();
+        if (id) base.condominio_id = id;
+    } catch (e) {}
     return base;
 }
 
@@ -206,11 +210,18 @@ function iniciarSeguranca() {
 
 document.addEventListener('DOMContentLoaded', iniciarSeguranca);
 
-window.addEventListener('pageshow', function () {
+window.addEventListener('pageshow', function (ev) {
     try {
         const path = (window.location.pathname || '').toLowerCase();
         if (path.includes('login.html')) return;
-        if (!estaLogado()) window.location.replace('login.html');
+        if (!estaLogado()) {
+            window.location.replace('login.html');
+            return;
+        }
+        // bfcache: revalida permissões ao voltar
+        if (ev && ev.persisted) {
+            try { aplicarPermissoesNaTela(); mostrarNavUsuariosAdmin(); } catch (e2) {}
+        }
     } catch (e) {}
 });
 
@@ -220,3 +231,17 @@ window.addEventListener('storage', function (e) {
         if (!path.includes('login.html')) window.location.replace('login.html');
     }
 });
+
+// Exports globais
+try {
+    window.comCondominio = comCondominio;
+    window.payloadComCondominio = payloadComCondominio;
+    window.getSessao = getSessao;
+    window.protegerPagina = protegerPagina;
+    window.logout = logout;
+    window.podeCadastrar = podeCadastrar;
+    window.podeEditar = podeEditar;
+    window.podeExcluir = podeExcluir;
+    window.ehAdministrador = ehAdministrador;
+    window.getCargo = getCargo;
+} catch (e) {}
