@@ -1365,6 +1365,15 @@
             <button class="modal-close" onclick="fecharModal('modalRelatorioItem')"><i class="fas fa-times"></i> Fechar</button>
         </div>
         <div class="modal-body" style="padding:0.8rem 1rem 1rem;">
+            <div style="display:flex;flex-wrap:wrap;gap:0.4rem;margin-bottom:0.65rem;">
+                <button type="button" id="btnRelItemUm" class="btn-filtro-periodo active" onclick="setModoRelItem('um')" style="flex:1;min-width:140px;">
+                    <i class="fas fa-search"></i> Um item
+                </button>
+                <button type="button" id="btnRelItemGeral" class="btn-filtro-periodo" onclick="setModoRelItem('geral')" style="flex:1;min-width:140px;background:#2E5A3C;color:#fff;border-color:#2E5A3C;">
+                    <i class="fas fa-list"></i> Geral — todos cadastrados
+                </button>
+            </div>
+            <div id="relItemBuscaBox">
             <label style="display:block;font-size:0.72rem;font-weight:700;color:var(--text-secondary);margin-bottom:0.35rem;">
                 <i class="fas fa-search"></i> Buscar item cadastrado
             </label>
@@ -1378,6 +1387,11 @@
             </div>
             <input type="hidden" id="relItemSelecionado" value="" />
             <div id="relItemSelecionadoLabel" style="font-size:0.75rem;margin-bottom:0.7rem;color:var(--verde-oliva);min-height:1.2em;"></div>
+            </div>
+            <div id="relItemGeralInfo" style="display:none;padding:0.65rem 0.75rem;margin-bottom:0.75rem;border-radius:8px;background:#E8F5C8;border:1px solid #C1CE83;font-size:0.78rem;color:#191D1B;">
+                <strong><i class="fas fa-check-circle"></i> Modo Geral</strong><br>
+                O relatório trará <strong>todos os itens cadastrados</strong> no estoque e as saídas de cada um no período escolhido (com código, quando houver).
+            </div>
 
             <label style="display:block;font-size:0.72rem;font-weight:700;color:var(--text-secondary);margin-bottom:0.35rem;">
                 <i class="fas fa-calendar-alt"></i> Período
@@ -4101,7 +4115,26 @@ ${secInt}
 
     // ===== RELATÓRIO POR NOME DO ITEM (busca tipo estoque) =====
     var _relItemPeriodo = 'mes';
+    var _relItemModo = 'um'; // 'um' | 'geral'
     var _relItemListaCache = [];
+
+    function setModoRelItem(modo) {
+        _relItemModo = (modo === 'geral') ? 'geral' : 'um';
+        var box = document.getElementById('relItemBuscaBox');
+        var info = document.getElementById('relItemGeralInfo');
+        var bUm = document.getElementById('btnRelItemUm');
+        var bGe = document.getElementById('btnRelItemGeral');
+        if (box) box.style.display = _relItemModo === 'geral' ? 'none' : '';
+        if (info) info.style.display = _relItemModo === 'geral' ? 'block' : 'none';
+        if (bUm) bUm.classList.toggle('active', _relItemModo === 'um');
+        if (bGe) bGe.classList.toggle('active', _relItemModo === 'geral');
+        if (_relItemModo === 'geral') {
+            var sel = document.getElementById('relItemSelecionado');
+            var lab = document.getElementById('relItemSelecionadoLabel');
+            if (sel) sel.value = '';
+            if (lab) lab.innerHTML = '✓ <strong>Todos os itens cadastrados</strong>';
+        }
+    }
 
     
     function buscarCodigoPorNomeItem(nomeItem) {
@@ -4215,12 +4248,14 @@ ${secInt}
 
     async function gerarRelatorioPorItem() {
         _relItemPeriodo = 'mes';
+        _relItemModo = 'um';
         document.getElementById('relItemBusca').value = '';
         document.getElementById('relItemSelecionado').value = '';
         document.getElementById('relItemSelecionadoLabel').textContent = '';
         document.querySelectorAll('#modalRelatorioItem [data-rel-periodo]').forEach(function(b) {
             b.classList.toggle('active', b.getAttribute('data-rel-periodo') === 'mes');
         });
+        if (typeof setModoRelItem === 'function') setModoRelItem('um');
         abrirModal('modalRelatorioItem');
         setTimeout(function() {
             var inp = document.getElementById('relItemBusca');
@@ -4231,15 +4266,38 @@ ${secInt}
 
     async function confirmarRelatorioPorItem() {
         try {
+            var modoGeral = (_relItemModo === 'geral');
             var nomeBusca = (document.getElementById('relItemSelecionado')?.value || document.getElementById('relItemBusca')?.value || '').trim();
-            if (!nomeBusca) {
-                mostrarToast('⚠️ Digite ou selecione um item', 'warning');
-                return;
-            }
-            var termo = normalizarBuscaItem(nomeBusca);
-            if (termo.length < 2) {
-                mostrarToast('⚠️ Digite pelo menos 2 letras', 'warning');
-                return;
+            var termo = '';
+            var nomesCadastrados = {};
+            if (modoGeral) {
+                nomeBusca = 'TODOS OS ITENS CADASTRADOS';
+                // mapa de nomes cadastrados no estoque
+                (cacheEstoqueDB || []).forEach(function(e) {
+                    var n = (e.nome || '').trim();
+                    if (n) nomesCadastrados[normalizarBuscaItem(n)] = n;
+                });
+                if (!Object.keys(nomesCadastrados).length) {
+                    try { await carregarEstoqueDB(true); } catch (e0) {}
+                    (cacheEstoqueDB || []).forEach(function(e) {
+                        var n = (e.nome || '').trim();
+                        if (n) nomesCadastrados[normalizarBuscaItem(n)] = n;
+                    });
+                }
+                if (!Object.keys(nomesCadastrados).length) {
+                    mostrarToast('⚠️ Nenhum item cadastrado no estoque', 'warning');
+                    return;
+                }
+            } else {
+                if (!nomeBusca) {
+                    mostrarToast('⚠️ Digite ou selecione um item (ou use Geral)', 'warning');
+                    return;
+                }
+                termo = normalizarBuscaItem(nomeBusca);
+                if (termo.length < 2) {
+                    mostrarToast('⚠️ Digite pelo menos 2 letras', 'warning');
+                    return;
+                }
             }
 
             var agora = new Date();
@@ -4292,7 +4350,12 @@ ${secInt}
                 (p.itens || []).forEach(function(it) {
                     var nomeItem = (it.item || it.item_nome || it.nome || it.descricao || '').trim();
                     if (!nomeItem) return;
-                    if (normalizarBuscaItem(nomeItem).indexOf(termo) === -1) return;
+                    if (modoGeral) {
+                        // só itens que existem no cadastro de estoque
+                        if (!nomesCadastrados[normalizarBuscaItem(nomeItem)]) return;
+                    } else {
+                        if (normalizarBuscaItem(nomeItem).indexOf(termo) === -1) return;
+                    }
                     var qtd = parseInt(it.qtd != null ? it.qtd : it.quantidade, 10) || 0;
                     linhas.push({
                         dataBR: dataBR,
@@ -4311,8 +4374,13 @@ ${secInt}
             });
 
             if (!linhas.length) {
-                mostrarToast('⚠️ Nenhuma saída de "' + nomeBusca + '" em ' + tituloPeriodo, 'warning');
-                return;
+                if (modoGeral) {
+                    // Ainda assim mostra catálogo cadastrado com zero saídas
+                    mostrarToast('ℹ️ Nenhuma saída no período — listando itens cadastrados', 'info');
+                } else {
+                    mostrarToast('⚠️ Nenhuma saída de "' + nomeBusca + '" em ' + tituloPeriodo, 'warning');
+                    return;
+                }
             }
 
             fecharModal('modalRelatorioItem');
@@ -4330,22 +4398,46 @@ ${secInt}
             var rankingItem = Object.entries(porItem).sort(function(a,b){ return b[1]-a[1]; });
             var gerado = agora.toLocaleString('pt-BR');
 
+            // Modo geral: inclui itens cadastrados sem saída no período (qtd 0)
+            if (modoGeral && nomesCadastrados) {
+                Object.keys(nomesCadastrados).forEach(function(k) {
+                    var nomeFull = nomesCadastrados[k];
+                    if (porItem[nomeFull] == null) {
+                        // tenta achar por normalização
+                        var achou = false;
+                        Object.keys(porItem).forEach(function(pi) {
+                            if (normalizarBuscaItem(pi) === k) achou = true;
+                        });
+                        if (!achou) porItem[nomeFull] = 0;
+                    }
+                });
+                rankingItem = Object.entries(porItem).sort(function(a,b){
+                    if (b[1] !== a[1]) return b[1]-a[1];
+                    return String(a[0]).localeCompare(String(b[0]), 'pt-BR');
+                });
+            }
+
             var html = '';
             html += '<div class="cabecalho-relatorio" style="margin-bottom:0.8rem;">';
-            html += '<h2 style="margin:0 0 0.3rem;font-size:1.05rem;">📦 RELATÓRIO DE SAÍDAS POR ITEM</h2>';
+            html += '<h2 style="margin:0 0 0.3rem;font-size:1.05rem;">📦 RELATÓRIO DE SAÍDAS POR ITEM' + (modoGeral ? ' — GERAL' : '') + '</h2>';
             html += '<div style="font-size:0.8rem;color:var(--text-secondary);">Item: <strong>' + esc(nomeBusca.toUpperCase()) + '</strong> · Período: <strong>' + esc(tituloPeriodo) + '</strong></div>';
             html += '<div style="font-size:0.72rem;color:var(--text-secondary);">Gerado em ' + esc(gerado) + ' · Condomínio TaguáLife</div>';
             html += '</div>';
             html += '<div style="display:flex;flex-wrap:wrap;gap:0.5rem;margin-bottom:0.8rem;">';
             html += '<div style="background:#E8F5C8;border:1px solid #C1CE83;border-radius:8px;padding:0.45rem 0.7rem;font-size:0.78rem;"><strong>' + linhas.length + '</strong> registro(s)</div>';
             html += '<div style="background:#F0F2EA;border:1px solid #D8DCCE;border-radius:8px;padding:0.45rem 0.7rem;font-size:0.78rem;"><strong>' + totalUnid + '</strong> unidade(s)</div>';
+            if (modoGeral) {
+                html += '<div style="background:#F0F2EA;border:1px solid #D8DCCE;border-radius:8px;padding:0.45rem 0.7rem;font-size:0.78rem;"><strong>' + rankingItem.length + '</strong> item(ns) cadastrado(s)</div>';
+            }
             html += '</div>';
 
-            if (rankingItem.length > 1) {
-                html += '<div class="secao-relatorio" style="margin-bottom:0.7rem;"><div class="titulo-secao">Itens encontrados</div>';
-                html += '<table class="tabela-relatorio"><thead><tr><th>Item</th><th style="text-align:center;">Qtd total</th></tr></thead><tbody>';
+            if (rankingItem.length > 0 && (modoGeral || rankingItem.length > 1)) {
+                html += '<div class="secao-relatorio" style="margin-bottom:0.7rem;"><div class="titulo-secao">' + (modoGeral ? 'Todos os itens cadastrados (saídas no período)' : 'Itens encontrados') + '</div>';
+                html += '<table class="tabela-relatorio"><thead><tr><th>Cód.</th><th>Item</th><th style="text-align:center;">Qtd saída</th></tr></thead><tbody>';
                 rankingItem.forEach(function(e) {
-                    html += '<tr><td>' + esc(e[0]) + '</td><td style="text-align:center;font-weight:700;">' + e[1] + '</td></tr>';
+                    var cod = (typeof buscarCodigoPorNomeItem === 'function') ? buscarCodigoPorNomeItem(e[0]) : null;
+                    var codTxt = (cod != null && cod !== '') ? String(cod) : '—';
+                    html += '<tr><td style="text-align:center;font-weight:700;">' + esc(codTxt) + '</td><td>' + esc(e[0]) + '</td><td style="text-align:center;font-weight:700;">' + e[1] + '</td></tr>';
                 });
                 html += '</tbody></table></div>';
             }
