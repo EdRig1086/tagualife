@@ -3932,10 +3932,22 @@ async function gerarRelatorioDetalhadoSaidas() {
                     });
                     return;
                 }
+                // mapa de itens cadastrados no estoque
+                const cadastradosNorm = {};
+                (cacheEstoqueDB || []).forEach(function(e) {
+                    const n = (e.nome || '').trim();
+                    if (n) cadastradosNorm[normalizarBuscaItem(n)] = true;
+                });
+
                 itens.forEach(it => {
                     // carregarSaidasDB usa: item, qtd, destino
                     const nomeItem = (it.item || it.descricao || it.item_nome || it.nome || it.nome_do_item || '').trim() || '—';
                     const qtdItem = parseInt(it.qtd != null ? it.qtd : it.quantidade, 10);
+                    let naoCad = (it.cadastrado === false);
+                    if (it.cadastrado !== true && it.cadastrado !== false) {
+                        // se não veio flag, infere pelo estoque
+                        naoCad = !cadastradosNorm[normalizarBuscaItem(nomeItem)];
+                    }
                     linhas.push({
                         nro,
                         dataBR,
@@ -3944,7 +3956,8 @@ async function gerarRelatorioDetalhadoSaidas() {
                         item: nomeItem,
                         codigo: (it.codigo != null ? it.codigo : buscarCodigoPorNomeItem(nomeItem)),
                         qtd: isNaN(qtdItem) ? 0 : qtdItem,
-                        destino: (it.destino || it.uso || destPadrao || 'sem destino').trim()
+                        destino: (it.destino || it.uso || destPadrao || 'sem destino').trim(),
+                        naoCadastrado: !!naoCad
                     });
                 });
             });
@@ -3953,6 +3966,8 @@ async function gerarRelatorioDetalhadoSaidas() {
             const totalUnid = linhas.reduce((s, l) => s + (l.qtd || 0), 0);
             const colabsSet = new Set(linhas.map(l => l.colaborador));
             const nColabs = colabsSet.size;
+            const linhasNaoCad = linhas.filter(function(l) { return l.naoCadastrado; });
+            const totalNaoCadUnid = linhasNaoCad.reduce(function(s, l) { return s + (l.qtd || 0); }, 0);
 
             // Classifica empresas conhecidas pelo nome do colaborador
             const empresasKey = [
@@ -4004,11 +4019,11 @@ async function gerarRelatorioDetalhadoSaidas() {
                   <th class="c-item">Cód. / Item</th>
                   <th class="c-qtd">Qtd.</th><th class="c-dest">Destino</th>
                 </tr>`;
-                const body = arr.map(l => `<tr>
+                const body = arr.map(l => `<tr${l.naoCadastrado ? ' style="background:#FCE8E0;"' : ''}>
                   <td class="c-nro">#${esc(String(l.nro).slice(0,8))}</td>
                   <td class="c-data">${esc(l.dataBR)}</td>
                   <td class="c-colab">${esc(l.colaborador)}</td>
-                  <td class="c-item">${esc(formatarItemComCodigo(l.item, l.codigo))}</td>
+                  <td class="c-item">${esc(formatarItemComCodigo(l.item, l.codigo))}${l.naoCadastrado ? ' <span style="color:#C45C26;font-weight:700;font-size:8px;">[NÃO CAD.]</span>' : ''}</td>
                   <td class="c-qtd">${fmtN(l.qtd)}</td>
                   <td class="c-dest">${esc(l.destino)}</td>
                 </tr>`).join('');
@@ -4025,10 +4040,10 @@ async function gerarRelatorioDetalhadoSaidas() {
                   <th class="c-item">Cód. / Item</th>
                   <th class="c-qtd">Qtd.</th><th class="c-dest">Destino</th>
                 </tr>`;
-                const body = arr.map(l => `<tr>
+                const body = arr.map(l => `<tr${l.naoCadastrado ? ' style="background:#FCE8E0;"' : ''}>
                   <td class="c-nro">#${esc(String(l.nro).slice(0,8))}</td>
                   <td class="c-data">${esc(l.dataBR)}</td>
-                  <td class="c-item">${esc(formatarItemComCodigo(l.item, l.codigo))}</td>
+                  <td class="c-item">${esc(formatarItemComCodigo(l.item, l.codigo))}${l.naoCadastrado ? ' <span style="color:#C45C26;font-weight:700;font-size:8px;">[NÃO CAD.]</span>' : ''}</td>
                   <td class="c-qtd">${fmtN(l.qtd)}</td>
                   <td class="c-dest">${esc(l.destino)}</td>
                 </tr>`).join('');
@@ -4124,8 +4139,12 @@ td.c-qtd, th.c-qtd { text-align: center; }
   <div class="card"><div class="n">${fmtN(totalSaidas)}</div><div class="l">Total de Saídas</div></div>
   <div class="card"><div class="n">${fmtN(totalUnid)}</div><div class="l">Itens (unid.)</div></div>
   <div class="card"><div class="n">${fmtN(nColabs)}</div><div class="l">Colaboradores</div></div>
-  <div class="card"><div class="n">0</div><div class="l">Não cadastrados</div></div>
+  <div class="card"><div class="n" style="color:${totalNaoCadUnid > 0 ? '#C45C26' : '#191D1B'}">${fmtN(totalNaoCadUnid)}</div><div class="l">Não cadastrados (unid.)</div></div>
 </div>
+
+${linhasNaoCad.length ? `<h2 style="background:#FCE8E0;border-left-color:#C45C26;">⚠ Itens NÃO CADASTRADOS no estoque (${fmtN(totalNaoCadUnid)} unid.)</h2>
+<p class="legenda" style="color:#8B3A3A;">Itens digitados na saída que não existem no cadastro de estoque (não baixam saldo).</p>
+` + tabelaLinhas(linhasNaoCad, false) : ''}
 
 ${secEmp}
 ${secInt}
