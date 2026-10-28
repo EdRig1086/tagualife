@@ -3233,6 +3233,7 @@ function mostrarToast(mensagem, tipo = 'success') {
                 }
                 mostrarMensagem(msgSucesso, '#7A816E');
                 mostrarToast(msgSucesso, 'success');
+                try { limparCamposSilencioso(); } catch (eL) { console.warn(eL); }
                 
             } else {
                 // CRIAR novo registro
@@ -3332,6 +3333,7 @@ function mostrarToast(mensagem, tipo = 'success') {
                             } else {
                                 console.log('✅ saida_itens ok');
                                 mostrarToast('☁️ Gravado no banco de dados!', 'success');
+                                try { limparCamposSilencioso(); } catch (eL) { console.warn(eL); }
                             }
                             try { localStorage.setItem('saidaMaterialTaguaLife', JSON.stringify((protocolos || []).slice(-30))); } catch (eQ) { try { localStorage.removeItem('saidaMaterialTaguaLife'); } catch(e){} }
                         }
@@ -3753,107 +3755,81 @@ function mostrarToast(mensagem, tipo = 'success') {
             window.protocoloEmEdicao = null;
             window.editandoSaidaId = null;
 
-            const btnSalvar = document.getElementById('btnSalvar');
+            var btnSalvar = document.getElementById('btnSalvar');
             if (btnSalvar) {
                 btnSalvar.disabled = false;
                 btnSalvar.innerHTML = '<i class="fas fa-save"></i> Salvar';
                 btnSalvar.style.background = '';
-                delete btnSalvar.dataset._html;
+                try { delete btnSalvar.dataset._html; } catch (e) {}
             }
 
-            // Colaborador e assinatura
-            const colab = document.getElementById('colaborador');
+            // 1) Zera colaborador e assinatura na hora
+            var colab = document.getElementById('colaborador');
             if (colab) {
-                try { colab.value = ''; } catch (e) {}
+                colab.value = '';
                 try { colab.selectedIndex = 0; } catch (e) {}
             }
-            const ass = document.getElementById('assinatura');
+            var ass = document.getElementById('assinatura');
             if (ass) ass.value = '';
-            const alm = document.getElementById('almoxarife');
-            if (alm && !alm.value) alm.value = 'Ednaldo de Souza — Almoxarife';
-            // mantém almoxarife padrão se vazio; se quiser sempre fixo:
-            if (alm) {
-                const v = (alm.value || '').trim();
-                if (!v) alm.value = 'Ednaldo de Souza — Almoxarife';
-            }
 
-            // Limpa inputs/selects do formulário (exceto data/hora/almoxarife)
-            document.querySelectorAll(
-                '.protocolo-body input, .protocolo-body select, ' +
-                '#tabelaItensBody input, #tabelaItensBody select, ' +
-                '.item-busca-rapida, input.item-busca-rapida, ' +
-                'select.item-select, select.select-item'
-            ).forEach(function(el) {
-                if (!el) return;
-                const id = el.id || '';
-                if (['dataAtual', 'horaAtual', 'dataGeracao', 'almoxarife', 'dataSaida', 'horasSaida'].includes(id)) return;
-                if (id === 'almoxarife') return;
-                try {
-                    if (el.tagName === 'SELECT') {
-                        el.selectedIndex = 0;
-                        el.value = '';
-                    } else if (el.type === 'checkbox' || el.type === 'radio') {
-                        el.checked = false;
-                    } else {
-                        el.value = '';
-                    }
-                } catch (e) {}
-            });
-
-            // Data e hora atuais (Brasília)
-            try {
-                const horario = (typeof getHorarioBrasilia === 'function') ? getHorarioBrasilia() : null;
-                const ds = document.getElementById('dataSaida');
-                const hs = document.getElementById('horasSaida');
-                if (ds) ds.value = (horario && horario.data) || new Date().toLocaleDateString('pt-BR');
-                if (hs) hs.value = (horario && horario.horaCompleta) || new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-            } catch (e) {
-                const now = new Date();
-                const ds = document.getElementById('dataSaida');
-                const hs = document.getElementById('horasSaida');
-                if (ds) ds.value = now.toLocaleDateString('pt-BR');
-                if (hs) hs.value = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-            }
-
-            // Recria linhas de itens vazias
-            const tbody = document.getElementById('tabelaItensBody');
+            // 2) Destrói e recria a tabela de itens (garante limpeza visual)
+            var tbody = document.getElementById('tabelaItensBody');
             if (tbody) {
                 tbody.innerHTML = '';
-                try {
-                    if (typeof adicionarLinha === 'function') adicionarLinha();
-                } catch (e) { console.warn('adicionarLinha', e); }
             }
 
-            // Recarrega selects (e força colaborador vazio depois)
+            // 3) Data / hora de agora
+            try {
+                var horario = (typeof getHorarioBrasilia === 'function') ? getHorarioBrasilia() : null;
+                var ds = document.getElementById('dataSaida');
+                var hs = document.getElementById('horasSaida');
+                if (ds) ds.value = (horario && horario.data) || new Date().toLocaleDateString('pt-BR');
+                if (hs) hs.value = (horario && (horario.horaCompleta || horario.hora)) || new Date().toLocaleTimeString('pt-BR');
+            } catch (e) {}
+
+            // 4) Nova linha em branco + selects
+            try {
+                if (typeof adicionarLinha === 'function') adicionarLinha();
+            } catch (e) { console.warn('adicionarLinha', e); }
+
             try {
                 if (typeof carregarSelectItens === 'function') {
-                    const r = carregarSelectItens();
-                    if (r && typeof r.then === 'function') r.catch(function(){});
+                    var pIt = carregarSelectItens();
+                    if (pIt && pIt.then) pIt.catch(function(){});
                 }
             } catch (e) {}
+
             try {
                 if (typeof carregarSelectColaboradores === 'function') {
-                    const r2 = carregarSelectColaboradores();
-                    if (r2 && typeof r2.then === 'function') {
-                        r2.then(function() {
-                            const c = document.getElementById('colaborador');
+                    var pCo = carregarSelectColaboradores();
+                    if (pCo && pCo.then) {
+                        pCo.then(function() {
+                            var c = document.getElementById('colaborador');
                             if (c) { c.value = ''; c.selectedIndex = 0; }
+                            var a = document.getElementById('assinatura');
+                            if (a) a.value = '';
                         }).catch(function(){});
-                    } else {
-                        const c = document.getElementById('colaborador');
-                        if (c) { c.value = ''; c.selectedIndex = 0; }
                     }
                 }
             } catch (e) {}
 
-            if (colab) {
-                try { colab.value = ''; colab.selectedIndex = 0; } catch (e) {}
-            }
-            if (ass) ass.value = '';
+            // 5) Reforço final em qualquer input restante (exceto almoxarife/data/hora)
+            setTimeout(function() {
+                try {
+                    var c2 = document.getElementById('colaborador');
+                    if (c2) { c2.value = ''; c2.selectedIndex = 0; }
+                    var a2 = document.getElementById('assinatura');
+                    if (a2) a2.value = '';
+                    document.querySelectorAll('#tabelaItensBody input, #tabelaItensBody select, .item-busca-rapida').forEach(function(el) {
+                        try {
+                            if (el.tagName === 'SELECT') { el.selectedIndex = 0; el.value = ''; }
+                            else el.value = '';
+                        } catch (e3) {}
+                    });
+                } catch (e4) {}
+            }, 100);
 
             try { if (typeof atualizarPainel === 'function') atualizarPainel(); } catch (e) {}
-            try { if (typeof validarItensEmTempoReal === 'function') validarItensEmTempoReal(); } catch (e) {}
-
             console.log('🧹 Formulário limpo após salvar');
         } catch (e) {
             console.error('limparCamposSilencioso', e);
