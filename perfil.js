@@ -112,10 +112,11 @@
 .user-menu-btn .avatar{width:28px;height:28px;border-radius:50%;background:#C1CE83;color:#191D1B;
   display:inline-flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:800;overflow:hidden;flex-shrink:0;}
 .user-menu-btn .avatar img{width:100%;height:100%;object-fit:cover;display:block;}
-.user-menu-btn .user-meta{display:flex;flex-direction:column;align-items:flex-start;line-height:1.15;min-width:0;}
-.user-menu-btn .user-meta .user-name{font-size:.72rem;font-weight:700;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.user-menu-btn .user-meta .user-role{font-size:.6rem;font-weight:600;color:#7A816E;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.user-menu-btn .user-meta .user-role.admin{color:#2E5A3C;}
+.user-menu-btn .user-meta{display:inline-flex;align-items:center;gap:.35rem;min-width:0;flex-wrap:nowrap;}
+.user-menu-btn .user-meta .user-name{font-size:.72rem;font-weight:700;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.user-menu-btn .user-meta .user-role{font-size:.58rem;font-weight:700;color:#7A816E;background:#F0F2EA;border:1px solid #D8DCCE;
+  padding:.08rem .4rem;border-radius:20px;white-space:nowrap;line-height:1.2;}
+.user-menu-btn .user-meta .user-role.admin{color:#2E5A3C;background:#E8F5C8;border-color:#C1CE83;}
 .user-menu-drop .drop-header{padding:.65rem .85rem .4rem;border-bottom:1px solid var(--border-color,#D8DCCE);margin-bottom:.15rem;}
 .user-menu-drop .drop-header .dh-name{font-size:.8rem;font-weight:700;}
 .user-menu-drop .drop-header .dh-role{font-size:.68rem;color:#7A816E;font-weight:600;}
@@ -417,26 +418,60 @@
         let host = document.getElementById('userMenuMount');
         if (!host) {
             const nomeEl = document.getElementById('usuarioLogado');
-            if (nomeEl && nomeEl.parentElement) {
+            if (nomeEl) {
+                // Sobe até o "pill" do topo (o que tem o ícone fa-user + nome)
+                // e troca o bloco inteiro — evita círculo do ícone + círculo da foto
+                let pill = nomeEl.closest('.user-info') ||
+                           nomeEl.closest('[class*="user"]') ||
+                           nomeEl.parentElement;
+                // se o pai imediato é só o span do nome, sobe mais um nível (div do pill)
+                if (pill && pill.id === 'usuarioLogado') pill = pill.parentElement;
+                if (pill && pill.tagName === 'SPAN' && pill.parentElement) {
+                    pill = pill.parentElement;
+                }
+                // se ainda tem fa-user no mesmo container, usa esse container
+                if (pill && pill.parentElement) {
+                    const maybe = pill.parentElement;
+                    if (maybe.querySelector && maybe.querySelector('.fa-user') && maybe.children.length <= 4) {
+                        // ok keep pill
+                    }
+                }
                 host = document.createElement('div');
                 host.id = 'userMenuMount';
-                nomeEl.parentElement.style.display = 'none';
-                nomeEl.parentElement.insertAdjacentElement('afterend', host);
+                host.style.cssText = 'display:inline-flex;align-items:center;';
+                if (pill && pill.parentElement) {
+                    pill.style.display = 'none';
+                    pill.insertAdjacentElement('afterend', host);
+                } else if (nomeEl.parentElement) {
+                    nomeEl.parentElement.style.display = 'none';
+                    nomeEl.parentElement.insertAdjacentElement('afterend', host);
+                }
             } else {
-                // topbar comum do sistema
-                const top = document.querySelector('.app-topbar .top-right, .app-topbar, .topbar-right, header .user-area');
                 const bar = document.querySelector('.app-topbar') || document.querySelector('header');
                 if (bar) {
                     host = document.createElement('div');
                     host.id = 'userMenuMount';
                     host.style.cssText = 'display:inline-flex;align-items:center;margin-left:auto;';
-                    // tenta colocar perto do lado direito
                     const right = bar.querySelector('.top-right') || bar;
                     right.appendChild(host);
                 }
             }
         }
         if (!host) return;
+
+        // esconde restos do layout antigo (ícone + texto)
+        try {
+            const oldPill = document.getElementById('userPillOriginal');
+            if (oldPill) oldPill.style.display = 'none';
+            document.querySelectorAll('.app-topbar .fa-user, .user-info .fa-user').forEach(function(ic) {
+                if (!host.contains(ic)) ic.style.display = 'none';
+            });
+            document.querySelectorAll('.user-info').forEach(function(el) {
+                if (!host.contains(el) && el.querySelector('#usuarioLogado, #cargoLogado')) {
+                    el.style.display = 'none';
+                }
+            });
+        } catch (e) {}
 
         const inicial = (s.nome || 'U').trim().charAt(0).toUpperCase();
         const cargo = (s.cargo || 'Usuário').trim();
