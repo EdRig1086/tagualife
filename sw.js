@@ -1,5 +1,5 @@
 /* TaguáLife Center — Service Worker básico (PWA) */
-const CACHE = 'tagualife-v1';
+const CACHE = 'tagualife-v2';
 const PRECACHE = [
   '/',
   '/index.html',
@@ -30,11 +30,18 @@ self.addEventListener('fetch', (event) => {
   // Não intercepta API Supabase
   if (req.url.includes('supabase.co')) return;
 
+  // HTML sempre da rede (evita tela antiga após deploy)
+  if (req.headers.get('accept') && req.headers.get('accept').includes('text/html')) {
+    event.respondWith(
+      fetch(req).catch(() => caches.match(req).then((r) => r || caches.match('/index.html')))
+    );
+    return;
+  }
   event.respondWith(
     fetch(req)
       .then((res) => {
         const copy = res.clone();
-        if (res.ok && req.url.startsWith(self.location.origin)) {
+        if (res.ok && req.url.startsWith(self.location.origin) && !req.url.includes('.html')) {
           caches.open(CACHE).then((c) => c.put(req, copy)).catch(() => {});
         }
         return res;
