@@ -109,9 +109,17 @@
   border:1px solid var(--border-color,#D8DCCE);background:var(--bg-card,#FBFBF7);color:var(--text-primary,#191D1B);
   font-size:.7rem;font-weight:600;cursor:pointer;font-family:inherit;}
 .user-menu-btn:hover{border-color:var(--verde-oliva,#7A816E);}
-.user-menu-btn .avatar{width:22px;height:22px;border-radius:50%;background:#C1CE83;color:#191D1B;
-  display:inline-flex;align-items:center;justify-content:center;font-size:.65rem;font-weight:800;overflow:hidden;}
+.user-menu-btn .avatar{width:28px;height:28px;border-radius:50%;background:#C1CE83;color:#191D1B;
+  display:inline-flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:800;overflow:hidden;flex-shrink:0;}
 .user-menu-btn .avatar img{width:100%;height:100%;object-fit:cover;display:block;}
+.user-menu-btn .user-meta{display:flex;flex-direction:column;align-items:flex-start;line-height:1.15;min-width:0;}
+.user-menu-btn .user-meta .user-name{font-size:.72rem;font-weight:700;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.user-menu-btn .user-meta .user-role{font-size:.6rem;font-weight:600;color:#7A816E;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.user-menu-btn .user-meta .user-role.admin{color:#2E5A3C;}
+.user-menu-drop .drop-header{padding:.65rem .85rem .4rem;border-bottom:1px solid var(--border-color,#D8DCCE);margin-bottom:.15rem;}
+.user-menu-drop .drop-header .dh-name{font-size:.8rem;font-weight:700;}
+.user-menu-drop .drop-header .dh-role{font-size:.68rem;color:#7A816E;font-weight:600;}
+.user-menu-drop .drop-header .dh-email{font-size:.62rem;color:#9AA08E;margin-top:.15rem;}
 .user-menu-drop{display:none;position:absolute;right:0;top:calc(100% + 6px);min-width:200px;background:var(--bg-card,#fff);
   border:1px solid var(--border-color,#D8DCCE);border-radius:10px;box-shadow:0 8px 28px rgba(0,0,0,.12);z-index:9999;overflow:hidden;}
 .user-menu-drop.open{display:block;}
@@ -415,30 +423,46 @@
                 nomeEl.parentElement.style.display = 'none';
                 nomeEl.parentElement.insertAdjacentElement('afterend', host);
             } else {
-                const top = document.querySelector('.app-topbar');
-                if (top) {
+                // topbar comum do sistema
+                const top = document.querySelector('.app-topbar .top-right, .app-topbar, .topbar-right, header .user-area');
+                const bar = document.querySelector('.app-topbar') || document.querySelector('header');
+                if (bar) {
                     host = document.createElement('div');
                     host.id = 'userMenuMount';
-                    top.appendChild(host);
+                    host.style.cssText = 'display:inline-flex;align-items:center;margin-left:auto;';
+                    // tenta colocar perto do lado direito
+                    const right = bar.querySelector('.top-right') || bar;
+                    right.appendChild(host);
                 }
             }
         }
         if (!host) return;
 
         const inicial = (s.nome || 'U').trim().charAt(0).toUpperCase();
+        const cargo = (s.cargo || 'Usuário').trim();
+        const isAdmin = cargo.toLowerCase() === 'administrador';
         const foto = getFotoUsuario(s);
         const avatarHtml = foto
             ? '<img src="' + foto + '" alt="Foto" />'
             : inicial;
+        const roleClass = isAdmin ? 'user-role admin' : 'user-role';
 
         host.innerHTML =
             '<div class="user-menu-wrap">' +
-            '<button type="button" class="user-menu-btn" id="userMenuBtn" aria-haspopup="true">' +
+            '<button type="button" class="user-menu-btn" id="userMenuBtn" aria-haspopup="true" title="' + (s.nome || '') + ' — ' + cargo + '">' +
             '<span class="avatar" id="userAvatar">' + avatarHtml + '</span>' +
-            '<span>' + (s.nome || 'Usuário') + '</span>' +
+            '<span class="user-meta">' +
+            '<span class="user-name">' + (s.nome || 'Usuário') + '</span>' +
+            '<span class="' + roleClass + '">' + cargo + '</span>' +
+            '</span>' +
             '<i class="fas fa-caret-down" style="font-size:.65rem;opacity:.7"></i>' +
             '</button>' +
             '<div class="user-menu-drop" id="userMenuDrop">' +
+            '<div class="drop-header">' +
+            '<div class="dh-name">' + (s.nome || 'Usuário') + '</div>' +
+            '<div class="dh-role">' + cargo + (isAdmin ? ' · acesso total' : '') + '</div>' +
+            (s.email ? '<div class="dh-email">' + s.email + '</div>' : '') +
+            '</div>' +
             '<button type="button" id="menuEditarPerfil"><i class="fas fa-user-edit"></i> Editar meu perfil</button>' +
             '<button type="button" id="menuAlterarSenha"><i class="fas fa-key"></i> Alterar minha senha</button>' +
             '<div class="sep"></div>' +
