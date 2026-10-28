@@ -3436,15 +3436,29 @@ function exportarCSVEstoque() {
                 return;
             }
             // Google Drive: tenta converter link de visualização
-            const mDrive = url.match(/drive\.google\.com\/file\/d\/([^/]+)/);
+            const mDrive = url.match(/drive\.google\.com\/file\/d\/([^/]+)/i);
             if (mDrive) {
                 url = 'https://drive.google.com/uc?export=view&id=' + mDrive[1];
                 if (fl) fl.value = url;
             }
-            _itemFotoPendente = url;
-            _fotoAlterada = true;
-            setPreviewFotoItem(url);
-            mostrarToast('🔗 Link aplicado — clique em Salvar/Atualizar', 'info');
+            // Aviso se parece página e não imagem
+            const parecePagina = /\/(search|maps|login)|google\.com\/?$/i.test(url) && !/\.(jpe?g|png|gif|webp|bmp|svg)(\?|$)/i.test(url);
+            if (parecePagina) {
+                mostrarToast('⚠️ Isso parece um site, não uma foto. Use o link direto da imagem (.jpg, .png…)', 'warning');
+            }
+            // Testa se a URL carrega como imagem
+            mostrarToast('⏳ Testando link da imagem…', 'info');
+            const testImg = new Image();
+            testImg.onload = function() {
+                _itemFotoPendente = url;
+                _fotoAlterada = true;
+                setPreviewFotoItem(url);
+                mostrarToast('🔗 Imagem OK — clique em Salvar/Atualizar', 'success');
+            };
+            testImg.onerror = function() {
+                mostrarToast('❌ Este link não abre uma imagem. Clique com o botão direito na foto → "Copiar endereço da imagem"', 'danger');
+            };
+            testImg.src = url;
         }
         const btnLink = document.getElementById('btnUsarLinkFoto');
         if (btnLink) btnLink.addEventListener('click', aplicarLinkFoto);
