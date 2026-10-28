@@ -105,8 +105,8 @@
             margin-bottom: 1.2rem;
         }
         .form-foto-col {
-            flex: 0 0 96px;
-            width: 96px;
+            flex: 0 0 130px;
+            width: 130px;
             display: flex;
             flex-direction: column;
             gap: 0.3rem;
@@ -346,6 +346,19 @@
             font-weight:600; color:#191D1B; cursor:pointer; font-family:inherit;
         }
         .btn-foto-escolha:hover { border-color:#7A816E; background:#F0F2EA; }
+        .foto-link-input {
+            width: 100%; box-sizing: border-box; margin-top: 0.25rem;
+            padding: 0.28rem 0.35rem; border: 1px solid #D8DCCE; border-radius: 6px;
+            font-size: 0.62rem; font-family: inherit; background: #fff; color: var(--text-primary);
+        }
+        .foto-link-input:focus { outline: none; border-color: #7A816E; }
+        .btn-foto-link {
+            display: inline-flex; align-items: center; gap: 0.25rem; margin-top: 0.2rem;
+            padding: 0.25rem 0.45rem; border-radius: 6px; border: 1px solid #C1CE83;
+            background: #F0F2EA; font-size: 0.62rem; font-weight: 600; cursor: pointer; font-family: inherit;
+            color: #191D1B; width: 100%; justify-content: center;
+        }
+        .btn-foto-link:hover { background: #C1CE83; }
         #itemFotoInput { position:absolute; width:1px; height:1px; opacity:0; overflow:hidden; z-index:-1; }
         .img-item-thumb {
             width:40px; height:40px; border-radius:8px; object-fit:contain; border:1px solid #D8DCCE;
@@ -449,8 +462,10 @@
                     <label><i class="fas fa-image"></i> FOTO</label>
                     <div class="foto-item-box">
                         <div class="foto-item-preview" id="itemFotoPreview"><i class="fas fa-camera"></i></div>
-                        <button type="button" class="btn-foto-escolha" id="btnEscolherFoto"><i class="fas fa-upload"></i> Escolher</button>
+                        <button type="button" class="btn-foto-escolha" id="btnEscolherFoto"><i class="fas fa-upload"></i> Arquivo</button>
                         <input type="file" id="itemFotoInput" accept="image/*" tabindex="-1" />
+                        <input type="url" id="itemFotoLink" class="foto-link-input" placeholder="Ou cole o link da foto..." />
+                        <button type="button" class="btn-foto-link" id="btnUsarLinkFoto"><i class="fas fa-link"></i> Usar link</button>
                         <button type="button" id="itemFotoRemover" style="font-size:0.65rem;border:0;background:transparent;color:#8B3A3A;cursor:pointer;padding:0;">Remover</button>
                     </div>
                 </div>
@@ -1258,7 +1273,16 @@
             return null;
         }
 
-        // 1) Tenta Storage
+        // Link externo (http/https) — grava direto, sem Storage
+        const s = String(dataUrl).trim();
+        if (/^https?:\/\//i.test(s) && s.indexOf('data:') !== 0) {
+            await gravarUrlNoBanco(s);
+            setFotoItemLocal(itemId, s);
+            console.log('✅ Foto por link:', s);
+            return s;
+        }
+
+        // 1) Tenta Storage (arquivo local / dataURL)
         try {
             const blob = dataURLparaBlob(dataUrl);
             const path = String(itemId) + '/' + Date.now() + '.jpg';
@@ -1639,6 +1663,7 @@
         _fotoAlterada = false;
         setPreviewFotoItem(null);
         const fi = document.getElementById('itemFotoInput'); if (fi) fi.value = '';
+        const fl = document.getElementById('itemFotoLink'); if (fl) fl.value = '';
         document.getElementById('btnSalvarItem').innerHTML = '<i class="fas fa-save"></i> Salvar';
     }
 
@@ -1663,6 +1688,11 @@
         _itemFotoPendente = item.foto_url || getFotoItemLocal(id) || getFotoItemLocal(item.nome) || null;
         _fotoAlterada = false;
         setPreviewFotoItem(_itemFotoPendente);
+        const flEd = document.getElementById('itemFotoLink');
+        if (flEd) {
+            const u = item.foto_url || '';
+            flEd.value = (/^https?:\/\//i.test(u) ? u : '');
+        }
         document.getElementById('btnSalvarItem').innerHTML = '<i class="fas fa-pen"></i> Atualizar';
         document.getElementById('itemNome').focus();
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -3390,6 +3420,38 @@ function exportarCSVEstoque() {
                 _itemFotoPendente = null;
                 _fotoAlterada = true;
                 setPreviewFotoItem(null);
+                const fl = document.getElementById('itemFotoLink');
+                if (fl) fl.value = '';
+            });
+        }
+        function aplicarLinkFoto() {
+            const fl = document.getElementById('itemFotoLink');
+            let url = (fl && fl.value || '').trim();
+            if (!url) {
+                mostrarToast('⚠️ Cole o link da imagem', 'warning');
+                return;
+            }
+            if (!/^https?:\/\//i.test(url)) {
+                mostrarToast('⚠️ O link deve começar com http:// ou https://', 'warning');
+                return;
+            }
+            // Google Drive: tenta converter link de visualização
+            const mDrive = url.match(/drive\.google\.com\/file\/d\/([^/]+)/);
+            if (mDrive) {
+                url = 'https://drive.google.com/uc?export=view&id=' + mDrive[1];
+                if (fl) fl.value = url;
+            }
+            _itemFotoPendente = url;
+            _fotoAlterada = true;
+            setPreviewFotoItem(url);
+            mostrarToast('🔗 Link aplicado — clique em Salvar/Atualizar', 'info');
+        }
+        const btnLink = document.getElementById('btnUsarLinkFoto');
+        if (btnLink) btnLink.addEventListener('click', aplicarLinkFoto);
+        const inpLink = document.getElementById('itemFotoLink');
+        if (inpLink) {
+            inpLink.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') { e.preventDefault(); aplicarLinkFoto(); }
             });
         }
         const btnNovaCat = document.getElementById('btnNovaCategoria');
