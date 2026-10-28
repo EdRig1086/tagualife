@@ -4942,22 +4942,20 @@ ${secInt}
             }
             
             const nome = p.colaborador || 'Não informado';
-            colaboradores[nome] = colaboradores[nome] || { itens: 0, unidades: 0, saidas: 0, destinos: new Set() };
+            colaboradores[nome] = colaboradores[nome] || { itens: 0, unidades: 0, saidas: 0, destinos: new Set(), itensMap: {} };
             colaboradores[nome].saidas += 1;
             colaboradores[nome].itens += p.itens ? p.itens.length : 0;
             if (p.itens) {
                 p.itens.forEach(i => {
-                    colaboradores[nome].unidades += parseInt(i.qtd) || 0;
-                });
-            }
-            
-            if (p.itens) {
-                p.itens.forEach(i => {
+                    const q = parseInt(i.qtd) || 0;
+                    colaboradores[nome].unidades += q;
+                    const nomeItem = (i.item || i.item_nome || i.nome || i.descricao || '—').toString().trim() || '—';
+                    colaboradores[nome].itensMap[nomeItem] = (colaboradores[nome].itensMap[nomeItem] || 0) + q;
                     if (i.destino) {
                         colaboradores[nome].destinos.add(i.destino);
                         destinos[i.destino] = destinos[i.destino] || { saidas: 0, unidades: 0 };
                         destinos[i.destino].saidas += 1;
-                        destinos[i.destino].unidades += parseInt(i.qtd) || 0;
+                        destinos[i.destino].unidades += q;
                     }
                 });
             }
@@ -5048,19 +5046,26 @@ ${secInt}
                             <th>Tipo</th>
                             <th style="text-align:center;">Saídas</th>
                             <th style="text-align:center;">Itens (unid.)</th>
+                            <th>Itens retirados</th>
                             <th>Destino</th>
                         </tr>
                     </thead>
                     <tbody>
-                        ${rankingColab.map(([nome, d]) => `
+                        ${rankingColab.map(([nome, d]) => {
+                            const listaItens = Object.entries(d.itensMap || {})
+                                .sort((a, b) => b[1] - a[1])
+                                .map(([item, qtd]) => qtd + '× ' + item)
+                                .join(', ');
+                            return `
                             <tr>
                                 <td>${nome}</td>
                                 <td>Colaborador</td>
                                 <td style="text-align:center;">${d.saidas}</td>
                                 <td style="text-align:center;">${d.unidades}</td>
+                                <td style="font-size:0.78rem;">${listaItens || '—'}</td>
                                 <td>${Array.from(d.destinos || []).slice(0, 3).join(', ')}${(d.destinos && d.destinos.size > 3) ? '...' : ''}</td>
-                            </tr>
-                        `).join('')}
+                            </tr>`;
+                        }).join('')}
                     </tbody>
                 </table>
             </div>
