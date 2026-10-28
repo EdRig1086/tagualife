@@ -294,7 +294,27 @@
             .app-container, .nav-menu, .app-topbar, #toastGlobal { display: none !important; }
         }
 
-    </style>
+    
+        .foto-item-box { display:flex; align-items:center; gap:0.5rem; }
+        .foto-item-preview {
+            width:64px; height:64px; border-radius:10px; background:#F0F2EA; border:1px solid var(--border-color);
+            display:flex; align-items:center; justify-content:center; overflow:hidden; flex-shrink:0;
+            font-size:1.1rem; color:#7A816E;
+        }
+        .foto-item-preview img { width:100%; height:100%; object-fit:contain; display:block; background:#fff; }
+        .img-item-thumb {
+            width:40px; height:40px; border-radius:8px; object-fit:contain; border:1px solid #D8DCCE;
+            background:#fff; vertical-align:middle;
+        }
+        .img-item-ph {
+            width:36px; height:36px; border-radius:6px; background:#F0F2EA; border:1px dashed #B8BEA8;
+            display:inline-flex; align-items:center; justify-content:center; color:#9AA08E; font-size:0.75rem;
+        }
+        .badge-demo-foto {
+            font-size:0.58rem; font-weight:700; color:#7A816E; background:#F0F2EA;
+            border:1px solid #D8DCCE; border-radius:20px; padding:0.1rem 0.4rem;
+        }
+</style>
 </head>
 <body>
 <div class="app-container">
@@ -356,6 +376,19 @@
                 <div class="campo">
                     <label><i class="fas fa-barcode"></i> CÓDIGO</label>
                     <input type="text" id="itemCodigo" placeholder="Automático" readonly style="background:var(--bg-body);font-weight:700;letter-spacing:0.5px;" title="Gerado automaticamente pelo sistema" />
+                </div>
+                <div class="campo">
+                    <label><i class="fas fa-image"></i> FOTO <span class="badge-demo-foto">oficial</span></label>
+                    <div class="foto-item-box">
+                        <div class="foto-item-preview" id="itemFotoPreview"><i class="fas fa-camera"></i></div>
+                        <div style="display:flex;flex-direction:column;gap:0.25rem;">
+                            <label for="itemFotoInput" style="cursor:pointer;font-size:0.72rem;font-weight:600;color:var(--verde-oliva);">
+                                <i class="fas fa-upload"></i> Escolher imagem
+                            </label>
+                            <input type="file" id="itemFotoInput" accept="image/*" style="display:none" />
+                            <button type="button" id="itemFotoRemover" style="font-size:0.68rem;border:0;background:transparent;color:#8B3A3A;cursor:pointer;text-align:left;padding:0;">Remover</button>
+                        </div>
+                    </div>
                 </div>
                 <div class="campo">
                     <label><i class="fas fa-tag"></i> ITEM</label>
@@ -488,6 +521,7 @@
                 <table class="tabela-items">
                     <thead>
                         <tr>
+                            <th style="width:48px;">Foto</th>
                             <th>Cód.</th>
                             <th>Item</th>
                             <th>Descrição</th>
@@ -498,7 +532,7 @@
                         </tr>
                     </thead>
                     <tbody id="corpoTabela">
-                        <tr><td colspan="7" class="loading-overlay"><i class="fas fa-spinner fa-spin"></i> Carregando do Supabase...</td></tr>
+                        <tr><td colspan="8" class="loading-overlay"><i class="fas fa-spinner fa-spin"></i> Carregando do Supabase...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -961,7 +995,7 @@
 
     async function carregarEstoque() {
         const corpo = document.getElementById('corpoTabela');
-        corpo.innerHTML = '<tr><td colspan="7" class="loading-overlay"><i class="fas fa-spinner fa-spin"></i> Carregando...</td></tr>';
+        corpo.innerHTML = '<tr><td colspan="8" class="loading-overlay"><i class="fas fa-spinner fa-spin"></i> Carregando...</td></tr>';
 
         try {
             const { data, error } = await sb
@@ -971,7 +1005,7 @@
 
             if (error) {
                 console.error(error);
-                corpo.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:2rem;color:#8B3A3A;">Erro: ' + error.message + '<br><small>Verifique as policies RLS da tabela estoque</small></td></tr>';
+                corpo.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:2rem;color:#8B3A3A;">Erro: ' + error.message + '<br><small>Verifique as policies RLS da tabela estoque</small></td></tr>';
                 return;
             }
 
@@ -981,9 +1015,141 @@
             mostrarToast('📦 ' + itensCache.length + ' itens carregados', 'info');
         } catch (err) {
             console.error(err);
-            corpo.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:2rem;color:#8B3A3A;">Erro de conexão</td></tr>';
+            corpo.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:2rem;color:#8B3A3A;">Erro de conexão</td></tr>';
         }
     }
+
+
+
+    // ===== FOTO DO ITEM (OFICIAL: Supabase Storage + foto_url) =====
+    var _itemFotoPendente = null; // dataURL ou null
+    var FOTOS_ESTOQUE_KEY = 'estoqueFotosTaguaLife_v1'; // cache local opcional
+    var BUCKET_FOTOS = 'itens-estoque';
+
+    function carregarMapaFotos() {
+        try { return JSON.parse(localStorage.getItem(FOTOS_ESTOQUE_KEY) || '{}') || {}; }
+        catch (e) { return {}; }
+    }
+    function salvarMapaFotos(map) {
+        try { localStorage.setItem(FOTOS_ESTOQUE_KEY, JSON.stringify(map)); } catch (e) {}
+    }
+    function getFotoItemLocal(idOuNome) {
+        const map = carregarMapaFotos();
+        return map[idOuNome] || map[String(idOuNome).toLowerCase()] || null;
+    }
+    function setFotoItemLocal(id, dataUrl) {
+        if (!id) return;
+        const map = carregarMapaFotos();
+        if (dataUrl) map[id] = dataUrl;
+        else delete map[id];
+        salvarMapaFotos(map);
+    }
+
+    function comprimirFotoItem(file, maxLado, qualidade) {
+        maxLado = maxLado || 400;
+        qualidade = qualidade || 0.82;
+        return new Promise(function(resolve, reject) {
+            const reader = new FileReader();
+            reader.onerror = function() { reject(new Error('Falha ao ler')); };
+            reader.onload = function() {
+                const img = new Image();
+                img.onerror = function() { reject(new Error('Imagem inválida')); };
+                img.onload = function() {
+                    let w = img.width, h = img.height;
+                    if (w > maxLado || h > maxLado) {
+                        if (w > h) { h = Math.round(h * maxLado / w); w = maxLado; }
+                        else { w = Math.round(w * maxLado / h); h = maxLado; }
+                    }
+                    const c = document.createElement('canvas');
+                    c.width = w; c.height = h;
+                    c.getContext('2d').drawImage(img, 0, 0, w, h);
+                    resolve(c.toDataURL('image/jpeg', qualidade));
+                };
+                img.src = reader.result;
+            };
+            reader.readAsDataURL(file);
+        });
+    }
+
+    function dataURLparaBlob(dataURL) {
+        const parts = dataURL.split(',');
+        const mime = (parts[0].match(/:(.*?);/) || [])[1] || 'image/jpeg';
+        const bin = atob(parts[1]);
+        const arr = new Uint8Array(bin.length);
+        for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+        return new Blob([arr], { type: mime });
+    }
+
+    function setPreviewFotoItem(dataUrlOuUrl) {
+        const el = document.getElementById('itemFotoPreview');
+        if (!el) return;
+        if (dataUrlOuUrl) el.innerHTML = '<img src="' + dataUrlOuUrl + '" alt="Foto" />';
+        else el.innerHTML = '<i class="fas fa-camera"></i>';
+    }
+
+    function htmlThumbItem(item) {
+        const url = (item && item.foto_url) || getFotoItemLocal(item.id) || getFotoItemLocal(item.nome);
+        if (url) return '<img class="img-item-thumb" src="' + url + '" alt="" loading="lazy" />';
+        return '<span class="img-item-ph"><i class="fas fa-box"></i></span>';
+    }
+
+    /** Envia foto para Storage e grava foto_url no item */
+    async function salvarFotoItemOficial(itemId, dataUrl) {
+        if (!itemId) return null;
+        if (!dataUrl) {
+            // remove url no banco
+            try {
+                await sb.from('estoque').update({ foto_url: null, atualizado_em: new Date().toISOString() }).eq('id', itemId);
+            } catch (e) { console.warn(e); }
+            setFotoItemLocal(itemId, null);
+            return null;
+        }
+        if (!sb) throw new Error('Sem conexão Supabase');
+
+        const blob = dataURLparaBlob(dataUrl);
+        const path = String(itemId) + '/' + Date.now() + '.jpg';
+
+        // upload (upsert)
+        let upErr = null;
+        {
+            const r = await sb.storage.from(BUCKET_FOTOS).upload(path, blob, {
+                contentType: 'image/jpeg',
+                upsert: true
+            });
+            upErr = r.error;
+        }
+        if (upErr) {
+            console.error('Storage upload:', upErr);
+            const msg = (upErr.message || String(upErr));
+            if (/bucket|not found|does not exist/i.test(msg)) {
+                throw new Error('Bucket "' + BUCKET_FOTOS + '" não existe. Crie no Supabase → Storage (público).');
+            }
+            if (/policy|denied|row-level|JWT|unauthorized|403|401/i.test(msg)) {
+                throw new Error('Sem permissão no Storage. Ajuste as policies do bucket "' + BUCKET_FOTOS + '".');
+            }
+            throw new Error(msg);
+        }
+
+        const pub = sb.storage.from(BUCKET_FOTOS).getPublicUrl(path);
+        const publicUrl = pub && pub.data && pub.data.publicUrl ? pub.data.publicUrl : null;
+        if (!publicUrl) throw new Error('Não foi possível obter URL pública da foto');
+
+        // grava no banco
+        let { error } = await sb.from('estoque').update({
+            foto_url: publicUrl,
+            atualizado_em: new Date().toISOString()
+        }).eq('id', itemId);
+
+        if (error && /foto_url|column/i.test(error.message || '')) {
+            // tenta criar orientação ao usuário
+            throw new Error('Coluna foto_url não existe. Rode no SQL Editor:\nALTER TABLE public.estoque ADD COLUMN IF NOT EXISTS foto_url text;');
+        }
+        if (error) throw error;
+
+        setFotoItemLocal(itemId, publicUrl); // cache
+        return publicUrl;
+    }
+
 
     function renderizarTabela() {
         const busca = (document.getElementById('buscaInput').value || '').toLowerCase().trim();
@@ -1009,7 +1175,7 @@
         const podeDel = ehAdministrador();
 
         if (filtrados.length === 0) {
-            corpo.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--gray-400);"><i class="fas fa-inbox" style="font-size:1.5rem;display:block;margin-bottom:0.3rem;"></i>Nenhum item encontrado.</td></tr>';
+            corpo.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:2rem;color:var(--gray-400);"><i class="fas fa-inbox" style="font-size:1.5rem;display:block;margin-bottom:0.3rem;"></i>Nenhum item encontrado.</td></tr>';
         } else {
             let html = '';
             filtrados.forEach(function(item, index) {
@@ -1022,6 +1188,7 @@
                 if (!botoes) botoes = '<span style="font-size:0.6rem;color:var(--gray-400);">—</span>';
 
                 html += '<tr class="' + (isBaixo ? 'estoque-baixo' : '') + '">' +
+                    '<td style="text-align:center;">' + htmlThumbItem(item) + '</td>' +
                     '<td style="font-weight:800;color:var(--verde-oliva);text-align:center;">' + formatarCodigo(item.codigo) + '</td>' +
                     '<td><strong>' + (item.nome || '—') + '</strong></td>' +
                     '<td>' + (item.descricao || '—') + '</td>' +
@@ -1227,6 +1394,13 @@
                 }
                 mostrarMensagem('✅ Item atualizado no banco!', '#7A816E');
                 mostrarToast('✅ Atualizado: ' + nome, 'success');
+                // foto oficial (Storage + foto_url)
+                try {
+                    await salvarFotoItemOficial(editandoId, _itemFotoPendente);
+                } catch (eFoto) {
+                    console.warn(eFoto);
+                    mostrarToast('⚠️ Item salvo, mas foto: ' + (eFoto.message || eFoto), 'warning');
+                }
             } else {
                 let proxCodigo = await obterProximoCodigo();
                 const payloadNovo = {
@@ -1283,6 +1457,14 @@
                 mostrarMensagem('✅ Item salvo no Supabase!', '#7A816E');
                 const codShow = (inserted && inserted[0] && inserted[0].codigo != null) ? (' [' + inserted[0].codigo + ']') : (proxCodigo != null ? (' [' + proxCodigo + ']') : '');
                 mostrarToast('✅ Cadastrado: ' + nome + codShow, 'success');
+                if (novoId && _itemFotoPendente) {
+                    try {
+                        await salvarFotoItemOficial(novoId, _itemFotoPendente);
+                    } catch (eFoto) {
+                        console.warn(eFoto);
+                        mostrarToast('⚠️ Item salvo, mas foto: ' + (eFoto.message || eFoto), 'warning');
+                    }
+                }
             }
 
             limparFormulario();
@@ -1309,6 +1491,9 @@
         document.getElementById('itemLimite').value = '5';
         document.getElementById('itemUnidade').value = 'UN';
         editandoId = null;
+        _itemFotoPendente = null;
+        setPreviewFotoItem(null);
+        const fi = document.getElementById('itemFotoInput'); if (fi) fi.value = '';
         document.getElementById('btnSalvarItem').innerHTML = '<i class="fas fa-save"></i> Salvar';
     }
 
@@ -1330,6 +1515,8 @@
         document.getElementById('itemLimite').value = String(item.limite_alerta != null ? item.limite_alerta : 5);
         document.getElementById('itemUnidade').value = item.unidade || 'UN';
         editandoId = id;
+        _itemFotoPendente = item.foto_url || getFotoItemLocal(id) || getFotoItemLocal(item.nome) || null;
+        setPreviewFotoItem(_itemFotoPendente);
         document.getElementById('btnSalvarItem').innerHTML = '<i class="fas fa-pen"></i> Atualizar';
         document.getElementById('itemNome').focus();
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -3025,6 +3212,29 @@ function exportarCSVEstoque() {
             e.preventDefault();
             salvarItem();
         });
+
+        const fotoIn = document.getElementById('itemFotoInput');
+        if (fotoIn) {
+            fotoIn.addEventListener('change', async function() {
+                const file = fotoIn.files && fotoIn.files[0];
+                if (!file) return;
+                try {
+                    _itemFotoPendente = await comprimirFotoItem(file, 400, 0.82);
+                    setPreviewFotoItem(_itemFotoPendente);
+                    mostrarToast('📷 Foto pronta — será enviada ao salvar', 'info');
+                } catch (e) {
+                    mostrarToast('❌ ' + (e.message || e), 'danger');
+                }
+                fotoIn.value = '';
+            });
+        }
+        const fotoRm = document.getElementById('itemFotoRemover');
+        if (fotoRm) {
+            fotoRm.addEventListener('click', function() {
+                _itemFotoPendente = null;
+                setPreviewFotoItem(null);
+            });
+        }
         const btnNovaCat = document.getElementById('btnNovaCategoria');
         if (btnNovaCat) btnNovaCat.addEventListener('click', abrirCadastroCategoria);
         const btnGerCat = document.getElementById('btnGerenciarCategorias');
