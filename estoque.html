@@ -349,7 +349,33 @@
         #itemFotoInput { position:absolute; width:1px; height:1px; opacity:0; overflow:hidden; z-index:-1; }
         .img-item-thumb {
             width:40px; height:40px; border-radius:8px; object-fit:contain; border:1px solid #D8DCCE;
-            background:#fff; vertical-align:middle;
+            background:#fff; vertical-align:middle; cursor:zoom-in; transition: transform .15s ease, box-shadow .15s ease;
+        }
+        .img-item-thumb:hover { transform: scale(1.08); box-shadow: 0 2px 10px rgba(0,0,0,.12); }
+        .foto-item-preview { cursor: zoom-in; }
+        .foto-item-preview.has-foto:hover { outline: 2px solid var(--verde-oliva); }
+        .foto-lightbox {
+            display: none; position: fixed; inset: 0; z-index: 99999;
+            background: rgba(25,29,27,.82); align-items: center; justify-content: center;
+            padding: 1.2rem; cursor: zoom-out;
+        }
+        .foto-lightbox.open { display: flex; }
+        .foto-lightbox .lb-box {
+            position: relative; max-width: min(920px, 96vw); max-height: 92vh;
+            background: #fff; border-radius: 12px; padding: 0.75rem; box-shadow: 0 16px 48px rgba(0,0,0,.35);
+            cursor: default;
+        }
+        .foto-lightbox img {
+            display: block; max-width: 88vw; max-height: 80vh; width: auto; height: auto;
+            object-fit: contain; margin: 0 auto; border-radius: 8px;
+        }
+        .foto-lightbox .lb-caption {
+            text-align: center; margin-top: 0.45rem; font-size: 0.8rem; font-weight: 600; color: #191D1B;
+        }
+        .foto-lightbox .lb-close {
+            position: absolute; top: -12px; right: -12px; width: 32px; height: 32px; border-radius: 50%;
+            border: none; background: #191D1B; color: #fff; font-size: 1rem; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(0,0,0,.3);
         }
         .img-item-ph {
             width:36px; height:36px; border-radius:6px; background:#F0F2EA; border:1px dashed #B8BEA8;
@@ -1133,15 +1159,81 @@
     function setPreviewFotoItem(dataUrlOuUrl) {
         const el = document.getElementById('itemFotoPreview');
         if (!el) return;
-        if (dataUrlOuUrl) el.innerHTML = '<img src="' + dataUrlOuUrl + '" alt="Foto" />';
-        else el.innerHTML = '<i class="fas fa-camera"></i>';
+        if (dataUrlOuUrl) {
+            el.classList.add('has-foto');
+            const src = String(dataUrlOuUrl).replace(/"/g, '&quot;');
+            el.innerHTML = '<img src="' + src + '" alt="Foto" title="Clique para ampliar" />';
+            el.onclick = function() { ampliarFoto(dataUrlOuUrl, document.getElementById('itemNome') && document.getElementById('itemNome').value); };
+        } else {
+            el.classList.remove('has-foto');
+            el.innerHTML = '<i class="fas fa-camera"></i>';
+            el.onclick = null;
+        }
     }
 
     function htmlThumbItem(item) {
         const url = (item && item.foto_url) || getFotoItemLocal(item.id) || getFotoItemLocal(item.nome);
-        if (url) return '<img class="img-item-thumb" src="' + url + '" alt="" loading="lazy" />';
+        if (url) {
+            const id = 'fotoThumb_' + String(item.id || Math.random()).replace(/[^a-zA-Z0-9]/g, '');
+            // guarda URL em dataset via after-render (evita quebrar com dataURL longo)
+            setTimeout(function() {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.dataset.fotoUrl = url;
+                    el.dataset.fotoNome = item.nome || '';
+                }
+            }, 0);
+            return '<img id="' + id + '" class="img-item-thumb" src="' + String(url).replace(/"/g, '&quot;') + '" alt="" loading="lazy" title="Clique para ampliar" />';
+        }
         return '<span class="img-item-ph"><i class="fas fa-box"></i></span>';
     }
+
+    // Clique na miniatura → amplia (registra já ao carregar o script)
+    if (!window._fotoThumbClickBound) {
+        window._fotoThumbClickBound = true;
+        document.addEventListener('click', function(e) {
+            const img = e.target && e.target.closest ? e.target.closest('img.img-item-thumb') : null;
+            if (!img) return;
+            e.preventDefault();
+            e.stopPropagation();
+            const url = img.dataset.fotoUrl || img.getAttribute('src');
+            const nome = img.dataset.fotoNome || img.getAttribute('alt') || '';
+            if (url) window.ampliarFoto(url, nome);
+        }, true);
+    }
+
+    function ensureFotoLightbox() {
+        if (document.getElementById('fotoLightbox')) return;
+        const div = document.createElement('div');
+        div.id = 'fotoLightbox';
+        div.className = 'foto-lightbox';
+        div.innerHTML = '<div class="lb-box" onclick="event.stopPropagation()">' +
+            '<button type="button" class="lb-close" onclick="fecharFotoAmpliada()" title="Fechar">✕</button>' +
+            '<img id="fotoLightboxImg" src="" alt="Foto ampliada" />' +
+            '<div class="lb-caption" id="fotoLightboxCap"></div>' +
+            '</div>';
+        div.addEventListener('click', function() { fecharFotoAmpliada(); });
+        document.body.appendChild(div);
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') fecharFotoAmpliada();
+        });
+    }
+
+    window.ampliarFoto = function(url, nome) {
+        if (!url) return;
+        ensureFotoLightbox();
+        const lb = document.getElementById('fotoLightbox');
+        const img = document.getElementById('fotoLightboxImg');
+        const cap = document.getElementById('fotoLightboxCap');
+        img.src = url;
+        cap.textContent = nome || '';
+        lb.classList.add('open');
+    };
+
+    window.fecharFotoAmpliada = function() {
+        const lb = document.getElementById('fotoLightbox');
+        if (lb) lb.classList.remove('open');
+    };
 
     /** Envia foto para Storage (ou grava dataURL em foto_url) e atualiza o item */
     async function salvarFotoItemOficial(itemId, dataUrl) {
@@ -3261,6 +3353,8 @@ function exportarCSVEstoque() {
                 aviso.style.color = '#1565C0';
             }
         }
+
+        ensureFotoLightbox();
 
         document.getElementById('btnSalvarItem').addEventListener('click', function(e) {
             e.preventDefault();
