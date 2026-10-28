@@ -5034,35 +5034,10 @@ ${secInt}
             `;
         }
 
-        html += `
-            <div class="secao-relatorio">
-                <div class="titulo-secao"><i class="fas fa-list"></i> Detalhamento das Saídas</div>
-        `;
-        
-        dados.slice().reverse().forEach((p, index) => {
-            const qtdNaoCad = contarUnidadesNaoCadastradas(p);
-            const temNaoCadastrado = qtdNaoCad > 0;
-            html += `
-                <div class="card-saida ${temNaoCadastrado ? 'nao-cadastrado' : ''}">
-                    <div class="cabeca">
-                        <span>#${index + 1} — ${p.colaborador}</span>
-                        <span class="data">${p.dataSaida || ''} • ${p.horas || ''}</span>
-                        ${temNaoCadastrado ? `<span class="badge-nao-cadastrado">${qtdNaoCad} unid. não cadastrada(s)</span>` : ''}
-                    </div>
-                    <div class="itens">
-                        ${(Array.isArray(p.itens) ? p.itens : []).map(i => 
-                            `${i.qtd || '?'}x ${formatarItemComCodigo(i.item || 'sem descrição', i.codigo)} (${i.destino || 'sem destino'})${i.cadastrado === false ? ' <span class="badge-nao-cadastrado">Não cadastrado</span>' : ''}`
-                        ).join(' • ') || 'Sem itens'}
-                    </div>
-                    <div class="rodape">Ass: ${p.assinatura || 'N/I'} • Almox: ${p.almoxarife || 'N/I'}</div>
-                </div>
-            `;
-        });
-        
-        html += `</div>`;
-
         const rankingColab = Object.entries(colaboradores).sort((a, b) => b[1].unidades - a[1].unidades);
-        
+        const rankingDestino = Object.entries(destinos).sort((a, b) => b[1].unidades - a[1].unidades);
+
+        // 1º Ranking de Colaboradores
         html += `
             <div class="secao-relatorio">
                 <div class="titulo-secao"><i class="fas fa-trophy"></i> Ranking de Colaboradores</div>
@@ -5091,7 +5066,7 @@ ${secInt}
             </div>
         `;
 
-        const rankingDestino = Object.entries(destinos).sort((a, b) => b[1].unidades - a[1].unidades);
+        // 2º Ranking por destino
         
         if (rankingDestino.length > 0) {
             html += `
@@ -5119,7 +5094,34 @@ ${secInt}
             `;
         }
 
-        container.innerHTML = html;
+        
+        // 3º Detalhamento das saídas
+        html += `
+            <div class="secao-relatorio">
+                <div class="titulo-secao"><i class="fas fa-list"></i> Detalhamento das Saídas</div>
+        `;
+        dados.slice().reverse().forEach((p, index) => {
+            const qtdNaoCad = contarUnidadesNaoCadastradas(p);
+            const temNaoCadastrado = qtdNaoCad > 0;
+            html += `
+                <div class="card-saida ${temNaoCadastrado ? 'nao-cadastrado' : ''}">
+                    <div class="cabeca">
+                        <span>#${index + 1} — ${p.colaborador}</span>
+                        <span class="data">${p.dataSaida || ''} • ${p.horas || ''}</span>
+                        ${temNaoCadastrado ? `<span class="badge-nao-cadastrado">${qtdNaoCad} unid. não cadastrada(s)</span>` : ''}
+                    </div>
+                    <div class="itens">
+                        ${(Array.isArray(p.itens) ? p.itens : []).map(i =>
+                            `${i.qtd || '?'}x ${formatarItemComCodigo(i.item || 'sem descrição', i.codigo)} (${i.destino || 'sem destino'})${i.cadastrado === false ? ' <span class="badge-nao-cadastrado">Não cadastrado</span>' : ''}`
+                        ).join(' • ') || 'Sem itens'}
+                    </div>
+                    <div class="rodape">Ass: ${p.assinatura || 'N/I'} • Almox: ${p.almoxarife || 'N/I'}</div>
+                </div>
+            `;
+        });
+        html += `</div>`;
+
+container.innerHTML = html;
     }
 
     window.regularizarItem = function(nomeItem) {
