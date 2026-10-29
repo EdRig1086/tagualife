@@ -37,7 +37,8 @@ const PERMISSOES = {
     },
     Manutenção: {
         cadastrar: false, editar: false, excluir: false, verTudo: false,
-        gerenciarUsuarios: false, aprovarCotacoes: false
+        gerenciarUsuarios: false, aprovarCotacoes: false,
+        soEstoque: true
     },
     Porteiro: {
         cadastrar: false, editar: false, excluir: false, verTudo: false,
@@ -195,6 +196,7 @@ function iniciarSeguranca() {
     mostrarUsuarioLogado();
     aplicarPermissoesNaTela();
     mostrarNavUsuariosAdmin();
+    try { aplicarRestricaoManutencao(); } catch (e) {}
 }
 
 
@@ -220,7 +222,7 @@ window.addEventListener('pageshow', function (ev) {
         }
         // bfcache: revalida permissões ao voltar
         if (ev && ev.persisted) {
-            try { aplicarPermissoesNaTela(); mostrarNavUsuariosAdmin(); } catch (e2) {}
+            try { aplicarPermissoesNaTela(); mostrarNavUsuariosAdmin(); aplicarRestricaoManutencao(); } catch (e2) {}
         }
     } catch (e) {}
 });
@@ -231,6 +233,41 @@ window.addEventListener('storage', function (e) {
         if (!path.includes('login.html')) window.location.replace('login.html');
     }
 });
+
+
+function ehManutencao() {
+    return getCargo() === 'Manutenção';
+}
+
+/** Manutenção: só consulta estoque (saber o que tem / o que falta) */
+function soConsultaEstoque() {
+    const p = PERMISSOES[getCargo()] || {};
+    return !!p.soEstoque || ehManutencao();
+}
+
+function aplicarRestricaoManutencao() {
+    if (!soConsultaEstoque()) return;
+    const path = (window.location.pathname || window.location.href || '').toLowerCase();
+    const livre = path.includes('login.html') || path.includes('estoque.html');
+    // Dashboard opcional bloqueado — só estoque
+    if (!livre) {
+        window.location.replace('estoque.html');
+        return;
+    }
+    // Esconde menus que não são Estoque / Sair / Tema
+    document.querySelectorAll('.nav-menu .nav-item').forEach(function(el) {
+        const href = (el.getAttribute('href') || '').toLowerCase();
+        const onclick = (el.getAttribute('onclick') || '');
+        const id = el.id || '';
+        if (href.includes('estoque.html')) return;
+        if (onclick.indexOf('logout') >= 0 || onclick.indexOf('toggleTheme') >= 0) return;
+        if (id === 'themeIcon' || el.classList.contains('btn-theme')) return;
+        if (el.tagName === 'BUTTON' && (onclick.indexOf('Theme') >= 0 || onclick.indexOf('logout') >= 0)) return;
+        // mantém tema e sair
+        if (el.textContent && /tema|sair/i.test(el.textContent)) return;
+        el.style.display = 'none';
+    });
+}
 
 // Exports globais
 try {
@@ -244,4 +281,7 @@ try {
     window.podeExcluir = podeExcluir;
     window.ehAdministrador = ehAdministrador;
     window.getCargo = getCargo;
+    window.ehManutencao = ehManutencao;
+    window.soConsultaEstoque = soConsultaEstoque;
+    window.aplicarRestricaoManutencao = aplicarRestricaoManutencao;
 } catch (e) {}
