@@ -1497,6 +1497,10 @@
 
 
     async function salvarItem() {
+        if ((typeof soConsultaEstoque === 'function' && soConsultaEstoque()) || (typeof ehManutencao === 'function' && ehManutencao())) {
+            mostrarToast('⛔ Perfil Manutenção só consulta o estoque', 'danger');
+            return;
+        }
         // Usuário comum: só cadastra item NOVO. Atualizar/excluir = só Administrador
         if (editandoId) {
             if (!ehAdministrador()) {
@@ -3359,28 +3363,62 @@ function exportarCSVEstoque() {
         atualizarRelogio();
         setInterval(atualizarRelogio, 1000);
 
-        // Usuário comum pode cadastrar; só admin edita/exclui
+        // Permissões do formulário
         const formCad = document.getElementById('formCadastro');
-        if (formCad) {
-            formCad.style.display = '';
-            formCad.querySelectorAll('input, select, button').forEach(function(el) {
-                el.disabled = false;
-                el.style.display = '';
-            });
-        }
         const btnSalvar = document.getElementById('btnSalvarItem');
-        if (btnSalvar) {
-            btnSalvar.style.display = '';
-            btnSalvar.disabled = false;
-        }
-        if (!ehAdministrador()) {
+        const soConsulta = (typeof soConsultaEstoque === 'function' && soConsultaEstoque())
+            || (typeof ehManutencao === 'function' && ehManutencao())
+            || (typeof getCargo === 'function' && getCargo() === 'Manutenção');
+
+        if (soConsulta) {
+            // Manutenção: só vê estoque
+            if (formCad) formCad.style.display = 'none';
+            if (btnSalvar) btnSalvar.style.display = 'none';
             const aviso = document.getElementById('avisoPermissao');
             if (aviso) {
-                aviso.innerHTML = '<i class="fas fa-info-circle"></i> Seu perfil pode <strong>cadastrar itens</strong>. Atualizar e excluir ficam com o <strong>Administrador</strong>.';
+                aviso.innerHTML = '<i class="fas fa-eye"></i> Perfil <strong>Manutenção</strong>: consulta o estoque (o que tem e o que está baixo). Sem cadastrar, editar ou excluir.';
                 aviso.classList.add('show');
-                aviso.style.background = '#E3F2FD';
-                aviso.style.borderColor = '#90CAF9';
-                aviso.style.color = '#1565C0';
+                aviso.style.background = '#E8F5E9';
+                aviso.style.borderColor = '#A5D6A7';
+                aviso.style.color = '#2E7D32';
+            }
+            // Esconde ações de gestão
+            document.querySelectorAll('#btnGerenciarCategorias, #btnNovaCategoria, [onclick*="gerarCodigos"], button').forEach(function(el) {
+                const tx = (el.textContent || '') + (el.getAttribute('onclick') || '') + (el.id || '');
+                if (/Gerar códigos|gerarCodigos|Nova categoria|btnNovaCategoria|btnGerenciarCategorias/i.test(tx)) {
+                    el.style.display = 'none';
+                }
+            });
+            const bg = document.querySelector('button[onclick*="gerarCodigos"], #btnGerarCodigos');
+            // botão gerar códigos na barra
+            document.querySelectorAll('.busca-bar button, .busca-bar a').forEach(function(el) {
+                if (/Gerar códigos/i.test(el.textContent || '')) el.style.display = 'none';
+            });
+        } else if (typeof podeCadastrar === 'function' && podeCadastrar()) {
+            if (formCad) {
+                formCad.style.display = '';
+                formCad.querySelectorAll('input, select, button').forEach(function(el) {
+                    el.disabled = false;
+                });
+            }
+            if (btnSalvar) { btnSalvar.style.display = ''; btnSalvar.disabled = false; }
+            if (!ehAdministrador()) {
+                const aviso = document.getElementById('avisoPermissao');
+                if (aviso) {
+                    aviso.innerHTML = '<i class="fas fa-info-circle"></i> Seu perfil pode <strong>cadastrar itens</strong>. Atualizar e excluir ficam com o <strong>Administrador</strong>.';
+                    aviso.classList.add('show');
+                    aviso.style.background = '#E3F2FD';
+                    aviso.style.borderColor = '#90CAF9';
+                    aviso.style.color = '#1565C0';
+                }
+            }
+        } else {
+            if (formCad) formCad.style.display = 'none';
+            if (btnSalvar) btnSalvar.style.display = 'none';
+            const aviso = document.getElementById('avisoPermissao');
+            if (aviso) {
+                aviso.innerHTML = '<i class="fas fa-eye"></i> Seu perfil tem acesso de <strong>consulta</strong> ao estoque.';
+                aviso.classList.add('show');
             }
         }
 
