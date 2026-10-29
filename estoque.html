@@ -203,6 +203,50 @@
         }
         .aviso-permissao.show { display: block; }
         #feedback { margin-top: 0.5rem; text-align: right; min-height: 1.5rem; font-size: 0.65rem; }
+
+        .painel-pedidos {
+            background: #FFF8E1; border: 1px solid #FFE082; border-radius: 10px;
+            padding: 0.75rem 1rem; margin-bottom: 1rem;
+        }
+        .painel-pedidos.vazio { display: none; }
+        .painel-pedidos h3 {
+            margin: 0 0 0.5rem; font-size: 0.8rem; color: #E65100;
+            display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap;
+        }
+        .painel-pedidos .badge-ped {
+            background: #E65100; color: #fff; border-radius: 20px; padding: 0.1rem 0.5rem;
+            font-size: 0.7rem; font-weight: 700;
+        }
+        .lista-pedidos { display: flex; flex-direction: column; gap: 0.4rem; max-height: 220px; overflow-y: auto; }
+        .pedido-item {
+            display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap;
+            background: #fff; border: 1px solid #FFE082; border-radius: 8px; padding: 0.45rem 0.65rem;
+            font-size: 0.72rem;
+        }
+        .pedido-item strong { color: #191D1B; }
+        .pedido-item .meta { color: #7A816E; font-size: 0.65rem; }
+        .pedido-item .btns { margin-left: auto; display: flex; gap: 0.3rem; }
+        .pedido-item button {
+            border: none; border-radius: 6px; padding: 0.25rem 0.5rem; font-size: 0.65rem;
+            font-weight: 600; cursor: pointer; font-family: inherit;
+        }
+        .btn-atender { background: #2E7D32; color: #fff; }
+        .btn-recusar { background: #F5F5F5; color: #8B3A3A; border: 1px solid #E0E0E0 !important; }
+        .btn-solicitar {
+            border: none; background: #FFF3E0; color: #E65100; border-radius: 6px;
+            padding: 0.2rem 0.4rem; cursor: pointer; font-size: 0.7rem;
+        }
+        .btn-solicitar:hover { background: #FFE0B2; }
+        .btn-ver-pedidos {
+            display: inline-flex; align-items: center; gap: 0.35rem;
+            padding: 0.35rem 0.75rem; border-radius: 40px; border: 1px solid #FFB74D;
+            background: #FFF3E0; color: #E65100; font-size: 0.7rem; font-weight: 600;
+            cursor: pointer; font-family: inherit;
+        }
+        .btn-ver-pedidos .n {
+            background: #E65100; color: #fff; border-radius: 20px; padding: 0.05rem 0.4rem; font-size: 0.65rem;
+        }
+
         #toastGlobal {
             position: fixed; bottom: 20px; right: 20px; padding: 12px 24px; border-radius: 8px;
             font-weight: 500; font-size: 13px; transform: translateY(100px); opacity: 0;
@@ -456,6 +500,16 @@
                 <i class="fas fa-lock"></i> Seu perfil tem acesso apenas para <strong>visualização</strong>.
             </div>
 
+
+            <div class="painel-pedidos vazio" id="painelPedidosCompra">
+                <h3>
+                    <i class="fas fa-bell"></i> Pedidos de compra
+                    <span class="badge-ped" id="badgePedidosN">0</span>
+                    <span style="font-weight:500;font-size:0.7rem;color:#7A816E;">— alerta para Admin e Almoxarife</span>
+                </h3>
+                <div class="lista-pedidos" id="listaPedidosCompra"></div>
+            </div>
+
             <div class="form-cadastro-wrap" id="formCadastro">
                 <!-- COLUNA FOTO (separada) -->
                 <div class="form-foto-col">
@@ -643,6 +697,9 @@
         <div class="modal-head">
             <h3><i class="fas fa-file-alt"></i> Relatório de Estoque</h3>
             <button type="button" class="btn-outline" onclick="fecharModalRelatorio()"><i class="fas fa-times"></i> Fechar</button>
+                    <button type="button" class="btn-ver-pedidos" id="btnPainelPedidos" onclick="alternarPainelPedidos()" title="Pedidos de compra">
+                        <i class="fas fa-shopping-cart"></i> Pedidos <span class="n" id="badgePedidosBtn">0</span>
+                    </button>
         </div>
         <div class="modal-body"><div id="relatorioConteudo"></div></div>
         <div class="modal-foot" style="flex-wrap:wrap;gap:0.4rem;">
@@ -1101,7 +1158,8 @@
 
             itensCache = data || [];
             carregarCategoriasDB().then(function() { atualizarSelectsCategoria(); });
-        renderizarTabela();
+            renderizarTabela();
+            carregarPedidosCompra();
             mostrarToast('📦 ' + itensCache.length + ' itens carregados', 'info');
         } catch (err) {
             console.error(err);
@@ -1237,6 +1295,9 @@
     window.ampliarFoto = function(url, nome) {
         if (!url) return;
         ensureFotoLightbox();
+        carregarPedidosCompra();
+        setInterval(function() { try { carregarPedidosCompra(); } catch (e) {} }, 60000);
+
         const lb = document.getElementById('fotoLightbox');
         const img = document.getElementById('fotoLightboxImg');
         const cap = document.getElementById('fotoLightboxCap');
@@ -1314,6 +1375,214 @@
     }
 
 
+
+    // ===== PEDIDOS DE COMPRA (Manutenção solicita → Admin/Almoxarife alertados) =====
+    var pedidosCompraCache = [];
+
+    function podeReceberPedidosCompra() {
+        const c = (typeof getCargo === 'function') ? getCargo() : '';
+        return c === 'Administrador' || c === 'Almoxarife' || c === 'Síndico' || c === 'Síndica';
+    }
+
+    function podeSolicitarCompra() {
+        const c = (typeof getCargo === 'function') ? getCargo() : '';
+        // Manutenção e quem só consulta; admin também pode registrar pedido se quiser
+        return c === 'Manutenção' || c === 'Usuário' || c === 'Porteiro' || c === 'Zelador'
+            || c === 'Administrador' || c === 'Almoxarife' || c === 'Síndico' || c === 'Síndica';
+    }
+
+    function nomeUsuarioSessao() {
+        try {
+            const s = JSON.parse(localStorage.getItem('tagualife_sessao') || 'null');
+            return (s && (s.nome || s.email)) || 'Usuário';
+        } catch (e) { return 'Usuário'; }
+    }
+
+    async function carregarPedidosCompra() {
+        if (!sb) return;
+        try {
+            const { data, error } = await sb
+                .from('pedidos_compra')
+                .select('*')
+                .eq('status', 'pendente')
+                .order('criado_em', { ascending: false })
+                .limit(50);
+            if (error) {
+                console.warn('pedidos_compra:', error.message);
+                // tabela pode não existir ainda
+                pedidosCompraCache = [];
+                atualizarUIPedidos();
+                return;
+            }
+            pedidosCompraCache = data || [];
+            atualizarUIPedidos();
+        } catch (e) {
+            console.warn(e);
+            pedidosCompraCache = [];
+            atualizarUIPedidos();
+        }
+    }
+
+    function atualizarUIPedidos() {
+        const n = pedidosCompraCache.length;
+        const badge = document.getElementById('badgePedidosN');
+        const badgeBtn = document.getElementById('badgePedidosBtn');
+        if (badge) badge.textContent = String(n);
+        if (badgeBtn) badgeBtn.textContent = String(n);
+
+        const painel = document.getElementById('painelPedidosCompra');
+        const lista = document.getElementById('listaPedidosCompra');
+        const btn = document.getElementById('btnPainelPedidos');
+
+        if (btn) {
+            btn.style.display = (podeReceberPedidosCompra() || n > 0) ? '' : 'none';
+        }
+
+        if (!painel || !lista) return;
+
+        // Painel detalhado só para quem recebe alerta
+        if (!podeReceberPedidosCompra()) {
+            painel.classList.add('vazio');
+            return;
+        }
+
+        if (n === 0) {
+            painel.classList.add('vazio');
+            lista.innerHTML = '';
+            return;
+        }
+
+        painel.classList.remove('vazio');
+        lista.innerHTML = pedidosCompraCache.map(function(p) {
+            const quando = p.criado_em ? new Date(p.criado_em).toLocaleString('pt-BR') : '';
+            const qtd = p.quantidade_atual != null ? p.quantidade_atual : '—';
+            const lim = p.limite_alerta != null ? p.limite_alerta : '—';
+            return '<div class="pedido-item">' +
+                '<div style="flex:1;min-width:160px;">' +
+                '<strong><i class="fas fa-exclamation-circle" style="color:#E65100;"></i> ' + (p.item_nome || 'Item') + '</strong>' +
+                '<div class="meta">Estoque: ' + qtd + ' · Limite: ' + lim +
+                ' · Pedido por: ' + (p.solicitado_por || '—') +
+                (p.cargo_solicitante ? ' (' + p.cargo_solicitante + ')' : '') +
+                (quando ? ' · ' + quando : '') + '</div>' +
+                (p.observacao ? '<div class="meta">' + p.observacao + '</div>' : '') +
+                '</div>' +
+                '<div class="btns">' +
+                '<button type="button" class="btn-atender" onclick="atenderPedidoCompra(\'' + p.id + '\')">Atendido</button>' +
+                '<button type="button" class="btn-recusar" onclick="recusarPedidoCompra(\'' + p.id + '\')">Dispensar</button>' +
+                '</div></div>';
+        }).join('');
+    }
+
+    window.alternarPainelPedidos = function() {
+        const painel = document.getElementById('painelPedidosCompra');
+        if (!painel) return;
+        if (!podeReceberPedidosCompra()) {
+            mostrarToast('ℹ️ Pedidos são alertas para Admin e Almoxarife', 'info');
+            return;
+        }
+        painel.classList.toggle('vazio');
+        if (!painel.classList.contains('vazio') && pedidosCompraCache.length === 0) {
+            lista = document.getElementById('listaPedidosCompra');
+            if (lista) lista.innerHTML = '<div class="meta">Nenhum pedido pendente.</div>';
+        }
+    };
+
+    window.solicitarCompraItem = async function(id) {
+        if (!podeSolicitarCompra()) {
+            mostrarToast('⛔ Sem permissão para solicitar', 'danger');
+            return;
+        }
+        const item = (itensCache || []).find(function(i) { return String(i.id) === String(id); });
+        if (!item) {
+            mostrarToast('Item não encontrado', 'danger');
+            return;
+        }
+        const obs = prompt('Solicitar compra de:\n' + (item.nome || '') + '\n\nObservação (opcional):', 'Estoque baixo / em falta');
+        if (obs === null) return;
+
+        const payload = {
+            estoque_id: item.id,
+            item_nome: item.nome || 'Item',
+            quantidade_atual: item.quantidade != null ? parseInt(item.quantidade, 10) : 0,
+            limite_alerta: item.limite_alerta != null ? parseInt(item.limite_alerta, 10) : 5,
+            solicitado_por: nomeUsuarioSessao(),
+            cargo_solicitante: (typeof getCargo === 'function' ? getCargo() : ''),
+            observacao: (obs || '').trim() || null,
+            status: 'pendente'
+        };
+
+        try {
+            const { error } = await sb.from('pedidos_compra').insert(
+                (typeof payloadComCondominio === 'function' ? payloadComCondominio(payload) : payload)
+            );
+            if (error) {
+                if (/pedidos_compra|relation|schema|exist/i.test(error.message || '')) {
+                    alert('Crie a tabela no Supabase (SQL Editor):\n\n' + sqlPedidosCompra());
+                    return;
+                }
+                throw error;
+            }
+            mostrarToast('🔔 Pedido enviado! Admin e Almoxarife foram alertados.', 'success');
+            await carregarPedidosCompra();
+        } catch (e) {
+            console.error(e);
+            mostrarToast('❌ ' + (e.message || e), 'danger');
+        }
+    };
+
+    function sqlPedidosCompra() {
+        return `CREATE TABLE IF NOT EXISTS public.pedidos_compra (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  estoque_id uuid REFERENCES public.estoque(id),
+  item_nome character varying NOT NULL,
+  quantidade_atual integer,
+  limite_alerta integer,
+  solicitado_por character varying,
+  cargo_solicitante character varying,
+  observacao text,
+  status character varying DEFAULT 'pendente',
+  atendido_por character varying,
+  criado_em timestamp without time zone DEFAULT now(),
+  atualizado_em timestamp without time zone DEFAULT now()
+);
+ALTER TABLE public.pedidos_compra ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "pedidos_compra_all" ON public.pedidos_compra FOR ALL USING (true) WITH CHECK (true);`;
+    }
+
+    window.atenderPedidoCompra = async function(id) {
+        if (!podeReceberPedidosCompra()) return;
+        try {
+            const { error } = await sb.from('pedidos_compra').update({
+                status: 'atendido',
+                atendido_por: nomeUsuarioSessao(),
+                atualizado_em: new Date().toISOString()
+            }).eq('id', id);
+            if (error) throw error;
+            mostrarToast('✅ Pedido marcado como atendido', 'success');
+            await carregarPedidosCompra();
+        } catch (e) {
+            mostrarToast('❌ ' + (e.message || e), 'danger');
+        }
+    };
+
+    window.recusarPedidoCompra = async function(id) {
+        if (!podeReceberPedidosCompra()) return;
+        if (!confirm('Dispensar este pedido?')) return;
+        try {
+            const { error } = await sb.from('pedidos_compra').update({
+                status: 'dispensado',
+                atendido_por: nomeUsuarioSessao(),
+                atualizado_em: new Date().toISOString()
+            }).eq('id', id);
+            if (error) throw error;
+            mostrarToast('Pedido dispensado', 'info');
+            await carregarPedidosCompra();
+        } catch (e) {
+            mostrarToast('❌ ' + (e.message || e), 'danger');
+        }
+    };
+
+
     function renderizarTabela() {
         const busca = (document.getElementById('buscaInput').value || '').toLowerCase().trim();
         const categoria = document.getElementById('filtroCategoria').value;
@@ -1348,6 +1617,9 @@
                 let botoes = '';
                 if (podeEdit) botoes += '<button class="btn-editar" onclick="editarItem(\'' + item.id + '\')" title="Editar"><i class="fas fa-edit"></i></button>';
                 if (podeDel) botoes += '<button class="btn-excluir" onclick="excluirItem(\'' + item.id + '\')" title="Excluir"><i class="fas fa-trash-alt"></i></button>';
+                if (typeof podeSolicitarCompra === 'function' ? podeSolicitarCompra() : true) {
+                    botoes += '<button type="button" class="btn-solicitar" onclick="solicitarCompraItem(\'' + item.id + '\')" title="Solicitar compra"><i class="fas fa-shopping-cart"></i></button>';
+                }
                 if (!botoes) botoes = '<span style="font-size:0.6rem;color:var(--gray-400);">—</span>';
 
                 html += '<tr class="' + (isBaixo ? 'estoque-baixo' : '') + '">' +
@@ -3423,6 +3695,9 @@ function exportarCSVEstoque() {
         }
 
         ensureFotoLightbox();
+        carregarPedidosCompra();
+        setInterval(function() { try { carregarPedidosCompra(); } catch (e) {} }, 60000);
+
 
         document.getElementById('btnSalvarItem').addEventListener('click', function(e) {
             e.preventDefault();
