@@ -263,6 +263,7 @@
         }
         .btn-relatorio:hover { background: #5A614E; }
         .relatorios-bar {
+            margin-top: 1rem;
             display: flex; gap: 0.4rem; flex-wrap: wrap; margin-bottom: 1rem;
             padding: 0.6rem 0.8rem; background: var(--gray-50); border-radius: 8px;
             border: 1px solid var(--border-color); align-items: center;
@@ -596,46 +597,6 @@
                 </div>
             </div>
 
-
-
-            
-            <div class="relatorios-bar">
-                <span class="lbl"><i class="fas fa-chart-bar"></i> Relatórios (banco):</span>
-                <button type="button" class="btn-relatorio" onclick="gerarRelatorioEstoque('geral')">
-                    <i class="fas fa-list"></i> Inventário geral
-                </button>
-                <button type="button" class="btn-relatorio" onclick="gerarRelatorioEstoque('categoria')">
-                    <i class="fas fa-th-list"></i> Por categoria
-                </button>
-                <button type="button" class="btn-relatorio" onclick="gerarRelatorioEstoque('baixo')" style="background:#C1A83C;border-color:#C1A83C;">
-                    <i class="fas fa-exclamation-triangle"></i> Baixa de estoque
-                </button>
-                <button type="button" class="btn-relatorio" onclick="gerarRelatorioEstoque('baixo_categoria')" style="background:#C1A83C;border-color:#C1A83C;">
-                    <i class="fas fa-filter"></i> Baixa por categoria
-                </button>
-                <button type="button" class="btn-relatorio" onclick="gerarRelatorioEstoque('categoria_escolhida')">
-                    <i class="fas fa-filter"></i> Categoria específica
-                </button>
-                <button type="button" class="btn-relatorio" onclick="gerarLevantamentoCompleto()" style="background:#2E5A3C;border-color:#2E5A3C;">
-                    <i class="fas fa-file-alt"></i> Levantamento completo
-                </button>
-                                <button type="button" class="btn-relatorio" onclick="gerarRelatorioSindico()" style="background:#1B4F72;border-color:#1B4F72;">
-                    <i class="fas fa-user-tie"></i> Relatório síndico
-                </button>
-<button type="button" class="btn-relatorio" onclick="gerarSugestaoCompra()" style="background:#8B6914;border-color:#8B6914;">
-                    <i class="fas fa-cart-plus"></i> Sugestão de compra
-                </button>
-                <button type="button" class="btn-relatorio" onclick="gerarCurvaABC()" style="background:#4A5568;border-color:#4A5568;">
-                    <i class="fas fa-chart-pie"></i> Curva ABC
-                </button>
-                <button type="button" class="btn-relatorio" onclick="exportarEstoqueExcel()">
-                    <i class="fas fa-file-excel"></i> Excel estoque
-                </button>
-                <button type="button" class="btn-relatorio" onclick="abrirHistoricoMovimentacoes()" style="background:#191D1B;border-color:#191D1B;color:#fff;">
-                    <i class="fas fa-exchange-alt"></i> Movimentações
-                </button>
-            </div>
-
             <div class="busca-bar">
                 <input type="text" id="buscaInput" placeholder="🔍 Buscar..." />
                 <select id="filtroCategoria">
@@ -687,6 +648,47 @@
                 <span>⚠️ Baixo estoque: <strong id="totalBaixoEstoque">0</strong></span>
             </div>
             <div id="feedback"></div>
+
+            <div class="relatorios-bar">
+                <span class="lbl"><i class="fas fa-chart-bar"></i> Relatórios (banco):</span>
+                <button type="button" class="btn-relatorio" onclick="gerarRelatorioEstoque('geral')">
+                    <i class="fas fa-list"></i> Inventário geral
+                </button>
+                    <button type="button" class="btn-ver-pedidos" id="btnPainelPedidos" onclick="alternarPainelPedidos()" title="Pedidos de compra">
+                        <i class="fas fa-shopping-cart"></i> Pedidos <span class="n" id="badgePedidosBtn">0</span>
+                    </button>
+                <button type="button" class="btn-relatorio" onclick="gerarRelatorioEstoque('categoria')">
+                    <i class="fas fa-th-list"></i> Por categoria
+                </button>
+                <button type="button" class="btn-relatorio" onclick="gerarRelatorioEstoque('baixo')" style="background:#C1A83C;border-color:#C1A83C;">
+                    <i class="fas fa-exclamation-triangle"></i> Baixa de estoque
+                </button>
+                <button type="button" class="btn-relatorio" onclick="gerarRelatorioEstoque('baixo_categoria')" style="background:#C1A83C;border-color:#C1A83C;">
+                    <i class="fas fa-filter"></i> Baixa por categoria
+                </button>
+                <button type="button" class="btn-relatorio" onclick="gerarRelatorioEstoque('categoria_escolhida')">
+                    <i class="fas fa-filter"></i> Categoria específica
+                </button>
+                <button type="button" class="btn-relatorio" onclick="gerarLevantamentoCompleto()" style="background:#2E5A3C;border-color:#2E5A3C;">
+                    <i class="fas fa-file-alt"></i> Levantamento completo
+                </button>
+                                <button type="button" class="btn-relatorio" onclick="gerarRelatorioSindico()" style="background:#1B4F72;border-color:#1B4F72;">
+                    <i class="fas fa-user-tie"></i> Relatório síndico
+                </button>
+<button type="button" class="btn-relatorio" onclick="gerarSugestaoCompra()" style="background:#8B6914;border-color:#8B6914;">
+                    <i class="fas fa-cart-plus"></i> Sugestão de compra
+                </button>
+                <button type="button" class="btn-relatorio" onclick="gerarCurvaABC()" style="background:#4A5568;border-color:#4A5568;">
+                    <i class="fas fa-chart-pie"></i> Curva ABC
+                </button>
+                <button type="button" class="btn-relatorio" onclick="exportarEstoqueExcel()">
+                    <i class="fas fa-file-excel"></i> Excel estoque
+                </button>
+                <button type="button" class="btn-relatorio" onclick="abrirHistoricoMovimentacoes()" style="background:#191D1B;border-color:#191D1B;color:#fff;">
+                    <i class="fas fa-exchange-alt"></i> Movimentações
+                </button>
+            </div>
+
         </div>
     </div>
 </div>
@@ -697,9 +699,6 @@
         <div class="modal-head">
             <h3><i class="fas fa-file-alt"></i> Relatório de Estoque</h3>
             <button type="button" class="btn-outline" onclick="fecharModalRelatorio()"><i class="fas fa-times"></i> Fechar</button>
-                    <button type="button" class="btn-ver-pedidos" id="btnPainelPedidos" onclick="alternarPainelPedidos()" title="Pedidos de compra">
-                        <i class="fas fa-shopping-cart"></i> Pedidos <span class="n" id="badgePedidosBtn">0</span>
-                    </button>
         </div>
         <div class="modal-body"><div id="relatorioConteudo"></div></div>
         <div class="modal-foot" style="flex-wrap:wrap;gap:0.4rem;">
