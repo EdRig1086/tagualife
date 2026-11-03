@@ -204,6 +204,45 @@
         .aviso-permissao.show { display: block; }
         #feedback { margin-top: 0.5rem; text-align: right; min-height: 1.5rem; font-size: 0.65rem; }
 
+        .bloco-notas-compra {
+            background: #F5F7F0; border: 1px solid #D8DCCE; border-radius: 10px;
+            padding: 0.85rem 1rem; margin-bottom: 1rem;
+        }
+        .bloco-notas-compra h3 {
+            margin: 0 0 0.55rem; font-size: 0.82rem; color: #191D1B;
+            display: flex; align-items: center; gap: 0.4rem;
+        }
+        .bloco-notas-compra .grid-notas {
+            display: grid; grid-template-columns: 1.4fr 100px 1fr 1fr; gap: 0.5rem 0.65rem; align-items: end;
+        }
+        @media (max-width: 900px) {
+            .bloco-notas-compra .grid-notas { grid-template-columns: 1fr 1fr; }
+        }
+        @media (max-width: 560px) {
+            .bloco-notas-compra .grid-notas { grid-template-columns: 1fr; }
+        }
+        .bloco-notas-compra label {
+            display: block; font-size: 0.6rem; font-weight: 700; color: #7A816E;
+            text-transform: uppercase; margin-bottom: 0.15rem;
+        }
+        .bloco-notas-compra input, .bloco-notas-compra textarea {
+            width: 100%; box-sizing: border-box; border: 1px solid #D8DCCE; border-radius: 8px;
+            padding: 0.4rem 0.55rem; font-size: 0.78rem; font-family: inherit;
+            background: #fff; color: var(--text-primary);
+        }
+        .bloco-notas-compra textarea { min-height: 56px; resize: vertical; grid-column: 1 / -1; }
+        .bloco-notas-compra .acoes-notas {
+            grid-column: 1 / -1; display: flex; gap: 0.4rem; flex-wrap: wrap; margin-top: 0.25rem;
+        }
+        .bloco-notas-compra .btn-enviar-pedido {
+            border: none; border-radius: 40px; padding: 0.4rem 1rem; font-weight: 700;
+            font-size: 0.75rem; background: #E65100; color: #fff; cursor: pointer; font-family: inherit;
+        }
+        .bloco-notas-compra .btn-enviar-pedido:hover { background: #BF360C; }
+        .bloco-notas-compra .btn-limpar-notas {
+            border: 1px solid #D8DCCE; border-radius: 40px; padding: 0.4rem 0.9rem;
+            font-size: 0.72rem; background: #fff; cursor: pointer; font-family: inherit; color: #7A816E;
+        }
         .painel-pedidos {
             background: #FFF8E1; border: 1px solid #FFE082; border-radius: 10px;
             padding: 0.75rem 1rem; margin-bottom: 1rem;
@@ -502,7 +541,39 @@
             </div>
 
 
-            <div class="painel-pedidos vazio" id="painelPedidosCompra">
+            
+            <div class="bloco-notas-compra" id="blocoNotasCompra" style="display:none;">
+                <h3><i class="fas fa-sticky-note"></i> Solicitar material / compra
+                    <span style="font-weight:500;font-size:0.7rem;color:#7A816E;">— Manutenção avisa Admin e Almoxarife</span>
+                </h3>
+                <div class="grid-notas">
+                    <div>
+                        <label>Nome do item *</label>
+                        <input type="text" id="notaItemNome" placeholder="Ex.: Lâmpada LED 9W" />
+                    </div>
+                    <div>
+                        <label>Qtd comprar *</label>
+                        <input type="number" id="notaQtd" min="1" value="1" />
+                    </div>
+                    <div>
+                        <label>Motivo / uso *</label>
+                        <input type="text" id="notaMotivo" placeholder="Ex.: queimou / manutenção preventiva" />
+                    </div>
+                    <div>
+                        <label>Onde será usado *</label>
+                        <input type="text" id="notaLocal" placeholder="Ex.: Bloco B · 5º andar · Car Wash" />
+                    </div>
+                    <textarea id="notaObs" placeholder="Observação extra (opcional)"></textarea>
+                    <div class="acoes-notas">
+                        <button type="button" class="btn-enviar-pedido" id="btnEnviarPedidoNota">
+                            <i class="fas fa-bell"></i> Enviar pedido (notificar)
+                        </button>
+                        <button type="button" class="btn-limpar-notas" id="btnLimparNota">Limpar</button>
+                    </div>
+                </div>
+            </div>
+
+<div class="painel-pedidos vazio" id="painelPedidosCompra">
                 <h3>
                     <i class="fas fa-bell"></i> Pedidos de compra
                     <span class="badge-ped" id="badgePedidosN">0</span>
@@ -1297,6 +1368,25 @@
         carregarPedidosCompra();
         setInterval(function() { try { carregarPedidosCompra(); } catch (e) {} }, 60000);
 
+        // Bloco de notas — solicitações
+        (function() {
+            const bloco = document.getElementById('blocoNotasCompra');
+            if (bloco && typeof podeSolicitarCompra === 'function' && podeSolicitarCompra()) {
+                bloco.style.display = '';
+            }
+            const btnEnv = document.getElementById('btnEnviarPedidoNota');
+            if (btnEnv) btnEnv.addEventListener('click', function(e) {
+                e.preventDefault();
+                enviarPedidoDoBlocoNotas();
+            });
+            const btnLim = document.getElementById('btnLimparNota');
+            if (btnLim) btnLim.addEventListener('click', function(e) {
+                e.preventDefault();
+                limparBlocoNotas();
+            });
+        })();
+
+
         const lb = document.getElementById('fotoLightbox');
         const img = document.getElementById('fotoLightboxImg');
         const cap = document.getElementById('fotoLightboxCap');
@@ -1456,14 +1546,18 @@
             const quando = p.criado_em ? new Date(p.criado_em).toLocaleString('pt-BR') : '';
             const qtd = p.quantidade_atual != null ? p.quantidade_atual : '—';
             const lim = p.limite_alerta != null ? p.limite_alerta : '—';
+            const qtdSol = p.quantidade_solicitar != null ? p.quantidade_solicitar : '—';
             return '<div class="pedido-item">' +
                 '<div style="flex:1;min-width:160px;">' +
-                '<strong><i class="fas fa-exclamation-circle" style="color:#E65100;"></i> ' + (p.item_nome || 'Item') + '</strong>' +
-                '<div class="meta">Estoque: ' + qtd + ' · Limite: ' + lim +
-                ' · Pedido por: ' + (p.solicitado_por || '—') +
+                '<strong><i class="fas fa-exclamation-circle" style="color:#E65100;"></i> ' + (p.item_nome || 'Item') +
+                ' <span style="color:#E65100;">× ' + qtdSol + '</span></strong>' +
+                '<div class="meta">Estoque atual: ' + qtd + (lim !== '—' ? ' · Limite: ' + lim : '') +
+                (p.motivo_uso ? ' · Motivo: ' + p.motivo_uso : '') +
+                (p.local_uso ? ' · Onde: ' + p.local_uso : '') + '</div>' +
+                '<div class="meta">Pedido por: ' + (p.solicitado_por || '—') +
                 (p.cargo_solicitante ? ' (' + p.cargo_solicitante + ')' : '') +
                 (quando ? ' · ' + quando : '') + '</div>' +
-                (p.observacao ? '<div class="meta">' + p.observacao + '</div>' : '') +
+                (p.observacao ? '<div class="meta">Obs: ' + p.observacao + '</div>' : '') +
                 '</div>' +
                 '<div class="btns">' +
                 '<button type="button" class="btn-atender" onclick="atenderPedidoCompra(\'' + p.id + '\')">Atendido</button>' +
@@ -1496,46 +1590,136 @@
             mostrarToast('Item não encontrado', 'danger');
             return;
         }
-        const obs = prompt('Solicitar compra de:\n' + (item.nome || '') + '\n\nObservação (opcional):', 'Estoque baixo / em falta');
-        if (obs === null) return;
+        const bloco = document.getElementById('blocoNotasCompra');
+        if (bloco) {
+            bloco.style.display = '';
+            bloco.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+        const elNome = document.getElementById('notaItemNome');
+        const elQtd = document.getElementById('notaQtd');
+        const elMot = document.getElementById('notaMotivo');
+        const elLoc = document.getElementById('notaLocal');
+        const elObs = document.getElementById('notaObs');
+        if (elNome) elNome.value = item.nome || '';
+        if (elQtd) {
+            const q = item.quantidade != null ? parseInt(item.quantidade, 10) : 0;
+            const lim = item.limite_alerta != null ? parseInt(item.limite_alerta, 10) : 5;
+            elQtd.value = Math.max(1, lim - q, 1);
+        }
+        if (elMot) elMot.value = (item.quantidade === 0 || item.quantidade === '0') ? 'Item zerado no estoque' : 'Estoque baixo';
+        if (elLoc) elLoc.value = '';
+        if (elObs) elObs.value = 'Cód. ' + (item.codigo != null ? item.codigo : '—') + ' · estoque atual: ' + (item.quantidade != null ? item.quantidade : 0);
+        window._pedidoEstoqueId = item.id;
+        window._pedidoQtdAtual = item.quantidade != null ? parseInt(item.quantidade, 10) : 0;
+        window._pedidoLimite = item.limite_alerta != null ? parseInt(item.limite_alerta, 10) : 5;
+        mostrarToast('📝 Complete motivo e local, depois envie o pedido', 'info');
+    };
+
+    async function enviarPedidoDoBlocoNotas() {
+        if (!podeSolicitarCompra()) {
+            mostrarToast('⛔ Sem permissão', 'danger');
+            return;
+        }
+        const nome = (document.getElementById('notaItemNome').value || '').trim();
+        const qtdSol = parseInt(document.getElementById('notaQtd').value, 10) || 0;
+        const motivo = (document.getElementById('notaMotivo').value || '').trim();
+        const local = (document.getElementById('notaLocal').value || '').trim();
+        const obs = (document.getElementById('notaObs').value || '').trim();
+        if (nome.length < 2) {
+            mostrarToast('⚠️ Informe o nome do item', 'warning');
+            document.getElementById('notaItemNome').focus();
+            return;
+        }
+        if (qtdSol < 1) {
+            mostrarToast('⚠️ Informe a quantidade a comprar', 'warning');
+            return;
+        }
+        if (!motivo) {
+            mostrarToast('⚠️ Informe o motivo / uso', 'warning');
+            document.getElementById('notaMotivo').focus();
+            return;
+        }
+        if (!local) {
+            mostrarToast('⚠️ Informe onde será usado', 'warning');
+            document.getElementById('notaLocal').focus();
+            return;
+        }
 
         const payload = {
-            estoque_id: item.id,
-            item_nome: item.nome || 'Item',
-            quantidade_atual: item.quantidade != null ? parseInt(item.quantidade, 10) : 0,
-            limite_alerta: item.limite_alerta != null ? parseInt(item.limite_alerta, 10) : 5,
+            estoque_id: window._pedidoEstoqueId || null,
+            item_nome: nome,
+            quantidade_atual: window._pedidoQtdAtual != null ? window._pedidoQtdAtual : null,
+            quantidade_solicitar: qtdSol,
+            limite_alerta: window._pedidoLimite != null ? window._pedidoLimite : null,
+            motivo_uso: motivo,
+            local_uso: local,
             solicitado_por: nomeUsuarioSessao(),
             cargo_solicitante: (typeof getCargo === 'function' ? getCargo() : ''),
-            observacao: (obs || '').trim() || null,
+            observacao: obs || null,
             status: 'pendente'
         };
 
         try {
-            const { error } = await sb.from('pedidos_compra').insert(
+            let { error } = await sb.from('pedidos_compra').insert(
                 (typeof payloadComCondominio === 'function' ? payloadComCondominio(payload) : payload)
             );
+            // Se colunas novas não existirem, tenta payload mínimo
+            if (error && /motivo_uso|local_uso|quantidade_solicitar|column/i.test(error.message || '')) {
+                const mini = {
+                    item_nome: nome,
+                    quantidade_atual: payload.quantidade_atual,
+                    solicitado_por: payload.solicitado_por,
+                    cargo_solicitante: payload.cargo_solicitante,
+                    observacao: ('Qtd: ' + qtdSol + ' | Motivo: ' + motivo + ' | Onde: ' + local + (obs ? ' | ' + obs : '')),
+                    status: 'pendente'
+                };
+                const r2 = await sb.from('pedidos_compra').insert(mini);
+                error = r2.error;
+                if (!error) {
+                    mostrarToast('🔔 Pedido enviado (atualize colunas SQL para mais detalhes)', 'success');
+                    limparBlocoNotas();
+                    await carregarPedidosCompra();
+                    return;
+                }
+            }
             if (error) {
-                if (/pedidos_compra|relation|schema|exist/i.test(error.message || '')) {
-                    alert('Crie a tabela no Supabase (SQL Editor):\n\n' + sqlPedidosCompra());
+                if (/pedidos_compra|relation|schema|does not exist/i.test(error.message || '')) {
+                    alert('Crie/atualize a tabela no Supabase (SQL Editor):\n\n' + sqlPedidosCompra());
                     return;
                 }
                 throw error;
             }
-            mostrarToast('🔔 Pedido enviado! Admin e Almoxarife foram alertados.', 'success');
+            mostrarToast('🔔 Pedido registrado! Admin e Almoxarife foram notificados.', 'success');
+            limparBlocoNotas();
             await carregarPedidosCompra();
         } catch (e) {
             console.error(e);
             mostrarToast('❌ ' + (e.message || e), 'danger');
         }
-    };
+    }
+
+    function limparBlocoNotas() {
+        window._pedidoEstoqueId = null;
+        window._pedidoQtdAtual = null;
+        window._pedidoLimite = null;
+        ['notaItemNome','notaMotivo','notaLocal','notaObs'].forEach(function(id) {
+            const el = document.getElementById(id);
+            if (el) el.value = '';
+        });
+        const q = document.getElementById('notaQtd');
+        if (q) q.value = '1';
+    }
 
     function sqlPedidosCompra() {
         return `CREATE TABLE IF NOT EXISTS public.pedidos_compra (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  estoque_id uuid REFERENCES public.estoque(id),
+  estoque_id uuid,
   item_nome character varying NOT NULL,
   quantidade_atual integer,
+  quantidade_solicitar integer,
   limite_alerta integer,
+  motivo_uso text,
+  local_uso text,
   solicitado_por character varying,
   cargo_solicitante character varying,
   observacao text,
@@ -1545,7 +1729,12 @@
   atualizado_em timestamp without time zone DEFAULT now()
 );
 ALTER TABLE public.pedidos_compra ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "pedidos_compra_all" ON public.pedidos_compra FOR ALL USING (true) WITH CHECK (true);`;
+DROP POLICY IF EXISTS "pedidos_compra_all" ON public.pedidos_compra;
+CREATE POLICY "pedidos_compra_all" ON public.pedidos_compra FOR ALL USING (true) WITH CHECK (true);
+-- Se a tabela já existir, rode também:
+ALTER TABLE public.pedidos_compra ADD COLUMN IF NOT EXISTS quantidade_solicitar integer;
+ALTER TABLE public.pedidos_compra ADD COLUMN IF NOT EXISTS motivo_uso text;
+ALTER TABLE public.pedidos_compra ADD COLUMN IF NOT EXISTS local_uso text;`;
     }
 
     window.atenderPedidoCompra = async function(id) {
@@ -3696,6 +3885,25 @@ function exportarCSVEstoque() {
         ensureFotoLightbox();
         carregarPedidosCompra();
         setInterval(function() { try { carregarPedidosCompra(); } catch (e) {} }, 60000);
+
+        // Bloco de notas — solicitações
+        (function() {
+            const bloco = document.getElementById('blocoNotasCompra');
+            if (bloco && typeof podeSolicitarCompra === 'function' && podeSolicitarCompra()) {
+                bloco.style.display = '';
+            }
+            const btnEnv = document.getElementById('btnEnviarPedidoNota');
+            if (btnEnv) btnEnv.addEventListener('click', function(e) {
+                e.preventDefault();
+                enviarPedidoDoBlocoNotas();
+            });
+            const btnLim = document.getElementById('btnLimparNota');
+            if (btnLim) btnLim.addEventListener('click', function(e) {
+                e.preventDefault();
+                limparBlocoNotas();
+            });
+        })();
+
 
 
         document.getElementById('btnSalvarItem').addEventListener('click', function(e) {
