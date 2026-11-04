@@ -544,12 +544,13 @@
             
             <div class="bloco-notas-compra" id="blocoNotasCompra" style="display:none;">
                 <h3><i class="fas fa-sticky-note"></i> Solicitar material / compra
-                    <span style="font-weight:500;font-size:0.7rem;color:#7A816E;">— Manutenção avisa Admin e Almoxarife</span>
+                    <span style="font-weight:500;font-size:0.7rem;color:#7A816E;">— notifica Admin e Almoxarife · gera documento para a síndica</span>
                 </h3>
                 <div class="grid-notas">
                     <div>
                         <label>Nome do item *</label>
-                        <input type="text" id="notaItemNome" placeholder="Ex.: Lâmpada LED 9W" />
+                        <input type="text" id="notaItemNome" list="listaItensEstoque" placeholder="Digite ou escolha do estoque" />
+                        <datalist id="listaItensEstoque"></datalist>
                     </div>
                     <div>
                         <label>Qtd comprar *</label>
@@ -557,27 +558,66 @@
                     </div>
                     <div>
                         <label>Motivo / uso *</label>
-                        <input type="text" id="notaMotivo" placeholder="Ex.: queimou / manutenção preventiva" />
+                        <select id="notaMotivo">
+                            <option value="">Selecione...</option>
+                            <option value="Item zerado no estoque">Item zerado no estoque</option>
+                            <option value="Estoque baixo">Estoque baixo</option>
+                            <option value="Substituição / quebrou">Substituição / quebrou</option>
+                            <option value="Manutenção preventiva">Manutenção preventiva</option>
+                            <option value="Manutenção corretiva">Manutenção corretiva</option>
+                            <option value="Obra / reforma">Obra / reforma</option>
+                            <option value="Uso diário / reposição">Uso diário / reposição</option>
+                            <option value="Emergência">Emergência</option>
+                            <option value="Outro">Outro (descrever na obs.)</option>
+                        </select>
                     </div>
                     <div>
                         <label>Onde será usado *</label>
-                        <input type="text" id="notaLocal" placeholder="Ex.: Bloco B · 5º andar · Car Wash" />
+                        <select id="notaLocal">
+                            <option value="">Selecione...</option>
+                            <option value="Áreas comuns">Áreas comuns</option>
+                            <option value="Portaria">Portaria</option>
+                            <option value="1º Subsolo">1º Subsolo</option>
+                            <option value="2º Subsolo">2º Subsolo</option>
+                            <option value="Térreo">Térreo</option>
+                            <option value="Car Wash">Car Wash</option>
+                            <option value="Bloco A">Bloco A</option>
+                            <option value="Bloco B">Bloco B</option>
+                            <option value="Bloco C">Bloco C</option>
+                            <option value="Bloco D">Bloco D</option>
+                            <option value="Bloco E">Bloco E</option>
+                            <option value="Bloco F">Bloco F</option>
+                            <option value="Cobertura">Cobertura</option>
+                            <option value="Casa de máquinas">Casa de máquinas</option>
+                            <option value="Reservatório / bomba">Reservatório / bomba</option>
+                            <option value="Outro">Outro (descrever na obs.)</option>
+                        </select>
                     </div>
-                    <textarea id="notaObs" placeholder="Observação extra (opcional)"></textarea>
+                    <textarea id="notaObs" placeholder="Detalhe extra: andar, apto, obs. para a síndica (opcional)"></textarea>
                     <div class="acoes-notas">
-                        <button type="button" class="btn-enviar-pedido" id="btnEnviarPedidoNota">
-                            <i class="fas fa-bell"></i> Enviar pedido (notificar)
+                        <button type="button" class="btn-limpar-notas" id="btnAddItemLista" style="border-color:#7A816E;color:#191D1B;font-weight:600;">
+                            <i class="fas fa-plus"></i> Adicionar item à lista
                         </button>
-                        <button type="button" class="btn-limpar-notas" id="btnLimparNota">Limpar</button>
+                        <button type="button" class="btn-enviar-pedido" id="btnEnviarPedidoNota">
+                            <i class="fas fa-bell"></i> Enviar pedido e notificar
+                        </button>
+                        <button type="button" class="btn-limpar-notas" id="btnPdfPedido" title="Documento para a síndica">
+                            <i class="fas fa-file-pdf"></i> PDF / Imprimir
+                        </button>
+                        <button type="button" class="btn-limpar-notas" id="btnLimparNota">Limpar tudo</button>
                     </div>
                 </div>
+                <div id="listaItensPedido" class="lista-itens-pedido" style="margin-top:0.65rem;"></div>
             </div>
 
 <div class="painel-pedidos vazio" id="painelPedidosCompra">
                 <h3>
                     <i class="fas fa-bell"></i> Pedidos de compra
                     <span class="badge-ped" id="badgePedidosN">0</span>
-                    <span style="font-weight:500;font-size:0.7rem;color:#7A816E;">— alerta para Admin e Almoxarife</span>
+                    <span style="font-weight:500;font-size:0.7rem;color:#7A816E;">— alerta Admin / Almoxarife</span>
+                    <button type="button" class="btn-limpar-notas" style="margin-left:auto;font-size:0.68rem;" onclick="gerarPdfTodosPendentes()">
+                        <i class="fas fa-file-pdf"></i> PDF pendentes
+                    </button>
                 </h3>
                 <div class="lista-pedidos" id="listaPedidosCompra"></div>
             </div>
@@ -1229,6 +1269,7 @@
             itensCache = data || [];
             carregarCategoriasDB().then(function() { atualizarSelectsCategoria(); });
             renderizarTabela();
+            try { atualizarDatalistItens(); } catch (e) {}
             carregarPedidosCompra();
             mostrarToast('📦 ' + itensCache.length + ' itens carregados', 'info');
         } catch (err) {
@@ -1374,15 +1415,29 @@
             if (bloco && typeof podeSolicitarCompra === 'function' && podeSolicitarCompra()) {
                 bloco.style.display = '';
             }
+            try { atualizarDatalistItens(); renderListaItensPedido(); } catch (e0) {}
+            const btnAdd = document.getElementById('btnAddItemLista');
+            if (btnAdd) btnAdd.addEventListener('click', function(e) {
+                e.preventDefault();
+                adicionarItemNaListaPedido();
+            });
             const btnEnv = document.getElementById('btnEnviarPedidoNota');
             if (btnEnv) btnEnv.addEventListener('click', function(e) {
                 e.preventDefault();
                 enviarPedidoDoBlocoNotas();
             });
+            const btnPdf = document.getElementById('btnPdfPedido');
+            if (btnPdf) btnPdf.addEventListener('click', function(e) {
+                e.preventDefault();
+                if (pedidoItensLista.length) gerarPdfPedidoCompra(pedidoItensLista.map(function(it) {
+                    return Object.assign({}, it, { solicitado_por: nomeUsuarioSessao(), cargo_solicitante: (typeof getCargo==='function'?getCargo():'') });
+                }));
+                else gerarPdfPedidoCompra();
+            });
             const btnLim = document.getElementById('btnLimparNota');
             if (btnLim) btnLim.addEventListener('click', function(e) {
                 e.preventDefault();
-                limparBlocoNotas();
+                limparBlocoNotas(true);
             });
         })();
 
@@ -1580,6 +1635,92 @@
         }
     };
 
+
+    // Lista multi-item do pedido atual (antes de enviar)
+    var pedidoItensLista = [];
+    var ultimoPedidoEnviado = []; // para PDF após envio
+
+    function atualizarDatalistItens() {
+        const dl = document.getElementById('listaItensEstoque');
+        if (!dl || !itensCache) return;
+        dl.innerHTML = (itensCache || []).slice(0, 400).map(function(it) {
+            const n = (it.nome || '').replace(/"/g, '&quot;');
+            return n ? '<option value="' + n + '"></option>' : '';
+        }).join('');
+    }
+
+    function renderListaItensPedido() {
+        const box = document.getElementById('listaItensPedido');
+        if (!box) return;
+        if (!pedidoItensLista.length) {
+            box.innerHTML = '<div class="meta" style="font-size:0.7rem;color:#7A816E;">Nenhum item na lista ainda. Preencha e clique em <strong>Adicionar item à lista</strong>.</div>';
+            return;
+        }
+        box.innerHTML = '<div style="font-size:0.7rem;font-weight:700;color:#191D1B;margin-bottom:0.25rem;">Itens do pedido (' + pedidoItensLista.length + ')</div>' +
+            pedidoItensLista.map(function(it, idx) {
+                return '<div class="item-linha">' +
+                    '<strong>' + (idx + 1) + '. ' + it.item_nome + '</strong>' +
+                    '<span>× ' + it.quantidade_solicitar + '</span>' +
+                    '<span style="color:#7A816E;">' + (it.motivo_uso || '') + '</span>' +
+                    '<span style="color:#7A816E;">@ ' + (it.local_uso || '') + '</span>' +
+                    '<button type="button" class="rm" onclick="removerItemPedidoLista(' + idx + ')" title="Remover"><i class="fas fa-times"></i></button>' +
+                    '</div>';
+            }).join('');
+    }
+
+    window.removerItemPedidoLista = function(idx) {
+        pedidoItensLista.splice(idx, 1);
+        renderListaItensPedido();
+    };
+
+    function adicionarItemNaListaPedido() {
+        const nome = (document.getElementById('notaItemNome').value || '').trim();
+        const qtdSol = parseInt(document.getElementById('notaQtd').value, 10) || 0;
+        const motivo = (document.getElementById('notaMotivo').value || '').trim();
+        const local = (document.getElementById('notaLocal').value || '').trim();
+        const obs = (document.getElementById('notaObs').value || '').trim();
+        if (nome.length < 2) { mostrarToast('⚠️ Informe o nome do item', 'warning'); return false; }
+        if (qtdSol < 1) { mostrarToast('⚠️ Informe a quantidade', 'warning'); return false; }
+        if (!motivo) { mostrarToast('⚠️ Selecione o motivo / uso', 'warning'); return false; }
+        if (!local) { mostrarToast('⚠️ Selecione onde será usado', 'warning'); return false; }
+
+        // tenta achar no estoque
+        let estoqueId = window._pedidoEstoqueId || null;
+        let qtdAtual = window._pedidoQtdAtual;
+        let limite = window._pedidoLimite;
+        if (!estoqueId && itensCache) {
+            const found = itensCache.find(function(i) { return (i.nome || '').toLowerCase() === nome.toLowerCase(); });
+            if (found) {
+                estoqueId = found.id;
+                qtdAtual = found.quantidade != null ? parseInt(found.quantidade, 10) : null;
+                limite = found.limite_alerta != null ? parseInt(found.limite_alerta, 10) : null;
+            }
+        }
+
+        pedidoItensLista.push({
+            estoque_id: estoqueId,
+            item_nome: nome,
+            quantidade_atual: qtdAtual,
+            quantidade_solicitar: qtdSol,
+            limite_alerta: limite,
+            motivo_uso: motivo,
+            local_uso: local,
+            observacao: obs || null
+        });
+
+        // limpa campos do item (mantém motivo/local se quiser repetir — limpa só nome/qtd/obs)
+        document.getElementById('notaItemNome').value = '';
+        document.getElementById('notaQtd').value = '1';
+        document.getElementById('notaObs').value = '';
+        window._pedidoEstoqueId = null;
+        window._pedidoQtdAtual = null;
+        window._pedidoLimite = null;
+        renderListaItensPedido();
+        mostrarToast('➕ Item adicionado à lista', 'success');
+        document.getElementById('notaItemNome').focus();
+        return true;
+    }
+
     window.solicitarCompraItem = async function(id) {
         if (!podeSolicitarCompra()) {
             mostrarToast('⛔ Sem permissão para solicitar', 'danger');
@@ -1595,24 +1736,16 @@
             bloco.style.display = '';
             bloco.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
-        const elNome = document.getElementById('notaItemNome');
-        const elQtd = document.getElementById('notaQtd');
-        const elMot = document.getElementById('notaMotivo');
-        const elLoc = document.getElementById('notaLocal');
-        const elObs = document.getElementById('notaObs');
-        if (elNome) elNome.value = item.nome || '';
-        if (elQtd) {
-            const q = item.quantidade != null ? parseInt(item.quantidade, 10) : 0;
-            const lim = item.limite_alerta != null ? parseInt(item.limite_alerta, 10) : 5;
-            elQtd.value = Math.max(1, lim - q, 1);
-        }
-        if (elMot) elMot.value = (item.quantidade === 0 || item.quantidade === '0') ? 'Item zerado no estoque' : 'Estoque baixo';
-        if (elLoc) elLoc.value = '';
-        if (elObs) elObs.value = 'Cód. ' + (item.codigo != null ? item.codigo : '—') + ' · estoque atual: ' + (item.quantidade != null ? item.quantidade : 0);
+        document.getElementById('notaItemNome').value = item.nome || '';
+        const q = item.quantidade != null ? parseInt(item.quantidade, 10) : 0;
+        const lim = item.limite_alerta != null ? parseInt(item.limite_alerta, 10) : 5;
+        document.getElementById('notaQtd').value = Math.max(1, lim - q, 1);
+        const mot = document.getElementById('notaMotivo');
+        if (mot) mot.value = (q === 0) ? 'Item zerado no estoque' : 'Estoque baixo';
         window._pedidoEstoqueId = item.id;
-        window._pedidoQtdAtual = item.quantidade != null ? parseInt(item.quantidade, 10) : 0;
-        window._pedidoLimite = item.limite_alerta != null ? parseInt(item.limite_alerta, 10) : 5;
-        mostrarToast('📝 Complete motivo e local, depois envie o pedido', 'info');
+        window._pedidoQtdAtual = q;
+        window._pedidoLimite = lim;
+        mostrarToast('📝 Escolha o local, adicione à lista e envie o pedido', 'info');
     };
 
     async function enviarPedidoDoBlocoNotas() {
@@ -1620,95 +1753,203 @@
             mostrarToast('⛔ Sem permissão', 'danger');
             return;
         }
-        const nome = (document.getElementById('notaItemNome').value || '').trim();
-        const qtdSol = parseInt(document.getElementById('notaQtd').value, 10) || 0;
-        const motivo = (document.getElementById('notaMotivo').value || '').trim();
-        const local = (document.getElementById('notaLocal').value || '').trim();
-        const obs = (document.getElementById('notaObs').value || '').trim();
-        if (nome.length < 2) {
-            mostrarToast('⚠️ Informe o nome do item', 'warning');
-            document.getElementById('notaItemNome').focus();
-            return;
+        // Se tem campos preenchidos e lista vazia, adiciona antes de enviar
+        const nomeTmp = (document.getElementById('notaItemNome').value || '').trim();
+        if (nomeTmp && !pedidoItensLista.length) {
+            if (!adicionarItemNaListaPedido()) return;
+        } else if (nomeTmp && pedidoItensLista.length) {
+            // pergunta se quer incluir o da linha atual
+            if (confirm('Há um item preenchido que ainda não está na lista. Adicionar antes de enviar?')) {
+                if (!adicionarItemNaListaPedido()) return;
+            }
         }
-        if (qtdSol < 1) {
-            mostrarToast('⚠️ Informe a quantidade a comprar', 'warning');
-            return;
-        }
-        if (!motivo) {
-            mostrarToast('⚠️ Informe o motivo / uso', 'warning');
-            document.getElementById('notaMotivo').focus();
-            return;
-        }
-        if (!local) {
-            mostrarToast('⚠️ Informe onde será usado', 'warning');
-            document.getElementById('notaLocal').focus();
+        if (!pedidoItensLista.length) {
+            mostrarToast('⚠️ Adicione pelo menos um item à lista', 'warning');
             return;
         }
 
-        const payload = {
-            estoque_id: window._pedidoEstoqueId || null,
-            item_nome: nome,
-            quantidade_atual: window._pedidoQtdAtual != null ? window._pedidoQtdAtual : null,
-            quantidade_solicitar: qtdSol,
-            limite_alerta: window._pedidoLimite != null ? window._pedidoLimite : null,
-            motivo_uso: motivo,
-            local_uso: local,
-            solicitado_por: nomeUsuarioSessao(),
-            cargo_solicitante: (typeof getCargo === 'function' ? getCargo() : ''),
-            observacao: obs || null,
-            status: 'pendente'
-        };
+        const solicitante = nomeUsuarioSessao();
+        const cargo = (typeof getCargo === 'function' ? getCargo() : '');
+        const solicitacaoId = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : ('s-' + Date.now());
+        let ok = 0, falha = 0;
+        const enviados = [];
 
-        try {
-            let { error } = await sb.from('pedidos_compra').insert(
-                (typeof payloadComCondominio === 'function' ? payloadComCondominio(payload) : payload)
-            );
-            // Se colunas novas não existirem, tenta payload mínimo
-            if (error && /motivo_uso|local_uso|quantidade_solicitar|column/i.test(error.message || '')) {
-                const mini = {
-                    item_nome: nome,
-                    quantidade_atual: payload.quantidade_atual,
-                    solicitado_por: payload.solicitado_por,
-                    cargo_solicitante: payload.cargo_solicitante,
-                    observacao: ('Qtd: ' + qtdSol + ' | Motivo: ' + motivo + ' | Onde: ' + local + (obs ? ' | ' + obs : '')),
-                    status: 'pendente'
-                };
-                const r2 = await sb.from('pedidos_compra').insert(mini);
-                error = r2.error;
-                if (!error) {
-                    mostrarToast('🔔 Pedido enviado (atualize colunas SQL para mais detalhes)', 'success');
-                    limparBlocoNotas();
-                    await carregarPedidosCompra();
-                    return;
+        for (let i = 0; i < pedidoItensLista.length; i++) {
+            const it = pedidoItensLista[i];
+            const payload = {
+                estoque_id: it.estoque_id || null,
+                item_nome: it.item_nome,
+                quantidade_atual: it.quantidade_atual,
+                quantidade_solicitar: it.quantidade_solicitar,
+                limite_alerta: it.limite_alerta,
+                motivo_uso: it.motivo_uso,
+                local_uso: it.local_uso,
+                solicitado_por: solicitante,
+                cargo_solicitante: cargo,
+                observacao: (it.observacao || '') + (it.observacao ? ' | ' : '') + 'solicitacao:' + solicitacaoId,
+                status: 'pendente'
+            };
+            try {
+                let { error } = await sb.from('pedidos_compra').insert(
+                    (typeof payloadComCondominio === 'function' ? payloadComCondominio(payload) : payload)
+                );
+                if (error && /motivo_uso|local_uso|quantidade_solicitar|column/i.test(error.message || '')) {
+                    const mini = {
+                        item_nome: it.item_nome,
+                        quantidade_atual: it.quantidade_atual,
+                        solicitado_por: solicitante,
+                        cargo_solicitante: cargo,
+                        observacao: 'Qtd: ' + it.quantidade_solicitar + ' | Motivo: ' + it.motivo_uso + ' | Onde: ' + it.local_uso + (it.observacao ? ' | ' + it.observacao : '') + ' | solicitacao:' + solicitacaoId,
+                        status: 'pendente'
+                    };
+                    const r2 = await sb.from('pedidos_compra').insert(mini);
+                    error = r2.error;
                 }
-            }
-            if (error) {
-                if (/pedidos_compra|relation|schema|does not exist/i.test(error.message || '')) {
-                    alert('Crie/atualize a tabela no Supabase (SQL Editor):\n\n' + sqlPedidosCompra());
-                    return;
+                if (error) {
+                    if (/pedidos_compra|relation|does not exist/i.test(error.message || '')) {
+                        alert('Crie/atualize a tabela no Supabase (SQL Editor):\n\n' + sqlPedidosCompra());
+                        return;
+                    }
+                    falha++;
+                    console.warn(error);
+                } else {
+                    ok++;
+                    enviados.push(Object.assign({}, it, { solicitado_por: solicitante, cargo_solicitante: cargo }));
                 }
-                throw error;
+            } catch (e) {
+                falha++;
+                console.warn(e);
             }
-            mostrarToast('🔔 Pedido registrado! Admin e Almoxarife foram notificados.', 'success');
-            limparBlocoNotas();
+        }
+
+        if (ok > 0) {
+            ultimoPedidoEnviado = enviados;
+            pedidoItensLista = [];
+            renderListaItensPedido();
+            limparBlocoNotas(false);
+            mostrarToast('🔔 ' + ok + ' item(ns) enviado(s)! Admin e Almoxarife notificados.', 'success');
             await carregarPedidosCompra();
-        } catch (e) {
-            console.error(e);
-            mostrarToast('❌ ' + (e.message || e), 'danger');
+            if (confirm('Pedido enviado.\n\nGerar documento PDF/impressão para mostrar à síndica?')) {
+                gerarPdfPedidoCompra(enviados);
+            }
+        } else {
+            mostrarToast('❌ Não foi possível enviar. Verifique a tabela pedidos_compra no Supabase.', 'danger');
         }
+        if (falha) mostrarToast('⚠️ ' + falha + ' item(ns) com falha', 'warning');
     }
 
-    function limparBlocoNotas() {
+    function limparBlocoNotas(limparLista) {
         window._pedidoEstoqueId = null;
         window._pedidoQtdAtual = null;
         window._pedidoLimite = null;
-        ['notaItemNome','notaMotivo','notaLocal','notaObs'].forEach(function(id) {
-            const el = document.getElementById(id);
-            if (el) el.value = '';
-        });
-        const q = document.getElementById('notaQtd');
-        if (q) q.value = '1';
+        const n = document.getElementById('notaItemNome'); if (n) n.value = '';
+        const q = document.getElementById('notaQtd'); if (q) q.value = '1';
+        const m = document.getElementById('notaMotivo'); if (m) m.value = '';
+        const l = document.getElementById('notaLocal'); if (l) l.value = '';
+        const o = document.getElementById('notaObs'); if (o) o.value = '';
+        if (limparLista !== false) {
+            pedidoItensLista = [];
+            renderListaItensPedido();
+        }
     }
+
+    /** Documento formal para a síndica */
+    function gerarPdfPedidoCompra(itens) {
+        itens = itens || ultimoPedidoEnviado || [];
+        if (!itens.length && pedidosCompraCache && pedidosCompraCache.length) {
+            // usa pendentes filtrados do solicitante atual se não houver lista
+            const eu = nomeUsuarioSessao();
+            itens = pedidosCompraCache.filter(function(p) { return (p.solicitado_por || '') === eu; });
+        }
+        if (!itens.length) {
+            mostrarToast('⚠️ Nenhum item para o documento. Envie um pedido ou abra os pendentes.', 'warning');
+            return;
+        }
+        const sol = itens[0].solicitado_por || nomeUsuarioSessao();
+        const cargo = itens[0].cargo_solicitante || (typeof getCargo === 'function' ? getCargo() : '');
+        const agora = new Date();
+        const dataStr = agora.toLocaleDateString('pt-BR');
+        const horaStr = agora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+
+        let rows = itens.map(function(it, i) {
+            return '<tr>' +
+                '<td style="text-align:center;">' + (i + 1) + '</td>' +
+                '<td>' + (it.item_nome || '—') + '</td>' +
+                '<td style="text-align:center;">' + (it.quantidade_solicitar != null ? it.quantidade_solicitar : '—') + '</td>' +
+                '<td>' + (it.motivo_uso || '—') + '</td>' +
+                '<td>' + (it.local_uso || '—') + '</td>' +
+                '<td>' + (it.observacao ? (String(it.observacao).split('solicitacao:')[0] || '').replace(/\|/g,'').trim() || '—' : '—') + '</td>' +
+                '</tr>';
+        }).join('');
+
+        const html = '<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>Solicitação de Compra · TaguáLife</title>' +
+            '<style>' +
+            '@page{size:A4 portrait;margin:14mm;}' +
+            'body{font-family:Arial,Helvetica,sans-serif;color:#191D1B;font-size:11px;}' +
+            'h1{font-size:16px;margin:0 0 4px;color:#2E5A3C;}' +
+            '.sub{color:#7A816E;margin-bottom:12px;font-size:10px;}' +
+            '.box{border:1px solid #D8DCCE;border-radius:8px;padding:10px 12px;margin-bottom:12px;}' +
+            '.box b{color:#2E5A3C;}' +
+            'table{width:100%;border-collapse:collapse;}' +
+            'th{background:#7A816E;color:#fff;padding:6px 8px;text-align:left;font-size:10px;}' +
+            'td{border-bottom:1px solid #E0E0E0;padding:6px 8px;vertical-align:top;}' +
+            '.assin{margin-top:28px;display:flex;justify-content:space-between;gap:24px;}' +
+            '.assin div{flex:1;text-align:center;border-top:1px solid #333;padding-top:6px;font-size:10px;}' +
+            '@media print{body{margin:0;}}' +
+            '</style></head><body>' +
+            '<h1>TaguáLife · Solicitação de Compra de Material</h1>' +
+            '<div class="sub">Documento para análise da administração / síndica · Gerado em ' + dataStr + ' às ' + horaStr + '</div>' +
+            '<div class="box">' +
+            '<div><b>Solicitante (responsável):</b> ' + sol + '</div>' +
+            '<div><b>Perfil:</b> ' + (cargo || '—') + '</div>' +
+            '<div><b>Data da solicitação:</b> ' + dataStr + ' · ' + horaStr + '</div>' +
+            '<div><b>Qtd. de itens:</b> ' + itens.length + '</div>' +
+            '</div>' +
+            '<table><thead><tr>' +
+            '<th style="width:28px;">#</th><th>Item</th><th style="width:56px;">Qtd</th><th>Motivo / uso</th><th>Local de uso</th><th>Obs.</th>' +
+            '</tr></thead><tbody>' + rows + '</tbody></table>' +
+            '<p style="margin-top:14px;font-size:10px;color:#555;">Solicito autorização para compra dos materiais acima, necessários às atividades de manutenção do condomínio.</p>' +
+            '<div class="assin">' +
+            '<div>Solicitante<br><b>' + sol + '</b></div>' +
+            '<div>Almoxarifado / Compras</div>' +
+            '<div>Síndica / Administração</div>' +
+            '</div>' +
+            '<scr'+'ipt>window.onload=function(){window.print();}</scr'+'ipt>' +
+            '</body></html>';
+
+        const w = window.open('', '_blank');
+        if (!w) {
+            mostrarToast('⚠️ Permita pop-up para gerar o PDF', 'warning');
+            return;
+        }
+        w.document.open();
+        w.document.write(html);
+        w.document.close();
+    }
+
+    window.gerarPdfPedidoCompra = gerarPdfPedidoCompra;
+    window.gerarPdfTodosPendentes = function() {
+        if (!podeReceberPedidosCompra()) {
+            gerarPdfPedidoCompra(ultimoPedidoEnviado);
+            return;
+        }
+        if (!pedidosCompraCache.length) {
+            mostrarToast('Nenhum pedido pendente', 'info');
+            return;
+        }
+        gerarPdfPedidoCompra(pedidosCompraCache.map(function(p) {
+            return {
+                item_nome: p.item_nome,
+                quantidade_solicitar: p.quantidade_solicitar,
+                motivo_uso: p.motivo_uso,
+                local_uso: p.local_uso,
+                observacao: p.observacao,
+                solicitado_por: p.solicitado_por,
+                cargo_solicitante: p.cargo_solicitante
+            };
+        }));
+    };
+
 
     function sqlPedidosCompra() {
         return `CREATE TABLE IF NOT EXISTS public.pedidos_compra (
@@ -3892,15 +4133,29 @@ function exportarCSVEstoque() {
             if (bloco && typeof podeSolicitarCompra === 'function' && podeSolicitarCompra()) {
                 bloco.style.display = '';
             }
+            try { atualizarDatalistItens(); renderListaItensPedido(); } catch (e0) {}
+            const btnAdd = document.getElementById('btnAddItemLista');
+            if (btnAdd) btnAdd.addEventListener('click', function(e) {
+                e.preventDefault();
+                adicionarItemNaListaPedido();
+            });
             const btnEnv = document.getElementById('btnEnviarPedidoNota');
             if (btnEnv) btnEnv.addEventListener('click', function(e) {
                 e.preventDefault();
                 enviarPedidoDoBlocoNotas();
             });
+            const btnPdf = document.getElementById('btnPdfPedido');
+            if (btnPdf) btnPdf.addEventListener('click', function(e) {
+                e.preventDefault();
+                if (pedidoItensLista.length) gerarPdfPedidoCompra(pedidoItensLista.map(function(it) {
+                    return Object.assign({}, it, { solicitado_por: nomeUsuarioSessao(), cargo_solicitante: (typeof getCargo==='function'?getCargo():'') });
+                }));
+                else gerarPdfPedidoCompra();
+            });
             const btnLim = document.getElementById('btnLimparNota');
             if (btnLim) btnLim.addEventListener('click', function(e) {
                 e.preventDefault();
-                limparBlocoNotas();
+                limparBlocoNotas(true);
             });
         })();
 
