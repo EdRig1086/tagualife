@@ -640,101 +640,7 @@
         <div class="card-body">
             <div class="aviso-permissao" id="avisoPermissao">
                 <i class="fas fa-lock"></i> Seu perfil tem acesso apenas para <strong>visualização</strong>.
-            </div>
-
-
-            
-            <div class="bloco-notas-compra" id="blocoNotasCompra" style="display:none;">
-                <div class="bloco-notas-head">
-                    <div>
-                        <h3><i class="fas fa-clipboard-list"></i> Solicitar material / compra</h3>
-                        <p class="bloco-sub">Preencha os campos · adicione um ou mais itens · notifica Admin e Almoxarife · gera documento para a síndica</p>
-                    </div>
-                </div>
-                <div class="bloco-notas-grid">
-                    <div class="campo bn-campo bn-item">
-                        <label><i class="fas fa-tag"></i> ITEM *</label>
-                        <input type="text" id="notaItemNome" list="listaItensEstoque" placeholder="Digite o nome ou escolha do estoque" />
-                        <datalist id="listaItensEstoque"></datalist>
-                    </div>
-                    <div class="campo bn-campo bn-qtd">
-                        <label><i class="fas fa-sort-numeric-up"></i> QTD *</label>
-                        <input type="number" id="notaQtd" min="1" value="1" />
-                    </div>
-                    <div class="campo bn-campo">
-                        <label><i class="fas fa-flag"></i> PRIORIDADE *</label>
-                        <select id="notaPrioridade">
-                            <option value="Normal">Normal</option>
-                            <option value="Importante">Importante</option>
-                            <option value="Urgente">Urgente</option>
-                        </select>
-                    </div>
-                    <div class="campo bn-campo">
-                        <label><i class="fas fa-wrench"></i> MOTIVO / USO *</label>
-                        <select id="notaMotivo">
-                            <option value="">Selecione...</option>
-                            <option value="Item zerado no estoque">Item zerado no estoque</option>
-                            <option value="Estoque baixo">Estoque baixo</option>
-                            <option value="Substituição / quebrou">Substituição / quebrou</option>
-                            <option value="Manutenção preventiva">Manutenção preventiva</option>
-                            <option value="Manutenção corretiva">Manutenção corretiva</option>
-                            <option value="Obra / reforma">Obra / reforma</option>
-                            <option value="Uso diário / reposição">Uso diário / reposição</option>
-                            <option value="Emergência">Emergência</option>
-                            <option value="__outro__">Outro (escrever abaixo)</option>
-                        </select>
-                        <input type="text" id="notaMotivoOutro" class="bn-outro" placeholder="Descreva o motivo..." style="display:none;margin-top:0.35rem;" />
-                    </div>
-                    <div class="campo bn-campo">
-                        <label><i class="fas fa-map-marker-alt"></i> ONDE SERÁ USADO *</label>
-                        <select id="notaLocal">
-                            <option value="">Selecione...</option>
-                            <option value="Áreas comuns">Áreas comuns</option>
-                            <option value="Portaria">Portaria</option>
-                            <option value="1º Subsolo">1º Subsolo</option>
-                            <option value="2º Subsolo">2º Subsolo</option>
-                            <option value="Térreo">Térreo</option>
-                            <option value="Car Wash">Car Wash</option>
-                            <option value="Bloco A">Bloco A</option>
-                            <option value="Bloco B">Bloco B</option>
-                            <option value="Bloco C">Bloco C</option>
-                            <option value="Bloco D">Bloco D</option>
-                            <option value="Bloco E">Bloco E</option>
-                            <option value="Bloco F">Bloco F</option>
-                            <option value="Cobertura">Cobertura</option>
-                            <option value="Casa de máquinas">Casa de máquinas</option>
-                            <option value="Reservatório / bomba">Reservatório / bomba</option>
-                            <option value="__outro__">Outro (escrever abaixo)</option>
-                        </select>
-                        <input type="text" id="notaLocalOutro" class="bn-outro" placeholder="Ex.: Bloco B · 5º andar · apto 502" style="display:none;margin-top:0.35rem;" />
-                    </div>
-                    <div class="campo bn-campo bn-obs">
-                        <label><i class="fas fa-align-left"></i> OBSERVAÇÃO</label>
-                        <input type="text" id="notaObs" placeholder="Detalhe extra para a síndica (opcional)" />
-                    </div>
-                </div>
-                <div class="bloco-notas-acoes">
-                    <button type="button" class="bn-btn bn-btn-sec" id="btnAddItemLista"><i class="fas fa-plus"></i> Adicionar à lista</button>
-                    <button type="button" class="bn-btn bn-btn-pri" id="btnEnviarPedidoNota"><i class="fas fa-bell"></i> Enviar e notificar</button>
-                    <button type="button" class="bn-btn bn-btn-sec" id="btnPdfPedido"><i class="fas fa-file-pdf"></i> PDF / Imprimir</button>
-                    <button type="button" class="bn-btn bn-btn-ghost" id="btnLimparNota">Limpar</button>
-                </div>
-                <div id="listaItensPedido" class="lista-itens-pedido"></div>
-            </div>
-
-            <div class="painel-pedidos vazio" id="painelPedidosCompra">
-                <h3>
-                    <i class="fas fa-bell"></i> Pedidos de compra
-                    <span class="badge-ped" id="badgePedidosN">0</span>
-                    <span style="font-weight:500;font-size:0.7rem;color:#7A816E;">— alerta Admin / Almoxarife</span>
-                    <button type="button" class="btn-limpar-notas" style="margin-left:auto;font-size:0.68rem;" onclick="gerarPdfTodosPendentes()">
-                        <i class="fas fa-file-pdf"></i> PDF pendentes
-                    </button>
-                </h3>
-                <div class="lista-pedidos" id="listaPedidosCompra"></div>
-            </div>
-
-            <div class="form-cadastro-wrap" id="formCadastro">
+            </div>            <div class="form-cadastro-wrap" id="formCadastro">
                 <!-- COLUNA FOTO (separada) -->
                 <div class="form-foto-col">
                     <label><i class="fas fa-image"></i> FOTO</label>
@@ -871,6 +777,97 @@
                 <span>⚠️ Baixo estoque: <strong id="totalBaixoEstoque">0</strong></span>
             </div>
             <div id="feedback"></div>
+
+            <div class="bloco-notas-compra" id="blocoNotasCompra" style="display:none;">
+                <div class="bloco-notas-head">
+                    <div>
+                        <h3><i class="fas fa-clipboard-list"></i> Solicitar material / compra</h3>
+                        <p class="bloco-sub">Preencha os campos · adicione um ou mais itens · notifica Admin e Almoxarife · gera documento para a síndica</p>
+                    </div>
+                </div>
+                <div class="bloco-notas-grid">
+                    <div class="campo bn-campo bn-item">
+                        <label><i class="fas fa-tag"></i> ITEM *</label>
+                        <input type="text" id="notaItemNome" list="listaItensEstoque" placeholder="Digite o nome ou escolha do estoque" />
+                        <datalist id="listaItensEstoque"></datalist>
+                    </div>
+                    <div class="campo bn-campo bn-qtd">
+                        <label><i class="fas fa-sort-numeric-up"></i> QTD *</label>
+                        <input type="number" id="notaQtd" min="1" value="1" />
+                    </div>
+                    <div class="campo bn-campo">
+                        <label><i class="fas fa-flag"></i> PRIORIDADE *</label>
+                        <select id="notaPrioridade">
+                            <option value="Normal">Normal</option>
+                            <option value="Importante">Importante</option>
+                            <option value="Urgente">Urgente</option>
+                        </select>
+                    </div>
+                    <div class="campo bn-campo">
+                        <label><i class="fas fa-wrench"></i> MOTIVO / USO *</label>
+                        <select id="notaMotivo">
+                            <option value="">Selecione...</option>
+                            <option value="Item zerado no estoque">Item zerado no estoque</option>
+                            <option value="Estoque baixo">Estoque baixo</option>
+                            <option value="Substituição / quebrou">Substituição / quebrou</option>
+                            <option value="Manutenção preventiva">Manutenção preventiva</option>
+                            <option value="Manutenção corretiva">Manutenção corretiva</option>
+                            <option value="Obra / reforma">Obra / reforma</option>
+                            <option value="Uso diário / reposição">Uso diário / reposição</option>
+                            <option value="Emergência">Emergência</option>
+                            <option value="__outro__">Outro (escrever abaixo)</option>
+                        </select>
+                        <input type="text" id="notaMotivoOutro" class="bn-outro" placeholder="Descreva o motivo..." style="display:none;margin-top:0.35rem;" />
+                    </div>
+                    <div class="campo bn-campo">
+                        <label><i class="fas fa-map-marker-alt"></i> ONDE SERÁ USADO *</label>
+                        <select id="notaLocal">
+                            <option value="">Selecione...</option>
+                            <option value="Áreas comuns">Áreas comuns</option>
+                            <option value="Portaria">Portaria</option>
+                            <option value="1º Subsolo">1º Subsolo</option>
+                            <option value="2º Subsolo">2º Subsolo</option>
+                            <option value="Térreo">Térreo</option>
+                            <option value="Car Wash">Car Wash</option>
+                            <option value="Bloco A">Bloco A</option>
+                            <option value="Bloco B">Bloco B</option>
+                            <option value="Bloco C">Bloco C</option>
+                            <option value="Bloco D">Bloco D</option>
+                            <option value="Bloco E">Bloco E</option>
+                            <option value="Bloco F">Bloco F</option>
+                            <option value="Cobertura">Cobertura</option>
+                            <option value="Casa de máquinas">Casa de máquinas</option>
+                            <option value="Reservatório / bomba">Reservatório / bomba</option>
+                            <option value="__outro__">Outro (escrever abaixo)</option>
+                        </select>
+                        <input type="text" id="notaLocalOutro" class="bn-outro" placeholder="Ex.: Bloco B · 5º andar · apto 502" style="display:none;margin-top:0.35rem;" />
+                    </div>
+                    <div class="campo bn-campo bn-obs">
+                        <label><i class="fas fa-align-left"></i> OBSERVAÇÃO</label>
+                        <input type="text" id="notaObs" placeholder="Detalhe extra para a síndica (opcional)" />
+                    </div>
+                </div>
+                <div class="bloco-notas-acoes">
+                    <button type="button" class="bn-btn bn-btn-sec" id="btnAddItemLista"><i class="fas fa-plus"></i> Adicionar à lista</button>
+                    <button type="button" class="bn-btn bn-btn-pri" id="btnEnviarPedidoNota"><i class="fas fa-bell"></i> Enviar e notificar</button>
+                    <button type="button" class="bn-btn bn-btn-sec" id="btnPdfPedido"><i class="fas fa-file-pdf"></i> PDF / Imprimir</button>
+                    <button type="button" class="bn-btn bn-btn-ghost" id="btnLimparNota">Limpar</button>
+                </div>
+                <div id="listaItensPedido" class="lista-itens-pedido"></div>
+            </div>
+
+            <div class="painel-pedidos vazio" id="painelPedidosCompra">
+                <h3>
+                    <i class="fas fa-bell"></i> Pedidos de compra
+                    <span class="badge-ped" id="badgePedidosN">0</span>
+                    <span style="font-weight:500;font-size:0.7rem;color:#7A816E;">— alerta Admin / Almoxarife</span>
+                    <button type="button" class="btn-limpar-notas" style="margin-left:auto;font-size:0.68rem;" onclick="gerarPdfTodosPendentes()">
+                        <i class="fas fa-file-pdf"></i> PDF pendentes
+                    </button>
+                </h3>
+                <div class="lista-pedidos" id="listaPedidosCompra"></div>
+            </div>
+
 
             <div class="relatorios-bar">
                 <span class="lbl"><i class="fas fa-chart-bar"></i> Relatórios (banco):</span>
