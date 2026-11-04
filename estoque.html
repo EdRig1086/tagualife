@@ -205,45 +205,147 @@
         #feedback { margin-top: 0.5rem; text-align: right; min-height: 1.5rem; font-size: 0.65rem; }
 
         .bloco-notas-compra {
-            background: #F5F7F0; border: 1px solid #D8DCCE; border-radius: 10px;
-            padding: 0.85rem 1rem; margin-bottom: 1rem;
+            background: var(--gray-50);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 1rem 1.15rem;
+            margin-bottom: 1rem;
         }
-        .bloco-notas-compra h3 {
-            margin: 0 0 0.55rem; font-size: 0.82rem; color: #191D1B;
-            display: flex; align-items: center; gap: 0.4rem;
+        .bloco-notas-head h3 {
+            margin: 0;
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
         }
-        .bloco-notas-compra .grid-notas {
-            display: grid; grid-template-columns: 1.4fr 100px 1fr 1fr; gap: 0.5rem 0.65rem; align-items: end;
+        .bloco-notas-head h3 i { color: var(--verde-oliva); }
+        .bloco-sub {
+            margin: 0.2rem 0 0.75rem;
+            font-size: 0.68rem;
+            color: var(--text-secondary);
+            font-weight: 500;
         }
-        @media (max-width: 900px) {
-            .bloco-notas-compra .grid-notas { grid-template-columns: 1fr 1fr; }
+        .bloco-notas-grid {
+            display: grid;
+            grid-template-columns: 1.6fr 90px 120px 1fr 1fr;
+            gap: 0.65rem 0.85rem;
+            align-items: start;
         }
-        @media (max-width: 560px) {
-            .bloco-notas-compra .grid-notas { grid-template-columns: 1fr; }
+        .bloco-notas-grid .bn-obs { grid-column: 1 / -1; }
+        @media (max-width: 1100px) {
+            .bloco-notas-grid { grid-template-columns: 1fr 1fr 1fr; }
+            .bloco-notas-grid .bn-item { grid-column: 1 / -1; }
         }
-        .bloco-notas-compra label {
-            display: block; font-size: 0.6rem; font-weight: 700; color: #7A816E;
-            text-transform: uppercase; margin-bottom: 0.15rem;
+        @media (max-width: 640px) {
+            .bloco-notas-grid { grid-template-columns: 1fr 1fr; }
+            .bloco-notas-grid .bn-obs { grid-column: 1 / -1; }
         }
-        .bloco-notas-compra input, .bloco-notas-compra textarea {
-            width: 100%; box-sizing: border-box; border: 1px solid #D8DCCE; border-radius: 8px;
-            padding: 0.4rem 0.55rem; font-size: 0.78rem; font-family: inherit;
-            background: #fff; color: var(--text-primary);
+        .bloco-notas-compra .campo label {
+            font-weight: 600;
+            font-size: 0.6rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
         }
-        .bloco-notas-compra textarea { min-height: 56px; resize: vertical; grid-column: 1 / -1; }
-        .bloco-notas-compra .acoes-notas {
-            grid-column: 1 / -1; display: flex; gap: 0.4rem; flex-wrap: wrap; margin-top: 0.25rem;
+        .bloco-notas-compra .campo label i {
+            color: var(--verde-oliva);
+            margin-right: 0.2rem;
         }
-        .bloco-notas-compra .btn-enviar-pedido {
-            border: none; border-radius: 40px; padding: 0.4rem 1rem; font-weight: 700;
-            font-size: 0.75rem; background: #E65100; color: #fff; cursor: pointer; font-family: inherit;
+        .bloco-notas-compra .campo input,
+        .bloco-notas-compra .campo select {
+            width: 100%;
+            box-sizing: border-box;
+            border: none;
+            border-bottom: 2px solid var(--input-border);
+            background: var(--input-bg);
+            padding: 0.35rem 0.15rem;
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: var(--text-primary);
+            outline: none;
+            font-family: inherit;
+            border-radius: 0;
         }
-        .bloco-notas-compra .btn-enviar-pedido:hover { background: #BF360C; }
-        .bloco-notas-compra .btn-limpar-notas {
-            border: 1px solid #D8DCCE; border-radius: 40px; padding: 0.4rem 0.9rem;
-            font-size: 0.72rem; background: #fff; cursor: pointer; font-family: inherit; color: #7A816E;
+        .bloco-notas-compra .campo input:focus,
+        .bloco-notas-compra .campo select:focus {
+            border-bottom-color: var(--verde-claro);
         }
-        .painel-pedidos {
+        .bloco-notas-compra .bn-outro {
+            border-bottom: 2px dashed var(--verde-oliva) !important;
+        }
+        .bloco-notas-acoes {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.4rem;
+            margin-top: 0.85rem;
+            padding-top: 0.65rem;
+            border-top: 1px solid var(--border-color);
+        }
+        .bn-btn {
+            border-radius: 40px;
+            padding: 0.4rem 0.95rem;
+            font-size: 0.72rem;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            border: 1px solid var(--border-color);
+            background: transparent;
+            color: var(--text-secondary);
+        }
+        .bn-btn-pri {
+            background: #191D1B;
+            color: #FBFBF7;
+            border-color: #191D1B;
+        }
+        .bn-btn-pri:hover { background: #2A3A2A; }
+        .bn-btn-sec {
+            background: var(--bg-card);
+            color: var(--text-primary);
+        }
+        .bn-btn-sec:hover { border-color: var(--verde-oliva); }
+        .bn-btn-ghost { background: transparent; }
+        .lista-itens-pedido {
+            display: flex;
+            flex-direction: column;
+            gap: 0.35rem;
+            margin-top: 0.75rem;
+        }
+        .lista-itens-pedido .item-linha {
+            display: flex;
+            align-items: center;
+            gap: 0.55rem;
+            flex-wrap: wrap;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 0.45rem 0.7rem;
+            font-size: 0.72rem;
+        }
+        .lista-itens-pedido .item-linha strong { color: var(--text-primary); }
+        .lista-itens-pedido .prio {
+            font-size: 0.6rem;
+            font-weight: 700;
+            padding: 0.12rem 0.45rem;
+            border-radius: 20px;
+            text-transform: uppercase;
+        }
+        .prio-normal { background: #E8F5E9; color: #2E7D32; }
+        .prio-importante { background: #FFF3E0; color: #E65100; }
+        .prio-urgente { background: #FFEBEE; color: #C62828; }
+        .lista-itens-pedido .item-linha .rm {
+            margin-left: auto;
+            border: none;
+            background: transparent;
+            color: var(--danger);
+            cursor: pointer;
+            font-size: 0.75rem;
+        }
+.painel-pedidos {
             background: #FFF8E1; border: 1px solid #FFE082; border-radius: 10px;
             padding: 0.75rem 1rem; margin-bottom: 1rem;
         }
@@ -543,21 +645,32 @@
 
             
             <div class="bloco-notas-compra" id="blocoNotasCompra" style="display:none;">
-                <h3><i class="fas fa-sticky-note"></i> Solicitar material / compra
-                    <span style="font-weight:500;font-size:0.7rem;color:#7A816E;">— notifica Admin e Almoxarife · gera documento para a síndica</span>
-                </h3>
-                <div class="grid-notas">
+                <div class="bloco-notas-head">
                     <div>
-                        <label>Nome do item *</label>
-                        <input type="text" id="notaItemNome" list="listaItensEstoque" placeholder="Digite ou escolha do estoque" />
+                        <h3><i class="fas fa-clipboard-list"></i> Solicitar material / compra</h3>
+                        <p class="bloco-sub">Preencha os campos · adicione um ou mais itens · notifica Admin e Almoxarife · gera documento para a síndica</p>
+                    </div>
+                </div>
+                <div class="bloco-notas-grid">
+                    <div class="campo bn-campo bn-item">
+                        <label><i class="fas fa-tag"></i> ITEM *</label>
+                        <input type="text" id="notaItemNome" list="listaItensEstoque" placeholder="Digite o nome ou escolha do estoque" />
                         <datalist id="listaItensEstoque"></datalist>
                     </div>
-                    <div>
-                        <label>Qtd comprar *</label>
+                    <div class="campo bn-campo bn-qtd">
+                        <label><i class="fas fa-sort-numeric-up"></i> QTD *</label>
                         <input type="number" id="notaQtd" min="1" value="1" />
                     </div>
-                    <div>
-                        <label>Motivo / uso *</label>
+                    <div class="campo bn-campo">
+                        <label><i class="fas fa-flag"></i> PRIORIDADE *</label>
+                        <select id="notaPrioridade">
+                            <option value="Normal">Normal</option>
+                            <option value="Importante">Importante</option>
+                            <option value="Urgente">Urgente</option>
+                        </select>
+                    </div>
+                    <div class="campo bn-campo">
+                        <label><i class="fas fa-wrench"></i> MOTIVO / USO *</label>
                         <select id="notaMotivo">
                             <option value="">Selecione...</option>
                             <option value="Item zerado no estoque">Item zerado no estoque</option>
@@ -568,11 +681,12 @@
                             <option value="Obra / reforma">Obra / reforma</option>
                             <option value="Uso diário / reposição">Uso diário / reposição</option>
                             <option value="Emergência">Emergência</option>
-                            <option value="Outro">Outro (descrever na obs.)</option>
+                            <option value="__outro__">Outro (escrever abaixo)</option>
                         </select>
+                        <input type="text" id="notaMotivoOutro" class="bn-outro" placeholder="Descreva o motivo..." style="display:none;margin-top:0.35rem;" />
                     </div>
-                    <div>
-                        <label>Onde será usado *</label>
+                    <div class="campo bn-campo">
+                        <label><i class="fas fa-map-marker-alt"></i> ONDE SERÁ USADO *</label>
                         <select id="notaLocal">
                             <option value="">Selecione...</option>
                             <option value="Áreas comuns">Áreas comuns</option>
@@ -590,27 +704,25 @@
                             <option value="Cobertura">Cobertura</option>
                             <option value="Casa de máquinas">Casa de máquinas</option>
                             <option value="Reservatório / bomba">Reservatório / bomba</option>
-                            <option value="Outro">Outro (descrever na obs.)</option>
+                            <option value="__outro__">Outro (escrever abaixo)</option>
                         </select>
+                        <input type="text" id="notaLocalOutro" class="bn-outro" placeholder="Ex.: Bloco B · 5º andar · apto 502" style="display:none;margin-top:0.35rem;" />
                     </div>
-                    <textarea id="notaObs" placeholder="Detalhe extra: andar, apto, obs. para a síndica (opcional)"></textarea>
-                    <div class="acoes-notas">
-                        <button type="button" class="btn-limpar-notas" id="btnAddItemLista" style="border-color:#7A816E;color:#191D1B;font-weight:600;">
-                            <i class="fas fa-plus"></i> Adicionar item à lista
-                        </button>
-                        <button type="button" class="btn-enviar-pedido" id="btnEnviarPedidoNota">
-                            <i class="fas fa-bell"></i> Enviar pedido e notificar
-                        </button>
-                        <button type="button" class="btn-limpar-notas" id="btnPdfPedido" title="Documento para a síndica">
-                            <i class="fas fa-file-pdf"></i> PDF / Imprimir
-                        </button>
-                        <button type="button" class="btn-limpar-notas" id="btnLimparNota">Limpar tudo</button>
+                    <div class="campo bn-campo bn-obs">
+                        <label><i class="fas fa-align-left"></i> OBSERVAÇÃO</label>
+                        <input type="text" id="notaObs" placeholder="Detalhe extra para a síndica (opcional)" />
                     </div>
                 </div>
-                <div id="listaItensPedido" class="lista-itens-pedido" style="margin-top:0.65rem;"></div>
+                <div class="bloco-notas-acoes">
+                    <button type="button" class="bn-btn bn-btn-sec" id="btnAddItemLista"><i class="fas fa-plus"></i> Adicionar à lista</button>
+                    <button type="button" class="bn-btn bn-btn-pri" id="btnEnviarPedidoNota"><i class="fas fa-bell"></i> Enviar e notificar</button>
+                    <button type="button" class="bn-btn bn-btn-sec" id="btnPdfPedido"><i class="fas fa-file-pdf"></i> PDF / Imprimir</button>
+                    <button type="button" class="bn-btn bn-btn-ghost" id="btnLimparNota">Limpar</button>
+                </div>
+                <div id="listaItensPedido" class="lista-itens-pedido"></div>
             </div>
 
-<div class="painel-pedidos vazio" id="painelPedidosCompra">
+            <div class="painel-pedidos vazio" id="painelPedidosCompra">
                 <h3>
                     <i class="fas fa-bell"></i> Pedidos de compra
                     <span class="badge-ped" id="badgePedidosN">0</span>
@@ -1421,6 +1533,10 @@
                 e.preventDefault();
                 adicionarItemNaListaPedido();
             });
+            const selMot = document.getElementById('notaMotivo');
+            const selLoc = document.getElementById('notaLocal');
+            if (selMot) selMot.addEventListener('change', toggleCamposOutro);
+            if (selLoc) selLoc.addEventListener('change', toggleCamposOutro);
             const btnEnv = document.getElementById('btnEnviarPedidoNota');
             if (btnEnv) btnEnv.addEventListener('click', function(e) {
                 e.preventDefault();
@@ -1602,10 +1718,16 @@
             const qtd = p.quantidade_atual != null ? p.quantidade_atual : '—';
             const lim = p.limite_alerta != null ? p.limite_alerta : '—';
             const qtdSol = p.quantidade_solicitar != null ? p.quantidade_solicitar : '—';
+            var prP = '';
+            if (p.observacao) {
+                var mx = String(p.observacao).match(/\[(Normal|Importante|Urgente)\]/i);
+                if (mx) prP = mx[1];
+            }
             return '<div class="pedido-item">' +
                 '<div style="flex:1;min-width:160px;">' +
                 '<strong><i class="fas fa-exclamation-circle" style="color:#E65100;"></i> ' + (p.item_nome || 'Item') +
-                ' <span style="color:#E65100;">× ' + qtdSol + '</span></strong>' +
+                ' <span style="color:#E65100;">× ' + qtdSol + '</span>' +
+                (prP ? ' <span class="prio ' + classePrioridade(prP) + '">' + prP + '</span>' : '') + '</strong>' +
                 '<div class="meta">Estoque atual: ' + qtd + (lim !== '—' ? ' · Limite: ' + lim : '') +
                 (p.motivo_uso ? ' · Motivo: ' + p.motivo_uso : '') +
                 (p.local_uso ? ' · Onde: ' + p.local_uso : '') + '</div>' +
@@ -1638,6 +1760,36 @@
 
     // Lista multi-item do pedido atual (antes de enviar)
     var pedidoItensLista = [];
+
+    function getNotaMotivoValor() {
+        const sel = document.getElementById('notaMotivo');
+        const outro = document.getElementById('notaMotivoOutro');
+        if (!sel) return '';
+        if (sel.value === '__outro__') return (outro && outro.value || '').trim();
+        return (sel.value || '').trim();
+    }
+    function getNotaLocalValor() {
+        const sel = document.getElementById('notaLocal');
+        const outro = document.getElementById('notaLocalOutro');
+        if (!sel) return '';
+        if (sel.value === '__outro__') return (outro && outro.value || '').trim();
+        return (sel.value || '').trim();
+    }
+    function toggleCamposOutro() {
+        const mot = document.getElementById('notaMotivo');
+        const loc = document.getElementById('notaLocal');
+        const motO = document.getElementById('notaMotivoOutro');
+        const locO = document.getElementById('notaLocalOutro');
+        if (mot && motO) motO.style.display = mot.value === '__outro__' ? '' : 'none';
+        if (loc && locO) locO.style.display = loc.value === '__outro__' ? '' : 'none';
+    }
+    function classePrioridade(p) {
+        p = (p || 'Normal').toLowerCase();
+        if (p.indexOf('urg') >= 0) return 'prio-urgente';
+        if (p.indexOf('import') >= 0) return 'prio-importante';
+        return 'prio-normal';
+    }
+
     var ultimoPedidoEnviado = []; // para PDF após envio
 
     function atualizarDatalistItens() {
@@ -1658,9 +1810,11 @@
         }
         box.innerHTML = '<div style="font-size:0.7rem;font-weight:700;color:#191D1B;margin-bottom:0.25rem;">Itens do pedido (' + pedidoItensLista.length + ')</div>' +
             pedidoItensLista.map(function(it, idx) {
+                const pr = it.prioridade || 'Normal';
                 return '<div class="item-linha">' +
                     '<strong>' + (idx + 1) + '. ' + it.item_nome + '</strong>' +
                     '<span>× ' + it.quantidade_solicitar + '</span>' +
+                    '<span class="prio ' + classePrioridade(pr) + '">' + pr + '</span>' +
                     '<span style="color:#7A816E;">' + (it.motivo_uso || '') + '</span>' +
                     '<span style="color:#7A816E;">@ ' + (it.local_uso || '') + '</span>' +
                     '<button type="button" class="rm" onclick="removerItemPedidoLista(' + idx + ')" title="Remover"><i class="fas fa-times"></i></button>' +
@@ -1676,13 +1830,14 @@
     function adicionarItemNaListaPedido() {
         const nome = (document.getElementById('notaItemNome').value || '').trim();
         const qtdSol = parseInt(document.getElementById('notaQtd').value, 10) || 0;
-        const motivo = (document.getElementById('notaMotivo').value || '').trim();
-        const local = (document.getElementById('notaLocal').value || '').trim();
+        const motivo = getNotaMotivoValor();
+        const local = getNotaLocalValor();
+        const prioridade = (document.getElementById('notaPrioridade') && document.getElementById('notaPrioridade').value) || 'Normal';
         const obs = (document.getElementById('notaObs').value || '').trim();
         if (nome.length < 2) { mostrarToast('⚠️ Informe o nome do item', 'warning'); return false; }
         if (qtdSol < 1) { mostrarToast('⚠️ Informe a quantidade', 'warning'); return false; }
-        if (!motivo) { mostrarToast('⚠️ Selecione o motivo / uso', 'warning'); return false; }
-        if (!local) { mostrarToast('⚠️ Selecione onde será usado', 'warning'); return false; }
+        if (!motivo) { mostrarToast('⚠️ Informe o motivo / uso', 'warning'); return false; }
+        if (!local) { mostrarToast('⚠️ Informe onde será usado', 'warning'); return false; }
 
         // tenta achar no estoque
         let estoqueId = window._pedidoEstoqueId || null;
@@ -1705,6 +1860,7 @@
             limite_alerta: limite,
             motivo_uso: motivo,
             local_uso: local,
+            prioridade: prioridade,
             observacao: obs || null
         });
 
@@ -1786,7 +1942,7 @@
                 local_uso: it.local_uso,
                 solicitado_por: solicitante,
                 cargo_solicitante: cargo,
-                observacao: (it.observacao || '') + (it.observacao ? ' | ' : '') + 'solicitacao:' + solicitacaoId,
+                observacao: ('[' + (it.prioridade || 'Normal') + '] ' + (it.observacao || '')).trim() + ' | solicitacao:' + solicitacaoId,
                 status: 'pendente'
             };
             try {
@@ -1846,6 +2002,9 @@
         const q = document.getElementById('notaQtd'); if (q) q.value = '1';
         const m = document.getElementById('notaMotivo'); if (m) m.value = '';
         const l = document.getElementById('notaLocal'); if (l) l.value = '';
+        const pr = document.getElementById('notaPrioridade'); if (pr) pr.value = 'Normal';
+        const mo = document.getElementById('notaMotivoOutro'); if (mo) { mo.value = ''; mo.style.display = 'none'; }
+        const lo = document.getElementById('notaLocalOutro'); if (lo) { lo.value = ''; lo.style.display = 'none'; }
         const o = document.getElementById('notaObs'); if (o) o.value = '';
         if (limparLista !== false) {
             pedidoItensLista = [];
@@ -1872,13 +2031,20 @@
         const horaStr = agora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 
         let rows = itens.map(function(it, i) {
+            var pr = it.prioridade || '';
+            if (!pr && it.observacao) {
+                var mm = String(it.observacao).match(/\[(Normal|Importante|Urgente)\]/i);
+                if (mm) pr = mm[1];
+            }
+            pr = pr || 'Normal';
             return '<tr>' +
                 '<td style="text-align:center;">' + (i + 1) + '</td>' +
                 '<td>' + (it.item_nome || '—') + '</td>' +
                 '<td style="text-align:center;">' + (it.quantidade_solicitar != null ? it.quantidade_solicitar : '—') + '</td>' +
+                '<td style="text-align:center;font-weight:700;">' + pr + '</td>' +
                 '<td>' + (it.motivo_uso || '—') + '</td>' +
                 '<td>' + (it.local_uso || '—') + '</td>' +
-                '<td>' + (it.observacao ? (String(it.observacao).split('solicitacao:')[0] || '').replace(/\|/g,'').trim() || '—' : '—') + '</td>' +
+                '<td>' + (it.observacao ? (String(it.observacao).split('solicitacao:')[0] || '').replace(/\|/g,'').replace(/\[(Normal|Importante|Urgente)\]/gi,'').trim() || '—' : '—') + '</td>' +
                 '</tr>';
         }).join('');
 
@@ -1906,7 +2072,7 @@
             '<div><b>Qtd. de itens:</b> ' + itens.length + '</div>' +
             '</div>' +
             '<table><thead><tr>' +
-            '<th style="width:28px;">#</th><th>Item</th><th style="width:56px;">Qtd</th><th>Motivo / uso</th><th>Local de uso</th><th>Obs.</th>' +
+            '<th style="width:28px;">#</th><th>Item</th><th style="width:48px;">Qtd</th><th style="width:72px;">Prioridade</th><th>Motivo / uso</th><th>Local de uso</th><th>Obs.</th>' +
             '</tr></thead><tbody>' + rows + '</tbody></table>' +
             '<p style="margin-top:14px;font-size:10px;color:#555;">Solicito autorização para compra dos materiais acima, necessários às atividades de manutenção do condomínio.</p>' +
             '<div class="assin">' +
@@ -4139,6 +4305,10 @@ function exportarCSVEstoque() {
                 e.preventDefault();
                 adicionarItemNaListaPedido();
             });
+            const selMot = document.getElementById('notaMotivo');
+            const selLoc = document.getElementById('notaLocal');
+            if (selMot) selMot.addEventListener('change', toggleCamposOutro);
+            if (selLoc) selLoc.addEventListener('change', toggleCamposOutro);
             const btnEnv = document.getElementById('btnEnviarPedidoNota');
             if (btnEnv) btnEnv.addEventListener('click', function(e) {
                 e.preventDefault();
