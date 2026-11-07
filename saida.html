@@ -4561,20 +4561,20 @@ ${secInt}
             const gerado = agora.toLocaleString('pt-BR');
 
             let html = '';
-            html += '<div class="cabecalho-relatorio" style="margin-bottom:0.8rem;">';
-            html += '<h2 style="margin:0 0 0.3rem;font-size:1.05rem;">⚠️ SAÍDAS DE ITENS NÃO CADASTRADOS</h2>';
-            html += '<div style="font-size:0.8rem;color:var(--text-secondary);">Período: <strong>' + esc(tituloPeriodo) + '</strong></div>';
-            html += '<div style="font-size:0.72rem;color:var(--text-secondary);">Itens digitados na saída que <strong>não existem no estoque</strong> (não baixam saldo)</div>';
-            html += '<div style="font-size:0.72rem;color:var(--text-secondary);">Gerado em ' + esc(gerado) + ' · Condomínio TaguáLife</div>';
-            html += '</div>';
+            html += htmlCabecalhoRelatorioPadrao(
+                'ITENS NÃO CADASTRADOS',
+                'Período: ' + esc(tituloPeriodo),
+                'O que é isto? Materiais digitados na saída que <strong>não estão no estoque</strong>. Eles não baixam saldo — cadastre-os para o controle ficar certo.',
+                gerado
+            );
+            html += htmlKpisRelatorio([
+                { val: linhas.length, lbl: 'Registros' },
+                { val: totalUnid, lbl: 'Unidades', alerta: totalUnid > 0 },
+                { val: rankingItem.length, lbl: 'Itens diferentes', alerta: rankingItem.length > 0 },
+                { val: rankingColab.length, lbl: 'Colaboradores' }
+            ]);
 
-            html += '<div style="display:flex;flex-wrap:wrap;gap:0.5rem;margin-bottom:0.8rem;">';
-            html += '<div style="background:#FCE8E0;border:1px solid #E8A090;border-radius:8px;padding:0.45rem 0.7rem;font-size:0.78rem;"><strong>' + linhas.length + '</strong> registro(s)</div>';
-            html += '<div style="background:#FCE8E0;border:1px solid #E8A090;border-radius:8px;padding:0.45rem 0.7rem;font-size:0.78rem;"><strong>' + totalUnid + '</strong> unidade(s)</div>';
-            html += '<div style="background:#F0F2EA;border:1px solid #D8DCCE;border-radius:8px;padding:0.45rem 0.7rem;font-size:0.78rem;"><strong>' + rankingItem.length + '</strong> item(ns) distintos</div>';
-            html += '</div>';
-
-            html += '<div class="secao-relatorio" style="margin-bottom:0.7rem;"><div class="titulo-secao">Resumo por item não cadastrado</div>';
+            html += '<div class="secao-relatorio" style="margin-bottom:0.7rem;"><div class="titulo-secao">Quais itens precisam ser cadastrados</div><p class="rel-dica">Lista do que foi retirado sem estar no sistema — cadastre para baixar o estoque certo.</p>';
             html += '<table class="tabela-relatorio"><thead><tr><th>Item (não cadastrado)</th><th style="text-align:center;">Qtd total</th></tr></thead><tbody>';
             rankingItem.forEach(function(e) {
                 html += '<tr><td><strong>' + esc(e[0]) + '</strong></td><td style="text-align:center;font-weight:700;color:#C45C26;">' + e[1] + '</td></tr>';
@@ -4595,7 +4595,7 @@ ${secInt}
             html += '</tbody></table></div>';
 
             if (rankingColab.length) {
-                html += '<div class="secao-relatorio" style="margin-top:0.7rem;"><div class="titulo-secao">Por colaborador</div>';
+                html += '<div class="secao-relatorio" style="margin-top:0.7rem;"><div class="titulo-secao">Quem mais retirou</div>';
                 html += '<table class="tabela-relatorio"><thead><tr><th>Colaborador</th><th style="text-align:center;">Unidades</th></tr></thead><tbody>';
                 rankingColab.forEach(function(e) {
                     html += '<tr><td>' + esc(e[0]) + '</td><td style="text-align:center;font-weight:700;">' + e[1] + '</td></tr>';
@@ -4603,7 +4603,7 @@ ${secInt}
                 html += '</tbody></table></div>';
             }
             if (rankingDest.length) {
-                html += '<div class="secao-relatorio" style="margin-top:0.7rem;"><div class="titulo-secao">Por destino</div>';
+                html += '<div class="secao-relatorio" style="margin-top:0.7rem;"><div class="titulo-secao">Para onde foi</div>';
                 html += '<table class="tabela-relatorio"><thead><tr><th>Destino</th><th style="text-align:center;">Unidades</th></tr></thead><tbody>';
                 rankingDest.forEach(function(e) {
                     html += '<tr><td>' + esc(e[0]) + '</td><td style="text-align:center;font-weight:700;">' + e[1] + '</td></tr>';
@@ -4806,18 +4806,18 @@ ${secInt}
             }
 
             var html = '';
-            html += '<div class="cabecalho-relatorio" style="margin-bottom:0.8rem;">';
-            html += '<h2 style="margin:0 0 0.3rem;font-size:1.05rem;">📦 RELATÓRIO DE SAÍDAS POR ITEM' + (modoGeral ? ' — GERAL' : '') + '</h2>';
-            html += '<div style="font-size:0.8rem;color:var(--text-secondary);">Item: <strong>' + esc(nomeBusca.toUpperCase()) + '</strong> · Período: <strong>' + esc(tituloPeriodo) + '</strong></div>';
-            html += '<div style="font-size:0.72rem;color:var(--text-secondary);">Gerado em ' + esc(gerado) + ' · Condomínio TaguáLife</div>';
-            html += '</div>';
-            html += '<div style="display:flex;flex-wrap:wrap;gap:0.5rem;margin-bottom:0.8rem;">';
-            html += '<div style="background:#E8F5C8;border:1px solid #C1CE83;border-radius:8px;padding:0.45rem 0.7rem;font-size:0.78rem;"><strong>' + linhas.length + '</strong> registro(s)</div>';
-            html += '<div style="background:#F0F2EA;border:1px solid #D8DCCE;border-radius:8px;padding:0.45rem 0.7rem;font-size:0.78rem;"><strong>' + totalUnid + '</strong> unidade(s)</div>';
-            if (modoGeral) {
-                html += '<div style="background:#F0F2EA;border:1px solid #D8DCCE;border-radius:8px;padding:0.45rem 0.7rem;font-size:0.78rem;"><strong>' + rankingItem.length + '</strong> item(ns) cadastrado(s)</div>';
-            }
-            html += '</div>';
+            html += htmlCabecalhoRelatorioPadrao(
+                'SAÍDAS POR ITEM' + (modoGeral ? ' — GERAL' : ''),
+                'Item: <strong>' + esc(nomeBusca.toUpperCase()) + '</strong> · Período: <strong>' + esc(tituloPeriodo) + '</strong>',
+                'O que é isto? Mostra <strong>quando</strong>, <strong>quem</strong> e <strong>para onde</strong> foi cada retirada deste material.',
+                gerado
+            );
+            html += htmlKpisRelatorio([
+                { val: linhas.length, lbl: 'Registros' },
+                { val: totalUnid, lbl: 'Unidades' },
+                { val: rankingColab.length, lbl: 'Colaboradores' },
+                { val: rankingDest.length, lbl: 'Destinos' }
+            ]);
 
             if (rankingItem.length > 0 && (modoGeral || rankingItem.length > 1)) {
                 html += '<div class="secao-relatorio" style="margin-bottom:0.7rem;"><div class="titulo-secao">' + (modoGeral ? 'Todos os itens cadastrados (saídas no período)' : 'Itens encontrados') + '</div>';
@@ -4830,15 +4830,15 @@ ${secInt}
                 html += '</tbody></table></div>';
             }
 
-            html += '<div class="secao-relatorio"><div class="titulo-secao">Detalhamento das saídas</div>';
-            html += '<table class="tabela-relatorio"><thead><tr><th>Data</th><th>Colaborador</th><th>Item</th><th style="text-align:center;">Qtd</th><th>Destino</th></tr></thead><tbody>';
+            html += '<div class="secao-relatorio"><div class="titulo-secao">Detalhe de cada retirada</div><p class="rel-dica">Data, quem pegou, quantidade e destino.</p>';
+            html += '<table class="tabela-relatorio"><thead><tr><th>Data</th><th>Quem retirou</th><th>Item</th><th style="text-align:center;">Qtd</th><th>Para onde</th></tr></thead><tbody>';
             linhas.forEach(function(l) {
                 html += '<tr><td style="white-space:nowrap;">' + esc(l.dataBR) + '</td><td>' + esc(l.colaborador) + '</td><td><strong>' + esc(formatarItemComCodigo(l.item, l.codigo)) + '</strong></td><td style="text-align:center;font-weight:700;">' + l.qtd + '</td><td>' + esc(l.destino) + '</td></tr>';
             });
             html += '</tbody></table></div>';
 
             if (rankingColab.length) {
-                html += '<div class="secao-relatorio" style="margin-top:0.7rem;"><div class="titulo-secao">Por colaborador</div>';
+                html += '<div class="secao-relatorio" style="margin-top:0.7rem;"><div class="titulo-secao">Quem mais retirou</div>';
                 html += '<table class="tabela-relatorio"><thead><tr><th>Colaborador</th><th style="text-align:center;">Unidades</th></tr></thead><tbody>';
                 rankingColab.forEach(function(e) {
                     html += '<tr><td>' + esc(e[0]) + '</td><td style="text-align:center;font-weight:700;">' + e[1] + '</td></tr>';
@@ -4846,7 +4846,7 @@ ${secInt}
                 html += '</tbody></table></div>';
             }
             if (rankingDest.length) {
-                html += '<div class="secao-relatorio" style="margin-top:0.7rem;"><div class="titulo-secao">Por destino</div>';
+                html += '<div class="secao-relatorio" style="margin-top:0.7rem;"><div class="titulo-secao">Para onde foi</div>';
                 html += '<table class="tabela-relatorio"><thead><tr><th>Destino</th><th style="text-align:center;">Unidades</th></tr></thead><tbody>';
                 rankingDest.forEach(function(e) {
                     html += '<tr><td>' + esc(e[0]) + '</td><td style="text-align:center;font-weight:700;">' + e[1] + '</td></tr>';
@@ -4854,6 +4854,7 @@ ${secInt}
                 html += '</tbody></table></div>';
             }
 
+            html += htmlRodapeRelatorioPadrao(gerado, linhas.length + ' registro(s) · ' + totalUnid + ' unid.');
             var container = document.getElementById('relatorioConteudo');
             if (!container) { mostrarToast('❌ Área de relatório não encontrada', 'danger'); return; }
             container.innerHTML = html;
@@ -5145,6 +5146,7 @@ ${secInt}
                 <div class="geracao">Documento gerado em ${dataGeracao}</div>
                 <h1>${titulo}</h1>
                 <div class="periodo">${subtitulo}</div>
+                <p class="rel-dica-topo">Leitura rápida: <strong>números no topo</strong> → quem retirou → para onde foi → o que mais saiu → detalhe de cada saída.</p>
             </div>
 
             <div class="relatorio-kpis">
@@ -5403,6 +5405,7 @@ container.innerHTML = html;
                     .lista-itens-saida .dest { color:#7A816E; font-size:0.72rem; }
                     .card-saida .rodape { font-size: 0.68rem; color: #7A816E; margin-top:0.3rem; padding-top:0.25rem; border-top:1px solid #E0E4D8; }
                     .rel-dica { font-size:0.7rem; color:#7A816E; margin:-0.2rem 0 0.5rem; }
+                    .rel-dica-topo { font-size:0.72rem; color:#555; background:#F0F2EA; border-left:3px solid #7A816E; padding:0.4rem 0.65rem; margin:0.5rem 0 0; border-radius:0 6px 6px 0; }
                     .tabela--compacta td { padding:0.4rem 0.6rem; }
                     .badge-nao-cadastrado { background: #FFB300; color: #E65100; font-size: 0.6rem; padding: 0.1rem 0.5rem; border-radius: 10px; font-weight: 700; }
                     .tabela-relatorio { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
