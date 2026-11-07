@@ -472,6 +472,34 @@
         .relatorio-resumo .lbl { color: var(--text-secondary); }
         .relatorio-resumo .val { font-weight: 700; }
         .relatorio-resumo .val.laranja { color: #E65100; }
+        .relatorio-kpis {
+            display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.55rem; margin: 0.85rem 0 1rem;
+        }
+        @media (max-width: 700px) { .relatorio-kpis { grid-template-columns: 1fr 1fr; } }
+        .relatorio-kpis .kpi {
+            background: var(--gray-50); border: 1px solid var(--border-color);
+            border-top: 3px solid var(--verde-oliva); border-radius: 10px;
+            padding: 0.7rem 0.5rem; text-align: center;
+        }
+        .relatorio-kpis .kpi-alerta { border-top-color: #E65100; background: #FFF8E1; }
+        .relatorio-kpis .kpi-val { display: block; font-size: 1.45rem; font-weight: 800; color: #191D1B; line-height: 1.15; }
+        .relatorio-kpis .kpi-alerta .kpi-val { color: #E65100; }
+        .relatorio-kpis .kpi-lbl {
+            display: block; font-size: 0.65rem; font-weight: 600; color: var(--text-secondary);
+            text-transform: uppercase; letter-spacing: 0.3px; margin-top: 0.15rem;
+        }
+        .rel-dica-topo {
+            margin: 0.5rem 0 0; font-size: 0.74rem; color: var(--text-secondary);
+            background: var(--gray-50); border: 1px solid var(--border-color);
+            border-left: 3px solid var(--verde-oliva); border-radius: 0 8px 8px 0;
+            padding: 0.45rem 0.7rem; line-height: 1.35;
+        }
+        .relatorio-rodape {
+            margin-top: 1.3rem; padding-top: 0.55rem; border-top: 2px solid var(--verde-claro);
+            display: flex; flex-wrap: wrap; gap: 0.4rem 1rem; justify-content: space-between;
+            font-size: 0.68rem; color: var(--text-secondary);
+        }
+
         .secao-relatorio { margin-top: 1rem; }
         .titulo-secao {
             font-size: 0.85rem; font-weight: 700; padding-bottom: 0.35rem;
@@ -2763,24 +2791,33 @@ ALTER TABLE public.pedidos_compra ADD COLUMN IF NOT EXISTS local_uso text;`;
         });
         const catsOrdenadas = Object.entries(porCat).sort((a, b) => a[0].localeCompare(b[0]));
 
+        const dicaTipo = (function() {
+            const titu = (titulo || '').toUpperCase();
+            if (titu.indexOf('BAIXA') >= 0) return 'O que é isto? Lista do que <strong>está acabando ou zerado</strong> — use para decidir o que comprar.';
+            if (titu.indexOf('CATEGORIA') >= 0) return 'O que é isto? Estoque organizado por <strong>tipo de material</strong> (elétrico, hidráulico…).';
+            return 'O que é isto? Foto do almoxarifado: <strong>o que tem</strong>, <strong>quanto tem</strong> e o que está baixo.';
+        })();
+
         let html = `
             <div class="relatorio-cabecalho">
-                <div class="empresa">TaguáLife Center · Almoxarifado · Condomínio TaguáLife</div>
-                <div class="geracao">Documento gerado em ${agora} · Fonte: banco Supabase · A4 retrato</div>
+                <div class="empresa">Condomínio TaguáLife · Life Conceito em Gestão Condominial</div>
+                <div class="geracao">Documento gerado em ${agora}</div>
                 <h1>${titulo}</h1>
                 <div class="periodo">${subtitulo}</div>
+                <p class="rel-dica-topo">${dicaTipo}</p>
             </div>
-            <p class="no-print" style="font-size:0.75rem;color:var(--text-secondary);margin:0 0 0.6rem;">
-                <i class="fas fa-info-circle"></i> Desmarque os itens que <strong>não</strong> quer no PDF. Depois clique em <strong>Imprimir / PDF</strong>.
+            <p class="no-print" style="font-size:0.75rem;color:var(--text-secondary);margin:0.5rem 0 0.6rem;">
+                <i class="fas fa-info-circle"></i> Desmarque o que <strong>não</strong> quiser no PDF e depois clique em <strong>Imprimir / PDF</strong>.
             </p>
-            <div class="relatorio-resumo">
-                <div class="item"><span class="lbl">Total de itens:</span><span class="val" id="relSumItens">${lista.length}</span></div>
-                <div class="item"><span class="lbl">Unidades totais:</span><span class="val" id="relSumUnid">${totalUnidades}</span></div>
-                <div class="item"><span class="lbl">Categorias:</span><span class="val">${Object.keys(porCat).length}</span></div>
-                <div class="item"><span class="lbl">Baixo estoque:</span><span class="val ${baixo > 0 ? 'laranja' : ''}" id="relSumBaixo">${baixo}</span></div>
+            <div class="relatorio-kpis">
+                <div class="kpi"><span class="kpi-val" id="relSumItens">${lista.length}</span><span class="kpi-lbl">Itens</span></div>
+                <div class="kpi"><span class="kpi-val" id="relSumUnid">${totalUnidades}</span><span class="kpi-lbl">Unidades</span></div>
+                <div class="kpi"><span class="kpi-val">${Object.keys(porCat).length}</span><span class="kpi-lbl">Categorias</span></div>
+                <div class="kpi ${baixo > 0 ? 'kpi-alerta' : ''}"><span class="kpi-val" id="relSumBaixo">${baixo}</span><span class="kpi-lbl">Baixo estoque</span></div>
             </div>
             <div class="secao-relatorio">
-                <div class="titulo-secao"><i class="fas fa-th-list"></i> Resumo por categoria</div>
+                <div class="titulo-secao"><i class="fas fa-th-list"></i> Por categoria (visão rápida)</div>
+                <p class="rel-dica" style="font-size:0.72rem;color:var(--text-secondary);margin:-0.25rem 0 0.55rem;">Quantos itens e unidades em cada tipo de material.</p>
                 <table class="tabela-relatorio">
                     <thead>
                         <tr>
@@ -2803,7 +2840,7 @@ ALTER TABLE public.pedidos_compra ADD COLUMN IF NOT EXISTS local_uso text;`;
             </div>
         `;
 
-        html += `<div class="secao-relatorio"><div class="titulo-secao"><i class="fas fa-boxes"></i> Detalhamento por categoria</div></div>`;
+        html += `<div class="secao-relatorio"><div class="titulo-secao"><i class="fas fa-boxes"></i> Lista dos itens por categoria</div><p class="rel-dica" style="font-size:0.72rem;color:var(--text-secondary);margin:-0.25rem 0 0.55rem;">Nome, quantidade e se está OK ou baixo.</p></div>`;
         catsOrdenadas.forEach(([cat]) => {
             const itensCat = lista.filter(i => (i.categoria || 'Outros') === cat)
                 .sort((a, b) => (a.nome || '').localeCompare(b.nome || ''));
@@ -2844,6 +2881,11 @@ ALTER TABLE public.pedidos_compra ADD COLUMN IF NOT EXISTS local_uso text;`;
                     </table>
                 </div>`;
         });
+        html += `<div class="relatorio-rodape">
+            <span>TaguáLife · Relatório de estoque</span>
+            <span>Gerado em ${agora}</span>
+            <span>${lista.length} item(ns) · ${totalUnidades} unid. · ${baixo} baixo(s)</span>
+        </div>`;
         container.innerHTML = html;
         relatorioAtualizarContadores();
     }
@@ -3091,9 +3133,12 @@ ALTER TABLE public.pedidos_compra ADD COLUMN IF NOT EXISTS local_uso text;`;
   </div>
 
   <div class="topo">
-    <div class="marca">TaguáLife Center · Almoxarifado</div>
+    <div class="marca">Condomínio TaguáLife · Life Conceito em Gestão Condominial</div>
     <h1>Sugestão de compra / reposição</h1>
-    <p class="sub">Condomínio TaguáLife · Itens agrupados por categoria</p>
+    <p class="sub">Lista do que está baixo ou zerado — organizada por categoria para facilitar a compra</p>
+    <p class="sub" style="margin-top:6px;padding:8px 10px;background:#F0F2EA;border-left:3px solid #7A816E;border-radius:0 8px 8px 0;color:#5A614E;">
+      <strong>Como ler:</strong> os números grandes mostram quantos itens faltam. A tabela diz o nome, quanto tem agora e quanto comprar. Desmarque o que não for comprar agora.
+    </p>
   </div>
 
   <div class="info-bar">
@@ -3108,7 +3153,7 @@ ALTER TABLE public.pedidos_compra ADD COLUMN IF NOT EXISTS local_uso text;`;
     <div class="card"><div class="n" id="cardSug">${fmtN(totalSugerido)}</div><div class="l">Unidades sugeridas</div></div>
   </div>
 
-  <h2>1. Resumo por categoria</h2>
+  <h2>1. Resumo por categoria (visão rápida)</h2>
   <table id="tabResumo">
     <thead>
       <tr>
@@ -3128,8 +3173,8 @@ ALTER TABLE public.pedidos_compra ADD COLUMN IF NOT EXISTS local_uso text;`;
     </tbody>
   </table>
 
-  <h2>2. Detalhe por categoria</h2>
-  <p class="legenda">Qtd sugerida = repor até cerca de 2× o limite mínimo. Use as caixas para incluir ou tirar itens antes de imprimir.</p>
+  <h2>2. O que comprar em cada categoria</h2>
+  <p class="legenda">Qtd sugerida ≈ repor até cerca de 2× o limite mínimo. Use as caixas para incluir ou tirar itens antes de imprimir.</p>
   ${corpo}
 
   <div class="footer">
@@ -3728,6 +3773,15 @@ body {
 .relatorio-resumo .lbl { color: #7A816E; }
 .relatorio-resumo .val { font-weight: 700; color: #191D1B; }
 .relatorio-resumo .val.laranja { color: #C45A00; }
+.relatorio-kpis { display:grid; grid-template-columns:repeat(4,1fr); gap:6px; margin:10px 0 12px; }
+.relatorio-kpis .kpi { border:1px solid #D8DCCE; border-top:3px solid #7A816E; border-radius:8px; padding:8px 6px; text-align:center; background:#FBFBF7; }
+.relatorio-kpis .kpi-alerta { border-top-color:#E65100; background:#FFF8E1; }
+.relatorio-kpis .kpi-val { display:block; font-size:18px; font-weight:800; color:#191D1B; }
+.relatorio-kpis .kpi-alerta .kpi-val { color:#E65100; }
+.relatorio-kpis .kpi-lbl { font-size:9px; color:#7A816E; font-weight:600; text-transform:uppercase; }
+.rel-dica-topo { font-size:10px; color:#555; background:#F0F2EA; border-left:3px solid #7A816E; padding:6px 8px; margin:6px 0 0; border-radius:0 6px 6px 0; }
+.relatorio-rodape { margin-top:14px; padding-top:8px; border-top:2px solid #C1CE83; display:flex; flex-wrap:wrap; gap:6px 12px; justify-content:space-between; font-size:9px; color:#7A816E; }
+
 .secao-relatorio { margin-top: 14px; page-break-inside: auto; }
 .titulo-secao {
   font-size: 12px;
