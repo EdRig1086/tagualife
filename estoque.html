@@ -2993,13 +2993,13 @@ ALTER TABLE public.pedidos_compra ADD COLUMN IF NOT EXISTS local_uso text;`;
     async function gerarSugestaoCompra() {
         try {
             if (!itensCache || !itensCache.length) await carregarEstoque();
+            // Só itens zerados ou com menos de 5 unidades
             const itens = (itensCache || []).filter(i => {
-                const q = parseInt(i.quantidade) || 0;
-                const lim = parseInt(i.limite_alerta) || 5;
-                return q <= lim;
+                const q = parseInt(i.quantidade, 10) || 0;
+                return q === 0 || q < 5;
             });
             if (!itens.length) {
-                mostrarToast('✅ Nenhum item abaixo do limite — sem sugestão de compra', 'success');
+                mostrarToast('✅ Nenhum item zerado ou com menos de 5 unidades — sem sugestão de compra', 'success');
                 return;
             }
 
@@ -3156,7 +3156,7 @@ ALTER TABLE public.pedidos_compra ADD COLUMN IF NOT EXISTS local_uso text;`;
   <div class="topo">
     <div class="marca">Condomínio TaguáLife · Life Conceito em Gestão Condominial</div>
     <h1>Sugestão de compra / reposição</h1>
-    <p class="sub">Lista do que está baixo ou zerado — organizada por categoria para facilitar a compra</p>
+    <p class="sub">Só itens <strong>zerados</strong> ou com <strong>menos de 5 unidades</strong> — organizados por categoria</p>
     <p class="sub" style="margin-top:6px;padding:8px 10px;background:#F0F2EA;border-left:3px solid #7A816E;border-radius:0 8px 8px 0;color:#5A614E;">
       <strong>Como ler:</strong> os números grandes mostram quantos itens faltam. A tabela diz o nome, quanto tem agora e quanto comprar. Desmarque o que não for comprar agora.
     </p>
