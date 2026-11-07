@@ -605,6 +605,17 @@
             background:#fff; vertical-align:middle; cursor:zoom-in; transition: transform .15s ease, box-shadow .15s ease;
         }
         .img-item-thumb:hover { transform: scale(1.08); box-shadow: 0 2px 10px rgba(0,0,0,.12); }
+        .img-rel-foto {
+            width: 36px; height: 36px; object-fit: contain; border-radius: 6px;
+            border: 1px solid #D8DCCE; background: #fff; vertical-align: middle;
+            display: inline-block;
+        }
+        .img-rel-ph {
+            width: 36px; height: 36px; border-radius: 6px; border: 1px dashed #D8DCCE;
+            background: #F5F7F0; display: inline-flex; align-items: center; justify-content: center;
+            color: #9AA08E; font-size: 0.7rem; vertical-align: middle;
+        }
+
         .foto-item-preview { cursor: zoom-in; }
         .foto-item-preview.has-foto:hover { outline: 2px solid var(--verde-oliva); }
         .foto-lightbox {
@@ -1516,6 +1527,14 @@
             el.innerHTML = '<i class="fas fa-camera"></i>';
             el.onclick = null;
         }
+    }
+
+    function htmlFotoRelatorio(item) {
+        const url = (item && item.foto_url) || (item && item.id && typeof getFotoItemLocal === 'function' ? getFotoItemLocal(item.id) : null) || (item && item.nome && typeof getFotoItemLocal === 'function' ? getFotoItemLocal(item.nome) : null);
+        if (url) {
+            return '<img class="img-rel-foto" src="' + String(url).replace(/"/g, '&quot;') + '" alt="" />';
+        }
+        return '<span class="img-rel-ph"><i class="fas fa-box"></i></span>';
     }
 
     function htmlThumbItem(item) {
@@ -2856,6 +2875,7 @@ ALTER TABLE public.pedidos_compra ADD COLUMN IF NOT EXISTS local_uso text;`;
                         <thead>
                             <tr>
                                 <th class="no-print" style="width:28px;"></th>
+                                <th style="width:42px;text-align:center;">Foto</th>
                                 <th>#</th><th>Item</th><th>Descrição</th><th>Fabricante</th>
                                 <th style="text-align:center;">Qtd</th>
                                 <th style="text-align:center;">Limite</th><th>Status</th>
@@ -2868,6 +2888,7 @@ ALTER TABLE public.pedidos_compra ADD COLUMN IF NOT EXISTS local_uso text;`;
                                 const bf = qtd < lim;
                                 return `<tr class="linha-rel-item ${bf ? 'baixo' : ''}" data-qtd="${qtd}" data-baixo="${bf ? '1' : '0'}">
                                     <td class="no-print" style="text-align:center;"><input type="checkbox" class="chk-rel-item" checked onchange="relatorioAtualizarContadores()" /></td>
+                                    <td style="text-align:center;width:42px;">${htmlFotoRelatorio(item)}</td>
                                     <td>${idx + 1}</td>
                                     <td><strong>${item.nome || '—'}</strong></td>
                                     <td>${item.descricao || '—'}</td>
@@ -3780,6 +3801,8 @@ body {
 .relatorio-kpis .kpi-alerta .kpi-val { color:#E65100; }
 .relatorio-kpis .kpi-lbl { font-size:9px; color:#7A816E; font-weight:600; text-transform:uppercase; }
 .rel-dica-topo { font-size:10px; color:#555; background:#F0F2EA; border-left:3px solid #7A816E; padding:6px 8px; margin:6px 0 0; border-radius:0 6px 6px 0; }
+.img-rel-foto { width:32px; height:32px; object-fit:contain; border:1px solid #D8DCCE; border-radius:5px; background:#fff; }
+.img-rel-ph { width:32px; height:32px; display:inline-block; border:1px dashed #D8DCCE; border-radius:5px; background:#F5F7F0; text-align:center; line-height:32px; font-size:10px; color:#999; }
 .relatorio-rodape { margin-top:14px; padding-top:8px; border-top:2px solid #C1CE83; display:flex; flex-wrap:wrap; gap:6px 12px; justify-content:space-between; font-size:9px; color:#7A816E; }
 
 .secao-relatorio { margin-top: 14px; page-break-inside: auto; }
