@@ -1077,6 +1077,16 @@
             min-width: 2.2rem;
         }
         .lista-itens-saida .nome { flex: 1; min-width: 140px; }
+        .img-rel-foto {
+            width: 28px; height: 28px; object-fit: contain; border-radius: 5px;
+            border: 1px solid #D8DCCE; background: #fff; vertical-align: middle; margin-right: 0.35rem;
+        }
+        .img-rel-ph {
+            display: inline-block; width: 28px; height: 28px; border-radius: 5px;
+            border: 1px dashed #D8DCCE; background: #F5F7F0; text-align: center;
+            line-height: 26px; font-size: 0.65rem; color: #9AA08E; margin-right: 0.35rem;
+            vertical-align: middle;
+        }
         .lista-itens-saida .dest {
             color: var(--text-secondary);
             font-size: 0.75rem;
@@ -1657,7 +1667,8 @@
                     unidade: e.unidade || 'UN',
                     descricao: e.descricao || '',
                     fabricante: e.fabricante || '',
-                    codigo: e.codigo != null ? e.codigo : null
+                    codigo: e.codigo != null ? e.codigo : null,
+                    foto_url: e.foto_url || null
                 };
             });
 
@@ -4344,6 +4355,31 @@ ${secInt}
         return null;
     }
 
+    function htmlFotoPorNomeItem(nomeOuItem) {
+        var nome = '';
+        var url = null;
+        if (nomeOuItem && typeof nomeOuItem === 'object') {
+            nome = (nomeOuItem.item || nomeOuItem.nome || nomeOuItem.item_nome || '').toString().trim();
+            url = nomeOuItem.foto_url || null;
+        } else {
+            nome = (nomeOuItem || '').toString().trim();
+        }
+        if (!url && nome && cacheEstoqueDB && cacheEstoqueDB.length) {
+            var key = (typeof normalizarBuscaItem === 'function') ? normalizarBuscaItem(nome) : nome.toLowerCase();
+            var reg = cacheEstoqueDB.find(function(e) {
+                var n = (e.nome || '').toString().trim();
+                if (!n) return false;
+                if (typeof normalizarBuscaItem === 'function') return normalizarBuscaItem(n) === key;
+                return n.toLowerCase() === nome.toLowerCase();
+            });
+            if (reg && reg.foto_url) url = reg.foto_url;
+        }
+        if (url) {
+            return '<img class="img-rel-foto" src="' + String(url).replace(/"/g, '&quot;') + '" alt="" />';
+        }
+        return '<span class="img-rel-ph">·</span>';
+    }
+
     function formatarItemComCodigo(nomeItem, codigoOpcional) {
         const nome = String(nomeItem || '').trim() || '—';
         let cod = codigoOpcional;
@@ -4575,18 +4611,19 @@ ${secInt}
             ]);
 
             html += '<div class="secao-relatorio" style="margin-bottom:0.7rem;"><div class="titulo-secao">Quais itens precisam ser cadastrados</div><p class="rel-dica">Lista do que foi retirado sem estar no sistema — cadastre para baixar o estoque certo.</p>';
-            html += '<table class="tabela-relatorio"><thead><tr><th>Item (não cadastrado)</th><th style="text-align:center;">Qtd total</th></tr></thead><tbody>';
+            html += '<table class="tabela-relatorio"><thead><tr><th style="width:40px;text-align:center;">Foto</th><th>Item (não cadastrado)</th><th style="text-align:center;">Qtd total</th></tr></thead><tbody>';
             rankingItem.forEach(function(e) {
-                html += '<tr><td><strong>' + esc(e[0]) + '</strong></td><td style="text-align:center;font-weight:700;color:#C45C26;">' + e[1] + '</td></tr>';
+                html += '<tr><td style="text-align:center;">' + htmlFotoPorNomeItem(e[0]) + '</td><td><strong>' + esc(e[0]) + '</strong></td><td style="text-align:center;font-weight:700;color:#C45C26;">' + e[1] + '</td></tr>';
             });
             html += '</tbody></table></div>';
 
-            html += '<div class="secao-relatorio"><div class="titulo-secao">Detalhamento das saídas</div>';
-            html += '<table class="tabela-relatorio"><thead><tr><th>Data</th><th>Colaborador</th><th>Item</th><th style="text-align:center;">Qtd</th><th>Destino</th></tr></thead><tbody>';
+            html += '<div class="secao-relatorio"><div class="titulo-secao">Detalhe de cada retirada</div><p class="rel-dica">Data, quem pegou, o quê, quanto e para onde.</p>';
+            html += '<table class="tabela-relatorio"><thead><tr><th>Data</th><th>Quem retirou</th><th style="width:40px;text-align:center;">Foto</th><th>Item</th><th style="text-align:center;">Qtd</th><th>Para onde</th></tr></thead><tbody>';
             linhas.forEach(function(l) {
                 html += '<tr>';
                 html += '<td style="white-space:nowrap;">' + esc(l.dataBR) + '</td>';
                 html += '<td>' + esc(l.colaborador) + '</td>';
+                html += '<td style="text-align:center;">' + htmlFotoPorNomeItem(l.item) + '</td>';
                 html += '<td><strong>' + esc(l.item) + '</strong> <span class="badge-nao-cadastrado">Não cadastrado</span></td>';
                 html += '<td style="text-align:center;font-weight:700;">' + l.qtd + '</td>';
                 html += '<td>' + esc(l.destino) + '</td>';
@@ -4821,19 +4858,19 @@ ${secInt}
 
             if (rankingItem.length > 0 && (modoGeral || rankingItem.length > 1)) {
                 html += '<div class="secao-relatorio" style="margin-bottom:0.7rem;"><div class="titulo-secao">' + (modoGeral ? 'Todos os itens cadastrados (saídas no período)' : 'Itens encontrados') + '</div>';
-                html += '<table class="tabela-relatorio"><thead><tr><th>Cód.</th><th>Item</th><th style="text-align:center;">Qtd saída</th></tr></thead><tbody>';
+                html += '<table class="tabela-relatorio"><thead><tr><th style="width:40px;text-align:center;">Foto</th><th>Cód.</th><th>Item</th><th style="text-align:center;">Qtd saída</th></tr></thead><tbody>';
                 rankingItem.forEach(function(e) {
                     var cod = (typeof buscarCodigoPorNomeItem === 'function') ? buscarCodigoPorNomeItem(e[0]) : null;
                     var codTxt = (cod != null && cod !== '') ? String(cod) : '—';
-                    html += '<tr><td style="text-align:center;font-weight:700;">' + esc(codTxt) + '</td><td>' + esc(e[0]) + '</td><td style="text-align:center;font-weight:700;">' + e[1] + '</td></tr>';
+                    html += '<tr><td style="text-align:center;">' + htmlFotoPorNomeItem(e[0]) + '</td><td style="text-align:center;font-weight:700;">' + esc(codTxt) + '</td><td>' + esc(e[0]) + '</td><td style="text-align:center;font-weight:700;">' + e[1] + '</td></tr>';
                 });
                 html += '</tbody></table></div>';
             }
 
             html += '<div class="secao-relatorio"><div class="titulo-secao">Detalhe de cada retirada</div><p class="rel-dica">Data, quem pegou, quantidade e destino.</p>';
-            html += '<table class="tabela-relatorio"><thead><tr><th>Data</th><th>Quem retirou</th><th>Item</th><th style="text-align:center;">Qtd</th><th>Para onde</th></tr></thead><tbody>';
+            html += '<table class="tabela-relatorio"><thead><tr><th>Data</th><th>Quem retirou</th><th style="width:40px;text-align:center;">Foto</th><th>Item</th><th style="text-align:center;">Qtd</th><th>Para onde</th></tr></thead><tbody>';
             linhas.forEach(function(l) {
-                html += '<tr><td style="white-space:nowrap;">' + esc(l.dataBR) + '</td><td>' + esc(l.colaborador) + '</td><td><strong>' + esc(formatarItemComCodigo(l.item, l.codigo)) + '</strong></td><td style="text-align:center;font-weight:700;">' + l.qtd + '</td><td>' + esc(l.destino) + '</td></tr>';
+                html += '<tr><td style="white-space:nowrap;">' + esc(l.dataBR) + '</td><td>' + esc(l.colaborador) + '</td><td style="text-align:center;">' + htmlFotoPorNomeItem(l.item) + '</td><td><strong>' + esc(formatarItemComCodigo(l.item, l.codigo)) + '</strong></td><td style="text-align:center;font-weight:700;">' + l.qtd + '</td><td>' + esc(l.destino) + '</td></tr>';
             });
             html += '</tbody></table></div>';
 
@@ -5274,13 +5311,14 @@ ${secInt}
                         <thead>
                             <tr>
                                 <th style="width:36px;text-align:center;">#</th>
+                                <th style="width:40px;text-align:center;">Foto</th>
                                 <th>Item</th>
                                 <th style="text-align:center;">Unidades</th>
                             </tr>
                         </thead>
                         <tbody>
                             ${topItens.map(function(pair, idx) {
-                                return '<tr><td style="text-align:center;color:#7A816E;font-weight:600;">' + (idx + 1) + '</td><td>' + pair[0] + '</td><td style="text-align:center;font-weight:700;">' + pair[1] + '</td></tr>';
+                                return '<tr><td style="text-align:center;color:#7A816E;font-weight:600;">' + (idx + 1) + '</td><td style="width:36px;text-align:center;">' + htmlFotoPorNomeItem(pair[0]) + '</td><td>' + pair[0] + '</td><td style="text-align:center;font-weight:700;">' + pair[1] + '</td></tr>';
                             }).join('')}
                         </tbody>
                     </table>
@@ -5306,7 +5344,8 @@ ${secInt}
                     const dest = i.destino || 'sem destino';
                     const q = i.qtd || '?';
                     const nc = i.cadastrado === false ? ' <span class="badge-nao-cadastrado">Não cadastrado</span>' : '';
-                    return '<li><span class="qtd">' + q + '×</span> <span class="nome">' + nome + '</span> <span class="dest">→ ' + dest + '</span>' + nc + '</li>';
+                    const foto = htmlFotoPorNomeItem(i.item || i.nome || '');
+                    return '<li>' + foto + '<span class="qtd">' + q + '×</span> <span class="nome">' + nome + '</span> <span class="dest">→ ' + dest + '</span>' + nc + '</li>';
                 }).join('') + '</ul>'
                 : '<div class="itens-vazio">Sem itens nesta saída</div>';
             html += `
@@ -5402,7 +5441,19 @@ container.innerHTML = html;
                     .lista-itens-saida { list-style:none; margin:0.3rem 0; padding:0; }
                     .lista-itens-saida li { font-size:0.78rem; padding:0.22rem 0; border-bottom:1px dotted #E0E4D8; }
                     .lista-itens-saida .qtd { font-weight:700; margin-right:0.35rem; }
-                    .lista-itens-saida .dest { color:#7A816E; font-size:0.72rem; }
+                    .img-rel-foto { width:26px;height:26px;object-fit:contain;border:1px solid #D8DCCE;border-radius:4px;background:#fff;vertical-align:middle;margin-right:4px; }
+                    .img-rel-ph { display:inline-block;width:26px;height:26px;border:1px dashed #D8DCCE;border-radius:4px;text-align:center;line-height:24px;font-size:9px;color:#999;margin-right:4px; }
+                    .img-rel-foto {
+            width: 28px; height: 28px; object-fit: contain; border-radius: 5px;
+            border: 1px solid #D8DCCE; background: #fff; vertical-align: middle; margin-right: 0.35rem;
+        }
+        .img-rel-ph {
+            display: inline-block; width: 28px; height: 28px; border-radius: 5px;
+            border: 1px dashed #D8DCCE; background: #F5F7F0; text-align: center;
+            line-height: 26px; font-size: 0.65rem; color: #9AA08E; margin-right: 0.35rem;
+            vertical-align: middle;
+        }
+        .lista-itens-saida .dest { color:#7A816E; font-size:0.72rem; }
                     .card-saida .rodape { font-size: 0.68rem; color: #7A816E; margin-top:0.3rem; padding-top:0.25rem; border-top:1px solid #E0E4D8; }
                     .rel-dica { font-size:0.7rem; color:#7A816E; margin:-0.2rem 0 0.5rem; }
                     .rel-dica-topo { font-size:0.72rem; color:#555; background:#F0F2EA; border-left:3px solid #7A816E; padding:0.4rem 0.65rem; margin:0.5rem 0 0; border-radius:0 6px 6px 0; }
