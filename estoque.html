@@ -3038,6 +3038,7 @@ ALTER TABLE public.pedidos_compra ADD COLUMN IF NOT EXISTS local_uso text;`;
                     const idRow = 'item_' + nGlobal;
                     return `<tr class="linha-item" data-sug="${sugerido}" id="${idRow}">
                       <td class="centro no-print-col"><input type="checkbox" class="chk-item" checked data-sug="${sugerido}" onchange="atualizarContadores()" /></td>
+                      <td class="centro" style="width:40px;">${htmlFotoRelatorio(i)}</td>
                       <td class="centro num-col">${nGlobal}</td>
                       <td>${esc(i.nome)}</td>
                       <td class="centro">${q} ${esc(i.unidade || 'UN')}</td>
@@ -3061,6 +3062,7 @@ ALTER TABLE public.pedidos_compra ADD COLUMN IF NOT EXISTS local_uso text;`;
                     <thead>
                       <tr>
                         <th class="no-print-col" style="width:28px;"></th>
+                        <th style="width:40px;" class="centro">Foto</th>
                         <th style="width:36px;">#</th>
                         <th>Item</th>
                         <th style="width:70px;" class="centro">Estoque</th>
@@ -3132,6 +3134,8 @@ ALTER TABLE public.pedidos_compra ADD COLUMN IF NOT EXISTS local_uso text;`;
   tr:nth-child(even) td { background: #F7F8F3; }
   tr.linha-item.excluida { display: none; }
   .centro { text-align: center; }
+  .img-rel-foto { width:32px;height:32px;object-fit:contain;border:1px solid #D8DCCE;border-radius:5px;background:#fff; }
+  .img-rel-ph { width:32px;height:32px;display:inline-flex;align-items:center;justify-content:center;border:1px dashed #D8DCCE;border-radius:5px;background:#F5F7F0;color:#999;font-size:10px; }
   .sug { font-weight: 800; color: #8B6914; }
   .subtotal td { background: #F0F2EA !important; font-weight: 700; border-top: 1px solid #C1CE83; }
   .legenda { font-size: 8.5px; color: #7A816E; margin: 8px 0 0; }
