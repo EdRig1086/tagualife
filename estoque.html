@@ -207,226 +207,282 @@
         .bloco-notas-compra {
             background: var(--bg-card);
             border: 1px solid var(--border-color);
-            border-radius: 10px;
-            margin-bottom: 1rem;
+            border-radius: 14px;
+            margin-bottom: 1.2rem;
             overflow: hidden;
+            box-shadow: 0 4px 18px rgba(25, 29, 27, 0.06);
         }
         .bloco-notas-head {
-            background: var(--verde-claro);
+            background: linear-gradient(135deg, #C1CE83 0%, #B5C478 100%);
             border-bottom: 3px solid var(--verde-oliva);
-            padding: 0.4rem 1.15rem;
+            padding: 0.65rem 1.25rem;
             display: flex;
             align-items: center;
             justify-content: space-between;
             flex-wrap: wrap;
-            gap: 0.3rem;
+            gap: 0.35rem;
         }
         .bloco-notas-head h3 {
             margin: 0;
-            font-size: 0.95rem;
-            font-weight: 600;
+            font-size: 1rem;
+            font-weight: 700;
             color: #191D1B;
             display: flex;
             align-items: center;
-            gap: 0.4rem;
+            gap: 0.45rem;
         }
         .bloco-notas-head h3 i { color: #191D1B; }
         .bloco-sub {
-            margin: 0;
-            font-size: 0.65rem;
-            color: #191D1B;
+            margin: 0.15rem 0 0;
+            font-size: 0.72rem;
+            color: #3d4238;
             font-weight: 500;
-            opacity: 0.85;
+            line-height: 1.35;
         }
-        .bloco-notas-compra .bloco-notas-grid,
-        .bloco-notas-compra .bloco-notas-acoes,
-        .bloco-notas-compra .lista-itens-pedido {
-            padding-left: 1.15rem;
-            padding-right: 1.15rem;
-        }
-        .lista-toolbar {
+        .bn-passos {
             display: flex;
             flex-wrap: wrap;
-            gap: 0.65rem 0.8rem;
-            align-items: flex-end;
-            padding: 0.75rem 1.15rem 0.25rem;
-            border-bottom: 1px solid var(--border-color);
+            gap: 0.4rem;
+            padding: 0.7rem 1.2rem 0.15rem;
             background: #F7F8F3;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .bn-passo {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: #5A614E;
+            background: #fff;
+            border: 1px solid #D8DCCE;
+            border-radius: 999px;
+            padding: 0.28rem 0.65rem;
+        }
+        .bn-passo .n {
+            width: 18px; height: 18px;
+            border-radius: 50%;
+            background: var(--verde-oliva);
+            color: #fff;
+            font-size: 0.65rem;
+            font-weight: 800;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .lista-toolbar {
+            display: grid;
+            grid-template-columns: 1.2fr 1fr auto;
+            gap: 0.75rem 1rem;
+            align-items: end;
+            padding: 0.9rem 1.2rem;
+            border-bottom: 1px solid var(--border-color);
+            background: #FBFBF7;
+        }
+        @media (max-width: 800px) {
+            .lista-toolbar { grid-template-columns: 1fr; }
         }
         .lista-toolbar .campo { margin: 0; }
-        .lista-toolbar .campo label {
-            font-size: 0.62rem; font-weight: 600; color: var(--text-secondary);
-            text-transform: uppercase; display: block; margin-bottom: 0.2rem;
+        .lista-toolbar .campo label,
+        .bloco-notas-compra .campo label {
+            font-size: 0.68rem;
+            font-weight: 700;
+            color: #5A614E;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+            margin-bottom: 0.3rem;
         }
         .lista-toolbar .campo input,
-        .lista-toolbar .campo select {
+        .lista-toolbar .campo select,
+        .bloco-notas-compra .campo input,
+        .bloco-notas-compra .campo select {
             width: 100%;
-            padding: 0.4rem 0.5rem;
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            font-size: 0.8rem;
+            padding: 0.5rem 0.65rem;
+            border: 1px solid #D0D5C6;
+            border-radius: 10px;
+            font-size: 0.85rem;
             font-family: inherit;
             background: #fff;
+            color: var(--text-primary);
+            transition: border-color .15s, box-shadow .15s;
+        }
+        .lista-toolbar .campo input:focus,
+        .lista-toolbar .campo select:focus,
+        .bloco-notas-compra .campo input:focus,
+        .bloco-notas-compra .campo select:focus {
+            outline: none;
+            border-color: var(--verde-oliva);
+            box-shadow: 0 0 0 3px rgba(122, 129, 110, 0.18);
         }
         .lista-toolbar-btns {
             display: flex;
             flex-wrap: wrap;
-            gap: 0.35rem;
-            padding-bottom: 0.1rem;
+            gap: 0.4rem;
+            padding-bottom: 0.05rem;
         }
         .bloco-notas-compra .bloco-notas-grid {
-            padding-top: 1rem;
-        }
-        .bloco-notas-compra .bloco-notas-acoes {
-            padding-bottom: 0.5rem;
-        }
-        .bloco-notas-compra .lista-itens-pedido {
-            padding-bottom: 1rem;
-        }
-        .bloco-notas-grid {
             display: grid;
-            grid-template-columns: 1.6fr 90px 120px 1fr 1fr;
-            gap: 0.65rem 0.85rem;
-            align-items: start;
+            grid-template-columns: 1.4fr 90px 130px 1fr 1fr;
+            gap: 0.75rem 0.85rem;
+            padding: 1rem 1.2rem 0.4rem;
         }
-        .bloco-notas-grid .bn-obs { grid-column: 1 / -1; }
-        @media (max-width: 1100px) {
-            .bloco-notas-grid { grid-template-columns: 1fr 1fr 1fr; }
-            .bloco-notas-grid .bn-item { grid-column: 1 / -1; }
+        @media (max-width: 900px) {
+            .bloco-notas-compra .bloco-notas-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+            .bloco-notas-compra .bn-item { grid-column: 1 / -1; }
         }
-        @media (max-width: 640px) {
-            .bloco-notas-grid { grid-template-columns: 1fr 1fr; }
-            .bloco-notas-grid .bn-obs { grid-column: 1 / -1; }
+        @media (max-width: 560px) {
+            .bloco-notas-compra .bloco-notas-grid {
+                grid-template-columns: 1fr;
+            }
         }
-        .bloco-notas-compra .campo label {
-            font-weight: 600;
-            font-size: 0.6rem;
-            color: var(--text-secondary);
-            text-transform: uppercase;
-            letter-spacing: 0.4px;
-        }
-        .bloco-notas-compra .campo label i {
-            color: var(--verde-oliva);
-            margin-right: 0.2rem;
-        }
-        .bloco-notas-compra .campo input,
-        .bloco-notas-compra .campo select {
-            width: 100%;
-            box-sizing: border-box;
-            border: none;
-            border-bottom: 2px solid var(--input-border);
-            background: var(--input-bg);
-            padding: 0.35rem 0.15rem;
-            font-size: 0.8rem;
-            font-weight: 500;
-            color: var(--text-primary);
-            outline: none;
-            font-family: inherit;
-            border-radius: 0;
-        }
-        .bloco-notas-compra .campo input:focus,
-        .bloco-notas-compra .campo select:focus {
-            border-bottom-color: var(--verde-claro);
+        .bloco-notas-compra .bn-obs-wrap {
+            padding: 0 1.2rem 0.5rem;
         }
         .bloco-notas-compra .bn-outro {
-            border-bottom: 2px dashed var(--verde-oliva) !important;
+            width: 100%;
+            margin-top: 0.35rem;
+            padding: 0.45rem 0.6rem;
+            border: 1px dashed #B8BEA8;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            font-family: inherit;
+            background: #FFFEF8;
         }
-        .bloco-notas-acoes {
+        .bloco-notas-compra .bloco-notas-acoes {
             display: flex;
             flex-wrap: wrap;
-            gap: 0.4rem;
-            margin-top: 0.85rem;
-            padding-top: 0.65rem;
-            border-top: 1px solid var(--border-color);
+            gap: 0.45rem;
+            padding: 0.75rem 1.2rem 1rem;
+            border-top: 1px solid #EEF0E8;
+            background: #FAFBF7;
+            align-items: center;
+        }
+        .bloco-notas-compra .bloco-notas-acoes .bn-hint {
+            width: 100%;
+            font-size: 0.7rem;
+            color: #7A816E;
+            margin: 0 0 0.2rem;
         }
         .bn-btn {
-            border-radius: 40px;
-            padding: 0.4rem 0.95rem;
-            font-size: 0.72rem;
-            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            border: none;
+            border-radius: 10px;
+            padding: 0.5rem 0.9rem;
+            font-size: 0.78rem;
+            font-weight: 700;
+            cursor: pointer;
             font-family: inherit;
+            transition: transform .12s, box-shadow .12s, background .12s;
+        }
+        .bn-btn:hover { transform: translateY(-1px); }
+        .bn-btn-pri {
+            background: #191D1B;
+            color: #fff;
+            box-shadow: 0 2px 8px rgba(25,29,27,.18);
+        }
+        .bn-btn-pri:hover { background: #2a312c; }
+        .bn-btn-sec {
+            background: var(--verde-oliva);
+            color: #fff;
+        }
+        .bn-btn-sec:hover { background: #5A614E; }
+        .bn-btn-ghost {
+            background: #fff;
+            color: #191D1B;
+            border: 1px solid #D0D5C6;
+        }
+        .bn-btn-ghost:hover { background: #F0F2EA; }
+        .lista-itens-pedido {
+            padding: 0.5rem 1.2rem 1.1rem;
+            background: #fff;
+        }
+        .lista-itens-pedido .meta {
+            font-size: 0.78rem;
+            color: #7A816E;
+            padding: 0.85rem 1rem;
+            background: #F7F8F3;
+            border: 1px dashed #D0D5C6;
+            border-radius: 10px;
+            text-align: center;
+            line-height: 1.45;
+        }
+        .lista-itens-pedido .lista-titulo {
+            font-size: 0.8rem;
+            font-weight: 800;
+            color: #191D1B;
+            margin: 0 0 0.55rem;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+        .lista-itens-pedido .lista-titulo .badge-n {
+            background: var(--verde-claro);
+            color: #191D1B;
+            border-radius: 999px;
+            padding: 0.1rem 0.5rem;
+            font-size: 0.72rem;
+        }
+        .item-linha {
+            display: grid;
+            grid-template-columns: auto 1fr auto;
+            gap: 0.25rem 0.65rem;
+            align-items: center;
+            padding: 0.65rem 0.75rem;
+            margin-bottom: 0.45rem;
+            background: #FBFBF7;
+            border: 1px solid #E4E8DC;
+            border-left: 4px solid var(--verde-oliva);
+            border-radius: 10px;
+            font-size: 0.8rem;
+        }
+        .item-linha strong {
+            grid-column: 1 / -2;
+            font-size: 0.85rem;
+            color: #191D1B;
+        }
+        .item-linha .meta-linha {
+            grid-column: 1 / -2;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.35rem 0.55rem;
+            align-items: center;
+            color: #5A614E;
+            font-size: 0.75rem;
+        }
+        .item-linha .rm {
+            grid-row: 1 / span 2;
+            grid-column: 3;
+            border: none;
+            background: #FCE8E0;
+            color: #8B3A3A;
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
             cursor: pointer;
             display: inline-flex;
             align-items: center;
-            gap: 0.3rem;
-            border: 1px solid var(--border-color);
-            background: transparent;
-            color: var(--text-secondary);
+            justify-content: center;
         }
-        .bn-btn-pri {
-            background: #191D1B;
-            color: #FBFBF7;
-            border-color: #191D1B;
-        }
-        .bn-btn-pri:hover { background: #2A3A2A; }
-        .bn-btn-sec {
-            background: var(--bg-card);
-            color: var(--text-primary);
-        }
-        .bn-btn-sec:hover { border-color: var(--verde-oliva); }
-        .bn-btn-ghost { background: transparent; }
-        .lista-itens-pedido {
-            display: flex;
-            flex-direction: column;
-            gap: 0.35rem;
-            margin-top: 0.75rem;
-        }
-        .lista-itens-pedido .item-linha {
-            display: flex;
-            align-items: center;
-            gap: 0.55rem;
-            flex-wrap: wrap;
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            padding: 0.45rem 0.7rem;
-            font-size: 0.72rem;
-        }
-        .lista-itens-pedido .item-linha strong { color: var(--text-primary); }
-        .lista-itens-pedido .prio {
-            font-size: 0.6rem;
-            font-weight: 700;
+        .item-linha .rm:hover { background: #f5c4b4; }
+        .prio {
+            display: inline-block;
             padding: 0.12rem 0.45rem;
-            border-radius: 20px;
+            border-radius: 999px;
+            font-size: 0.65rem;
+            font-weight: 800;
             text-transform: uppercase;
         }
-        .prio-normal { background: #E8F5E9; color: #2E7D32; }
+        .prio-normal { background: #E8F0E0; color: #3d5c34; }
         .prio-importante { background: #FFF3E0; color: #E65100; }
         .prio-urgente { background: #FFEBEE; color: #C62828; }
-        .lista-itens-pedido .item-linha .rm {
-            margin-left: auto;
-            border: none;
-            background: transparent;
-            color: var(--danger);
-            cursor: pointer;
-            font-size: 0.75rem;
-        }
-.painel-pedidos {
-            background: #FFF8E1; border: 1px solid #FFE082; border-radius: 10px;
-            padding: 0.75rem 1rem; margin-bottom: 1rem;
-        }
-        .painel-pedidos.vazio { display: none; }
-        .painel-pedidos h3 {
-            margin: 0 0 0.5rem; font-size: 0.8rem; color: #E65100;
-            display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap;
-        }
-        .painel-pedidos .badge-ped {
-            background: #E65100; color: #fff; border-radius: 20px; padding: 0.1rem 0.5rem;
-            font-size: 0.7rem; font-weight: 700;
-        }
-        .lista-pedidos { display: flex; flex-direction: column; gap: 0.4rem; max-height: 220px; overflow-y: auto; }
-        .pedido-item {
-            display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap;
-            background: #fff; border: 1px solid #FFE082; border-radius: 8px; padding: 0.45rem 0.65rem;
-            font-size: 0.72rem;
-        }
-        .pedido-item strong { color: #191D1B; }
-        .pedido-item .meta { color: #7A816E; font-size: 0.65rem; }
-        .pedido-item .btns { margin-left: auto; display: flex; gap: 0.3rem; }
-        .pedido-item button {
-            border: none; border-radius: 6px; padding: 0.25rem 0.5rem; font-size: 0.65rem;
-            font-weight: 600; cursor: pointer; font-family: inherit;
-        }
+
         .btn-atender { background: #2E7D32; color: #fff; }
         .btn-recusar { background: #F5F5F5; color: #8B3A3A; border: 1px solid #E0E0E0 !important; }
         .btn-solicitar {
@@ -875,10 +931,15 @@
 
             <div class="bloco-notas-compra" id="blocoNotasCompra" style="display:none;">
                 <div class="bloco-notas-head">
-                    <div class="left" style="display:flex;flex-direction:column;gap:0.1rem;">
+                    <div class="left" style="display:flex;flex-direction:column;gap:0.15rem;">
                         <h3><i class="fas fa-clipboard-list"></i> Solicitar material / compra</h3>
-                        <p class="bloco-sub">Várias listas (papelaria, pintura…) · feche e salve · abra outra</p>
+                        <p class="bloco-sub">Monte listas por tipo (papelaria, pintura…) · salve · avise o estoque</p>
                     </div>
+                </div>
+                <div class="bn-passos" aria-hidden="true">
+                    <span class="bn-passo"><span class="n">1</span> Nome da lista</span>
+                    <span class="bn-passo"><span class="n">2</span> Incluir itens</span>
+                    <span class="bn-passo"><span class="n">3</span> Fechar ou enviar</span>
                 </div>
                 <div class="lista-toolbar" id="listaToolbar">
                     <div class="campo" style="flex:1;min-width:200px;">
@@ -972,6 +1033,7 @@
                     </div>
                 </div>
                 <div class="bloco-notas-acoes">
+                    <p class="bn-hint"><i class="fas fa-info-circle"></i> Adicione quantos itens quiser. Depois feche a lista ou envie para o Admin / Almoxarife.</p>
                     <button type="button" class="bn-btn bn-btn-sec" id="btnAddItemLista"><i class="fas fa-plus"></i> Adicionar à lista</button>
                     <button type="button" class="bn-btn bn-btn-pri" id="btnEnviarPedidoNota"><i class="fas fa-bell"></i> Enviar e notificar</button>
                     <button type="button" class="bn-btn bn-btn-sec" id="btnPdfPedido"><i class="fas fa-file-pdf"></i> PDF / Imprimir</button>
@@ -2335,20 +2397,22 @@
         const box = document.getElementById('listaItensPedido');
         if (!box) return;
         if (!pedidoItensLista.length) {
-            box.innerHTML = '<div class="meta" style="font-size:0.7rem;color:#7A816E;">Nenhum item nesta lista. Dê um <strong>nome</strong> (ex: Papelaria), adicione itens e use <strong>Fechar lista</strong> para guardar e começar outra.</div>';
+            box.innerHTML = '<div class="meta" style="font-size:0.7rem;color:#7A816E;"><strong>Lista vazia.</strong><br>1) Escolha o nome da lista &nbsp;·&nbsp; 2) Preencha o item e clique em <strong>Adicionar à lista</strong><br>3) Use <strong>Fechar lista</strong> para guardar ou <strong>Enviar e notificar</strong> para avisar o estoque.</div>';
             return;
         }
         var tituloLista = (listaCompraAtual && listaCompraAtual.nome) ? listaCompraAtual.nome : 'Lista atual';
-        box.innerHTML = '<div style="font-size:0.7rem;font-weight:700;color:#191D1B;margin-bottom:0.25rem;">' + tituloLista + ' · ' + pedidoItensLista.length + ' item(ns)</div>' +
+        box.innerHTML = '<div class="lista-titulo"><i class="fas fa-shopping-basket"></i> ' + tituloLista + ' <span class="badge-n">' + pedidoItensLista.length + '</span></div>' +
             pedidoItensLista.map(function(it, idx) {
                 const pr = it.prioridade || 'Normal';
                 return '<div class="item-linha">' +
                     '<strong>' + (idx + 1) + '. ' + it.item_nome + '</strong>' +
-                    '<span>× ' + it.quantidade_solicitar + '</span>' +
+                    '<div class="meta-linha">' +
+                    '<span><b>' + it.quantidade_solicitar + '</b> un.</span>' +
                     '<span class="prio ' + classePrioridade(pr) + '">' + pr + '</span>' +
-                    '<span style="color:#7A816E;">' + (it.motivo_uso || '') + '</span>' +
-                    '<span style="color:#7A816E;">@ ' + (it.local_uso || '') + '</span>' +
-                    (it.id_banco ? '<span title="Salvo no banco" style="color:#2E7D32;font-size:0.65rem;"><i class="fas fa-cloud"></i></span>' : '<span title="Só local" style="color:#C1A83C;font-size:0.65rem;"><i class="fas fa-laptop"></i></span>') +
+                    '<span>' + (it.motivo_uso || '—') + '</span>' +
+                    '<span>📍 ' + (it.local_uso || '—') + '</span>' +
+                    (it.id_banco ? '<span title="Salvo no banco" style="color:#2E7D32;"><i class="fas fa-cloud"></i> banco</span>' : '<span title="Só local" style="color:#C1A83C;"><i class="fas fa-laptop"></i></span>') +
+                    '</div>' +
                     '<button type="button" class="rm" onclick="removerItemPedidoLista(' + idx + ')" title="Remover"><i class="fas fa-times"></i></button>' +
                     '</div>';
             }).join('');
