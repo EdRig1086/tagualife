@@ -204,6 +204,48 @@
         .aviso-permissao.show { display: block; }
         #feedback { margin-top: 0.5rem; text-align: right; min-height: 1.5rem; font-size: 0.65rem; }
 
+        .alerta-pedidos-topo {
+            display: none;
+            align-items: center;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+            padding: 0.75rem 1rem;
+            margin-bottom: 0.85rem;
+            border-radius: 12px;
+            background: #FFF3E0;
+            border: 2px solid #FFB74D;
+            color: #E65100;
+            font-size: 0.85rem;
+            font-weight: 600;
+            animation: alertaPedPulse 1.8s ease-in-out infinite;
+        }
+        .alerta-pedidos-topo.show { display: flex; }
+        .alerta-pedidos-topo .btn-abrir-ped {
+            margin-left: auto;
+            background: #E65100;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            padding: 0.4rem 0.75rem;
+            font-weight: 700;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 0.78rem;
+        }
+        @keyframes alertaPedPulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(230, 81, 0, 0.25); }
+            50% { box-shadow: 0 0 0 6px rgba(230, 81, 0, 0); }
+        }
+        #btnPainelPedidos.has-pedidos {
+            background: #E65100 !important;
+            border-color: #E65100 !important;
+            color: #fff !important;
+            animation: badgePedBlink 1.2s ease-in-out infinite;
+        }
+        @keyframes badgePedBlink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.82; }
+        }
         .bloco-notas-compra {
             background: var(--bg-card);
             border: 1px solid var(--border-color);
@@ -1713,7 +1755,13 @@
         if (!url) return;
         ensureFotoLightbox();
         carregarPedidosCompra();
-        setInterval(function() { try { carregarPedidosCompra(); } catch (e) {} }, 60000);
+        setInterval(function() { try { carregarPedidosCompra(); } catch (e) {} }, 30000);
+        try {
+            if (podeReceberPedidosCompra() && typeof Notification !== 'undefined' && Notification.permission === 'default') {
+                Notification.requestPermission().catch(function(){});
+            }
+        } catch (eNot) {}
+
 
         // Bloco de notas — solicitações
         (function() {
@@ -1916,6 +1964,9 @@
         }
     }
 
+    var _pedidosPendentesAntes = -1;
+    var _tituloPaginaOriginal = null;
+
     function atualizarUIPedidos() {
         const n = pedidosCompraCache.length;
         const badge = document.getElementById('badgePedidosN');
@@ -1926,25 +1977,63 @@
         const painel = document.getElementById('painelPedidosCompra');
         const lista = document.getElementById('listaPedidosCompra');
         const btn = document.getElementById('btnPainelPedidos');
+        const alertaTopo = document.getElementById('alertaPedidosTopo');
+        const alertaTxt = document.getElementById('alertaPedidosTxt');
+        const recebe = podeReceberPedidosCompra();
 
         if (btn) {
-            btn.style.display = (podeReceberPedidosCompra() || n > 0) ? '' : 'none';
+            btn.style.display = recebe ? '' : 'none';
+            if (n > 0 && recebe) btn.classList.add('has-pedidos');
+            else btn.classList.remove('has-pedidos');
         }
+
+        // Título da aba do navegador
+        if (_tituloPaginaOriginal === null) _tituloPaginaOriginal = document.title.replace(/^\(\d+\)\s*/, '');
+        if (recebe && n > 0) document.title = '(' + n + ') ' + _tituloPaginaOriginal;
+        else if (_tituloPaginaOriginal) document.title = _tituloPaginaOriginal;
+
+        // Faixa de alerta no topo (só Admin / Almoxarife / Síndico)
+        if (alertaTopo) {
+            if (recebe && n > 0) {
+                alertaTopo.classList.add('show');
+                if (alertaTxt) {
+                    alertaTxt.innerHTML = n === 1
+                        ? 'Há <strong>1 pedido de compra pendente</strong> — resolva para o alerta sumir.'
+                        : 'Há <strong>' + n + ' pedidos de compra pendentes</strong> — resolva para o alerta sumir.';
+                }
+            } else {
+                alertaTopo.classList.remove('show');
+            }
+        }
+
+        // Toast quando chega pedido novo
+        if (recebe && _pedidosPendentesAntes >= 0 && n > _pedidosPendentesAntes) {
+            var diff = n - _pedidosPendentesAntes;
+            mostrarToast('🔔 ' + diff + ' novo(s) pedido(s) de compra! Resolva no painel.', 'warning');
+            try {
+                if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+                    new Notification('TaguáLife — Pedido de compra', {
+                        body: diff + ' pedido(s) aguardando resolução no estoque.'
+                    });
+                }
+            } catch (eN) {}
+        }
+        _pedidosPendentesAntes = n;
 
         if (!painel || !lista) return;
 
-        // Painel detalhado só para quem recebe alerta
-        if (!podeReceberPedidosCompra()) {
+        if (!recebe) {
             painel.classList.add('vazio');
             return;
         }
 
         if (n === 0) {
             painel.classList.add('vazio');
-            lista.innerHTML = '';
+            lista.innerHTML = '<div class="meta">Nenhum pedido pendente. Alertas aparecem aqui até marcar Atendido ou Dispensar.</div>';
             return;
         }
 
+        // Mantém painel aberto enquanto houver pendentes
         painel.classList.remove('vazio');
         lista.innerHTML = pedidosCompraCache.map(function(p) {
             const quando = p.criado_em ? new Date(p.criado_em).toLocaleString('pt-BR') : '';
@@ -1956,6 +2045,11 @@
                 var mx = String(p.observacao).match(/\[(Normal|Importante|Urgente)\]/i);
                 if (mx) prP = mx[1];
             }
+            var listaNome = '';
+            if (p.observacao) {
+                var mn = String(p.observacao).match(/\|lista_nome:([^|]+)/);
+                if (mn) listaNome = mn[1];
+            }
             return '<div class="pedido-item">' +
                 '<div style="flex:1;min-width:160px;">' +
                 '<strong><i class="fas fa-exclamation-circle" style="color:#E65100;"></i> ' + (p.item_nome || 'Item') +
@@ -1963,18 +2057,28 @@
                 (prP ? ' <span class="prio ' + classePrioridade(prP) + '">' + prP + '</span>' : '') + '</strong>' +
                 '<div class="meta">Estoque atual: ' + qtd + (lim !== '—' ? ' · Limite: ' + lim : '') +
                 (p.motivo_uso ? ' · Motivo: ' + p.motivo_uso : '') +
-                (p.local_uso ? ' · Onde: ' + p.local_uso : '') + '</div>' +
+                (p.local_uso ? ' · Onde: ' + p.local_uso : '') +
+                (listaNome ? ' · Lista: ' + listaNome : '') + '</div>' +
                 '<div class="meta">Pedido por: ' + (p.solicitado_por || '—') +
                 (p.cargo_solicitante ? ' (' + p.cargo_solicitante + ')' : '') +
                 (quando ? ' · ' + quando : '') + '</div>' +
-                (p.observacao ? '<div class="meta">Obs: ' + p.observacao + '</div>' : '') +
+                (p.observacao ? '<div class="meta" style="opacity:.85;">' + String(p.observacao).replace(/\|lista_id:[^|]*/g,'').replace(/\|lista_nome:[^|]*/g,'').replace(/\|?\s*solicitacao:[^|]*/gi,'').trim() + '</div>' : '') +
                 '</div>' +
-                '<div class="btns">' +
+                '<div class="acoes-ped">' +
                 '<button type="button" class="btn-atender" onclick="atenderPedidoCompra(\'' + p.id + '\')">Atendido</button>' +
                 '<button type="button" class="btn-recusar" onclick="recusarPedidoCompra(\'' + p.id + '\')">Dispensar</button>' +
                 '</div></div>';
         }).join('');
     }
+
+    window.abrirPainelPedidosForcado = function() {
+        const painel = document.getElementById('painelPedidosCompra');
+        if (painel) {
+            painel.classList.remove('vazio');
+            painel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+        carregarPedidosCompra();
+    };
 
     window.alternarPainelPedidos = function() {
         const painel = document.getElementById('painelPedidosCompra');
@@ -2614,7 +2718,7 @@
             limparListaPedidoLocal();
             renderListaItensPedido();
             limparBlocoNotas(false);
-            mostrarToast('🔔 ' + ok + ' item(ns) enviado(s)! Admin e Almoxarife notificados.', 'success');
+            mostrarToast('🔔 ' + ok + ' item(ns) enviado(s)! Fica em alerta para Admin/Almoxarife até ser resolvido.', 'success');
             await carregarPedidosCompra();
             if (confirm('Pedido enviado.\n\nGerar documento PDF/impressão para mostrar à síndica?')) {
                 gerarPdfPedidoCompra(enviados);
@@ -5150,7 +5254,13 @@ function exportarCSVEstoque() {
 
         ensureFotoLightbox();
         carregarPedidosCompra();
-        setInterval(function() { try { carregarPedidosCompra(); } catch (e) {} }, 60000);
+        setInterval(function() { try { carregarPedidosCompra(); } catch (e) {} }, 30000);
+        try {
+            if (podeReceberPedidosCompra() && typeof Notification !== 'undefined' && Notification.permission === 'default') {
+                Notification.requestPermission().catch(function(){});
+            }
+        } catch (eNot) {}
+
 
         // Bloco de notas — solicitações
         (function() {
