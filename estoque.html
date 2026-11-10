@@ -963,6 +963,9 @@
 <button type="button" class="btn-relatorio" onclick="gerarSugestaoCompra()" style="background:#8B6914;border-color:#8B6914;">
                     <i class="fas fa-cart-plus"></i> Sugestão de compra
                 </button>
+                <button type="button" class="btn-relatorio" onclick="gerarRelatorioListaCompras()" style="background:#5C4033;border-color:#5C4033;">
+                    <i class="fas fa-clipboard-list"></i> Lista de compras
+                </button>
                 <button type="button" class="btn-relatorio" onclick="gerarCurvaABC()" style="background:#4A5568;border-color:#4A5568;">
                     <i class="fas fa-chart-pie"></i> Curva ABC
                 </button>
@@ -3189,6 +3192,196 @@ ALTER TABLE public.pedidos_compra ADD COLUMN IF NOT EXISTS local_uso text;`;
     }
 
     
+
+    /** Relatório de pedidos de compra organizados por data */
+    async function gerarRelatorioListaCompras() {
+        try {
+            if (!sb) {
+                mostrarToast('⚠️ Sem conexão com o banco', 'warning');
+                return;
+            }
+            mostrarToast('📦 Carregando pedidos de compra...', 'info');
+            let q = sb.from('pedidos_compra').select('*').order('criado_em', { ascending: false }).limit(500);
+            if (typeof comCondominio === 'function') q = comCondominio(q);
+            // não inclui rascunho no relatório oficial
+            const { data, error } = await q;
+            if (error) {
+                if (/pedidos_compra|relation|does not exist/i.test(error.message || '')) {
+                    alert('Crie a tabela pedidos_compra no Supabase (SQL Editor).');
+                    return;
+                }
+                throw error;
+            }
+            let lista = (data || []).filter(function(p) {
+                return (p.status || '') !== 'rascunho';
+            });
+            if (!lista.length) {
+                mostrarToast('⚠️ Nenhum pedido de compra registrado', 'warning');
+                return;
+            }
+
+            function esc(s) {
+                return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+            }
+            function dataBR(iso) {
+                if (!iso) return '—';
+                try {
+                    var d = new Date(iso);
+                    if (isNaN(d.getTime())) return String(iso).slice(0, 10);
+                    return d.toLocaleDateString('pt-BR') + ' ' + d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+                } catch (e) { return String(iso); }
+            }
+            function soData(iso) {
+                if (!iso) return 'Sem data';
+                try {
+                    var d = new Date(iso);
+                    if (isNaN(d.getTime())) return String(iso).slice(0, 10);
+                    return d.toLocaleDateString('pt-BR');
+                } catch (e) { return 'Sem data'; }
+            }
+            function prioDe(p) {
+                var o = p.observacao || '';
+                var m = String(o).match(/\[(Normal|Importante|Urgente)\]/i);
+                if (m) return m[1];
+                return 'Normal';
+            }
+            function classeP(p) {
+                p = (p || '').toLowerCase();
+                if (p.indexOf('urg') >= 0) return 'color:#C62828;font-weight:800;';
+                if (p.indexOf('import') >= 0) return 'color:#E65100;font-weight:700;';
+                return 'color:#5A614E;';
+            }
+
+            // agrupa por data (dia)
+            var porData = {};
+            lista.forEach(function(p) {
+                var k = soData(p.criado_em || p.atualizado_em);
+                if (!porData[k]) porData[k] = [];
+                porData[k].push(p);
+            });
+            // ordena datas (mais recente primeiro) — parse BR dd/mm/yyyy
+            function parseBR(s) {
+                var p = String(s).split('/');
+                if (p.length !== 3) return 0;
+                return new Date(parseInt(p[2],10), parseInt(p[1],10)-1, parseInt(p[0],10)).getTime();
+            }
+            var datas = Object.keys(porData).sort(function(a, b) { return parseBR(b) - parseBR(a); });
+
+            var totalItens = lista.length;
+            var pend = lista.filter(function(p) { return (p.status || '') === 'pendente'; }).length;
+            var atend = lista.filter(function(p) { return (p.status || '') === 'atendido'; }).length;
+            var disp = lista.filter(function(p) { return (p.status || '') === 'dispensado'; }).length;
+            var totalQtd = lista.reduce(function(s, p) { return s + (parseInt(p.quantidade_solicitar, 10) || 0); }, 0);
+            var geradoEm = new Date().toLocaleString('pt-BR');
+
+            var secoes = datas.map(function(dt) {
+                var arr = porData[dt];
+                var rows = arr.map(function(p, i) {
+                    var pr = prioDe(p);
+                    return '<tr>' +
+                        '<td class="centro">' + (i + 1) + '</td>' +
+                        '<td>' + esc(p.item_nome) + '</td>' +
+                        '<td class="centro">' + (p.quantidade_solicitar != null ? p.quantidade_solicitar : '—') + '</td>' +
+                        '<td style="' + classeP(pr) + '">' + esc(pr) + '</td>' +
+                        '<td>' + esc(p.motivo_uso || '—') + '</td>' +
+                        '<td>' + esc(p.local_uso || '—') + '</td>' +
+                        '<td>' + esc(p.solicitado_por || '—') + '</td>' +
+                        '<td class="centro">' + esc((p.status || '—').toUpperCase()) + '</td>' +
+                        '<td class="hora">' + esc(dataBR(p.criado_em).split(' ').slice(1).join(' ')) + '</td>' +
+                        '</tr>';
+                }).join('');
+                return (
+                    '<div class="dia-bloco">' +
+                    '<div class="dia-titulo"><span class="dia-data">' + esc(dt) + '</span>' +
+                    '<span class="dia-meta">' + arr.length + ' pedido(s)</span></div>' +
+                    '<table><thead><tr>' +
+                    '<th class="centro" style="width:32px;">#</th>' +
+                    '<th>Item</th>' +
+                    '<th class="centro" style="width:48px;">Qtd</th>' +
+                    '<th style="width:80px;">Prioridade</th>' +
+                    '<th>Motivo / uso</th>' +
+                    '<th>Onde será usado</th>' +
+                    '<th>Solicitante</th>' +
+                    '<th class="centro" style="width:70px;">Status</th>' +
+                    '<th class="centro" style="width:50px;">Hora</th>' +
+                    '</tr></thead><tbody>' + rows + '</tbody></table></div>'
+                );
+            }).join('');
+
+            var html = `<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"/>
+<title>Lista de Compras por Data · TaguáLife</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet"/>
+<style>
+  @page { size: A4 portrait; margin: 12mm 10mm; }
+  * { box-sizing: border-box; }
+  body { font-family: Inter, Arial, sans-serif; color: #191D1B; font-size: 10px; margin: 0; padding: 14px 16px; background: #fff; line-height: 1.35; }
+  .no-print { text-align: center; margin-bottom: 12px; }
+  .no-print button { padding: 8px 14px; border: 0; border-radius: 8px; cursor: pointer; font-weight: 700; margin: 0 4px; font-family: inherit; }
+  .btn-print { background: #191D1B; color: #fff; }
+  .topo { border-bottom: 3px solid #C1CE83; padding-bottom: 10px; margin-bottom: 12px; }
+  .marca { font-size: 10px; color: #7A816E; font-weight: 600; }
+  h1 { margin: 4px 0 2px; font-size: 18px; font-weight: 800; color: #191D1B; }
+  .sub { margin: 0; color: #5A614E; font-size: 11px; }
+  .dica { margin: 8px 0 0; padding: 8px 10px; background: #F0F2EA; border-left: 3px solid #7A816E; border-radius: 0 8px 8px 0; color: #5A614E; font-size: 10px; }
+  .kpis { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin: 12px 0 14px; }
+  .kpi { border: 1px solid #D8DCCE; border-top: 3px solid #7A816E; border-radius: 8px; padding: 8px 6px; text-align: center; background: #FBFBF7; }
+  .kpi.alerta { border-top-color: #E65100; background: #FFF8E1; }
+  .kpi .n { display: block; font-size: 18px; font-weight: 800; }
+  .kpi .l { font-size: 9px; color: #7A816E; font-weight: 600; text-transform: uppercase; }
+  .dia-bloco { margin-bottom: 14px; page-break-inside: avoid; }
+  .dia-titulo { display: flex; justify-content: space-between; align-items: center; background: #7A816E; color: #FBFBF7; padding: 7px 10px; border-radius: 6px 6px 0 0; }
+  .dia-data { font-size: 12px; font-weight: 800; }
+  .dia-meta { font-size: 10px; opacity: 0.95; }
+  table { width: 100%; border-collapse: collapse; font-size: 9.5px; }
+  th { background: #5A614E; color: #fff; text-align: left; padding: 5px 6px; font-size: 8.5px; font-weight: 600; }
+  td { border-bottom: 1px solid #E4E8DC; padding: 5px 6px; vertical-align: top; }
+  tr:nth-child(even) td { background: #F7F8F3; }
+  .centro { text-align: center; }
+  .hora { text-align: center; color: #7A816E; white-space: nowrap; }
+  .footer { margin-top: 14px; padding-top: 8px; border-top: 2px solid #C1CE83; font-size: 9px; color: #7A816E; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 6px; }
+  @media print { .no-print { display: none !important; } body { padding: 0; } }
+</style>
+</head>
+<body>
+  <div class="no-print">
+    <button class="btn-print" onclick="window.print()">Imprimir / PDF</button>
+  </div>
+  <div class="topo">
+    <div class="marca">Condomínio TaguáLife · Life Conceito em Gestão Condominial</div>
+    <h1>Lista de compras — por data</h1>
+    <p class="sub">Pedidos de material registrados no sistema (enviados, atendidos e dispensados)</p>
+    <p class="dica"><strong>Como ler:</strong> cada bloco é um dia. Dentro: item, quantidade, prioridade, motivo, local, quem pediu e status.</p>
+  </div>
+  <div class="kpis">
+    <div class="kpi"><span class="n">${totalItens}</span><span class="l">Pedidos</span></div>
+    <div class="kpi"><span class="n">${totalQtd}</span><span class="l">Unidades pedidas</span></div>
+    <div class="kpi ${pend ? 'alerta' : ''}"><span class="n">${pend}</span><span class="l">Pendentes</span></div>
+    <div class="kpi"><span class="n">${atend}</span><span class="l">Atendidos</span></div>
+    <div class="kpi"><span class="n">${disp}</span><span class="l">Dispensados</span></div>
+  </div>
+  ${secoes}
+  <div class="footer">
+    <span>TaguáLife · Lista de compras</span>
+    <span>Gerado em ${esc(geradoEm)}</span>
+    <span>${totalItens} pedido(s) · ${datas.length} dia(s)</span>
+  </div>
+</body>
+</html>`;
+
+            const w = window.open('', '_blank');
+            if (!w) { mostrarToast('⚠️ Permita pop-up', 'warning'); return; }
+            w.document.write(html);
+            w.document.close();
+            mostrarToast('✅ Lista de compras por data gerada!', 'success');
+        } catch (e) {
+            console.error(e);
+            mostrarToast('❌ ' + (e.message || e), 'danger');
+        }
+    }
+
     async function gerarSugestaoCompra() {
         try {
             if (!itensCache || !itensCache.length) await carregarEstoque();
