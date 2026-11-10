@@ -209,42 +209,99 @@
             align-items: center;
             gap: 0.75rem;
             flex-wrap: wrap;
-            padding: 0.75rem 1rem;
+            padding: 0.9rem 1.1rem;
             margin-bottom: 0.85rem;
             border-radius: 12px;
-            background: #FFF3E0;
-            border: 2px solid #FFB74D;
-            color: #E65100;
-            font-size: 0.85rem;
-            font-weight: 600;
-            animation: alertaPedPulse 1.8s ease-in-out infinite;
+            background: #E65100;
+            border: 3px solid #BF360C;
+            color: #fff;
+            font-size: 0.95rem;
+            font-weight: 800;
+            animation: alertaPedFlash 0.9s ease-in-out infinite;
+            z-index: 50;
+            position: relative;
         }
         .alerta-pedidos-topo.show { display: flex; }
+        .alerta-pedidos-topo i.fa-bell {
+            font-size: 1.25rem;
+            animation: alertaBell 0.6s ease-in-out infinite;
+        }
         .alerta-pedidos-topo .btn-abrir-ped {
             margin-left: auto;
-            background: #E65100;
-            color: #fff;
+            background: #fff;
+            color: #E65100;
             border: none;
             border-radius: 8px;
-            padding: 0.4rem 0.75rem;
-            font-weight: 700;
+            padding: 0.45rem 0.85rem;
+            font-weight: 800;
             cursor: pointer;
             font-family: inherit;
-            font-size: 0.78rem;
+            font-size: 0.8rem;
         }
-        @keyframes alertaPedPulse {
-            0%, 100% { box-shadow: 0 0 0 0 rgba(230, 81, 0, 0.25); }
-            50% { box-shadow: 0 0 0 6px rgba(230, 81, 0, 0); }
+        @keyframes alertaPedFlash {
+            0%, 100% {
+                background: #E65100;
+                border-color: #BF360C;
+                box-shadow: 0 0 0 0 rgba(230, 81, 0, 0.55);
+            }
+            50% {
+                background: #FF6D00;
+                border-color: #FFAB40;
+                box-shadow: 0 0 0 10px rgba(230, 81, 0, 0);
+            }
+        }
+        @keyframes alertaBell {
+            0%, 100% { transform: rotate(-12deg); }
+            50% { transform: rotate(12deg); }
         }
         #btnPainelPedidos.has-pedidos {
             background: #E65100 !important;
-            border-color: #E65100 !important;
+            border-color: #BF360C !important;
             color: #fff !important;
-            animation: badgePedBlink 1.2s ease-in-out infinite;
+            animation: badgePedBlink 0.8s ease-in-out infinite;
+            font-weight: 800;
         }
         @keyframes badgePedBlink {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.82; }
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.7; transform: scale(1.06); }
+        }
+        /* Bolha flutuante piscando */
+        .alerta-flutuante-pedidos {
+            display: none;
+            position: fixed;
+            right: 18px;
+            bottom: 22px;
+            z-index: 9999;
+            max-width: 300px;
+            background: #E65100;
+            color: #fff;
+            border: 3px solid #FFAB40;
+            border-radius: 16px;
+            padding: 0.9rem 1rem;
+            font-weight: 800;
+            font-size: 0.9rem;
+            box-shadow: 0 8px 28px rgba(230, 81, 0, 0.45);
+            animation: alertaPedFlash 0.9s ease-in-out infinite;
+            cursor: pointer;
+            font-family: inherit;
+            text-align: left;
+            line-height: 1.35;
+        }
+        .alerta-flutuante-pedidos.show { display: block; }
+        .alerta-flutuante-pedidos .af-titulo {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            margin-bottom: 0.25rem;
+            font-size: 0.95rem;
+        }
+        .alerta-flutuante-pedidos .af-titulo i {
+            animation: alertaBell 0.6s ease-in-out infinite;
+        }
+        .alerta-flutuante-pedidos .af-sub {
+            font-size: 0.75rem;
+            font-weight: 600;
+            opacity: 0.95;
         }
         .bloco-notas-compra {
             background: var(--bg-card);
@@ -1084,6 +1141,14 @@
                 <div id="listaItensPedido" class="lista-itens-pedido"></div>
             </div>
 
+            <div class="alerta-pedidos-topo" id="alertaPedidosTopo">
+                <span><i class="fas fa-bell"></i> <strong id="alertaPedidosTxt">Há pedidos de compra pendentes</strong> — resolva para o alerta sumir.</span>
+                <button type="button" class="btn-abrir-ped" onclick="abrirPainelPedidosForcado()"><i class="fas fa-eye"></i> Ver pedidos</button>
+            </div>
+            <button type="button" class="alerta-flutuante-pedidos" id="alertaFlutuantePedidos" onclick="abrirPainelPedidosForcado()">
+                <div class="af-titulo"><i class="fas fa-bell"></i> ALERTA DE COMPRA</div>
+                <div class="af-sub" id="alertaFlutuanteTxt">Pedidos pendentes — clique para resolver</div>
+            </button>
             <div class="painel-pedidos vazio" id="painelPedidosCompra">
                 <h3>
                     <i class="fas fa-bell"></i> Pedidos de compra
@@ -1992,17 +2057,31 @@
         if (recebe && n > 0) document.title = '(' + n + ') ' + _tituloPaginaOriginal;
         else if (_tituloPaginaOriginal) document.title = _tituloPaginaOriginal;
 
-        // Faixa de alerta no topo (só Admin / Almoxarife / Síndico)
+        // Faixa + bolha flutuante piscando (só Admin / Almoxarife / Síndico)
+        var alertaFloat = document.getElementById('alertaFlutuantePedidos');
+        var alertaFloatTxt = document.getElementById('alertaFlutuanteTxt');
         if (alertaTopo) {
             if (recebe && n > 0) {
                 alertaTopo.classList.add('show');
                 if (alertaTxt) {
                     alertaTxt.innerHTML = n === 1
-                        ? 'Há <strong>1 pedido de compra pendente</strong> — resolva para o alerta sumir.'
-                        : 'Há <strong>' + n + ' pedidos de compra pendentes</strong> — resolva para o alerta sumir.';
+                        ? '⚠ HÁ <strong>1 PEDIDO DE COMPRA PENDENTE</strong> — RESOLVA PARA O ALERTA SUMIR'
+                        : '⚠ HÁ <strong>' + n + ' PEDIDOS DE COMPRA PENDENTES</strong> — RESOLVA PARA O ALERTA SUMIR';
                 }
             } else {
                 alertaTopo.classList.remove('show');
+            }
+        }
+        if (alertaFloat) {
+            if (recebe && n > 0) {
+                alertaFloat.classList.add('show');
+                if (alertaFloatTxt) {
+                    alertaFloatTxt.textContent = n === 1
+                        ? '1 pedido aguardando — clique para resolver'
+                        : n + ' pedidos aguardando — clique para resolver';
+                }
+            } else {
+                alertaFloat.classList.remove('show');
             }
         }
 
