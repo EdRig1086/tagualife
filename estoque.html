@@ -582,6 +582,8 @@
         .prio-importante { background: #FFF3E0; color: #E65100; }
         .prio-urgente { background: #FFEBEE; color: #C62828; }
 
+        .btn-editar-ped { background: #5A614E; color: #fff; }
+        .btn-add-ped { background: #1B4F72; color: #fff; }
         .btn-atender { background: #2E7D32; color: #fff; }
         .btn-recusar { background: #F5F5F5; color: #8B3A3A; border: 1px solid #E0E0E0 !important; }
         .btn-solicitar {
@@ -2144,6 +2146,8 @@
                 (p.observacao ? '<div class="meta" style="opacity:.85;">' + String(p.observacao).replace(/\|lista_id:[^|]*/g,'').replace(/\|lista_nome:[^|]*/g,'').replace(/\|?\s*solicitacao:[^|]*/gi,'').trim() + '</div>' : '') +
                 '</div>' +
                 '<div class="acoes-ped">' +
+                '<button type="button" class="btn-editar-ped" onclick="editarPedidoCompra(\'' + p.id + '\')" title="Editar"><i class="fas fa-pen"></i> Editar</button>' +
+                '<button type="button" class="btn-add-ped" onclick="acrescentarItemPedido(\'' + p.id + '\')" title="Acrescentar item"><i class="fas fa-plus"></i> Item</button>' +
                 '<button type="button" class="btn-atender" onclick="atenderPedidoCompra(\'' + p.id + '\')">Atendido</button>' +
                 '<button type="button" class="btn-recusar" onclick="recusarPedidoCompra(\'' + p.id + '\')">Dispensar</button>' +
                 '</div></div>';
@@ -2961,6 +2965,142 @@ ALTER TABLE public.pedidos_compra ADD COLUMN IF NOT EXISTS quantidade_solicitar 
 ALTER TABLE public.pedidos_compra ADD COLUMN IF NOT EXISTS motivo_uso text;
 ALTER TABLE public.pedidos_compra ADD COLUMN IF NOT EXISTS local_uso text;`;
     }
+
+
+    function acharPedidoCache(id) {
+        return (pedidosCompraCache || []).find(function(p) { return String(p.id) === String(id); });
+    }
+
+    /** Edita campos de um pedido pendente */
+    window.editarPedidoCompra = async function(id) {
+        if (!podeReceberPedidosCompra() && !podeSolicitarCompra()) {
+            mostrarToast('⛔ Sem permissão', 'danger');
+            return;
+        }
+        var p = acharPedidoCache(id);
+        if (!p) {
+            mostrarToast('Pedido não encontrado', 'warning');
+            return;
+        }
+        var prP = 'Normal';
+        if (p.observacao) {
+            var mx = String(p.observacao).match(/\[(Normal|Importante|Urgente)\]/i);
+            if (mx) prP = mx[1];
+        }
+        var meta = typeof extrairMetaLista === 'function' ? extrairMetaLista(p.observacao) : { id: null, nome: '' };
+
+        var nome = prompt('Item:', p.item_nome || '');
+        if (nome === null) return;
+        nome = (nome || '').trim();
+        if (nome.length < 2) { mostrarToast('⚠️ Nome inválido', 'warning'); return; }
+
+        var qtdStr = prompt('Quantidade a solicitar:', p.quantidade_solicitar != null ? String(p.quantidade_solicitar) : '1');
+        if (qtdStr === null) return;
+        var qtd = parseInt(qtdStr, 10);
+        if (!(qtd > 0)) { mostrarToast('⚠️ Quantidade inválida', 'warning'); return; }
+
+        var prioridade = prompt('Prioridade (Normal / Importante / Urgente):', prP) || prP;
+        prioridade = String(prioridade).trim() || 'Normal';
+
+        var motivo = prompt('Motivo / uso:', p.motivo_uso || '') ;
+        if (motivo === null) return;
+        motivo = (motivo || '').trim();
+
+        var local = prompt('Onde será usado:', p.local_uso || '');
+        if (local === null) return;
+        local = (local || '').trim();
+
+        var obsLivre = prompt('Observação (opcional):', '');
+        if (obsLivre === null) return;
+
+        var obs = '[' + prioridade + '] ' + (obsLivre || '').trim();
+        if (meta.id) obs += ' |lista_id:' + meta.id;
+        if (meta.nome) obs += '|lista_nome:' + meta.nome;
+
+        try {
+            var payload = {
+                item_nome: nome,
+                quantidade_solicitar: qtd,
+                motivo_uso: motivo || null,
+                local_uso: local || null,
+                observacao: obs.trim(),
+                atualizado_em: new Date().toISOString()
+            };
+            var { error } = await sb.from('pedidos_compra').update(payload).eq('id', id);
+            if (error) throw error;
+            mostrarToast('✅ Pedido atualizado', 'success');
+            await carregarPedidosCompra();
+        } catch (e) {
+            mostrarToast('❌ ' + (e.message || e), 'danger');
+        }
+    };
+
+    /** Acrescenta novo item pendente na mesma lista do pedido de referência */
+    window.acrescentarItemPedido = async function(idRef) {
+        if (!podeReceberPedidosCompra() && !podeSolicitarCompra()) {
+            mostrarToast('⛔ Sem permissão', 'danger');
+            return;
+        }
+        var p = acharPedidoCache(idRef);
+        if (!p) {
+            mostrarToast('Pedido não encontrado', 'warning');
+            return;
+        }
+        var meta = typeof extrairMetaLista === 'function' ? extrairMetaLista(p.observacao) : { id: null, nome: '' };
+        if (!meta.id) {
+            meta.id = 'L' + Date.now().toString(36);
+            meta.nome = meta.nome || 'Lista';
+        }
+
+        var nome = prompt('Novo item a acrescentar:');
+        if (nome === null) return;
+        nome = (nome || '').trim();
+        if (nome.length < 2) { mostrarToast('⚠️ Informe o nome do item', 'warning'); return; }
+
+        var qtdStr = prompt('Quantidade:', '1');
+        if (qtdStr === null) return;
+        var qtd = parseInt(qtdStr, 10) || 1;
+
+        var prioridade = prompt('Prioridade (Normal / Importante / Urgente):', 'Normal') || 'Normal';
+        var motivo = prompt('Motivo / uso:', p.motivo_uso || 'Reposição') || '';
+        var local = prompt('Onde será usado:', p.local_uso || '') || '';
+
+        // tenta achar no estoque
+        var estoqueId = null, qtdAtual = null, limite = null;
+        if (itensCache && itensCache.length) {
+            var found = itensCache.find(function(i) { return (i.nome || '').toLowerCase() === nome.toLowerCase(); });
+            if (found) {
+                estoqueId = found.id;
+                qtdAtual = found.quantidade != null ? parseInt(found.quantidade, 10) : null;
+                limite = found.limite_alerta != null ? parseInt(found.limite_alerta, 10) : null;
+            }
+        }
+
+        var obs = '[' + prioridade + '] |lista_id:' + meta.id + '|lista_nome:' + (meta.nome || 'Lista');
+        var payload = {
+            estoque_id: estoqueId,
+            item_nome: nome,
+            quantidade_atual: qtdAtual,
+            quantidade_solicitar: qtd,
+            limite_alerta: limite,
+            motivo_uso: motivo || null,
+            local_uso: local || null,
+            solicitado_por: p.solicitado_por || nomeUsuarioSessao(),
+            cargo_solicitante: p.cargo_solicitante || (typeof getCargo === 'function' ? getCargo() : ''),
+            observacao: obs,
+            status: 'pendente'
+        };
+        if (typeof payloadComCondominio === 'function') payload = payloadComCondominio(payload);
+
+        try {
+            var { error } = await sb.from('pedidos_compra').insert(payload);
+            if (error) throw error;
+            mostrarToast('➕ Item acrescentado ao pedido', 'success');
+            await carregarPedidosCompra();
+        } catch (e) {
+            mostrarToast('❌ ' + (e.message || e), 'danger');
+        }
+    };
 
     window.atenderPedidoCompra = async function(id) {
         if (!podeReceberPedidosCompra()) return;
