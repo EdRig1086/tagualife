@@ -1597,7 +1597,19 @@
             if (bloco && typeof podeSolicitarCompra === 'function' && podeSolicitarCompra()) {
                 bloco.style.display = '';
             }
-            try { atualizarDatalistItens(); renderListaItensPedido(); } catch (e0) {}
+            try {
+                Promise.resolve(carregarListaPedidoLocal()).then(function() {
+                    atualizarDatalistItens();
+                    renderListaItensPedido();
+                    if (pedidoItensLista.length) {
+                        var elBloco = document.getElementById('blocoNotasCompra');
+                        if (elBloco && typeof podeSolicitarCompra === 'function' && podeSolicitarCompra()) {
+                            elBloco.style.display = '';
+                        }
+                        console.log('📋 Lista restaurada do banco:', pedidoItensLista.length, 'item(ns)');
+                    }
+                }).catch(function(e0) { console.warn(e0); });
+            } catch (e0) {}
             const btnAdd = document.getElementById('btnAddItemLista');
             if (btnAdd) btnAdd.addEventListener('click', function(e) {
                 e.preventDefault();
@@ -1828,8 +1840,160 @@
     };
 
 
-    // Lista multi-item do pedido atual (antes de enviar)
+    // Lista multi-item do pedido — salva no BANCO (status rascunho) + backup local
     var pedidoItensLista = [];
+    var ultimoPedidoEnviado = [];
+    var PEDIDO_LISTA_KEY = 'tagualife_pedido_lista_rascunho';
+    var PEDIDO_ULTIMO_KEY = 'tagualife_pedido_ultimo_enviado';
+
+    function salvarListaPedidoLocal() {
+        try {
+            localStorage.setItem(PEDIDO_LISTA_KEY, JSON.stringify(pedidoItensLista || []));
+        } catch (e) { console.warn('salvar lista pedido', e); }
+    }
+    function limparListaPedidoLocal() {
+        try { localStorage.removeItem(PEDIDO_LISTA_KEY); } catch (e) {}
+    }
+
+    function montarPayloadRascunho(it) {
+        var solicitante = nomeUsuarioSessao();
+        var cargo = (typeof getCargo === 'function' ? getCargo() : '');
+        var prio = it.prioridade || 'Normal';
+        var obs = ('[' + prio + '] ' + (it.observacao || '')).trim();
+        var payload = {
+            estoque_id: it.estoque_id || null,
+            item_nome: it.item_nome,
+            quantidade_atual: it.quantidade_atual != null ? it.quantidade_atual : null,
+            quantidade_solicitar: it.quantidade_solicitar,
+            limite_alerta: it.limite_alerta != null ? it.limite_alerta : null,
+            motivo_uso: it.motivo_uso || null,
+            local_uso: it.local_uso || null,
+            solicitado_por: solicitante,
+            cargo_solicitante: cargo,
+            observacao: obs || null,
+            status: 'rascunho'
+        };
+        return (typeof payloadComCondominio === 'function' ? payloadComCondominio(payload) : payload);
+    }
+
+    /** Grava / atualiza um item da lista como rascunho no Supabase */
+    async function salvarItemPedidoNoBanco(it, idx) {
+        if (!sb || !it) return it;
+        try {
+            var payload = montarPayloadRascunho(it);
+            if (it.id_banco) {
+                var up = await sb.from('pedidos_compra').update(payload).eq('id', it.id_banco).eq('status', 'rascunho');
+                if (up.error) throw up.error;
+                return it;
+            }
+            var ins = await sb.from('pedidos_compra').insert(payload).select('id').single();
+            if (ins.error) {
+                // fallback sem colunas novas
+                if (/motivo_uso|local_uso|quantidade_solicitar|column/i.test(ins.error.message || '')) {
+                    var mini = {
+                        item_nome: it.item_nome,
+                        quantidade_atual: it.quantidade_atual,
+                        solicitado_por: payload.solicitado_por,
+                        cargo_solicitante: payload.cargo_solicitante,
+                        observacao: ('Qtd: ' + it.quantidade_solicitar + ' | Motivo: ' + (it.motivo_uso||'') + ' | Onde: ' + (it.local_uso||'') + ' | [' + (it.prioridade||'Normal') + '] rascunho'),
+                        status: 'rascunho'
+                    };
+                    var r2 = await sb.from('pedidos_compra').insert(mini).select('id').single();
+                    if (r2.error) throw r2.error;
+                    it.id_banco = r2.data && r2.data.id;
+                    return it;
+                }
+                throw ins.error;
+            }
+            it.id_banco = ins.data && ins.data.id;
+            return it;
+        } catch (e) {
+            console.warn('salvar rascunho banco:', e);
+            // mantém só local
+            return it;
+        }
+    }
+
+    async function carregarListaPedidoDoBanco() {
+        pedidoItensLista = [];
+        if (!sb) {
+            // só local
+            try {
+                var raw = localStorage.getItem(PEDIDO_LISTA_KEY);
+                if (raw) {
+                    var arr = JSON.parse(raw);
+                    if (Array.isArray(arr)) pedidoItensLista = arr;
+                }
+            } catch (e) {}
+            return;
+        }
+        try {
+            var eu = nomeUsuarioSessao();
+            var q = sb.from('pedidos_compra').select('*').eq('status', 'rascunho').order('criado_em', { ascending: true }).limit(100);
+            if (eu && eu !== '—') q = q.eq('solicitado_por', eu);
+            var res = await q;
+            if (res.error) {
+                console.warn('carregar rascunhos:', res.error.message);
+                // fallback local
+                try {
+                    var raw2 = localStorage.getItem(PEDIDO_LISTA_KEY);
+                    if (raw2) {
+                        var arr2 = JSON.parse(raw2);
+                        if (Array.isArray(arr2)) pedidoItensLista = arr2;
+                    }
+                } catch (e2) {}
+                return;
+            }
+            pedidoItensLista = (res.data || []).map(function(p) {
+                var prio = 'Normal';
+                if (p.observacao) {
+                    var mx = String(p.observacao).match(/\[(Normal|Importante|Urgente)\]/i);
+                    if (mx) prio = mx[1];
+                }
+                return {
+                    id_banco: p.id,
+                    estoque_id: p.estoque_id || null,
+                    item_nome: p.item_nome,
+                    quantidade_atual: p.quantidade_atual,
+                    quantidade_solicitar: p.quantidade_solicitar != null ? p.quantidade_solicitar : 1,
+                    limite_alerta: p.limite_alerta,
+                    motivo_uso: p.motivo_uso || '',
+                    local_uso: p.local_uso || '',
+                    prioridade: prio,
+                    observacao: (p.observacao || '').replace(/\[(Normal|Importante|Urgente)\]/gi, '').replace(/\s*\|?\s*solicitacao:[^|]*/gi, '').trim() || null
+                };
+            });
+            salvarListaPedidoLocal();
+        } catch (e) {
+            console.warn(e);
+        }
+    }
+
+    // compat: nome antigo usado no DOMContentLoaded
+    async function carregarListaPedidoLocal() {
+        await carregarListaPedidoDoBanco();
+        try {
+            var u = localStorage.getItem(PEDIDO_ULTIMO_KEY);
+            if (u) {
+                var arrU = JSON.parse(u);
+                if (Array.isArray(arrU)) ultimoPedidoEnviado = arrU;
+            }
+        } catch (e2) {}
+    }
+
+    async function apagarRascunhosDoBanco(ids) {
+        if (!sb) return;
+        try {
+            if (ids && ids.length) {
+                await sb.from('pedidos_compra').delete().in('id', ids).eq('status', 'rascunho');
+            } else {
+                var eu = nomeUsuarioSessao();
+                var q = sb.from('pedidos_compra').delete().eq('status', 'rascunho');
+                if (eu && eu !== '—') q = q.eq('solicitado_por', eu);
+                await q;
+            }
+        } catch (e) { console.warn('apagar rascunhos', e); }
+    }
 
     function getNotaMotivoValor() {
         const sel = document.getElementById('notaMotivo');
@@ -1860,8 +2024,7 @@
         return 'prio-normal';
     }
 
-    var ultimoPedidoEnviado = []; // para PDF após envio
-
+    
     function atualizarDatalistItens() {
         const dl = document.getElementById('listaItensEstoque');
         if (!dl || !itensCache) return;
@@ -1875,7 +2038,7 @@
         const box = document.getElementById('listaItensPedido');
         if (!box) return;
         if (!pedidoItensLista.length) {
-            box.innerHTML = '<div class="meta" style="font-size:0.7rem;color:#7A816E;">Nenhum item na lista ainda. Preencha e clique em <strong>Adicionar item à lista</strong>.</div>';
+            box.innerHTML = '<div class="meta" style="font-size:0.7rem;color:#7A816E;">Nenhum item na lista ainda. Preencha e clique em <strong>Adicionar à lista</strong>. A lista fica salva neste aparelho até enviar ou limpar.</div>';
             return;
         }
         box.innerHTML = '<div style="font-size:0.7rem;font-weight:700;color:#191D1B;margin-bottom:0.25rem;">Itens do pedido (' + pedidoItensLista.length + ')</div>' +
@@ -1887,14 +2050,20 @@
                     '<span class="prio ' + classePrioridade(pr) + '">' + pr + '</span>' +
                     '<span style="color:#7A816E;">' + (it.motivo_uso || '') + '</span>' +
                     '<span style="color:#7A816E;">@ ' + (it.local_uso || '') + '</span>' +
+                    (it.id_banco ? '<span title="Salvo no banco" style="color:#2E7D32;font-size:0.65rem;"><i class="fas fa-cloud"></i></span>' : '<span title="Só local" style="color:#C1A83C;font-size:0.65rem;"><i class="fas fa-laptop"></i></span>') +
                     '<button type="button" class="rm" onclick="removerItemPedidoLista(' + idx + ')" title="Remover"><i class="fas fa-times"></i></button>' +
                     '</div>';
             }).join('');
     }
 
-    window.removerItemPedidoLista = function(idx) {
+    window.removerItemPedidoLista = async function(idx) {
+        var it = pedidoItensLista[idx];
+        if (it && it.id_banco) {
+            try { await apagarRascunhosDoBanco([it.id_banco]); } catch (e) {}
+        }
         pedidoItensLista.splice(idx, 1);
         renderListaItensPedido();
+        salvarListaPedidoLocal();
     };
 
     function adicionarItemNaListaPedido() {
@@ -1942,7 +2111,20 @@
         window._pedidoQtdAtual = null;
         window._pedidoLimite = null;
         renderListaItensPedido();
-        mostrarToast('➕ Item adicionado à lista', 'success');
+        salvarListaPedidoLocal();
+        // salva no banco em segundo plano
+        (async function() {
+            var idx = pedidoItensLista.length - 1;
+            var saved = await salvarItemPedidoNoBanco(pedidoItensLista[idx], idx);
+            if (saved && saved.id_banco) {
+                pedidoItensLista[idx].id_banco = saved.id_banco;
+                salvarListaPedidoLocal();
+                renderListaItensPedido();
+                mostrarToast('➕ Item salvo no banco', 'success');
+            } else {
+                mostrarToast('➕ Item na lista (só neste aparelho — confira tabela pedidos_compra)', 'warning');
+            }
+        })();
         document.getElementById('notaItemNome').focus();
         return true;
     }
@@ -2013,12 +2195,23 @@
                 solicitado_por: solicitante,
                 cargo_solicitante: cargo,
                 observacao: ('[' + (it.prioridade || 'Normal') + '] ' + (it.observacao || '')).trim() + ' | solicitacao:' + solicitacaoId,
-                status: 'pendente'
+                status: 'pendente',
+                atualizado_em: new Date().toISOString()
             };
             try {
-                let { error } = await sb.from('pedidos_compra').insert(
-                    (typeof payloadComCondominio === 'function' ? payloadComCondominio(payload) : payload)
-                );
+                let error = null;
+                if (it.id_banco) {
+                    // promove rascunho → pendente (notifica admin)
+                    const rUp = await sb.from('pedidos_compra').update(
+                        (typeof payloadComCondominio === 'function' ? payloadComCondominio(payload) : payload)
+                    ).eq('id', it.id_banco);
+                    error = rUp.error;
+                } else {
+                    const rIns = await sb.from('pedidos_compra').insert(
+                        (typeof payloadComCondominio === 'function' ? payloadComCondominio(payload) : payload)
+                    );
+                    error = rIns.error;
+                }
                 if (error && /motivo_uso|local_uso|quantidade_solicitar|column/i.test(error.message || '')) {
                     const mini = {
                         item_nome: it.item_nome,
@@ -2050,7 +2243,9 @@
 
         if (ok > 0) {
             ultimoPedidoEnviado = enviados;
+            try { localStorage.setItem(PEDIDO_ULTIMO_KEY, JSON.stringify(enviados)); } catch (eU) {}
             pedidoItensLista = [];
+            limparListaPedidoLocal();
             renderListaItensPedido();
             limparBlocoNotas(false);
             mostrarToast('🔔 ' + ok + ' item(ns) enviado(s)! Admin e Almoxarife notificados.', 'success');
@@ -2077,8 +2272,12 @@
         const lo = document.getElementById('notaLocalOutro'); if (lo) { lo.value = ''; lo.style.display = 'none'; }
         const o = document.getElementById('notaObs'); if (o) o.value = '';
         if (limparLista !== false) {
+            var ids = (pedidoItensLista || []).map(function(x) { return x.id_banco; }).filter(Boolean);
             pedidoItensLista = [];
+            limparListaPedidoLocal();
             renderListaItensPedido();
+            if (ids.length) apagarRascunhosDoBanco(ids);
+            else apagarRascunhosDoBanco();
         }
     }
 
@@ -4403,7 +4602,19 @@ function exportarCSVEstoque() {
             if (bloco && typeof podeSolicitarCompra === 'function' && podeSolicitarCompra()) {
                 bloco.style.display = '';
             }
-            try { atualizarDatalistItens(); renderListaItensPedido(); } catch (e0) {}
+            try {
+                Promise.resolve(carregarListaPedidoLocal()).then(function() {
+                    atualizarDatalistItens();
+                    renderListaItensPedido();
+                    if (pedidoItensLista.length) {
+                        var elBloco = document.getElementById('blocoNotasCompra');
+                        if (elBloco && typeof podeSolicitarCompra === 'function' && podeSolicitarCompra()) {
+                            elBloco.style.display = '';
+                        }
+                        console.log('📋 Lista restaurada do banco:', pedidoItensLista.length, 'item(ns)');
+                    }
+                }).catch(function(e0) { console.warn(e0); });
+            } catch (e0) {}
             const btnAdd = document.getElementById('btnAddItemLista');
             if (btnAdd) btnAdd.addEventListener('click', function(e) {
                 e.preventDefault();
