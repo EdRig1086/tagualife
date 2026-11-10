@@ -244,6 +244,36 @@
             padding-left: 1.15rem;
             padding-right: 1.15rem;
         }
+        .lista-toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.65rem 0.8rem;
+            align-items: flex-end;
+            padding: 0.75rem 1.15rem 0.25rem;
+            border-bottom: 1px solid var(--border-color);
+            background: #F7F8F3;
+        }
+        .lista-toolbar .campo { margin: 0; }
+        .lista-toolbar .campo label {
+            font-size: 0.62rem; font-weight: 600; color: var(--text-secondary);
+            text-transform: uppercase; display: block; margin-bottom: 0.2rem;
+        }
+        .lista-toolbar .campo input,
+        .lista-toolbar .campo select {
+            width: 100%;
+            padding: 0.4rem 0.5rem;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 0.8rem;
+            font-family: inherit;
+            background: #fff;
+        }
+        .lista-toolbar-btns {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.35rem;
+            padding-bottom: 0.1rem;
+        }
         .bloco-notas-compra .bloco-notas-grid {
             padding-top: 1rem;
         }
@@ -847,7 +877,23 @@
                 <div class="bloco-notas-head">
                     <div class="left" style="display:flex;flex-direction:column;gap:0.1rem;">
                         <h3><i class="fas fa-clipboard-list"></i> Solicitar material / compra</h3>
-                        <p class="bloco-sub">Adicione itens · notifica Admin e Almoxarife · documento para a síndica</p>
+                        <p class="bloco-sub">Várias listas (papelaria, pintura…) · feche e salve · abra outra</p>
+                    </div>
+                </div>
+                <div class="lista-toolbar" id="listaToolbar">
+                    <div class="campo" style="flex:1;min-width:180px;">
+                        <label><i class="fas fa-folder-open"></i> NOME DA LISTA *</label>
+                        <input type="text" id="notaNomeLista" placeholder="Ex: Papelaria e escritório" maxlength="80" />
+                    </div>
+                    <div class="campo" style="flex:1;min-width:180px;">
+                        <label><i class="fas fa-list"></i> LISTAS SALVAS</label>
+                        <select id="notaSelectLista">
+                            <option value="">— Lista atual / nova —</option>
+                        </select>
+                    </div>
+                    <div class="lista-toolbar-btns">
+                        <button type="button" class="bn-btn bn-btn-sec" id="btnFecharLista" title="Fecha e salva esta lista no banco"><i class="fas fa-folder"></i> Fechar lista</button>
+                        <button type="button" class="bn-btn bn-btn-ghost" id="btnNovaLista" title="Começa uma lista nova em branco"><i class="fas fa-plus"></i> Nova lista</button>
                     </div>
                 </div>
                 <div class="bloco-notas-grid">
@@ -1640,6 +1686,26 @@
                 e.preventDefault();
                 limparBlocoNotas(true);
             });
+            const btnFecharLista = document.getElementById('btnFecharLista');
+            if (btnFecharLista) btnFecharLista.addEventListener('click', function(e) {
+                e.preventDefault();
+                fecharListaAtual();
+            });
+            const btnNovaLista = document.getElementById('btnNovaLista');
+            if (btnNovaLista) btnNovaLista.addEventListener('click', function(e) {
+                e.preventDefault();
+                iniciarNovaLista(true);
+            });
+            const selLista = document.getElementById('notaSelectLista');
+            if (selLista) selLista.addEventListener('change', function() {
+                var v = selLista.value;
+                if (v) abrirListaSalva(v);
+            });
+            const inpNomeLista = document.getElementById('notaNomeLista');
+            if (inpNomeLista) inpNomeLista.addEventListener('change', function() {
+                listaCompraAtual.nome = (inpNomeLista.value || '').trim();
+            });
+
         })();
 
 
@@ -1858,11 +1924,45 @@
         try { localStorage.removeItem(PEDIDO_LISTA_KEY); } catch (e) {}
     }
 
-    function montarPayloadRascunho(it) {
+
+    // Controle de várias listas nomeadas
+    var listaCompraAtual = { id: null, nome: '' };
+
+    function novoIdLista() {
+        return 'L' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+    }
+    function garantirListaAtual() {
+        if (!listaCompraAtual.id) {
+            listaCompraAtual.id = novoIdLista();
+        }
+        var el = document.getElementById('notaNomeLista');
+        if (el && !listaCompraAtual.nome) {
+            listaCompraAtual.nome = (el.value || '').trim();
+        }
+        if (el && el.value && el.value.trim() !== listaCompraAtual.nome) {
+            listaCompraAtual.nome = el.value.trim();
+        }
+        return listaCompraAtual;
+    }
+    function tagListaObs(obs) {
+        var L = garantirListaAtual();
+        var nome = L.nome || 'Sem nome';
+        var base = (obs || '').replace(/\s*\|lista_id:[^|]*/g, '').replace(/\s*\|lista_nome:[^|]*/g, '').trim();
+        return (base + ' |lista_id:' + L.id + '|lista_nome:' + nome).trim();
+    }
+    function extrairMetaLista(obs) {
+        obs = String(obs || '');
+        var id = (obs.match(/\|lista_id:([^|]+)/) || [])[1] || null;
+        var nome = (obs.match(/\|lista_nome:([^|]+)/) || [])[1] || '';
+        return { id: id, nome: nome };
+    }
+
+    function montarPayloadRascunho(it, statusOpt) {
         var solicitante = nomeUsuarioSessao();
         var cargo = (typeof getCargo === 'function' ? getCargo() : '');
         var prio = it.prioridade || 'Normal';
-        var obs = ('[' + prio + '] ' + (it.observacao || '')).trim();
+        var obs = tagListaObs(('[' + prio + '] ' + (it.observacao || '')).trim());
+        var st = statusOpt || it.status_lista || 'rascunho';
         var payload = {
             estoque_id: it.estoque_id || null,
             item_nome: it.item_nome,
@@ -1874,7 +1974,7 @@
             solicitado_por: solicitante,
             cargo_solicitante: cargo,
             observacao: obs || null,
-            status: 'rascunho'
+            status: st
         };
         return (typeof payloadComCondominio === 'function' ? payloadComCondominio(payload) : payload);
     }
@@ -1883,7 +1983,7 @@
     async function salvarItemPedidoNoBanco(it, idx) {
         if (!sb || !it) return it;
         try {
-            var payload = montarPayloadRascunho(it);
+            var payload = montarPayloadRascunho(it, it.status_lista || 'rascunho');
             if (it.id_banco) {
                 var up = await sb.from('pedidos_compra').update(payload).eq('id', it.id_banco).eq('status', 'rascunho');
                 if (up.error) throw up.error;
@@ -1917,10 +2017,63 @@
         }
     }
 
-    async function carregarListaPedidoDoBanco() {
+    function mapRowPedidoParaItem(p) {
+        var prio = 'Normal';
+        if (p.observacao) {
+            var mx = String(p.observacao).match(/\[(Normal|Importante|Urgente)\]/i);
+            if (mx) prio = mx[1];
+        }
+        var meta = extrairMetaLista(p.observacao);
+        return {
+            id_banco: p.id,
+            estoque_id: p.estoque_id || null,
+            item_nome: p.item_nome,
+            quantidade_atual: p.quantidade_atual,
+            quantidade_solicitar: p.quantidade_solicitar != null ? p.quantidade_solicitar : 1,
+            limite_alerta: p.limite_alerta,
+            motivo_uso: p.motivo_uso || '',
+            local_uso: p.local_uso || '',
+            prioridade: prio,
+            lista_id: meta.id,
+            lista_nome: meta.nome,
+            status_lista: p.status,
+            observacao: (p.observacao || '').replace(/\[(Normal|Importante|Urgente)\]/gi, '').replace(/\s*\|lista_id:[^|]*/g, '').replace(/\s*\|lista_nome:[^|]*/g, '').replace(/\s*\|?\s*solicitacao:[^|]*/gi, '').trim() || null
+        };
+    }
+
+    async function atualizarSelectListasSalvas() {
+        var sel = document.getElementById('notaSelectLista');
+        if (!sel || !sb) return;
+        try {
+            var eu = nomeUsuarioSessao();
+            var q = sb.from('pedidos_compra').select('id, observacao, status, criado_em, item_nome').in('status', ['lista_salva', 'rascunho']).order('criado_em', { ascending: false }).limit(300);
+            if (eu && eu !== '—') q = q.eq('solicitado_por', eu);
+            var res = await q;
+            if (res.error) return;
+            var grupos = {};
+            (res.data || []).forEach(function(p) {
+                var meta = extrairMetaLista(p.observacao);
+                var id = meta.id || ('solo_' + p.id);
+                if (!grupos[id]) {
+                    grupos[id] = { id: id, nome: meta.nome || 'Lista sem nome', status: p.status, n: 0 };
+                }
+                grupos[id].n++;
+                if (p.status === 'rascunho') grupos[id].status = 'rascunho';
+            });
+            var cur = listaCompraAtual.id;
+            var html = '<option value="">— Lista atual / nova —</option>';
+            Object.keys(grupos).forEach(function(k) {
+                var g = grupos[k];
+                var st = g.status === 'rascunho' ? ' (aberta)' : ' (fechada)';
+                html += '<option value="' + g.id + '"' + (cur && cur === g.id ? ' selected' : '') + '>' + (g.nome || g.id) + st + ' · ' + g.n + ' item(ns)</option>';
+            });
+            sel.innerHTML = html;
+        } catch (e) { console.warn(e); }
+    }
+
+    async function carregarListaPedidoDoBanco(listaIdForcada) {
         pedidoItensLista = [];
         if (!sb) {
-            // só local
             try {
                 var raw = localStorage.getItem(PEDIDO_LISTA_KEY);
                 if (raw) {
@@ -1932,12 +2085,12 @@
         }
         try {
             var eu = nomeUsuarioSessao();
-            var q = sb.from('pedidos_compra').select('*').eq('status', 'rascunho').order('criado_em', { ascending: true }).limit(100);
+            // carrega rascunhos (lista aberta) e listas salvas para o select
+            var q = sb.from('pedidos_compra').select('*').in('status', ['rascunho', 'lista_salva']).order('criado_em', { ascending: true }).limit(300);
             if (eu && eu !== '—') q = q.eq('solicitado_por', eu);
             var res = await q;
             if (res.error) {
-                console.warn('carregar rascunhos:', res.error.message);
-                // fallback local
+                console.warn('carregar listas:', res.error.message);
                 try {
                     var raw2 = localStorage.getItem(PEDIDO_LISTA_KEY);
                     if (raw2) {
@@ -1947,29 +2100,125 @@
                 } catch (e2) {}
                 return;
             }
-            pedidoItensLista = (res.data || []).map(function(p) {
-                var prio = 'Normal';
-                if (p.observacao) {
-                    var mx = String(p.observacao).match(/\[(Normal|Importante|Urgente)\]/i);
-                    if (mx) prio = mx[1];
+            var rows = (res.data || []).map(mapRowPedidoParaItem);
+            await atualizarSelectListasSalvas();
+
+            // decide lista atual
+            var alvo = listaIdForcada || listaCompraAtual.id;
+            if (!alvo) {
+                // prefere rascunho mais recente
+                var abertos = rows.filter(function(r) { return r.status_lista === 'rascunho'; });
+                if (abertos.length) {
+                    alvo = abertos[abertos.length - 1].lista_id || null;
+                    if (!alvo) {
+                        // itens antigos sem tag: trata todos rascunhos como lista atual
+                        pedidoItensLista = abertos;
+                        listaCompraAtual = { id: novoIdLista(), nome: '' };
+                        var elN = document.getElementById('notaNomeLista');
+                        if (elN) elN.value = '';
+                        // grava tag nos antigos em background
+                        abertos.forEach(function(it) { salvarItemPedidoNoBanco(it); });
+                        salvarListaPedidoLocal();
+                        return;
+                    }
                 }
-                return {
-                    id_banco: p.id,
-                    estoque_id: p.estoque_id || null,
-                    item_nome: p.item_nome,
-                    quantidade_atual: p.quantidade_atual,
-                    quantidade_solicitar: p.quantidade_solicitar != null ? p.quantidade_solicitar : 1,
-                    limite_alerta: p.limite_alerta,
-                    motivo_uso: p.motivo_uso || '',
-                    local_uso: p.local_uso || '',
-                    prioridade: prio,
-                    observacao: (p.observacao || '').replace(/\[(Normal|Importante|Urgente)\]/gi, '').replace(/\s*\|?\s*solicitacao:[^|]*/gi, '').trim() || null
-                };
-            });
+            }
+            if (alvo) {
+                pedidoItensLista = rows.filter(function(r) { return r.lista_id === alvo; });
+                if (pedidoItensLista.length) {
+                    listaCompraAtual = {
+                        id: alvo,
+                        nome: pedidoItensLista[0].lista_nome || ''
+                    };
+                } else {
+                    listaCompraAtual = { id: alvo, nome: listaCompraAtual.nome || '' };
+                }
+            } else {
+                listaCompraAtual = { id: novoIdLista(), nome: '' };
+                pedidoItensLista = [];
+            }
+            var elNome = document.getElementById('notaNomeLista');
+            if (elNome) elNome.value = listaCompraAtual.nome || '';
             salvarListaPedidoLocal();
+            await atualizarSelectListasSalvas();
         } catch (e) {
             console.warn(e);
         }
+    }
+
+    async function fecharListaAtual() {
+        garantirListaAtual();
+        var elNome = document.getElementById('notaNomeLista');
+        var nome = (elNome && elNome.value || '').trim();
+        if (!nome) {
+            nome = prompt('Nome desta lista (ex: Papelaria e escritório, Materiais de pintura):', listaCompraAtual.nome || '');
+            if (nome === null) return;
+            nome = (nome || '').trim();
+        }
+        if (!nome) {
+            mostrarToast('⚠️ Informe um nome para fechar a lista', 'warning');
+            return;
+        }
+        if (!pedidoItensLista.length) {
+            mostrarToast('⚠️ Lista vazia — adicione itens antes de fechar', 'warning');
+            return;
+        }
+        listaCompraAtual.nome = nome;
+        if (elNome) elNome.value = nome;
+        var ok = 0;
+        for (var i = 0; i < pedidoItensLista.length; i++) {
+            pedidoItensLista[i].status_lista = 'lista_salva';
+            var saved = await salvarItemPedidoNoBanco(pedidoItensLista[i]);
+            // força status lista_salva
+            if (saved && saved.id_banco && sb) {
+                try {
+                    await sb.from('pedidos_compra').update({ status: 'lista_salva', observacao: tagListaObs(('[' + (pedidoItensLista[i].prioridade||'Normal') + '] ' + (pedidoItensLista[i].observacao||'')).trim()) }).eq('id', saved.id_banco);
+                    ok++;
+                } catch (e) { console.warn(e); }
+            }
+        }
+        mostrarToast('📁 Lista "' + nome + '" fechada e salva (' + ok + ' item(ns))', 'success');
+        // inicia lista nova
+        await iniciarNovaLista(false);
+        await atualizarSelectListasSalvas();
+    }
+
+    async function iniciarNovaLista(perguntarNome) {
+        listaCompraAtual = { id: novoIdLista(), nome: '' };
+        pedidoItensLista = [];
+        limparListaPedidoLocal();
+        renderListaItensPedido();
+        var elNome = document.getElementById('notaNomeLista');
+        if (elNome) elNome.value = '';
+        var sel = document.getElementById('notaSelectLista');
+        if (sel) sel.value = '';
+        if (perguntarNome !== false) {
+            var n = prompt('Nome da nova lista (ex: Papelaria, Pintura, Hidráulico):', '');
+            if (n && n.trim()) {
+                listaCompraAtual.nome = n.trim();
+                if (elNome) elNome.value = listaCompraAtual.nome;
+            }
+        }
+        mostrarToast('🆕 Nova lista pronta — adicione os itens', 'info');
+    }
+
+    async function abrirListaSalva(listaId) {
+        if (!listaId) return;
+        await carregarListaPedidoDoBanco(listaId);
+        // se estava fechada, reabre como rascunho para editar
+        for (var i = 0; i < pedidoItensLista.length; i++) {
+            if (pedidoItensLista[i].status_lista === 'lista_salva' && pedidoItensLista[i].id_banco && sb) {
+                try {
+                    await sb.from('pedidos_compra').update({ status: 'rascunho' }).eq('id', pedidoItensLista[i].id_banco);
+                    pedidoItensLista[i].status_lista = 'rascunho';
+                } catch (e) {}
+            }
+        }
+        renderListaItensPedido();
+        var elNome = document.getElementById('notaNomeLista');
+        if (elNome) elNome.value = listaCompraAtual.nome || '';
+        mostrarToast('📂 Lista aberta: ' + (listaCompraAtual.nome || listaId), 'success');
+        await atualizarSelectListasSalvas();
     }
 
     // compat: nome antigo usado no DOMContentLoaded
@@ -2041,10 +2290,11 @@
         const box = document.getElementById('listaItensPedido');
         if (!box) return;
         if (!pedidoItensLista.length) {
-            box.innerHTML = '<div class="meta" style="font-size:0.7rem;color:#7A816E;">Nenhum item na lista ainda. Preencha e clique em <strong>Adicionar à lista</strong>. A lista fica salva neste aparelho até enviar ou limpar.</div>';
+            box.innerHTML = '<div class="meta" style="font-size:0.7rem;color:#7A816E;">Nenhum item nesta lista. Dê um <strong>nome</strong> (ex: Papelaria), adicione itens e use <strong>Fechar lista</strong> para guardar e começar outra.</div>';
             return;
         }
-        box.innerHTML = '<div style="font-size:0.7rem;font-weight:700;color:#191D1B;margin-bottom:0.25rem;">Itens do pedido (' + pedidoItensLista.length + ')</div>' +
+        var tituloLista = (listaCompraAtual && listaCompraAtual.nome) ? listaCompraAtual.nome : 'Lista atual';
+        box.innerHTML = '<div style="font-size:0.7rem;font-weight:700;color:#191D1B;margin-bottom:0.25rem;">' + tituloLista + ' · ' + pedidoItensLista.length + ' item(ns)</div>' +
             pedidoItensLista.map(function(it, idx) {
                 const pr = it.prioridade || 'Normal';
                 return '<div class="item-linha">' +
@@ -2094,6 +2344,7 @@
             }
         }
 
+        garantirListaAtual();
         pedidoItensLista.push({
             estoque_id: estoqueId,
             item_nome: nome,
@@ -2103,7 +2354,10 @@
             motivo_uso: motivo,
             local_uso: local,
             prioridade: prioridade,
-            observacao: obs || null
+            observacao: obs || null,
+            lista_id: listaCompraAtual.id,
+            lista_nome: listaCompraAtual.nome || (document.getElementById('notaNomeLista') && document.getElementById('notaNomeLista').value) || '',
+            status_lista: 'rascunho'
         });
 
         // limpa campos do item (mantém motivo/local se quiser repetir — limpa só nome/qtd/obs)
@@ -4835,6 +5089,26 @@ function exportarCSVEstoque() {
                 e.preventDefault();
                 limparBlocoNotas(true);
             });
+            const btnFecharLista = document.getElementById('btnFecharLista');
+            if (btnFecharLista) btnFecharLista.addEventListener('click', function(e) {
+                e.preventDefault();
+                fecharListaAtual();
+            });
+            const btnNovaLista = document.getElementById('btnNovaLista');
+            if (btnNovaLista) btnNovaLista.addEventListener('click', function(e) {
+                e.preventDefault();
+                iniciarNovaLista(true);
+            });
+            const selLista = document.getElementById('notaSelectLista');
+            if (selLista) selLista.addEventListener('change', function() {
+                var v = selLista.value;
+                if (v) abrirListaSalva(v);
+            });
+            const inpNomeLista = document.getElementById('notaNomeLista');
+            if (inpNomeLista) inpNomeLista.addEventListener('change', function() {
+                listaCompraAtual.nome = (inpNomeLista.value || '').trim();
+            });
+
         })();
 
 
