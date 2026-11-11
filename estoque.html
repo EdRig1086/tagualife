@@ -172,6 +172,50 @@
             display: inline-flex; align-items: center; gap: 0.3rem; background: transparent; color: var(--text-secondary);
         }
         .btn-voltar { background: #191D1B; color: #FBFBF7; }
+        .barra-selecao-itens {
+            display: none;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 0.5rem 0.75rem;
+            padding: 0.5rem 0.85rem;
+            margin-bottom: 0.55rem;
+            background: #FFF3E0;
+            border: 1px solid #FFB74D;
+            border-radius: 10px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: #E65100;
+        }
+        .barra-selecao-itens.show { display: flex; }
+        .barra-selecao-itens .btn-excluir-sel {
+            background: #8B3A3A;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            padding: 0.35rem 0.75rem;
+            font-size: 0.75rem;
+            font-weight: 700;
+            cursor: pointer;
+            font-family: inherit;
+        }
+        .barra-selecao-itens .btn-excluir-sel:hover { background: #6d2d2d; }
+        .barra-selecao-itens .btn-limpar-sel {
+            background: #fff;
+            color: #5A614E;
+            border: 1px solid #D0D5C6;
+            border-radius: 8px;
+            padding: 0.35rem 0.65rem;
+            font-size: 0.72rem;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: inherit;
+        }
+        .chk-item-estoque {
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+            accent-color: #7A816E;
+        }
         .tabela-wrapper { overflow-x: auto; border-radius: 8px; border: 1px solid var(--border-color); max-height: 420px; overflow-y: auto; }
         .tabela-items { width: 100%; border-collapse: collapse; font-size: 0.75rem; }
         .tabela-items thead { background: var(--gray-100); position: sticky; top: 0; z-index: 10; }
@@ -1057,10 +1101,20 @@
                 <a href="index.html" class="btn-voltar"><i class="fas fa-arrow-left"></i> Voltar</a>
             </div>
 
+            <div class="barra-selecao-itens" id="barraSelecaoItens">
+                <span id="txtSelecaoItens">0 item(ns) selecionado(s)</span>
+                <button type="button" class="btn-excluir-sel" id="btnExcluirSelecionados" onclick="excluirItensSelecionados()">
+                    <i class="fas fa-trash-alt"></i> Excluir selecionados
+                </button>
+                <button type="button" class="btn-limpar-sel" onclick="limparSelecaoItens()">Limpar seleção</button>
+            </div>
             <div class="tabela-wrapper">
                 <table class="tabela-items">
                     <thead>
                         <tr>
+                            <th style="width:36px;text-align:center;" id="thChkEstoque">
+                                <input type="checkbox" class="chk-item-estoque" id="chkTodosEstoque" title="Selecionar todos (Admin)" onclick="toggleSelecionarTodosEstoque(this)" style="display:none;" />
+                            </th>
                             <th style="width:48px;">Foto</th>
                             <th>Cód.</th>
                             <th>Item</th>
@@ -1072,7 +1126,7 @@
                         </tr>
                     </thead>
                     <tbody id="corpoTabela">
-                        <tr><td colspan="8" class="loading-overlay"><i class="fas fa-spinner fa-spin"></i> Carregando do Supabase...</td></tr>
+                        <tr><td colspan="9" class="loading-overlay"><i class="fas fa-spinner fa-spin"></i> Carregando do Supabase...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -3426,9 +3480,14 @@ ALTER TABLE public.pedidos_compra ADD COLUMN IF NOT EXISTS local_uso text;`;
         const corpo = document.getElementById('corpoTabela');
         const podeEdit = ehAdministrador();
         const podeDel = ehAdministrador();
+        const chkAll = document.getElementById('chkTodosEstoque');
+        if (chkAll) {
+            chkAll.style.display = podeDel ? '' : 'none';
+            chkAll.checked = false;
+        }
 
         if (filtrados.length === 0) {
-            corpo.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:2rem;color:var(--gray-400);"><i class="fas fa-inbox" style="font-size:1.5rem;display:block;margin-bottom:0.3rem;"></i>Nenhum item encontrado.</td></tr>';
+            corpo.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:2rem;color:var(--gray-400);"><i class="fas fa-inbox" style="font-size:1.5rem;display:block;margin-bottom:0.3rem;"></i>Nenhum item encontrado.</td></tr>';
         } else {
             let html = '';
             filtrados.forEach(function(item, index) {
@@ -3443,7 +3502,12 @@ ALTER TABLE public.pedidos_compra ADD COLUMN IF NOT EXISTS local_uso text;`;
                 }
                 if (!botoes) botoes = '<span style="font-size:0.6rem;color:var(--gray-400);">—</span>';
 
+                const chkCell = podeDel
+                    ? '<td style="text-align:center;"><input type="checkbox" class="chk-item-estoque chk-estoque-row" value="' + item.id + '" onchange="atualizarBarraSelecaoItens()" /></td>'
+                    : '<td></td>';
+
                 html += '<tr class="' + (isBaixo ? 'estoque-baixo' : '') + '">' +
+                    chkCell +
                     '<td style="text-align:center;">' + htmlThumbItem(item) + '</td>' +
                     '<td style="font-weight:800;color:var(--verde-oliva);text-align:center;">' + formatarCodigo(item.codigo) + '</td>' +
                     '<td><strong>' + (item.nome || '—') + '</strong></td>' +
@@ -3451,10 +3515,12 @@ ALTER TABLE public.pedidos_compra ADD COLUMN IF NOT EXISTS local_uso text;`;
                     '<td>' + (item.fabricante || '—') + '</td>' +
                     '<td style="text-align:center;font-weight:600;' + (isBaixo ? 'color:#E65100;' : '') + '">' + qtd + ' ' + (item.unidade || 'UN') + '</td>' +
                     '<td><span class="categoria-badge">' + (item.categoria || 'Outros') + '</span></td>' +
-                    '<td><div class="acoes">' + botoes + '</div></td></tr>';
+                    '<td><div class="acoes">' + botoes + '</div></td>' +
+                    '</tr>';
             });
             corpo.innerHTML = html;
         }
+        atualizarBarraSelecaoItens();
 
         document.getElementById('totalItens').textContent = itensCache.length;
         const cats = {};
@@ -3466,6 +3532,85 @@ ALTER TABLE public.pedidos_compra ADD COLUMN IF NOT EXISTS local_uso text;`;
         document.getElementById('totalBaixoEstoque').textContent = baixo;
         document.getElementById('totalBaixoEstoque').style.color = baixo > 0 ? '#E65100' : '';
     }
+
+    function idsItensSelecionados() {
+        return Array.prototype.map.call(
+            document.querySelectorAll('.chk-estoque-row:checked'),
+            function(c) { return c.value; }
+        ).filter(Boolean);
+    }
+
+    window.atualizarBarraSelecaoItens = function() {
+        var barra = document.getElementById('barraSelecaoItens');
+        var txt = document.getElementById('txtSelecaoItens');
+        var n = idsItensSelecionados().length;
+        var pode = typeof ehAdministrador === 'function' && ehAdministrador();
+        if (barra) {
+            if (pode && n > 0) barra.classList.add('show');
+            else barra.classList.remove('show');
+        }
+        if (txt) txt.textContent = n + ' item(ns) selecionado(s)';
+        var chkAll = document.getElementById('chkTodosEstoque');
+        if (chkAll) {
+            var todos = document.querySelectorAll('.chk-estoque-row');
+            var marcados = document.querySelectorAll('.chk-estoque-row:checked');
+            chkAll.checked = todos.length > 0 && todos.length === marcados.length;
+        }
+    };
+
+    window.toggleSelecionarTodosEstoque = function(el) {
+        if (typeof ehAdministrador === 'function' && !ehAdministrador()) return;
+        var on = !!(el && el.checked);
+        document.querySelectorAll('.chk-estoque-row').forEach(function(c) { c.checked = on; });
+        atualizarBarraSelecaoItens();
+    };
+
+    window.limparSelecaoItens = function() {
+        document.querySelectorAll('.chk-estoque-row').forEach(function(c) { c.checked = false; });
+        var chkAll = document.getElementById('chkTodosEstoque');
+        if (chkAll) chkAll.checked = false;
+        atualizarBarraSelecaoItens();
+    };
+
+    window.excluirItensSelecionados = async function() {
+        if (typeof ehAdministrador === 'function' && !ehAdministrador()) {
+            mostrarToast('⛔ Só Administrador pode excluir itens', 'danger');
+            return;
+        }
+        var ids = idsItensSelecionados();
+        if (!ids.length) {
+            mostrarToast('⚠️ Selecione ao menos um item', 'warning');
+            return;
+        }
+        if (!confirm('⚠️ Excluir ' + ids.length + ' item(ns) selecionado(s) permanentemente do banco?\\n\\nEssa ação não pode ser desfeita.')) return;
+
+        try {
+            var { error } = await sb.from('estoque').delete().in('id', ids);
+            if (error) throw error;
+            mostrarToast('🗑️ ' + ids.length + ' item(ns) excluído(s)', 'danger');
+            limparSelecaoItens();
+            await carregarEstoque();
+        } catch (err) {
+            console.error(err);
+            // fallback: um a um
+            var ok = 0, falha = 0;
+            for (var i = 0; i < ids.length; i++) {
+                try {
+                    var r = await sb.from('estoque').delete().eq('id', ids[i]);
+                    if (r.error) falha++;
+                    else ok++;
+                } catch (e2) { falha++; }
+            }
+            if (ok) {
+                mostrarToast('🗑️ ' + ok + ' excluído(s)' + (falha ? ' · ' + falha + ' falha(s)' : ''), ok && !falha ? 'danger' : 'warning');
+                limparSelecaoItens();
+                await carregarEstoque();
+            } else {
+                mostrarToast('❌ Erro ao excluir: ' + (err.message || err), 'danger');
+            }
+        }
+    };
+
 
 
     // ===== CÓDIGO SIMPLES DO ITEM (147, 148, ...) =====
