@@ -563,21 +563,35 @@
             color: #5A614E;
             font-size: 0.75rem;
         }
-        .item-linha .rm {
+        .item-linha .acoes-item-lista {
             grid-row: 1 / span 2;
             grid-column: 3;
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+        .item-linha .btn-item-ed,
+        .item-linha .btn-item-ex {
             border: none;
-            background: #FCE8E0;
-            color: #8B3A3A;
             width: 32px;
-            height: 32px;
-            border-radius: 8px;
+            height: 28px;
+            border-radius: 7px;
             cursor: pointer;
             display: inline-flex;
             align-items: center;
             justify-content: center;
+            font-size: 0.7rem;
         }
-        .item-linha .rm:hover { background: #f5c4b4; }
+        .item-linha .btn-item-ed {
+            background: #E8EEE4;
+            color: #3d5c34;
+        }
+        .item-linha .btn-item-ed:hover { background: #d0dcc8; }
+        .item-linha .btn-item-ex {
+            background: #FCE8E0;
+            color: #8B3A3A;
+        }
+        .item-linha .btn-item-ex:hover { background: #f5c4b4; }
         .prio {
             display: inline-block;
             padding: 0.12rem 0.45rem;
@@ -2714,19 +2728,102 @@
                     '<span>📍 ' + (it.local_uso || '—') + '</span>' +
                     (it.id_banco ? '<span title="Salvo no banco" style="color:#2E7D32;"><i class="fas fa-cloud"></i> banco</span>' : '<span title="Só local" style="color:#C1A83C;"><i class="fas fa-laptop"></i></span>') +
                     '</div>' +
-                    '<button type="button" class="rm" onclick="removerItemPedidoLista(' + idx + ')" title="Remover"><i class="fas fa-times"></i></button>' +
+                    '<div class="acoes-item-lista">' +
+                    '<button type="button" class="btn-item-ed" onclick="editarItemPedidoLista(' + idx + ')" title="Editar"><i class="fas fa-pen"></i></button>' +
+                    '<button type="button" class="btn-item-ex" onclick="removerItemPedidoLista(' + idx + ')" title="Excluir"><i class="fas fa-trash"></i></button>' +
+                    '</div>' +
                     '</div>';
             }).join('');
     }
 
     window.removerItemPedidoLista = async function(idx) {
         var it = pedidoItensLista[idx];
-        if (it && it.id_banco) {
+        if (!it) return;
+        if (!confirm('Excluir o item "' + (it.item_nome || '') + '" da lista?')) return;
+        if (it.id_banco) {
             try { await apagarRascunhosDoBanco([it.id_banco]); } catch (e) {}
         }
         pedidoItensLista.splice(idx, 1);
         renderListaItensPedido();
         salvarListaPedidoLocal();
+        mostrarToast('🗑️ Item excluído da lista', 'info');
+    };
+
+    /** Carrega o item nos campos para editar e remove da lista (ao salvar de novo volta atualizado) */
+    window.editarItemPedidoLista = async function(idx) {
+        var it = pedidoItensLista[idx];
+        if (!it) return;
+
+        // preenche formulário
+        var elNome = document.getElementById('notaItemNome');
+        if (elNome) elNome.value = it.item_nome || '';
+        var elQtd = document.getElementById('notaQtd');
+        if (elQtd) elQtd.value = it.quantidade_solicitar != null ? it.quantidade_solicitar : 1;
+        var elUn = document.getElementById('notaUnidade');
+        if (elUn) {
+            var un = (it.unidade || 'UN').toString();
+            var ok = false;
+            for (var i = 0; i < elUn.options.length; i++) {
+                if (elUn.options[i].value === un) { elUn.value = un; ok = true; break; }
+            }
+            if (!ok) elUn.value = 'UN';
+        }
+        var elPr = document.getElementById('notaPrioridade');
+        if (elPr) elPr.value = it.prioridade || 'Normal';
+
+        // motivo
+        var elMot = document.getElementById('notaMotivo');
+        var elMotO = document.getElementById('notaMotivoOutro');
+        if (elMot) {
+            var m = it.motivo_uso || '';
+            var temMot = false;
+            for (var j = 0; j < elMot.options.length; j++) {
+                if (elMot.options[j].value === m) { elMot.value = m; temMot = true; break; }
+            }
+            if (!temMot && m) {
+                elMot.value = '__outro__';
+                if (elMotO) { elMotO.value = m; elMotO.style.display = ''; }
+            } else if (elMotO) { elMotO.value = ''; elMotO.style.display = 'none'; }
+        }
+        // local
+        var elLoc = document.getElementById('notaLocal');
+        var elLocO = document.getElementById('notaLocalOutro');
+        if (elLoc) {
+            var l = it.local_uso || '';
+            var temLoc = false;
+            for (var k = 0; k < elLoc.options.length; k++) {
+                if (elLoc.options[k].value === l) { elLoc.value = l; temLoc = true; break; }
+            }
+            if (!temLoc && l) {
+                elLoc.value = '__outro__';
+                if (elLocO) { elLocO.value = l; elLocO.style.display = ''; }
+            } else if (elLocO) { elLocO.value = ''; elLocO.style.display = 'none'; }
+        }
+        var elObs = document.getElementById('notaObs');
+        if (elObs) elObs.value = it.observacao || '';
+
+        window._pedidoEstoqueId = it.estoque_id || null;
+        window._pedidoQtdAtual = it.quantidade_atual;
+        window._pedidoLimite = it.limite_alerta;
+        window._editandoPedidoIdx = idx;
+        window._editandoPedidoIdBanco = it.id_banco || null;
+
+        // remove da lista (ao adicionar de novo grava atualizado)
+        if (it.id_banco) {
+            try { await apagarRascunhosDoBanco([it.id_banco]); } catch (e) {}
+        }
+        pedidoItensLista.splice(idx, 1);
+        renderListaItensPedido();
+        salvarListaPedidoLocal();
+
+        mostrarToast('✏️ Item carregado para edição — ajuste e clique em Adicionar à lista', 'info');
+        if (elNome) {
+            elNome.focus();
+            elNome.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+        if (typeof preencherDadosItemPedidoPorNome === 'function') {
+            try { preencherDadosItemPedidoPorNome(); } catch (e0) {}
+        }
     };
 
 
