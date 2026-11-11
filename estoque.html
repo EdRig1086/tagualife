@@ -269,37 +269,38 @@
         .alerta-flutuante-pedidos {
             display: none;
             position: fixed;
-            right: 18px;
-            bottom: 22px;
+            right: 14px;
+            bottom: 16px;
             z-index: 9999;
-            max-width: 300px;
+            max-width: 200px;
             background: #E65100;
             color: #fff;
-            border: 3px solid #FFAB40;
-            border-radius: 16px;
-            padding: 0.9rem 1rem;
+            border: 2px solid #FFAB40;
+            border-radius: 12px;
+            padding: 0.45rem 0.65rem;
             font-weight: 800;
-            font-size: 0.9rem;
-            box-shadow: 0 8px 28px rgba(230, 81, 0, 0.45);
+            font-size: 0.72rem;
+            box-shadow: 0 4px 16px rgba(230, 81, 0, 0.4);
             animation: alertaPedFlash 0.9s ease-in-out infinite;
             cursor: pointer;
             font-family: inherit;
             text-align: left;
-            line-height: 1.35;
+            line-height: 1.25;
         }
         .alerta-flutuante-pedidos.show { display: block; }
         .alerta-flutuante-pedidos .af-titulo {
             display: flex;
             align-items: center;
-            gap: 0.4rem;
-            margin-bottom: 0.25rem;
-            font-size: 0.95rem;
+            gap: 0.3rem;
+            margin-bottom: 0.1rem;
+            font-size: 0.74rem;
         }
         .alerta-flutuante-pedidos .af-titulo i {
+            font-size: 0.75rem;
             animation: alertaBell 0.6s ease-in-out infinite;
         }
         .alerta-flutuante-pedidos .af-sub {
-            font-size: 0.75rem;
+            font-size: 0.65rem;
             font-weight: 600;
             opacity: 0.95;
         }
@@ -424,9 +425,15 @@
         }
         .bloco-notas-compra .bloco-notas-grid {
             display: grid;
-            grid-template-columns: 1.4fr 90px 130px 1fr 1fr;
-            gap: 0.75rem 0.85rem;
+            grid-template-columns: 1.5fr 80px 90px 120px 1fr 1fr;
+            gap: 0.75rem 0.75rem;
             padding: 1rem 1.2rem 0.4rem;
+            align-items: end;
+        }
+        .bloco-notas-compra .bn-qtd-un {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.4rem;
         }
         @media (max-width: 900px) {
             .bloco-notas-compra .bloco-notas-grid {
@@ -1074,12 +1081,32 @@
                 <div class="bloco-notas-grid">
                     <div class="campo bn-campo bn-item">
                         <label><i class="fas fa-tag"></i> ITEM *</label>
-                        <input type="text" id="notaItemNome" list="listaItensEstoque" placeholder="Digite o nome ou escolha do estoque" />
+                        <input type="text" id="notaItemNome" list="listaItensEstoque" placeholder="Nome do item ou escolha do estoque" autocomplete="off" />
                         <datalist id="listaItensEstoque"></datalist>
+                        <small id="notaItemHint" style="display:block;margin-top:0.25rem;font-size:0.68rem;color:#7A816E;"></small>
                     </div>
                     <div class="campo bn-campo bn-qtd">
                         <label><i class="fas fa-sort-numeric-up"></i> QTD *</label>
                         <input type="number" id="notaQtd" min="1" value="1" />
+                    </div>
+                    <div class="campo bn-campo bn-un">
+                        <label><i class="fas fa-ruler"></i> UNIDADE *</label>
+                        <select id="notaUnidade">
+                            <option value="UN">UN</option>
+                            <option value="CX">CX</option>
+                            <option value="PC">PC</option>
+                            <option value="KG">KG</option>
+                            <option value="G">G</option>
+                            <option value="LT">LT</option>
+                            <option value="ML">ML</option>
+                            <option value="MT">MT</option>
+                            <option value="M²">M²</option>
+                            <option value="RL">RL (rolo)</option>
+                            <option value="PCT">PCT</option>
+                            <option value="PAR">PAR</option>
+                            <option value="SC">SC (saco)</option>
+                            <option value="GL">GL (galão)</option>
+                        </select>
                     </div>
                     <div class="campo bn-campo">
                         <label><i class="fas fa-flag"></i> PRIORIDADE *</label>
@@ -1854,6 +1881,12 @@
                 e.preventDefault();
                 adicionarItemNaListaPedido();
             });
+
+            const notaItemNomeEl = document.getElementById('notaItemNome');
+            if (notaItemNomeEl) {
+                notaItemNomeEl.addEventListener('change', preencherDadosItemPedidoPorNome);
+                notaItemNomeEl.addEventListener('blur', preencherDadosItemPedidoPorNome);
+            }
             const selMot = document.getElementById('notaMotivo');
             const selLoc = document.getElementById('notaLocal');
             if (selMot) selMot.addEventListener('change', toggleCamposOutro);
@@ -2134,7 +2167,7 @@
             return '<div class="pedido-item">' +
                 '<div style="flex:1;min-width:160px;">' +
                 '<strong><i class="fas fa-exclamation-circle" style="color:#E65100;"></i> ' + (p.item_nome || 'Item') +
-                ' <span style="color:#E65100;">× ' + qtdSol + '</span>' +
+                ' <span style="color:#E65100;">× ' + qtdSol + ' ' + ((p.unidade) || (String(p.observacao||'').match(/Qtd:\s*\d+\s*([A-Za-z²°]+)/i)||[])[1] || 'UN') + '</span>' +
                 (prP ? ' <span class="prio ' + classePrioridade(prP) + '">' + prP + '</span>' : '') + '</strong>' +
                 '<div class="meta">Estoque atual: ' + qtd + (lim !== '—' ? ' · Limite: ' + lim : '') +
                 (p.motivo_uso ? ' · Motivo: ' + p.motivo_uso : '') +
@@ -2268,7 +2301,8 @@
         var solicitante = nomeUsuarioSessao();
         var cargo = (typeof getCargo === 'function' ? getCargo() : '');
         var prio = it.prioridade || 'Normal';
-        var obs = tagListaObs(('[' + prio + '] ' + (it.observacao || '')).trim());
+        var un = it.unidade || 'UN';
+        var obs = tagListaObs(('[' + prio + '] Qtd: ' + (it.quantidade_solicitar || '') + ' ' + un + ' · ' + (it.observacao || '')).trim());
         var st = statusOpt || it.status_lista || 'rascunho';
         var payload = {
             estoque_id: it.estoque_id || null,
@@ -2341,6 +2375,11 @@
             motivo_uso: p.motivo_uso || '',
             local_uso: p.local_uso || '',
             prioridade: prio,
+            unidade: (function() {
+                if (p.unidade) return p.unidade;
+                var m = String(p.observacao || '').match(/Qtd:\s*\d+\s*([A-Za-z²°]+)/i);
+                return (m && m[1]) ? m[1] : 'UN';
+            })(),
             lista_id: meta.id,
             lista_nome: meta.nome,
             status_lista: p.status,
@@ -2594,7 +2633,7 @@
                 return '<div class="item-linha">' +
                     '<strong>' + (idx + 1) + '. ' + it.item_nome + '</strong>' +
                     '<div class="meta-linha">' +
-                    '<span><b>' + it.quantidade_solicitar + '</b> un.</span>' +
+                    '<span><b>' + it.quantidade_solicitar + '</b> ' + (it.unidade || 'UN') + '</span>' +
                     '<span class="prio ' + classePrioridade(pr) + '">' + pr + '</span>' +
                     '<span>' + (it.motivo_uso || '—') + '</span>' +
                     '<span>📍 ' + (it.local_uso || '—') + '</span>' +
@@ -2614,6 +2653,47 @@
         renderListaItensPedido();
         salvarListaPedidoLocal();
     };
+
+
+    function preencherDadosItemPedidoPorNome() {
+        var nome = (document.getElementById('notaItemNome') && document.getElementById('notaItemNome').value || '').trim();
+        var hint = document.getElementById('notaItemHint');
+        var unEl = document.getElementById('notaUnidade');
+        if (!nome || !itensCache) {
+            if (hint) hint.textContent = '';
+            return;
+        }
+        var found = itensCache.find(function(i) { return (i.nome || '').toLowerCase() === nome.toLowerCase(); });
+        if (!found) {
+            // partial match
+            found = itensCache.find(function(i) { return (i.nome || '').toLowerCase().indexOf(nome.toLowerCase()) === 0; });
+        }
+        if (found) {
+            window._pedidoEstoqueId = found.id;
+            window._pedidoQtdAtual = found.quantidade != null ? parseInt(found.quantidade, 10) : null;
+            window._pedidoLimite = found.limite_alerta != null ? parseInt(found.limite_alerta, 10) : null;
+            var un = (found.unidade || 'UN').toString().toUpperCase();
+            if (unEl) {
+                // se opção existir, seleciona; senão fica UN
+                var ok = false;
+                for (var i = 0; i < unEl.options.length; i++) {
+                    if (unEl.options[i].value.toUpperCase() === un) { unEl.value = unEl.options[i].value; ok = true; break; }
+                }
+                if (!ok) unEl.value = 'UN';
+            }
+            if (hint) {
+                var q = found.quantidade != null ? found.quantidade : '—';
+                hint.innerHTML = 'No estoque: <strong>' + q + ' ' + (found.unidade || 'UN') + '</strong>' +
+                    (found.categoria ? ' · ' + found.categoria : '') +
+                    (window._pedidoLimite != null ? ' · limite ' + window._pedidoLimite : '');
+            }
+        } else {
+            window._pedidoEstoqueId = null;
+            window._pedidoQtdAtual = null;
+            window._pedidoLimite = null;
+            if (hint) hint.textContent = 'Item não cadastrado no estoque — pode solicitar mesmo assim.';
+        }
+    }
 
     function adicionarItemNaListaPedido() {
         const nome = (document.getElementById('notaItemNome').value || '').trim();
@@ -2641,11 +2721,13 @@
         }
 
         garantirListaAtual();
+        var unidade = (document.getElementById('notaUnidade') && document.getElementById('notaUnidade').value) || 'UN';
         pedidoItensLista.push({
             estoque_id: estoqueId,
             item_nome: nome,
             quantidade_atual: qtdAtual,
             quantidade_solicitar: qtdSol,
+            unidade: unidade,
             limite_alerta: limite,
             motivo_uso: motivo,
             local_uso: local,
@@ -2659,6 +2741,8 @@
         // limpa campos do item (mantém motivo/local se quiser repetir — limpa só nome/qtd/obs)
         document.getElementById('notaItemNome').value = '';
         document.getElementById('notaQtd').value = '1';
+        var unEl = document.getElementById('notaUnidade'); if (unEl) unEl.value = 'UN';
+        var hint = document.getElementById('notaItemHint'); if (hint) hint.textContent = '';
         document.getElementById('notaObs').value = '';
         window._pedidoEstoqueId = null;
         window._pedidoQtdAtual = null;
@@ -2701,6 +2785,16 @@
         const q = item.quantidade != null ? parseInt(item.quantidade, 10) : 0;
         const lim = item.limite_alerta != null ? parseInt(item.limite_alerta, 10) : 5;
         document.getElementById('notaQtd').value = Math.max(1, lim - q, 1);
+        var unEl = document.getElementById('notaUnidade');
+        if (unEl) {
+            var un = (item.unidade || 'UN').toString().toUpperCase();
+            var ok = false;
+            for (var ui = 0; ui < unEl.options.length; ui++) {
+                if (unEl.options[ui].value.toUpperCase() === un) { unEl.value = unEl.options[ui].value; ok = true; break; }
+            }
+            if (!ok) unEl.value = 'UN';
+        }
+        setTimeout(preencherDadosItemPedidoPorNome, 0);
         const mot = document.getElementById('notaMotivo');
         if (mot) mot.value = (q === 0) ? 'Item zerado no estoque' : 'Estoque baixo';
         window._pedidoEstoqueId = item.id;
@@ -2818,6 +2912,8 @@
         window._pedidoLimite = null;
         const n = document.getElementById('notaItemNome'); if (n) n.value = '';
         const q = document.getElementById('notaQtd'); if (q) q.value = '1';
+        const unL = document.getElementById('notaUnidade'); if (unL) unL.value = 'UN';
+        const hi = document.getElementById('notaItemHint'); if (hi) hi.textContent = '';
         const m = document.getElementById('notaMotivo'); if (m) m.value = '';
         const l = document.getElementById('notaLocal'); if (l) l.value = '';
         const pr = document.getElementById('notaPrioridade'); if (pr) pr.value = 'Normal';
@@ -5505,6 +5601,12 @@ function exportarCSVEstoque() {
                 e.preventDefault();
                 adicionarItemNaListaPedido();
             });
+
+            const notaItemNomeEl = document.getElementById('notaItemNome');
+            if (notaItemNomeEl) {
+                notaItemNomeEl.addEventListener('change', preencherDadosItemPedidoPorNome);
+                notaItemNomeEl.addEventListener('blur', preencherDadosItemPedidoPorNome);
+            }
             const selMot = document.getElementById('notaMotivo');
             const selLoc = document.getElementById('notaLocal');
             if (selMot) selMot.addEventListener('change', toggleCamposOutro);
