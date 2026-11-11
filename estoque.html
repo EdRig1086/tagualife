@@ -269,40 +269,41 @@
         .alerta-flutuante-pedidos {
             display: none;
             position: fixed;
-            right: 14px;
-            bottom: 16px;
+            right: 12px;
+            bottom: 12px;
             z-index: 9999;
-            max-width: 200px;
+            max-width: 150px;
             background: #E65100;
             color: #fff;
-            border: 2px solid #FFAB40;
-            border-radius: 12px;
-            padding: 0.45rem 0.65rem;
-            font-weight: 800;
-            font-size: 0.72rem;
-            box-shadow: 0 4px 16px rgba(230, 81, 0, 0.4);
-            animation: alertaPedFlash 0.9s ease-in-out infinite;
+            border: 1px solid #FFAB40;
+            border-radius: 10px;
+            padding: 0.3rem 0.45rem;
+            font-weight: 700;
+            font-size: 0.62rem;
+            box-shadow: 0 3px 12px rgba(230, 81, 0, 0.35);
+            animation: alertaPedFlash 1s ease-in-out infinite;
             cursor: pointer;
             font-family: inherit;
             text-align: left;
-            line-height: 1.25;
+            line-height: 1.2;
         }
         .alerta-flutuante-pedidos.show { display: block; }
         .alerta-flutuante-pedidos .af-titulo {
             display: flex;
             align-items: center;
-            gap: 0.3rem;
-            margin-bottom: 0.1rem;
-            font-size: 0.74rem;
+            gap: 0.25rem;
+            margin-bottom: 0;
+            font-size: 0.64rem;
         }
         .alerta-flutuante-pedidos .af-titulo i {
-            font-size: 0.75rem;
+            font-size: 0.62rem;
             animation: alertaBell 0.6s ease-in-out infinite;
         }
         .alerta-flutuante-pedidos .af-sub {
-            font-size: 0.65rem;
+            font-size: 0.58rem;
             font-weight: 600;
             opacity: 0.95;
+            margin-top: 0.08rem;
         }
         .bloco-notas-compra {
             background: var(--bg-card);
@@ -589,6 +590,38 @@
         .prio-importante { background: #FFF3E0; color: #E65100; }
         .prio-urgente { background: #FFEBEE; color: #C62828; }
 
+        .pedido-grupo-lista {
+            border: 1px solid #E4E8DC;
+            border-radius: 12px;
+            margin-bottom: 0.85rem;
+            overflow: hidden;
+            background: #fff;
+        }
+        .pedido-grupo-cab {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 0.4rem 0.75rem;
+            padding: 0.55rem 0.75rem;
+            background: #5A614E;
+            color: #FBFBF7;
+            font-size: 0.8rem;
+            font-weight: 700;
+        }
+        .pedido-grupo-cab .pg-nome { font-size: 0.88rem; }
+        .pedido-grupo-cab .pg-meta {
+            font-size: 0.72rem;
+            font-weight: 600;
+            opacity: 0.9;
+            margin-left: auto;
+        }
+        .pedido-grupo-lista .pedido-item {
+            border-bottom: 1px solid #EEF0E8;
+            border-radius: 0;
+            margin: 0;
+            border-left: 3px solid #C1CE83;
+        }
+        .pedido-grupo-lista .pedido-item:last-child { border-bottom: none; }
         .btn-editar-ped { background: #5A614E; color: #fff; }
         .btn-add-ped { background: #1B4F72; color: #fff; }
         .btn-atender { background: #2E7D32; color: #fff; }
@@ -2147,9 +2180,22 @@
             return;
         }
 
-        // Mantém painel aberto enquanto houver pendentes
+        // Mantém painel aberto enquanto houver pendentes — agrupado por lista
         painel.classList.remove('vazio');
-        lista.innerHTML = pedidosCompraCache.map(function(p) {
+
+        function metaListaPedido(p) {
+            var obs = String(p.observacao || '');
+            var id = (obs.match(/\|lista_id:([^|]+)/) || [])[1] || '';
+            var nome = (obs.match(/\|lista_nome:([^|]+)/) || [])[1] || '';
+            if (!id && !nome) {
+                var dia = (p.criado_em || '').toString().slice(0, 10);
+                id = 'solo_' + (p.solicitado_por || 'x') + '_' + dia;
+                nome = 'Pedidos avulsos';
+            }
+            if (!nome) nome = 'Lista sem nome';
+            return { id: id, nome: nome };
+        }
+        function htmlItemPedido(p) {
             const quando = p.criado_em ? new Date(p.criado_em).toLocaleString('pt-BR') : '';
             const qtd = p.quantidade_atual != null ? p.quantidade_atual : '—';
             const lim = p.limite_alerta != null ? p.limite_alerta : '—';
@@ -2159,24 +2205,22 @@
                 var mx = String(p.observacao).match(/\[(Normal|Importante|Urgente)\]/i);
                 if (mx) prP = mx[1];
             }
-            var listaNome = '';
-            if (p.observacao) {
-                var mn = String(p.observacao).match(/\|lista_nome:([^|]+)/);
-                if (mn) listaNome = mn[1];
-            }
+            var un = p.unidade || (String(p.observacao||'').match(/Qtd:\s*\d+\s*([A-Za-z²°]+)/i)||[])[1] || 'UN';
+            var obsLimpa = p.observacao
+                ? String(p.observacao).replace(/\|lista_id:[^|]*/g,'').replace(/\|lista_nome:[^|]*/g,'').replace(/\|?\s*solicitacao:[^|]*/gi,'').replace(/Qtd:\s*\d+\s*[A-Za-z²°]+/gi,'').replace(/\[(Normal|Importante|Urgente)\]/gi,'').trim()
+                : '';
             return '<div class="pedido-item">' +
                 '<div style="flex:1;min-width:160px;">' +
                 '<strong><i class="fas fa-exclamation-circle" style="color:#E65100;"></i> ' + (p.item_nome || 'Item') +
-                ' <span style="color:#E65100;">× ' + qtdSol + ' ' + ((p.unidade) || (String(p.observacao||'').match(/Qtd:\s*\d+\s*([A-Za-z²°]+)/i)||[])[1] || 'UN') + '</span>' +
+                ' <span style="color:#E65100;">× ' + qtdSol + ' ' + un + '</span>' +
                 (prP ? ' <span class="prio ' + classePrioridade(prP) + '">' + prP + '</span>' : '') + '</strong>' +
                 '<div class="meta">Estoque atual: ' + qtd + (lim !== '—' ? ' · Limite: ' + lim : '') +
                 (p.motivo_uso ? ' · Motivo: ' + p.motivo_uso : '') +
-                (p.local_uso ? ' · Onde: ' + p.local_uso : '') +
-                (listaNome ? ' · Lista: ' + listaNome : '') + '</div>' +
+                (p.local_uso ? ' · Onde: ' + p.local_uso : '') + '</div>' +
                 '<div class="meta">Pedido por: ' + (p.solicitado_por || '—') +
                 (p.cargo_solicitante ? ' (' + p.cargo_solicitante + ')' : '') +
                 (quando ? ' · ' + quando : '') + '</div>' +
-                (p.observacao ? '<div class="meta" style="opacity:.85;">' + String(p.observacao).replace(/\|lista_id:[^|]*/g,'').replace(/\|lista_nome:[^|]*/g,'').replace(/\|?\s*solicitacao:[^|]*/gi,'').trim() + '</div>' : '') +
+                (obsLimpa ? '<div class="meta" style="opacity:.85;">' + obsLimpa + '</div>' : '') +
                 '</div>' +
                 '<div class="acoes-ped">' +
                 '<button type="button" class="btn-editar-ped" onclick="editarPedidoCompra(\'' + p.id + '\')" title="Editar"><i class="fas fa-pen"></i> Editar</button>' +
@@ -2184,6 +2228,37 @@
                 '<button type="button" class="btn-atender" onclick="atenderPedidoCompra(\'' + p.id + '\')">Atendido</button>' +
                 '<button type="button" class="btn-recusar" onclick="recusarPedidoCompra(\'' + p.id + '\')">Dispensar</button>' +
                 '</div></div>';
+        }
+
+        var grupos = {};
+        var ordem = [];
+        pedidosCompraCache.forEach(function(p) {
+            var m = metaListaPedido(p);
+            if (!grupos[m.id]) {
+                grupos[m.id] = { id: m.id, nome: m.nome, itens: [], quando: p.criado_em || '' };
+                ordem.push(m.id);
+            }
+            grupos[m.id].itens.push(p);
+            if (m.nome && m.nome !== 'Lista sem nome' && m.nome !== 'Pedidos avulsos') {
+                grupos[m.id].nome = m.nome;
+            }
+        });
+
+        lista.innerHTML = ordem.map(function(gid) {
+            var g = grupos[gid];
+            var quem = {};
+            g.itens.forEach(function(it) {
+                if (it.solicitado_por) quem[it.solicitado_por] = true;
+            });
+            var solicitantes = Object.keys(quem).join(', ');
+            return '<div class="pedido-grupo-lista">' +
+                '<div class="pedido-grupo-cab">' +
+                '<span class="pg-nome"><i class="fas fa-folder-open"></i> ' + g.nome + '</span>' +
+                '<span class="pg-meta">' + g.itens.length + ' item(ns)' +
+                (solicitantes ? ' · ' + solicitantes : '') + '</span>' +
+                '</div>' +
+                g.itens.map(htmlItemPedido).join('') +
+                '</div>';
         }).join('');
     }
 
