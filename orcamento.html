@@ -999,7 +999,7 @@
                     <div class="assinaturas">
                         <div><div class="linha">_________________________</div><p><strong>Ednaldo de Souza</strong><br>Almoxarifado</p></div>
                         <div><div class="linha">_________________________</div><p><strong>Elisabeth Velásquez</strong><br>Síndica</p></div>
-                        <div><div class="linha">_________________________</div><p><strong>Eliane Guimarães</strong><br>Síndica</p></div>
+                        <div><div class="linha">_________________________</div><p><strong>Administração / Gerência</strong><br>Gestão</p></div>
                     </div>
                     <div class="rodape">TaguaLife Center – Life Conceito em Gestão Condominial</div>
                 </div>
@@ -1531,6 +1531,43 @@
 
     function carregarDados() {
         try {
+            // Prioridade: veio da solicitação de compra (estoque)
+            const daSolic = localStorage.getItem('pedidoOrcamentoDaSolicitacao');
+            if (daSolic) {
+                const parsed = JSON.parse(daSolic);
+                if (parsed.itens && parsed.itens.length > 0) {
+                    itens = parsed.itens.map(function(it, idx) {
+                        return {
+                            id: it.id || (idx + 1),
+                            descricao: it.descricao || it.item_nome || '',
+                            quantidade: String(it.quantidade != null ? it.quantidade : (it.quantidade_solicitar != null ? it.quantidade_solicitar : '1')),
+                            unidade: it.unidade || 'UN',
+                            obs: it.obs || it.observacao || it.motivo_uso || ''
+                        };
+                    });
+                    proximoId = Math.max.apply(null, itens.map(function(i) { return i.id || 0; }).concat([0])) + 1;
+                }
+                if (parsed.obs) {
+                    var elObs = document.getElementById('obsPedido');
+                    if (elObs) elObs.value = parsed.obs;
+                }
+                if (parsed.listaNome) {
+                    var elObs2 = document.getElementById('obsPedido');
+                    if (elObs2 && !elObs2.value) {
+                        elObs2.value = 'Lista: ' + parsed.listaNome + (parsed.solicitante ? ' · Solicitante: ' + parsed.solicitante : '');
+                    }
+                }
+                // consome a origem para não sobrescrever sempre
+                localStorage.removeItem('pedidoOrcamentoDaSolicitacao');
+                localStorage.setItem('pedidoOrcamento', JSON.stringify({
+                    itens: itens,
+                    fornecedor: { nome: '', telefone: '' },
+                    data: document.getElementById('dataPedido') ? document.getElementById('dataPedido').value : '',
+                    obs: document.getElementById('obsPedido') ? document.getElementById('obsPedido').value : ''
+                }));
+                return;
+            }
+
             const dados = localStorage.getItem('pedidoOrcamento');
             if (dados) {
                 const parsed = JSON.parse(dados);
@@ -1793,7 +1830,7 @@ _________________________________
 Elisabeth Velásquez - Síndica
 
 _________________________________
-Eliane Guimarães - Síndica
+Administração / Gerência
 
 TaguaLife Center – Life Conceito em Gestão Condominial
 ============================================================`;
