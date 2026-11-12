@@ -1266,6 +1266,7 @@
                     <button type="button" class="bn-btn bn-btn-sec" id="btnAddItemLista"><i class="fas fa-plus"></i> Adicionar à lista</button>
                     <button type="button" class="bn-btn bn-btn-pri" id="btnEnviarPedidoNota"><i class="fas fa-bell"></i> Enviar e notificar</button>
                     <button type="button" class="bn-btn bn-btn-sec" id="btnPdfPedido"><i class="fas fa-file-pdf"></i> PDF / Imprimir</button>
+                    <button type="button" class="bn-btn bn-btn-sec" id="btnPedidoOrcamento" title="Monta Pedido de Orçamento com os itens desta lista"><i class="fas fa-file-invoice-dollar"></i> Pedido de orçamento</button>
                     <button type="button" class="bn-btn bn-btn-ghost" id="btnLimparNota">Limpar</button>
                 </div>
                 <div id="listaItensPedido" class="lista-itens-pedido"></div>
@@ -2009,6 +2010,12 @@
             if (btnLim) btnLim.addEventListener('click', function(e) {
                 e.preventDefault();
                 limparBlocoNotas(true);
+            });
+
+            const btnOrc = document.getElementById('btnPedidoOrcamento');
+            if (btnOrc) btnOrc.addEventListener('click', function(e) {
+                e.preventDefault();
+                montarPedidoOrcamentoDaLista();
             });
             const btnFecharLista = document.getElementById('btnFecharLista');
             if (btnFecharLista) btnFecharLista.addEventListener('click', function(e) {
@@ -3157,6 +3164,64 @@
     }
 
     /** Documento formal para a síndica */
+
+    /** Monta Pedido de Orçamento (orcamento.html) com base na lista de solicitação */
+    function montarPedidoOrcamentoDaLista(itensFonte) {
+        var lista = itensFonte || pedidoItensLista || [];
+        if ((!lista || !lista.length) && ultimoPedidoEnviado && ultimoPedidoEnviado.length) {
+            lista = ultimoPedidoEnviado;
+        }
+        if (!lista || !lista.length) {
+            mostrarToast('⚠️ Adicione itens à lista ou envie um pedido antes', 'warning');
+            return;
+        }
+        var itensOrc = lista.map(function(it, idx) {
+            var qtd = it.quantidade_solicitar != null ? it.quantidade_solicitar : (it.quantidade != null ? it.quantidade : 1);
+            var un = it.unidade || 'UN';
+            var obsParts = [];
+            if (it.motivo_uso) obsParts.push(it.motivo_uso);
+            if (it.local_uso) obsParts.push('Uso: ' + it.local_uso);
+            if (it.prioridade && it.prioridade !== 'Normal') obsParts.push(it.prioridade);
+            if (it.observacao) {
+                obsParts.push(String(it.observacao)
+                    .replace(/\|lista_id:[^|]*/g, '')
+                    .replace(/\|lista_nome:[^|]*/g, '')
+                    .replace(/\[(Normal|Importante|Urgente)\]/gi, '')
+                    .trim());
+            }
+            return {
+                id: idx + 1,
+                descricao: it.item_nome || it.nome || 'Item',
+                quantidade: String(qtd),
+                unidade: un,
+                obs: obsParts.filter(Boolean).join(' · ') || ''
+            };
+        });
+        var listaNome = (typeof listaCompraAtual !== 'undefined' && listaCompraAtual && listaCompraAtual.nome)
+            ? listaCompraAtual.nome
+            : (typeof getNomeListaValor === 'function' ? getNomeListaValor() : '');
+        var solicitante = (typeof nomeUsuarioSessao === 'function' ? nomeUsuarioSessao() : '');
+        var cargo = (typeof getCargo === 'function' ? getCargo() : '');
+        var payload = {
+            origem: 'solicitacao_compra',
+            listaNome: listaNome,
+            solicitante: solicitante + (cargo ? ' (' + cargo + ')' : ''),
+            obs: (listaNome ? 'Referente à lista: ' + listaNome + '. ' : '') +
+                (solicitante ? 'Solicitado por: ' + solicitante + '. ' : '') +
+                'Gerado a partir da solicitação de compra do estoque.',
+            itens: itensOrc
+        };
+        try {
+            localStorage.setItem('pedidoOrcamentoDaSolicitacao', JSON.stringify(payload));
+        } catch (e) {
+            mostrarToast('❌ Não foi possível preparar o orçamento', 'danger');
+            return;
+        }
+        mostrarToast('📋 Abrindo Pedido de Orçamento com ' + itensOrc.length + ' item(ns)...', 'success');
+        window.location.href = 'orcamento.html';
+    }
+    window.montarPedidoOrcamentoDaLista = montarPedidoOrcamentoDaLista;
+
     function gerarPdfPedidoCompra(itens) {
         itens = itens || ultimoPedidoEnviado || [];
         if (!itens.length && pedidosCompraCache && pedidosCompraCache.length) {
@@ -5945,6 +6010,12 @@ function exportarCSVEstoque() {
             if (btnLim) btnLim.addEventListener('click', function(e) {
                 e.preventDefault();
                 limparBlocoNotas(true);
+            });
+
+            const btnOrc = document.getElementById('btnPedidoOrcamento');
+            if (btnOrc) btnOrc.addEventListener('click', function(e) {
+                e.preventDefault();
+                montarPedidoOrcamentoDaLista();
             });
             const btnFecharLista = document.getElementById('btnFecharLista');
             if (btnFecharLista) btnFecharLista.addEventListener('click', function(e) {
