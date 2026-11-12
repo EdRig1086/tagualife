@@ -247,172 +247,221 @@
         .card-body { padding: 1.2rem 1.5rem 1.5rem; }
 
         #conteudoPDF {
-            background: var(--bg-card);
-            padding: 20px 25px;
-            font-family: var(--font-primary);
-            width: 100%;
-            max-width: 210mm;
+            background: #fff;
+            color: #191D1B;
+            padding: 18px 20px 16px;
+            border-radius: 12px;
+            border: 1px solid #D8DCCE;
+            max-width: 800px;
             margin: 0 auto;
-            min-height: 277mm;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            transition: background 0.3s, border-color 0.3s;
+            font-family: Inter, Arial, sans-serif;
+            font-size: 11px;
+            line-height: 1.4;
+            box-shadow: 0 4px 18px rgba(25,29,27,0.06);
         }
 
-        #conteudoPDF .header-pdf {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 3px solid var(--verde-oliva);
+        #conteudoPDF .doc-topo {
+            border-bottom: 3px solid #C1CE83;
             padding-bottom: 10px;
             margin-bottom: 12px;
         }
-        #conteudoPDF .header-pdf .esquerda .logo-tagua {
-            font-size: 24px;
-            font-weight: 700;
-            color: var(--text-primary);
-            letter-spacing: 1px;
-        }
-        #conteudoPDF .header-pdf .esquerda .logo-tagua span { color: var(--verde-claro); }
-        #conteudoPDF .header-pdf .esquerda .slogan-pdf {
-            color: var(--text-secondary);
+        #conteudoPDF .doc-marca {
             font-size: 11px;
+            font-weight: 700;
+            color: #7A816E;
+            letter-spacing: 0.2px;
+        }
+        #conteudoPDF .doc-marca span { color: #C1CE83; }
+        #conteudoPDF .doc-titulo {
+            margin: 4px 0 2px;
+            font-size: 16px;
+            font-weight: 800;
+            color: #191D1B;
+        }
+        #conteudoPDF .doc-sub {
+            margin: 0;
+            font-size: 10px;
+            color: #7A816E;
             font-weight: 500;
-            letter-spacing: 2px;
-            text-transform: uppercase;
-            margin-top: 2px;
         }
-        #conteudoPDF .header-pdf .direita .badge-pdf {
-            background: var(--verde-claro);
-            color: var(--preto);
-            padding: 6px 16px;
-            border-radius: 20px;
-            font-weight: 700;
-            font-size: 12px;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            letter-spacing: 1px;
+        #conteudoPDF .doc-badge {
+            display: inline-block;
+            margin-top: 6px;
+            background: #C1CE83;
+            color: #191D1B;
+            font-size: 9px;
+            font-weight: 800;
+            padding: 3px 10px;
+            border-radius: 999px;
+            letter-spacing: 0.3px;
         }
 
-        #conteudoPDF .dados-pedido {
-            margin-bottom: 10px;
-            padding: 6px 10px;
-            background: var(--gray-50);
-            border-radius: 6px;
-            border-left: 4px solid var(--verde-claro);
+        #conteudoPDF .meta-box {
+            border: 1px solid #D8DCCE;
+            border-radius: 10px;
+            padding: 8px 12px;
+            margin-bottom: 12px;
+            background: #FBFBF7;
+            font-size: 10.5px;
+        }
+        #conteudoPDF .meta-box p { margin: 2px 0; color: #191D1B; }
+        #conteudoPDF .meta-box strong { color: #5A614E; font-weight: 700; }
+
+        #conteudoPDF .mensagem {
             font-size: 11px;
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: space-between;
+            line-height: 1.55;
+            margin-bottom: 10px;
+            color: #191D1B;
         }
-        #conteudoPDF .dados-pedido p { margin: 2px 0; }
-        #conteudoPDF .dados-pedido strong { color: var(--text-primary); }
-
-        #conteudoPDF .mensagem { font-size: 11px; line-height: 1.6; margin-bottom: 8px; }
         #conteudoPDF .mensagem p { margin: 3px 0; }
 
         #conteudoPDF table {
             width: 100%;
             border-collapse: collapse;
-            margin: 8px 0 10px 0;
-            font-size: 10px;
+            margin: 8px 0 12px;
+            font-size: 10.5px;
         }
         #conteudoPDF table th {
-            background: var(--verde-oliva);
-            color: var(--branco);
-            padding: 5px 6px;
+            background: #5A614E;
+            color: #fff;
             text-align: left;
-            border: 1px solid var(--verde-oliva);
-            font-weight: 600;
-            font-size: 9px;
+            padding: 7px 8px;
+            font-size: 9.5px;
+            font-weight: 700;
+            border: none;
         }
+        #conteudoPDF table th:first-child { border-radius: 8px 0 0 0; }
+        #conteudoPDF table th:last-child { border-radius: 0 8px 0 0; }
         #conteudoPDF table td {
-            padding: 4px 6px;
-            border: 1px solid var(--border-color);
+            padding: 7px 8px;
+            border-bottom: 1px solid #E4E8DC;
+            vertical-align: top;
+            color: #191D1B;
         }
-        #conteudoPDF table tr:nth-child(even) td { background: var(--gray-50); }
+        #conteudoPDF table tr:nth-child(even) td { background: #F7F8F3; }
+        #conteudoPDF table tr:last-child td { border-bottom: none; }
+        #conteudoPDF .centro { text-align: center; }
 
-        #conteudoPDF .solicitacoes-titulo {
-            font-size: 10px;
-            font-weight: 600;
-            margin: 6px 0 3px 0;
-            color: var(--text-primary);
+        #conteudoPDF .bloco-secao {
+            margin: 12px 0;
+            border: 1px solid #D8DCCE;
+            border-radius: 10px;
+            overflow: hidden;
         }
+        #conteudoPDF .bloco-secao h4 {
+            margin: 0;
+            padding: 6px 10px;
+            background: #EEF0E8;
+            color: #191D1B;
+            font-size: 10px;
+            font-weight: 800;
+            border-bottom: 1px solid #D8DCCE;
+        }
+        #conteudoPDF .bloco-secao .bloco-body {
+            padding: 8px 10px;
+            background: #fff;
+        }
+
         #conteudoPDF .lista-solicitacao {
-            margin: 3px 0 8px 18px;
-            font-size: 10px;
-            line-height: 1.6;
-            columns: 2;
             list-style: none;
+            margin: 0;
+            padding: 0;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 3px 14px;
+            font-size: 10px;
+            color: #191D1B;
         }
-        #conteudoPDF .lista-solicitacao li::before { content: "✓ "; color: var(--verde-claro); font-weight: 700; }
+        #conteudoPDF .lista-solicitacao li {
+            padding: 2px 0 2px 2px;
+        }
+        #conteudoPDF .lista-solicitacao li::before {
+            content: "✓ ";
+            color: #7A816E;
+            font-weight: 800;
+        }
 
         #conteudoPDF .obs-pdf {
-            margin-top: 6px;
-            padding: 6px 10px;
-            background: var(--gray-50);
-            border-left: 4px solid var(--verde-claro);
             font-size: 10px;
-            border-radius: 4px;
+            color: #5A614E;
+            line-height: 1.45;
         }
-        #conteudoPDF .obs-pdf strong { color: var(--text-primary); }
-        #conteudoPDF .obs-pdf p { margin-top: 2px; color: var(--text-secondary); }
+        #conteudoPDF .obs-pdf strong {
+            display: block;
+            color: #191D1B;
+            margin-bottom: 3px;
+            font-size: 10px;
+        }
+        #conteudoPDF .obs-pdf p { margin: 0; }
 
-        #conteudoPDF .footer-pdf {
-            margin-top: 12px;
-            padding-top: 12px;
-            border-top: 2px solid var(--border-color);
+        #conteudoPDF .dados-empresa {
             font-size: 10px;
+            line-height: 1.45;
         }
-        #conteudoPDF .footer-pdf .dados-empresa {
-            background: var(--gray-50);
-            padding: 6px 10px;
-            border-radius: 6px;
-            margin-bottom: 6px;
+        #conteudoPDF .dados-empresa p { margin: 2px 0; }
+        #conteudoPDF .dados-empresa .titulo-emp {
+            font-weight: 800;
+            color: #191D1B;
+            margin-bottom: 4px !important;
+        }
+
+        #conteudoPDF .contatos {
+            margin-top: 6px;
             font-size: 10px;
+            color: #191D1B;
         }
-        #conteudoPDF .footer-pdf .dados-empresa p { margin: 2px 0; }
-        #conteudoPDF .footer-pdf .contatos {
-            margin: 5px 0;
-            padding: 5px 10px;
-            background: var(--gray-50);
-            border-radius: 6px;
-            font-size: 10px;
-        }
-        #conteudoPDF .footer-pdf .contatos p { margin: 2px 0; }
-        #conteudoPDF .footer-pdf .aguardo-retorno {
-            margin: 8px 0 4px 0;
+        #conteudoPDF .contatos p { margin: 2px 0; }
+
+        #conteudoPDF .aguardo-retorno {
+            margin: 12px 0 4px;
             font-size: 11px;
-            font-weight: 500;
-        }
-        #conteudoPDF .footer-pdf .assinaturas {
-            display: flex;
-            justify-content: space-around;
-            margin-top: 14px;
+            font-weight: 600;
+            color: #191D1B;
             text-align: center;
-            flex-wrap: wrap;
-            gap: 4px;
         }
-        #conteudoPDF .footer-pdf .assinaturas .linha {
-            border-top: 2px solid var(--text-primary);
-            width: 150px;
-            margin-top: 20px;
-            padding-top: 4px;
-        }
-        #conteudoPDF .footer-pdf .assinaturas p { font-size: 9px; margin-top: 2px; }
-        #conteudoPDF .footer-pdf .assinaturas p strong { font-size: 10px; }
-        #conteudoPDF .footer-pdf .rodape {
+
+        #conteudoPDF .assinaturas {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 12px;
+            margin-top: 22px;
             text-align: center;
-            margin-top: 14px;
-            font-size: 8px;
-            color: var(--text-secondary);
-            letter-spacing: 1px;
-            font-weight: 500;
         }
+        #conteudoPDF .assinaturas .col {
+            padding: 0 6px;
+        }
+        #conteudoPDF .assinaturas .linha {
+            border-top: 1.5px solid #191D1B;
+            margin: 28px 8px 6px;
+        }
+        #conteudoPDF .assinaturas p {
+            margin: 0;
+            font-size: 9.5px;
+            color: #5A614E;
+            line-height: 1.35;
+        }
+        #conteudoPDF .assinaturas p strong {
+            display: block;
+            font-size: 10.5px;
+            color: #191D1B;
+            font-weight: 700;
+        }
+
+        #conteudoPDF .rodape {
+            text-align: center;
+            margin-top: 16px;
+            padding-top: 8px;
+            border-top: 1px solid #D8DCCE;
+            font-size: 8.5px;
+            color: #7A816E;
+            letter-spacing: 0.3px;
+        }
+
+        /* compat: esconde estrutura antiga se sobrar */
+        #conteudoPDF .header-pdf,
+        #conteudoPDF .dados-pedido,
+        #conteudoPDF .badge-pdf,
+        #conteudoPDF .footer-pdf { /* redefinidos abaixo se usados */ }
 
         .info-fornecedor {
             background: var(--gray-50);
@@ -932,19 +981,16 @@
 
         <div class="card-body">
             <div id="conteudoPDF">
-                <div class="header-pdf">
-                    <div class="esquerda">
-                        <div class="logo-tagua">Taguá<span>Life</span></div>
-                        <div class="slogan-pdf">Life Conceito em Gestão Condominial</div>
-                    </div>
-                    <div class="direita">
-                        <div class="badge-pdf">Pedido de Orçamento <i class="fas fa-file-pdf"></i></div>
-                    </div>
+                <div class="doc-topo">
+                    <div class="doc-marca">Taguá<span>Life</span></div>
+                    <div class="doc-titulo">Pedido de Orçamento</div>
+                    <p class="doc-sub">Documento para fornecedor · Life Conceito em Gestão Condominial</p>
+                    <span class="doc-badge">ORÇAMENTO</span>
                 </div>
 
-                <div class="dados-pedido">
-                    <p><strong>📅 Data:</strong> <span id="pdfData"></span> &nbsp;|&nbsp; <strong>🕐 Hora:</strong> <span id="pdfHora"></span></p>
-                    <p><strong>👤 Fornecedor:</strong> <span id="pdfFornecedor">-</span></p>
+                <div class="meta-box">
+                    <p><strong>Data:</strong> <span id="pdfData">—</span> &nbsp;·&nbsp; <strong>Hora:</strong> <span id="pdfHora">—</span></p>
+                    <p><strong>Fornecedor:</strong> <span id="pdfFornecedor">—</span></p>
                 </div>
 
                 <div class="mensagem">
@@ -955,54 +1001,75 @@
                 <table>
                     <thead>
                         <tr>
-                            <th style="width:25px; text-align:center;">#</th>
-                            <th style="text-align:left;">Descrição do Material / Serviço</th>
-                            <th style="width:50px; text-align:center;">Qtd.</th>
-                            <th style="width:50px; text-align:center;">Unid.</th>
-                            <th style="text-align:left;">Observação</th>
+                            <th class="centro" style="width:32px;">#</th>
+                            <th>Item / Material / Serviço</th>
+                            <th class="centro" style="width:48px;">Qtd</th>
+                            <th class="centro" style="width:48px;">Unid.</th>
+                            <th>Observação</th>
                         </tr>
                     </thead>
                     <tbody id="pdfCorpoTabela">
-                        <tr><td colspan="5" style="text-align:center; color:var(--gray-400); padding:10px;">Nenhum item adicionado ainda.</td></tr>
+                        <tr><td colspan="5" class="centro" style="color:#9AA08E;padding:12px;">Nenhum item adicionado ainda.</td></tr>
                     </tbody>
                 </table>
 
-                <p class="solicitacoes-titulo">Solicitamos que conste no orçamento:</p>
-                <ul class="lista-solicitacao">
-                    <li>Itens e valor unitário</li>
-                    <li>Valor do frete</li>
-                    <li>Valor total</li>
-                    <li>Prazo de entrega</li>
-                    <li>Forma de pagamento: à vista, parcelado, boleto, cartão de crédito, Pix, etc.</li>
-                    <li>Dados para pagamento (PIX, banco, agência, conta)</li>
-                </ul>
-
-                <div class="obs-pdf">
-                    <strong>📝 Observações / Condições Gerais:</strong>
-                    <p id="pdfObsTexto">Nenhuma observação adicional.</p>
+                <div class="bloco-secao">
+                    <h4>Solicitamos que conste no orçamento</h4>
+                    <div class="bloco-body">
+                        <ul class="lista-solicitacao">
+                            <li>Itens e valor unitário</li>
+                            <li>Valor do frete</li>
+                            <li>Valor total</li>
+                            <li>Prazo de entrega</li>
+                            <li>Forma de pagamento (à vista, parcelado, boleto, cartão, Pix…)</li>
+                            <li>Dados para pagamento (PIX, banco, agência, conta)</li>
+                        </ul>
+                    </div>
                 </div>
 
-                <div class="footer-pdf">
-                    <div class="dados-empresa">
-                        <p><strong>Dados para emissão da proposta:</strong></p>
-                        <p><strong>Empresa:</strong> Condomínio TaguaLife Center – Subcondomínio Apart-Hotel</p>
-                        <p><strong>CNPJ:</strong> 34.330.943/0003-66</p>
-                        <p><strong>Inscrição Estadual:</strong> 081936050350</p>
-                        <p><strong>Endereço:</strong> CSG 03, Lote 07, Blocos A ao F – Taguatinga Sul – Brasília/DF</p>
-                        <p><strong>CEP:</strong> 72.035-503</p>
+                <div class="bloco-secao">
+                    <h4>Observações / Condições gerais</h4>
+                    <div class="bloco-body">
+                        <div class="obs-pdf">
+                            <p id="pdfObsTexto">Nenhuma observação adicional.</p>
+                        </div>
                     </div>
-                    <div class="contatos">
-                        <p><strong>📧 E-mails:</strong> almoxarifadotagualife@gmail.com | admtagualife@gmail.com</p>
-                        <p><strong>📱 WhatsApp:</strong> (61) 9 9256-4762</p>
-                    </div>
-                    <p class="aguardo-retorno">Ficamos no aguardo do retorno.</p>
-                    <div class="assinaturas">
-                        <div><div class="linha">_________________________</div><p><strong>Ednaldo de Souza</strong><br>Almoxarifado</p></div>
-                        <div><div class="linha">_________________________</div><p><strong>Elisabeth Velásquez</strong><br>Síndica</p></div>
-                        <div><div class="linha">_________________________</div><p><strong>Administração / Gerência</strong><br>Gestão</p></div>
-                    </div>
-                    <div class="rodape">TaguaLife Center – Life Conceito em Gestão Condominial</div>
                 </div>
+
+                <div class="bloco-secao">
+                    <h4>Dados para emissão da proposta</h4>
+                    <div class="bloco-body">
+                        <div class="dados-empresa">
+                            <p><strong>Empresa:</strong> Condomínio TaguáLife Center – Subcondomínio Apart-Hotel</p>
+                            <p><strong>CNPJ:</strong> 34.330.943/0003-66 &nbsp;·&nbsp; <strong>IE:</strong> 081936050350</p>
+                            <p><strong>Endereço:</strong> CSG 03, Lote 07, Blocos A ao F – Taguatinga Sul – Brasília/DF</p>
+                            <p><strong>CEP:</strong> 72.035-503</p>
+                        </div>
+                        <div class="contatos">
+                            <p><strong>E-mails:</strong> almoxarifadotagualife@gmail.com | admtagualife@gmail.com</p>
+                            <p><strong>WhatsApp:</strong> (61) 9 9256-4762</p>
+                        </div>
+                    </div>
+                </div>
+
+                <p class="aguardo-retorno">Ficamos no aguardo do retorno.</p>
+
+                <div class="assinaturas">
+                    <div class="col">
+                        <div class="linha"></div>
+                        <p><strong>Ednaldo de Souza</strong>Almoxarifado / Compras</p>
+                    </div>
+                    <div class="col">
+                        <div class="linha"></div>
+                        <p><strong>Elisabeth Velásquez</strong>Síndica</p>
+                    </div>
+                    <div class="col">
+                        <div class="linha"></div>
+                        <p><strong>Administração / Gerência</strong>Gestão</p>
+                    </div>
+                </div>
+
+                <div class="rodape">TaguáLife Center · Life Conceito em Gestão Condominial</div>
             </div>
 
             <div class="no-print" style="margin-top:16px;">
