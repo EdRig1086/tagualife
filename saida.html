@@ -3185,7 +3185,7 @@ function mostrarToast(mensagem, tipo = 'success') {
     // SALVAR PROTOCOLO (com controle de edição)
     // ============================================
     async function salvarProtocolo() {
-        const editando = !!(window.protocoloEmEdicao || window.editandoSaidaId);
+        const editando = !!(window._protocoloEmEdicao || window.protocoloEmEdicao || window.editandoSaidaId);
         // Usuário comum: pode REGISTRAR saída nova; não pode alterar registro existente
         if (editando) {
             if (typeof podeEditar === 'function' && !podeEditar()) {
@@ -3277,15 +3277,17 @@ function mostrarToast(mensagem, tipo = 'success') {
             if (idEdicao) {
                 protocoloAntigo = protocolos.find(p => String(p.id) === String(idEdicao));
                 
-                if (protocoloAntigo) {
+                // Devolve ao estoque local o que tinha sido baixado no registro antigo
+                if (protocoloAntigo && Array.isArray(protocoloAntigo.itens)) {
                     protocoloAntigo.itens.forEach(item => {
-                        if (item.cadastrado) {
-                            const itemEstoque = estoque.find(i => 
-                                i.nome.toLowerCase() === item.item.toLowerCase()
-                            );
-                            if (itemEstoque) {
-                                itemEstoque.quantidade += parseInt(item.qtd) || 0;
-                            }
+                        const nomeAnt = (item.item || item.item_nome || '').trim();
+                        const qtdAnt = parseInt(item.qtd || item.quantidade) || 0;
+                        if (!nomeAnt || qtdAnt <= 0) return;
+                        const itemEstoque = estoque.find(i =>
+                            (i.nome || '').toLowerCase() === nomeAnt.toLowerCase()
+                        );
+                        if (itemEstoque) {
+                            itemEstoque.quantidade = (parseInt(itemEstoque.quantidade) || 0) + qtdAnt;
                         }
                     });
                 }
@@ -3300,7 +3302,6 @@ function mostrarToast(mensagem, tipo = 'success') {
                 const qtd = parseInt(item.qtd) || 0;
                 if (!nomeItem || qtd <= 0) return;
 
-                // Marca cadastrado se existir no cache do banco
                 const noBanco = (cacheEstoqueDB || []).find(i =>
                     (i.nome || '').toLowerCase() === nomeItem.toLowerCase()
                 );
@@ -3309,7 +3310,7 @@ function mostrarToast(mensagem, tipo = 'success') {
                 );
 
                 if (noBanco || noLocal || item.cadastrado) {
-                    itensBaixados.push({ nome: nomeItem, item: nomeItem, qtd: qtd, id: (noBanco && noBanco.id) || null });
+                    itensBaixados.push({ nome: nomeItem, item: nomeItem, qtd: qtd, id: (noBanco && noBanco.id) || (noLocal && noLocal.id) || null });
                     if (noLocal) {
                         noLocal.quantidade = Math.max(0, (parseInt(noLocal.quantidade) || 0) - qtd);
                     }
@@ -3323,17 +3324,38 @@ function mostrarToast(mensagem, tipo = 'success') {
 
             localStorage.setItem('estoqueTaguaLife', JSON.stringify(estoque));
 
-            // BAIXA REAL NO SUPABASE (estoque)
+            // ESTOQUE NO BANCO: se edição, primeiro devolve o antigo; depois baixa o novo
+            if (idEdicao && protocoloAntigo && Array.isArray(protocoloAntigo.itens) && protocoloAntigo.itens.length) {
+                const devolver = protocoloAntigo.itens.map(function(it) {
+                    return {
+                        nome: (it.item || it.item_nome || '').trim(),
+                        item: (it.item || it.item_nome || '').trim(),
+                        qtd: parseInt(it.qtd || it.quantidade) || 0,
+                        id: it.id || null
+                    };
+                }).filter(function(x) { return x.nome && x.qtd > 0; });
+                if (devolver.length && typeof devolverEstoqueDB === 'function') {
+                    try {
+                        await devolverEstoqueDB(devolver, { colaborador: dados.colaborador || '', observacao: 'Estorno por edição de saída' });
+                        console.log('↩️ Estoque devolvido (edição):', devolver);
+                    } catch (eDev) { console.warn('devolverEstoqueDB', eDev); }
+                }
+            }
+
             if (itensBaixados.length > 0) {
-                await baixarEstoqueDB(itensBaixados, { colaborador: (dados && dados.colaborador) || '', observacao: 'Saída de material' });
+                await baixarEstoqueDB(itensBaixados, {
+                    colaborador: (dados && dados.colaborador) || '',
+                    observacao: idEdicao ? 'Saída atualizada' : 'Saída de material'
+                });
                 console.log('📦 Estoque baixado no banco:', itensBaixados);
             }
             
             if (idEdicao && protocoloAntigo) {
                 // ATUALIZAR registro existente
-                const index = protocolos.findIndex(p => p.id === idEdicao);
-                protocolos[index] = {
+                const index = protocolos.findIndex(p => String(p.id) === String(idEdicao));
+                const atualizado = {
                     ...protocoloAntigo,
+                    id: idEdicao,
                     colaborador: dados.colaborador.trim(),
                     dataSaida: dados.dataSaida || '',
                     itens: dados.itens,
@@ -3343,31 +3365,40 @@ function mostrarToast(mensagem, tipo = 'success') {
                     itensNaoCadastrados: itensNaoCadastrados,
                     qtdNaoCadastrados: qtdNaoCadastrados,
                     itensBaixados: itensBaixados,
-                    // ❌ NÃO atualiza dataSalvamento (mantém a original)
                     dataEdicao: new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })
                 };
+                if (index >= 0) protocolos[index] = atualizado;
+                else protocolos.unshift(atualizado);
                 
                 try { localStorage.setItem('saidaMaterialTaguaLife', JSON.stringify((protocolos || []).slice(-30))); } catch (eQ) { try { localStorage.removeItem('saidaMaterialTaguaLife'); } catch(e){} }
                 
                 window._protocoloEmEdicao = null;
+                window.protocoloEmEdicao = null;
+                window.editandoSaidaId = null;
 
                 if (sb && idEdicao) {
-                    await sb.from('saidas').update({
+                    const { error: errUp } = await sb.from('saidas').update({
                         colaborador: dados.colaborador.trim(),
                         data_saida: dataBRParaISO(dados.dataSaida),
                         hora_saida: horaParaDB(dados.horas),
                         assinatura: dados.assinatura || null,
                         almoxarife: dados.almoxarife || null
                     }).eq('id', idEdicao);
-                    // recria itens
-                    await sb.from('saida_itens').delete().eq('saida_id', idEdicao);
+                    if (errUp) throw errUp;
+
+                    const { error: errDel } = await sb.from('saida_itens').delete().eq('saida_id', idEdicao);
+                    if (errDel) console.warn('saida_itens delete', errDel);
+
                     const linhas = (dados.itens || []).map(i => ({
                         saida_id: idEdicao,
                         item_nome: i.item || '',
                         quantidade: parseInt(i.qtd) || 1,
                         destino: i.destino || null
                     }));
-                    if (linhas.length) await sb.from('saida_itens').insert(linhas);
+                    if (linhas.length) {
+                        const { error: errIns } = await sb.from('saida_itens').insert(linhas);
+                        if (errIns) throw errIns;
+                    }
                 }
                 
                 let msgSucesso = '✅ Registro ATUALIZADO com sucesso!';
@@ -3537,7 +3568,14 @@ function mostrarToast(mensagem, tipo = 'success') {
             const btn = document.getElementById('btnSalvar');
             if (btn) {
                 btn.disabled = false;
-                btn.innerHTML = btn.dataset._html || '<i class="fas fa-save"></i> Salvar';
+                if (window._protocoloEmEdicao || window.editandoSaidaId) {
+                    btn.innerHTML = '<i class="fas fa-edit"></i> Atualizar Registro';
+                    btn.style.background = '#3498DB';
+                } else {
+                    btn.innerHTML = '<i class="fas fa-save"></i> Salvar';
+                    btn.style.background = '';
+                }
+                try { delete btn.dataset._html; } catch (e) {}
             }
         }
     }
@@ -3814,7 +3852,38 @@ function mostrarToast(mensagem, tipo = 'success') {
         }
         
         document.getElementById('listaProtocolos').style.display = 'none';
-        carregarSelectItens();
+        await carregarSelectItens();
+        // reaplica seleção dos itens após options carregadas
+        try {
+            const rows = document.querySelectorAll('#tabelaItensBody tr');
+            (p.itens || []).forEach(function(item, idx) {
+                const tr = rows[idx];
+                if (!tr) return;
+                const select = tr.querySelector('.item-select');
+                const inputManual = tr.querySelector('.item-input-manual');
+                const nome = (item.item || item.item_nome || '').trim();
+                if (!nome) return;
+                let matched = false;
+                if (select) {
+                    for (let i = 0; i < select.options.length; i++) {
+                        if ((select.options[i].value || '').toLowerCase() === nome.toLowerCase()) {
+                            select.value = select.options[i].value;
+                            select.style.display = '';
+                            if (inputManual) inputManual.style.display = 'none';
+                            matched = true;
+                            break;
+                        }
+                    }
+                }
+                if (!matched) {
+                    if (select) select.style.display = 'none';
+                    if (inputManual) {
+                        inputManual.style.display = 'block';
+                        inputManual.value = nome;
+                    }
+                }
+            });
+        } catch (eRe) { console.warn(eRe); }
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
