@@ -535,6 +535,31 @@
             transition: var(--transition);
         }
 
+        .tabela-cotacao .fornecedor-header .fornec-titulo-wrap {
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+            width: 100%;
+            margin-bottom: 0.2rem;
+        }
+        .tabela-cotacao .fornecedor-header .fornec-num {
+            flex-shrink: 0;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: #191D1B;
+            color: #FBFBF7;
+            font-size: 0.72rem;
+            font-weight: 800;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 1;
+        }
+        .tabela-cotacao .fornecedor-header .fornec-titulo-wrap input {
+            flex: 1;
+            min-width: 0;
+        }
         .tabela-cotacao .fornecedor-header input {
             color: var(--fornecedor-text) !important;
             font-weight: 700;
@@ -923,6 +948,13 @@
         }
 
         @media print {
+            .tabela-cotacao .fornecedor-header .fornec-num {
+                background: #191D1B !important;
+                color: #fff !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+
             * {
                 -webkit-print-color-adjust: exact !important;
                 print-color-adjust: exact !important;
@@ -1601,7 +1633,7 @@ async function salvarCotacaoSupabase(concluir = false) {
             
             fornecedoresData.push({
                 id: f.id,
-                nome: nomeInput ? nomeInput.value.trim() : f.nome || '',
+                nome: (function(){ var n = nomeInput ? nomeInput.value.trim() : (f.nome || ''); return String(n).replace(/^\s*\d+\s*[-–.)]\s*/i,'').trim() || ''; })(),
                 contato: contatoInput ? contatoInput.value.trim() : '',
                 telefone: telefoneInput ? telefoneInput.value.trim() : '',
                 obs: obsInput ? obsInput.value.trim() : '',
@@ -1990,8 +2022,13 @@ function renderizarTabela() {
         const th = document.createElement('th');
         th.className = 'col-fornecedor fornecedor-header';
         th.style.position = 'relative';
+        const numF = index + 1;
+        const nomeLimpo = String(f.nome || '').replace(/^\s*\d+\s*[-–.)]\s*/i, '').trim();
         th.innerHTML = `
-            <input type="text" id="f${index}Nome" value="${f.nome}" placeholder="FORNECEDOR ${index + 1}" style="font-weight:700; font-size:0.7rem; text-transform:uppercase; color:var(--fornecedor-text);" />
+            <div class="fornec-titulo-wrap">
+                <span class="fornec-num">${numF}</span>
+                <input type="text" id="f${index}Nome" value="${nomeLimpo.replace(/"/g, '&quot;')}" placeholder="Nome do fornecedor" style="font-weight:700; font-size:0.7rem; text-transform:uppercase; color:var(--fornecedor-text);" />
+            </div>
             <button class="btn-aprovar-fornecedor" onclick="aprovarFornecedor(${f.id})" title="Aprovar este fornecedor">
                 <i class="fas fa-check-circle"></i> Aprovar
             </button>
@@ -2402,6 +2439,20 @@ function initSortable() {
 // FUNÇÕES DE MANIPULAÇÃO
 // ============================================================
 
+
+/** Nome do fornecedor com número da coluna (1-, 2-, 3-…) */
+function nomeFornecedorComNumero(f, index) {
+    var idx = (typeof index === 'number') ? index : fornecedores.findIndex(function(x) { return x.id === f.id; });
+    if (idx < 0) idx = 0;
+    var num = idx + 1;
+    var nome = '';
+    var el = document.getElementById('f' + idx + 'Nome');
+    if (el && el.value.trim()) nome = el.value.trim();
+    else if (f && f.nome) nome = String(f.nome).replace(/^\s*\d+\s*[-–.)]\s*/i, '').trim();
+    if (!nome) nome = 'Fornecedor';
+    return num + '-' + nome.toUpperCase();
+}
+
 function adicionarFornecedor() {
     if (fornecedores.length >= 8) {
         mostrarMensagem('⚠️ Máximo de 8 fornecedores!', '#8B3A3A');
@@ -2509,7 +2560,7 @@ function aprovarFornecedor(id) {
     }
     const index = fornecedores.indexOf(f);
     const nomeInput = document.getElementById(`f${index}Nome`);
-    const nome = nomeInput ? nomeInput.value.trim() : f.nome || '';
+    const nome = (function(){ var n = nomeInput ? nomeInput.value.trim() : (f.nome || ''); return String(n).replace(/^\s*\d+\s*[-–.)]\s*/i,'').trim() || ''; })();
     if (!nome) {
         mostrarMensagem('⚠️ Informe o nome do fornecedor!', '#8B3A3A');
         return;
@@ -2611,7 +2662,7 @@ function atualizarTotais() {
     const labels = [], valores = [];
     fornecedores.forEach(f => {
         const nomeInput = document.getElementById(`f${fornecedores.indexOf(f)}Nome`);
-        labels.push(nomeInput ? nomeInput.value || `Fornecedor ${fornecedores.indexOf(f) + 1}` : `Fornecedor ${fornecedores.indexOf(f) + 1}`);
+        labels.push(typeof nomeFornecedorComNumero === 'function' ? nomeFornecedorComNumero(f) : (nomeInput ? nomeInput.value || (`Fornecedor ${fornecedores.indexOf(f) + 1}`) : `Fornecedor ${fornecedores.indexOf(f) + 1}`));
         const el = document.getElementById(`totalF${f.id}`);
         valores.push(el ? parseFloat(el.textContent.replace('R$ ', '').replace('.', '').replace(',', '.')) || 0 : 0);
     });
@@ -2666,8 +2717,7 @@ function atualizarMelhorProposta() {
     if (fornecedorAprovadoId !== null) {
         const f = fornecedores.find(item => item.id === fornecedorAprovadoId);
         if (f) {
-            const nomeInput = document.getElementById(`f${fornecedores.indexOf(f)}Nome`);
-            const nome = nomeInput ? nomeInput.value.trim() : f.nome || 'Fornecedor';
+            const nome = typeof nomeFornecedorComNumero === 'function' ? nomeFornecedorComNumero(f) : ((document.getElementById('f' + fornecedores.indexOf(f) + 'Nome') || {}).value || f.nome || 'Fornecedor');
             const el = document.getElementById(`totalF${f.id}`);
             const valor = el ? parseFloat(el.textContent.replace('R$ ', '').replace('.', '').replace(',', '.')) || 0 : 0;
             melhorValorEl.textContent = formatarMoeda(valor);
@@ -2697,10 +2747,9 @@ function atualizarMelhorProposta() {
         if (qtd > 0) {
             const freteInput = document.getElementById(`freteF${f.id}`);
             const frete = freteInput ? textoParaNumero(freteInput.value) : 0;
-            const nomeInput = document.getElementById(`f${fornecedores.indexOf(f)}Nome`);
             melhores.push({
                 id: f.id,
-                nome: nomeInput ? nomeInput.value.trim() : f.nome || 'Fornecedor',
+                nome: typeof nomeFornecedorComNumero === 'function' ? nomeFornecedorComNumero(f) : ((document.getElementById('f' + fornecedores.indexOf(f) + 'Nome') || {}).value || f.nome || 'Fornecedor'),
                 total: total + frete,
                 qtd: qtd,
                 totalItens: totalItens
