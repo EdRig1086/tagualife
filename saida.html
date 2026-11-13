@@ -3406,8 +3406,20 @@ function mostrarToast(mensagem, tipo = 'success') {
                     msgSucesso += ` (${qtdNaoCadastrados} unid. não cadastrada(s))`;
                 }
                 mostrarMensagem(msgSucesso, '#7A816E');
-                mostrarToast(msgSucesso, 'success');
+                mostrarToast(msgSucesso + ' — formulário limpo', 'success');
                 try { limparCamposSilencioso(); } catch (eL) { console.warn(eL); }
+                try { await atualizarPainel(); } catch (eP) {}
+                try {
+                    const el = document.getElementById('listaProtocolos');
+                    if (el && el.style.display !== 'none') exibirListaProtocolos().catch(function(){});
+                    else {
+                        carregarSaidasDB().then(function(lista) {
+                            const b = document.getElementById('badgeHistorico');
+                            if (b) b.textContent = (lista || []).length;
+                        }).catch(function(){});
+                    }
+                } catch (eH) {}
+                return true;
                 
             } else {
                 // CRIAR novo registro
@@ -3975,78 +3987,101 @@ function mostrarToast(mensagem, tipo = 'success') {
                 try { delete btnSalvar.dataset._html; } catch (e) {}
             }
 
-            // 1) Zera colaborador e assinatura na hora
-            var colab = document.getElementById('colaborador');
-            if (colab) {
-                colab.value = '';
-                try { colab.selectedIndex = 0; } catch (e) {}
-            }
-            var ass = document.getElementById('assinatura');
-            if (ass) ass.value = '';
+            // Colaborador / assinatura / almoxarife
+            ['colaborador', 'assinatura'].forEach(function(id) {
+                var el = document.getElementById(id);
+                if (!el) return;
+                try {
+                    el.value = '';
+                    if (el.tagName === 'SELECT') el.selectedIndex = 0;
+                } catch (e) {}
+            });
 
-            // 2) Destrói e recria a tabela de itens (garante limpeza visual)
+            // Tabela de itens: zera e recria 1 linha vazia
             var tbody = document.getElementById('tabelaItensBody');
-            if (tbody) {
-                tbody.innerHTML = '';
-            }
+            if (tbody) tbody.innerHTML = '';
 
-            // 3) Data / hora de agora
+            // Data / hora atuais
             try {
                 var horario = (typeof getHorarioBrasilia === 'function') ? getHorarioBrasilia() : null;
                 var ds = document.getElementById('dataSaida');
                 var hs = document.getElementById('horasSaida');
                 if (ds) ds.value = (horario && horario.data) || new Date().toLocaleDateString('pt-BR');
-                if (hs) hs.value = (horario && (horario.horaCompleta || horario.hora)) || new Date().toLocaleTimeString('pt-BR');
+                if (hs) hs.value = (horario && (horario.horaCompleta || horario.hora)) || new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
             } catch (e) {}
 
-            // 4) Nova linha em branco + selects
             try {
                 if (typeof adicionarLinha === 'function') adicionarLinha();
             } catch (e) { console.warn('adicionarLinha', e); }
 
+            // Selects em background (não reescrevem valores preenchidos da edição)
             try {
                 if (typeof carregarSelectItens === 'function') {
                     var pIt = carregarSelectItens();
                     if (pIt && pIt.then) pIt.catch(function(){});
                 }
             } catch (e) {}
-
             try {
                 if (typeof carregarSelectColaboradores === 'function') {
                     var pCo = carregarSelectColaboradores();
                     if (pCo && pCo.then) {
                         pCo.then(function() {
                             var c = document.getElementById('colaborador');
-                            if (c) { c.value = ''; c.selectedIndex = 0; }
-                            var a = document.getElementById('assinatura');
-                            if (a) a.value = '';
+                            if (c) { c.value = ''; try { c.selectedIndex = 0; } catch (e0) {} }
                         }).catch(function(){});
                     }
                 }
             } catch (e) {}
 
-            // 5) Reforço final em qualquer input restante (exceto almoxarife/data/hora)
-            setTimeout(function() {
-                try {
-                    var c2 = document.getElementById('colaborador');
-                    if (c2) { c2.value = ''; c2.selectedIndex = 0; }
-                    var a2 = document.getElementById('assinatura');
-                    if (a2) a2.value = '';
-                    document.querySelectorAll('#tabelaItensBody input, #tabelaItensBody select, .item-busca-rapida').forEach(function(el) {
-                        try {
-                            if (el.tagName === 'SELECT') { el.selectedIndex = 0; el.value = ''; }
-                            else el.value = '';
-                        } catch (e3) {}
-                    });
-                } catch (e4) {}
-            }, 100);
+            // Reforço visual após pequenos delays (evita “voltar” preenchido)
+            [50, 150, 400].forEach(function(ms) {
+                setTimeout(function() {
+                    try {
+                        window._protocoloEmEdicao = null;
+                        window.editandoSaidaId = null;
+                        var c = document.getElementById('colaborador');
+                        if (c && c.value) { c.value = ''; try { c.selectedIndex = 0; } catch (e1) {} }
+                        var a = document.getElementById('assinatura');
+                        if (a && a.value) a.value = '';
+                        var btn = document.getElementById('btnSalvar');
+                        if (btn) {
+                            btn.disabled = false;
+                            btn.innerHTML = '<i class="fas fa-save"></i> Salvar';
+                            btn.style.background = '';
+                        }
+                        var tb = document.getElementById('tabelaItensBody');
+                        if (tb) {
+                            var rows = tb.querySelectorAll('tr');
+                            // se ficou mais de 1 linha ou linha ainda com item, reconstrói
+                            var precisa = rows.length !== 1;
+                            if (!precisa && rows[0]) {
+                                var sel = rows[0].querySelector('.item-select');
+                                var man = rows[0].querySelector('.item-input-manual');
+                                var qtd = rows[0].querySelector('.qtd-input');
+                                if ((sel && sel.value && sel.value !== '') || (man && man.value) || (qtd && String(qtd.value) !== '1')) {
+                                    precisa = true;
+                                }
+                            }
+                            if (precisa) {
+                                tb.innerHTML = '';
+                                if (typeof adicionarLinha === 'function') adicionarLinha();
+                                if (typeof carregarSelectItens === 'function') {
+                                    var p2 = carregarSelectItens();
+                                    if (p2 && p2.then) p2.catch(function(){});
+                                }
+                            }
+                        }
+                    } catch (e2) {}
+                }, ms);
+            });
 
             try { if (typeof atualizarPainel === 'function') atualizarPainel(); } catch (e) {}
-            console.log('🧹 Formulário limpo após salvar');
+            console.log('🧹 Formulário limpo após salvar/atualizar');
         } catch (e) {
             console.error('limparCamposSilencioso', e);
         }
     }
+
 
     function imprimirProtocolo() {
         window.print();
