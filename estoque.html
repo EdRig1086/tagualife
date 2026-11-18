@@ -384,6 +384,67 @@
             font-weight: 500;
             line-height: 1.35;
         }
+        .bn-ajuda-rapida {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.45rem;
+            padding: 0.65rem 1.2rem 0.35rem;
+            background: #F7F9F2;
+            border-bottom: 1px solid #EEF0E8;
+        }
+        @media (max-width: 720px) {
+            .bn-ajuda-rapida { grid-template-columns: 1fr; }
+        }
+        .bn-ajuda-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.4rem;
+            font-size: 0.74rem;
+            color: #3d4538;
+            line-height: 1.35;
+            background: #fff;
+            border: 1px solid #E4E8DC;
+            border-radius: 10px;
+            padding: 0.45rem 0.55rem;
+        }
+        .bn-ajuda-item .n {
+            flex-shrink: 0;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #C1CE83;
+            color: #191D1B;
+            font-weight: 800;
+            font-size: 0.72rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .bn-campo-dica {
+            margin: 0.25rem 0 0;
+            font-size: 0.68rem;
+            color: #7A816E;
+            font-weight: 500;
+        }
+        .bn-secao-titulo {
+            padding: 0.55rem 1.2rem 0.15rem;
+            font-size: 0.78rem;
+            font-weight: 800;
+            color: #5A614E;
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+        }
+        .bn-secao-lista {
+            border-top: 1px solid #EEF0E8;
+            background: #FAFBF7;
+            padding-top: 0.65rem;
+        }
+        .bn-hint-item {
+            margin-top: 0.25rem;
+            font-size: 0.7rem;
+            color: #7A816E;
+        }
         .bn-passos {
             display: flex;
             flex-wrap: wrap;
@@ -1140,21 +1201,23 @@
 
             <div class="bloco-notas-compra" id="blocoNotasCompra" style="display:none;">
                 <div class="bloco-notas-head">
-                    <div class="left" style="display:flex;flex-direction:column;gap:0.15rem;">
-                        <h3><i class="fas fa-clipboard-list"></i> Solicitar material / compra</h3>
-                        <p class="bloco-sub">Monte listas por tipo (papelaria, pintura…) · salve · avise o estoque</p>
+                    <div class="left" style="display:flex;flex-direction:column;gap:0.2rem;">
+                        <h3><i class="fas fa-cart-plus"></i> Quero comprar material</h3>
+                        <p class="bloco-sub">Clique no carrinho do item na tabela <strong>ou</strong> preencha abaixo · monte a lista · avise o estoque</p>
                     </div>
                 </div>
-                <div class="bn-passos" aria-hidden="true">
-                    <span class="bn-passo"><span class="n">1</span> Nome da lista</span>
-                    <span class="bn-passo"><span class="n">2</span> Incluir itens</span>
-                    <span class="bn-passo"><span class="n">3</span> Fechar ou enviar</span>
+
+                <div class="bn-ajuda-rapida">
+                    <div class="bn-ajuda-item"><span class="n">1</span> Escolha o <strong>tipo da lista</strong> (ex.: Hidráulico)</div>
+                    <div class="bn-ajuda-item"><span class="n">2</span> Clique no <strong>carrinho</strong> dos itens ou preencha e toque em <strong>Colocar na lista</strong></div>
+                    <div class="bn-ajuda-item"><span class="n">3</span> Quando terminar, toque em <strong>Enviar pedido</strong></div>
                 </div>
+
                 <div class="lista-toolbar" id="listaToolbar">
                     <div class="campo" style="flex:1;min-width:200px;">
-                        <label><i class="fas fa-folder-open"></i> NOME DA LISTA *</label>
+                        <label><i class="fas fa-folder-open"></i> TIPO DA LISTA *</label>
                         <select id="notaNomeListaSel">
-                            <option value="">Selecione...</option>
+                            <option value="">Escolha o tipo...</option>
                             <option value="Papelaria e escritório">Papelaria e escritório</option>
                             <option value="Materiais de pintura">Materiais de pintura</option>
                             <option value="Hidráulico">Hidráulico</option>
@@ -1164,79 +1227,84 @@
                             <option value="Manutenção geral">Manutenção geral</option>
                             <option value="Segurança">Segurança</option>
                             <option value="Jardinagem">Jardinagem</option>
-                            <option value="__outro__">Outro (escrever abaixo)</option>
+                            <option value="__outro__">Outro nome (escrever)</option>
                         </select>
-                        <input type="text" id="notaNomeListaOutro" class="bn-outro" placeholder="Digite o nome da lista..." maxlength="80" style="display:none;margin-top:0.35rem;" />
+                        <input type="text" id="notaNomeListaOutro" class="bn-outro" placeholder="Escreva o nome da lista aqui..." maxlength="80" style="display:none;margin-top:0.35rem;" />
+                        <p class="bn-campo-dica">Separe por tipo: facilita a compra depois.</p>
                     </div>
                     <div class="campo" style="flex:1;min-width:180px;">
-                        <label><i class="fas fa-list"></i> LISTAS SALVAS</label>
+                        <label><i class="fas fa-list"></i> ABRIR LISTA JÁ SALVA</label>
                         <select id="notaSelectLista">
-                            <option value="">— Lista atual / nova —</option>
+                            <option value="">— Lista nova / em uso —</option>
                         </select>
+                        <p class="bn-campo-dica">Use se quiser continuar uma lista antiga.</p>
                     </div>
                     <div class="lista-toolbar-btns">
-                        <button type="button" class="bn-btn bn-btn-sec" id="btnFecharLista" title="Fecha e salva esta lista no banco"><i class="fas fa-folder"></i> Fechar lista</button>
-                        <button type="button" class="bn-btn bn-btn-ghost" id="btnNovaLista" title="Começa uma lista nova em branco"><i class="fas fa-plus"></i> Nova lista</button>
+                        <button type="button" class="bn-btn bn-btn-sec" id="btnFecharLista" title="Guarda a lista para continuar depois"><i class="fas fa-folder"></i> Guardar lista</button>
+                        <button type="button" class="bn-btn bn-btn-ghost" id="btnNovaLista" title="Começa do zero"><i class="fas fa-plus"></i> Começar outra</button>
                     </div>
                 </div>
+
+                <div class="bn-secao-titulo"><i class="fas fa-box-open"></i> O que você precisa?</div>
+
                 <div class="bloco-notas-grid">
-                    <div class="campo bn-campo bn-item">
-                        <label><i class="fas fa-tag"></i> ITEM *</label>
-                        <input type="text" id="notaItemNome" list="listaItensEstoque" placeholder="Nome do item ou escolha do estoque" autocomplete="off" />
-                        <datalist id="listaItensEstoque"></datalist>
-                        <small id="notaItemHint" style="display:block;margin-top:0.25rem;font-size:0.68rem;color:#7A816E;"></small>
+                    <div class="campo bn-item">
+                        <label><i class="fas fa-tag"></i> NOME DO ITEM *</label>
+                        <input type="text" id="notaItemNome" list="listaSugestaoItensPedido" placeholder="Digite ou escolha o item..." autocomplete="off" />
+                        <datalist id="listaSugestaoItensPedido"></datalist>
+                        <div id="notaItemHint" class="bn-hint-item"></div>
                     </div>
-                    <div class="campo bn-campo bn-qtd">
-                        <label><i class="fas fa-sort-numeric-up"></i> QTD *</label>
+                    <div class="campo">
+                        <label><i class="fas fa-hashtag"></i> QUANTIDADE *</label>
                         <input type="number" id="notaQtd" min="1" value="1" />
                     </div>
-                    <div class="campo bn-campo bn-un">
-                        <label><i class="fas fa-ruler"></i> UNIDADE *</label>
+                    <div class="campo">
+                        <label><i class="fas fa-ruler"></i> MEDIDA *</label>
                         <select id="notaUnidade">
-                            <option value="UN">UN</option>
-                            <option value="CX">CX</option>
-                            <option value="PC">PC</option>
+                            <option value="UN">UN (unidade)</option>
+                            <option value="CX">CX (caixa)</option>
+                            <option value="PC">PC (peça)</option>
                             <option value="KG">KG</option>
-                            <option value="G">G</option>
-                            <option value="LT">LT</option>
+                            <option value="G">G (grama)</option>
+                            <option value="LT">LT (litro)</option>
                             <option value="ML">ML</option>
-                            <option value="MT">MT</option>
+                            <option value="MT">MT (metro)</option>
                             <option value="M²">M²</option>
                             <option value="RL">RL (rolo)</option>
-                            <option value="PCT">PCT</option>
+                            <option value="PCT">PCT (pacote)</option>
                             <option value="PAR">PAR</option>
                             <option value="SC">SC (saco)</option>
                             <option value="GL">GL (galão)</option>
                         </select>
                     </div>
-                    <div class="campo bn-campo">
-                        <label><i class="fas fa-flag"></i> PRIORIDADE *</label>
+                    <div class="campo">
+                        <label><i class="fas fa-exclamation-circle"></i> PRIORIDADE *</label>
                         <select id="notaPrioridade">
-                            <option value="Normal">Normal</option>
-                            <option value="Importante">Importante</option>
-                            <option value="Urgente">Urgente</option>
+                            <option value="Normal">Normal — pode esperar</option>
+                            <option value="Importante">Importante — logo</option>
+                            <option value="Urgente">Urgente — precisa já</option>
                         </select>
                     </div>
-                    <div class="campo bn-campo">
-                        <label><i class="fas fa-wrench"></i> MOTIVO / USO *</label>
+                    <div class="campo">
+                        <label><i class="fas fa-comment-dots"></i> POR QUE PRECISA? *</label>
                         <select id="notaMotivo">
-                            <option value="">Selecione...</option>
-                            <option value="Item zerado no estoque">Item zerado no estoque</option>
-                            <option value="Estoque baixo">Estoque baixo</option>
-                            <option value="Substituição / quebrou">Substituição / quebrou</option>
+                            <option value="">Escolha...</option>
+                            <option value="Item zerado no estoque">Acabou no estoque</option>
+                            <option value="Estoque baixo">Está acabando</option>
+                            <option value="Substituição / quebrou">Quebrou / precisa trocar</option>
                             <option value="Manutenção preventiva">Manutenção preventiva</option>
                             <option value="Manutenção corretiva">Manutenção corretiva</option>
                             <option value="Obra / reforma">Obra / reforma</option>
-                            <option value="Uso diário / reposição">Uso diário / reposição</option>
+                            <option value="Uso diário / reposição">Uso do dia a dia</option>
                             <option value="Emergência">Emergência</option>
-                            <option value="__outro__">Outro (escrever abaixo)</option>
+                            <option value="__outro__">Outro (escrever)</option>
                         </select>
-                        <input type="text" id="notaMotivoOutro" class="bn-outro" placeholder="Descreva o motivo..." style="display:none;margin-top:0.35rem;" />
+                        <input type="text" id="notaMotivoOutro" class="bn-outro" placeholder="Escreva o motivo..." maxlength="120" style="display:none;" />
                     </div>
-                    <div class="campo bn-campo">
-                        <label><i class="fas fa-map-marker-alt"></i> ONDE SERÁ USADO *</label>
+                    <div class="campo">
+                        <label><i class="fas fa-map-marker-alt"></i> ONDE VAI USAR? *</label>
                         <select id="notaLocal">
-                            <option value="">Selecione...</option>
+                            <option value="">Escolha...</option>
                             <option value="Áreas comuns">Áreas comuns</option>
                             <option value="Portaria">Portaria</option>
                             <option value="1º Subsolo">1º Subsolo</option>
@@ -1252,24 +1320,29 @@
                             <option value="Cobertura">Cobertura</option>
                             <option value="Casa de máquinas">Casa de máquinas</option>
                             <option value="Reservatório / bomba">Reservatório / bomba</option>
-                            <option value="__outro__">Outro (escrever abaixo)</option>
+                            <option value="__outro__">Outro (escrever)</option>
                         </select>
-                        <input type="text" id="notaLocalOutro" class="bn-outro" placeholder="Ex.: Bloco B · 5º andar · apto 502" style="display:none;margin-top:0.35rem;" />
-                    </div>
-                    <div class="campo bn-campo bn-obs">
-                        <label><i class="fas fa-align-left"></i> OBSERVAÇÃO</label>
-                        <input type="text" id="notaObs" placeholder="Detalhe extra para a síndica (opcional)" />
+                        <input type="text" id="notaLocalOutro" class="bn-outro" placeholder="Escreva o local..." maxlength="120" style="display:none;" />
                     </div>
                 </div>
+                <div class="bn-obs-wrap">
+                    <div class="campo">
+                        <label><i class="fas fa-sticky-note"></i> OBSERVAÇÃO <span style="font-weight:500;color:#7A816E;">(opcional)</span></label>
+                        <input type="text" id="notaObs" placeholder="Algo a mais? Pode deixar em branco." maxlength="200" />
+                    </div>
+                </div>
+
                 <div class="bloco-notas-acoes">
-                    <p class="bn-hint"><i class="fas fa-info-circle"></i> Adicione quantos itens quiser. Depois feche a lista ou envie para o Admin / Almoxarife.</p>
-                    <button type="button" class="bn-btn bn-btn-sec" id="btnAddItemLista"><i class="fas fa-plus"></i> Adicionar à lista</button>
-                    <button type="button" class="bn-btn bn-btn-pri" id="btnEnviarPedidoNota"><i class="fas fa-bell"></i> Enviar e notificar</button>
-                    <button type="button" class="bn-btn bn-btn-sec" id="btnPdfPedido"><i class="fas fa-file-pdf"></i> PDF / Imprimir</button>
+                    <p class="bn-hint"><strong>Dica:</strong> pode clicar no carrinho <i class="fas fa-shopping-cart"></i> na tabela de cima — o item entra sozinho na lista.</p>
+                    <button type="button" class="bn-btn bn-btn-sec" id="btnAddItemLista"><i class="fas fa-plus"></i> Colocar na lista</button>
+                    <button type="button" class="bn-btn bn-btn-pri" id="btnEnviarPedidoNota"><i class="fas fa-paper-plane"></i> Enviar pedido</button>
+                    <button type="button" class="bn-btn bn-btn-sec" id="btnPdfPedido"><i class="fas fa-file-pdf"></i> Imprimir</button>
                     <button type="button" class="bn-btn bn-btn-sec" id="btnPedidoOrcamento" title="Monta Pedido de Orçamento com os itens desta lista"><i class="fas fa-file-invoice-dollar"></i> Pedido de orçamento</button>
                     <button type="button" class="bn-btn bn-btn-ghost" id="btnLimparNota">Limpar</button>
                 </div>
+                <div class="bn-secao-titulo bn-secao-lista"><i class="fas fa-shopping-basket"></i> Itens desta lista</div>
                 <div id="listaItensPedido" class="lista-itens-pedido"></div>
+
             </div>
 
             <div class="alerta-pedidos-topo" id="alertaPedidosTopo">
@@ -2773,7 +2846,7 @@
         const box = document.getElementById('listaItensPedido');
         if (!box) return;
         if (!pedidoItensLista.length) {
-            box.innerHTML = '<div class="meta" style="font-size:0.7rem;color:#7A816E;"><strong>Lista vazia.</strong><br>1) Escolha o nome da lista &nbsp;·&nbsp; 2) Preencha o item e clique em <strong>Adicionar à lista</strong><br>3) Use <strong>Fechar lista</strong> para guardar ou <strong>Enviar e notificar</strong> para avisar o estoque.</div>';
+            box.innerHTML = '<div class="meta" style="font-size:0.78rem;color:#7A816E;line-height:1.5;"><strong>Sua lista ainda está vazia.</strong><br>Clique no <strong>carrinho</strong> dos itens na tabela de cima<br>ou preencha o formulário e toque em <strong>Colocar na lista</strong>.</div>';
             return;
         }
         var tituloLista = (listaCompraAtual && listaCompraAtual.nome) ? listaCompraAtual.nome : 'Lista atual';
@@ -3100,7 +3173,7 @@
             }
         })();
 
-        mostrarToast('🛒 ' + (item.nome || 'Item') + ' adicionado · lista com ' + pedidoItensLista.length + ' item(ns)', 'success');
+        mostrarToast('✅ Colocado na lista: ' + (item.nome || 'Item') + ' (' + pedidoItensLista.length + ' na lista)', 'success');
     };
 
     async function enviarPedidoDoBlocoNotas() {
