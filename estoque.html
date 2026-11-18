@@ -3009,31 +3009,98 @@
             mostrarToast('Item não encontrado', 'danger');
             return;
         }
+
+        // Mostra o bloco de solicitação
         const bloco = document.getElementById('blocoNotasCompra');
         if (bloco) {
             bloco.style.display = '';
-            bloco.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            // só rola na primeira vez da sessão de cliques
+            if (!window._carrinhoListaScrollou) {
+                bloco.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                window._carrinhoListaScrollou = true;
+            }
         }
-        document.getElementById('notaItemNome').value = item.nome || '';
+
+        // Garante lista ativa (cria se não houver)
+        garantirListaAtual();
+        var nomeLista = getNomeListaValor();
+        if (!nomeLista) {
+            // tenta usar a categoria do item; senão "Lista rápida"
+            var cat = (item.categoria || '').trim();
+            var opcoesLista = {
+                'Elétrico': 'Elétrico',
+                'Hidráulico': 'Hidráulico',
+                'Pintura': 'Materiais de pintura',
+                'Higiene': 'Limpeza e higiene',
+                'Manutenção': 'Manutenção geral',
+                'Ferragens': 'Ferramentas',
+                'Ferramentas': 'Ferramentas'
+            };
+            nomeLista = opcoesLista[cat] || (cat ? cat : 'Lista rápida');
+            setNomeListaValor(nomeLista);
+            listaCompraAtual.nome = nomeLista;
+        }
+
+        // Se o item já está na lista, só avisa e destaca
+        var ja = pedidoItensLista.findIndex(function(it) {
+            return (it.estoque_id && String(it.estoque_id) === String(item.id)) ||
+                (it.item_nome || '').toLowerCase() === (item.nome || '').toLowerCase();
+        });
+        if (ja >= 0) {
+            // incrementa quantidade sugerida em +1 (ou soma a sugerida)
+            var extra = Math.max(1, (item.limite_alerta != null ? parseInt(item.limite_alerta, 10) : 5) - (item.quantidade != null ? parseInt(item.quantidade, 10) : 0), 1);
+            pedidoItensLista[ja].quantidade_solicitar = (parseInt(pedidoItensLista[ja].quantidade_solicitar, 10) || 0) + extra;
+            renderListaItensPedido();
+            salvarListaPedidoLocal();
+            if (pedidoItensLista[ja].id_banco) {
+                try {
+                    await salvarItemPedidoNoBanco(pedidoItensLista[ja], ja);
+                } catch (e) {}
+            }
+            mostrarToast('🛒 Já na lista — qtd agora ' + pedidoItensLista[ja].quantidade_solicitar + ' · ' + pedidoItensLista.length + ' item(ns)', 'info');
+            return;
+        }
+
+        // Preenche campos mínimos e adiciona direto na lista
         const q = item.quantidade != null ? parseInt(item.quantidade, 10) : 0;
         const lim = item.limite_alerta != null ? parseInt(item.limite_alerta, 10) : 5;
-        document.getElementById('notaQtd').value = Math.max(1, lim - q, 1);
-        var unEl = document.getElementById('notaUnidade');
-        if (unEl) {
-            var un = (item.unidade || 'UN').toString().toUpperCase();
-            var ok = false;
-            for (var ui = 0; ui < unEl.options.length; ui++) {
-                if (unEl.options[ui].value.toUpperCase() === un) { unEl.value = unEl.options[ui].value; ok = true; break; }
+        const qtdSol = Math.max(1, lim - q, 1);
+        const unidade = (item.unidade || 'UN').toString().toUpperCase();
+        const motivo = (q === 0) ? 'Item zerado no estoque' : 'Estoque baixo';
+        const local = 'Áreas comuns';
+        const prioridade = (q === 0) ? 'Urgente' : (q <= lim ? 'Importante' : 'Normal');
+
+        pedidoItensLista.push({
+            estoque_id: item.id,
+            item_nome: item.nome || '',
+            quantidade_atual: q,
+            quantidade_solicitar: qtdSol,
+            unidade: unidade,
+            limite_alerta: lim,
+            motivo_uso: motivo,
+            local_uso: local,
+            prioridade: prioridade,
+            observacao: null,
+            lista_id: listaCompraAtual.id,
+            lista_nome: listaCompraAtual.nome || nomeLista || '',
+            status_lista: 'rascunho'
+        });
+
+        renderListaItensPedido();
+        salvarListaPedidoLocal();
+
+        // salva no banco em segundo plano
+        (async function() {
+            var idx = pedidoItensLista.length - 1;
+            var saved = await salvarItemPedidoNoBanco(pedidoItensLista[idx], idx);
+            if (saved && saved.id_banco) {
+                pedidoItensLista[idx].id_banco = saved.id_banco;
+                salvarListaPedidoLocal();
+                renderListaItensPedido();
             }
-            if (!ok) unEl.value = 'UN';
-        }
-        setTimeout(preencherDadosItemPedidoPorNome, 0);
-        const mot = document.getElementById('notaMotivo');
-        if (mot) mot.value = (q === 0) ? 'Item zerado no estoque' : 'Estoque baixo';
-        window._pedidoEstoqueId = item.id;
-        window._pedidoQtdAtual = q;
-        window._pedidoLimite = lim;
-        mostrarToast('📝 Escolha o local, adicione à lista e envie o pedido', 'info');
+        })();
+
+        mostrarToast('🛒 ' + (item.nome || 'Item') + ' adicionado · lista com ' + pedidoItensLista.length + ' item(ns)', 'success');
     };
 
     async function enviarPedidoDoBlocoNotas() {
