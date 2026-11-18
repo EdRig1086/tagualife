@@ -2046,15 +2046,16 @@
             }
             try {
                 Promise.resolve(carregarListaPedidoLocal()).then(function() {
+                    // sempre começa lista em branco; listas salvas só no seletor
+                    pedidoItensLista = [];
+                    listaCompraAtual = { id: null, nome: '' };
+                    try { localStorage.removeItem(PEDIDO_LISTA_KEY); } catch (eL) {}
+                    setNomeListaValor('');
+                    var selL = document.getElementById('notaSelectLista');
+                    if (selL) selL.value = '';
                     atualizarDatalistItens();
                     renderListaItensPedido();
-                    if (pedidoItensLista.length) {
-                        var elBloco = document.getElementById('blocoNotasCompra');
-                        if (elBloco && typeof podeSolicitarCompra === 'function' && podeSolicitarCompra()) {
-                            elBloco.style.display = '';
-                        }
-                        console.log('📋 Lista restaurada do banco:', pedidoItensLista.length, 'item(ns)');
-                    }
+                    console.log('📋 Estoque: lista de compra em branco (escolha uma salva se quiser)');
                 }).catch(function(e0) { console.warn(e0); });
             } catch (e0) {}
             const btnAdd = document.getElementById('btnAddItemLista');
@@ -2725,73 +2726,69 @@
     }
 
     async function carregarListaPedidoDoBanco(listaIdForcada) {
+        // Sem id: só atualiza o seletor de listas — NÃO restaura itens (página entra limpa)
+        // Com id: carrega aquela lista específica (quando o usuário escolhe no select)
         pedidoItensLista = [];
-        if (!sb) {
-            try {
-                var raw = localStorage.getItem(PEDIDO_LISTA_KEY);
-                if (raw) {
-                    var arr = JSON.parse(raw);
-                    if (Array.isArray(arr)) pedidoItensLista = arr;
-                }
-            } catch (e) {}
-            return;
-        }
         try {
+            if (!listaIdForcada) {
+                listaCompraAtual = { id: null, nome: '' };
+                try { localStorage.removeItem(PEDIDO_LISTA_KEY); } catch (e0) {}
+                setNomeListaValor('');
+                var sel0 = document.getElementById('notaSelectLista');
+                if (sel0) sel0.value = '';
+                await atualizarSelectListasSalvas();
+                renderListaItensPedido();
+                return;
+            }
+
+            if (!sb) {
+                mostrarToast('⚠️ Sem conexão para abrir lista salva', 'warning');
+                return;
+            }
+
             var eu = nomeUsuarioSessao();
-            // carrega rascunhos (lista aberta) e listas salvas para o select
-            var q = sb.from('pedidos_compra').select('*').in('status', ['rascunho', 'lista_salva']).order('criado_em', { ascending: true }).limit(300);
+            var q = sb.from('pedidos_compra').select('*').in('status', ['rascunho', 'lista_salva', 'pendente']).order('criado_em', { ascending: true }).limit(300);
             if (eu && eu !== '—') q = q.eq('solicitado_por', eu);
             var res = await q;
             if (res.error) {
-                console.warn('carregar listas:', res.error.message);
-                try {
-                    var raw2 = localStorage.getItem(PEDIDO_LISTA_KEY);
-                    if (raw2) {
-                        var arr2 = JSON.parse(raw2);
-                        if (Array.isArray(arr2)) pedidoItensLista = arr2;
-                    }
-                } catch (e2) {}
+                console.warn('carregar lista:', res.error.message);
+                mostrarToast('⚠️ Não foi possível abrir a lista', 'warning');
                 return;
             }
             var rows = (res.data || []).map(mapRowPedidoParaItem);
-            await atualizarSelectListasSalvas();
-
-            // decide lista atual
-            var alvo = listaIdForcada || listaCompraAtual.id;
-            if (!alvo) {
-                // prefere rascunho mais recente
-                var abertos = rows.filter(function(r) { return r.status_lista === 'rascunho'; });
-                if (abertos.length) {
-                    alvo = abertos[abertos.length - 1].lista_id || null;
-                    if (!alvo) {
-                        // itens antigos sem tag: trata todos rascunhos como lista atual
-                        pedidoItensLista = abertos;
-                        listaCompraAtual = { id: novoIdLista(), nome: '' };
-                        setNomeListaValor('');
-                        // grava tag nos antigos em background
-                        abertos.forEach(function(it) { salvarItemPedidoNoBanco(it); });
-                        salvarListaPedidoLocal();
-                        return;
+            var alvo = listaIdForcada;
+            pedidoItensLista = rows.filter(function(r) {
+                return r.lista_id && String(r.lista_id) === String(alvo);
+            });
+            // fallback: alguns registros antigos sem lista_id batem pelo nome
+            if (!pedidoItensLista.length) {
+                var nomeAlvo = '';
+                try {
+                    var sel = document.getElementById('notaSelectLista');
+                    if (sel && sel.selectedOptions && sel.selectedOptions[0]) {
+                        nomeAlvo = (sel.selectedOptions[0].textContent || '').replace(/\s*\(.*?\)\s*·.*$/, '').trim();
                     }
+                } catch (eN) {}
+                if (nomeAlvo) {
+                    pedidoItensLista = rows.filter(function(r) {
+                        return (r.lista_nome || '').trim().toLowerCase() === nomeAlvo.toLowerCase();
+                    });
                 }
             }
-            if (alvo) {
-                pedidoItensLista = rows.filter(function(r) { return r.lista_id === alvo; });
-                if (pedidoItensLista.length) {
-                    listaCompraAtual = {
-                        id: alvo,
-                        nome: pedidoItensLista[0].lista_nome || ''
-                    };
-                } else {
-                    listaCompraAtual = { id: alvo, nome: listaCompraAtual.nome || '' };
-                }
+            if (pedidoItensLista.length) {
+                listaCompraAtual = {
+                    id: alvo,
+                    nome: pedidoItensLista[0].lista_nome || ''
+                };
+                setNomeListaValor(listaCompraAtual.nome || '');
             } else {
-                listaCompraAtual = { id: novoIdLista(), nome: '' };
-                pedidoItensLista = [];
+                listaCompraAtual = { id: alvo, nome: listaCompraAtual.nome || '' };
             }
-            setNomeListaValor(listaCompraAtual.nome || '');
             salvarListaPedidoLocal();
             await atualizarSelectListasSalvas();
+            var sel1 = document.getElementById('notaSelectLista');
+            if (sel1) sel1.value = String(alvo);
+            renderListaItensPedido();
         } catch (e) {
             console.warn(e);
         }
@@ -6290,15 +6287,16 @@ function exportarCSVEstoque() {
             }
             try {
                 Promise.resolve(carregarListaPedidoLocal()).then(function() {
+                    // sempre começa lista em branco; listas salvas só no seletor
+                    pedidoItensLista = [];
+                    listaCompraAtual = { id: null, nome: '' };
+                    try { localStorage.removeItem(PEDIDO_LISTA_KEY); } catch (eL) {}
+                    setNomeListaValor('');
+                    var selL = document.getElementById('notaSelectLista');
+                    if (selL) selL.value = '';
                     atualizarDatalistItens();
                     renderListaItensPedido();
-                    if (pedidoItensLista.length) {
-                        var elBloco = document.getElementById('blocoNotasCompra');
-                        if (elBloco && typeof podeSolicitarCompra === 'function' && podeSolicitarCompra()) {
-                            elBloco.style.display = '';
-                        }
-                        console.log('📋 Lista restaurada do banco:', pedidoItensLista.length, 'item(ns)');
-                    }
+                    console.log('📋 Estoque: lista de compra em branco (escolha uma salva se quiser)');
                 }).catch(function(e0) { console.warn(e0); });
             } catch (e0) {}
             const btnAdd = document.getElementById('btnAddItemLista');
