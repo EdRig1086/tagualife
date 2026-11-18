@@ -2581,6 +2581,79 @@
         }
     }
 
+    /** Grava pedido como PENDENTE — alerta na hora para Admin / Almoxarife */
+    async function gravarPedidoPendente(it) {
+        if (!sb || !it) return it;
+        try {
+            var solicitante = (typeof nomeUsuarioSessao === 'function' ? nomeUsuarioSessao() : '') || '';
+            var cargo = (typeof getCargo === 'function' ? getCargo() : '') || '';
+            var tagLista = '';
+            if (it.lista_id) tagLista += '|lista_id:' + it.lista_id;
+            if (it.lista_nome) tagLista += '|lista_nome:' + it.lista_nome;
+            var obs = ('[' + (it.prioridade || 'Normal') + '] ' + (it.observacao || '')).trim() +
+                ' | Motivo: ' + (it.motivo_uso || '') +
+                ' | Onde: ' + (it.local_uso || '') +
+                (tagLista ? (' ' + tagLista) : '') +
+                ' | via:carrinho';
+            var payload = {
+                estoque_id: it.estoque_id || null,
+                item_nome: it.item_nome,
+                quantidade_atual: it.quantidade_atual != null ? it.quantidade_atual : null,
+                quantidade_solicitar: it.quantidade_solicitar,
+                limite_alerta: it.limite_alerta != null ? it.limite_alerta : null,
+                motivo_uso: it.motivo_uso || null,
+                local_uso: it.local_uso || null,
+                solicitado_por: solicitante,
+                cargo_solicitante: cargo,
+                observacao: obs,
+                status: 'pendente',
+                atualizado_em: new Date().toISOString()
+            };
+            if (typeof payloadComCondominio === 'function') payload = payloadComCondominio(payload);
+
+            if (it.id_banco) {
+                var up = await sb.from('pedidos_compra').update(payload).eq('id', it.id_banco);
+                if (up.error) {
+                    var up2 = await sb.from('pedidos_compra').update({
+                        item_nome: payload.item_nome,
+                        quantidade_atual: payload.quantidade_atual,
+                        solicitado_por: payload.solicitado_por,
+                        cargo_solicitante: payload.cargo_solicitante,
+                        observacao: obs,
+                        status: 'pendente',
+                        atualizado_em: payload.atualizado_em
+                    }).eq('id', it.id_banco);
+                    if (up2.error) throw up2.error;
+                }
+            } else {
+                var ins = await sb.from('pedidos_compra').insert(payload).select('id').single();
+                if (ins.error) {
+                    var mini = {
+                        item_nome: it.item_nome,
+                        quantidade_atual: it.quantidade_atual,
+                        solicitado_por: solicitante,
+                        cargo_solicitante: cargo,
+                        observacao: obs,
+                        status: 'pendente'
+                    };
+                    if (typeof payloadComCondominio === 'function') mini = payloadComCondominio(mini);
+                    var r2 = await sb.from('pedidos_compra').insert(mini).select('id').single();
+                    if (r2.error) throw r2.error;
+                    it.id_banco = r2.data && r2.data.id;
+                } else {
+                    it.id_banco = ins.data && ins.data.id;
+                }
+            }
+            it.status_lista = 'pendente';
+            it.alerta_enviado = true;
+            try { await carregarPedidosCompra(); } catch (eC) {}
+            return it;
+        } catch (e) {
+            console.warn('gravarPedidoPendente', e);
+            throw e;
+        }
+    }
+
     function mapRowPedidoParaItem(p) {
         var prio = 'Normal';
         if (p.observacao) {
@@ -2860,7 +2933,7 @@
                     '<span class="prio ' + classePrioridade(pr) + '">' + pr + '</span>' +
                     '<span>' + (it.motivo_uso || '—') + '</span>' +
                     '<span>📍 ' + (it.local_uso || '—') + '</span>' +
-                    (it.id_banco ? '<span title="Salvo no banco" style="color:#2E7D32;"><i class="fas fa-cloud"></i> banco</span>' : '<span title="Só local" style="color:#C1A83C;"><i class="fas fa-laptop"></i></span>') +
+                    (it.status_lista === 'pendente' || it.alerta_enviado ? '<span title="Alerta enviado" style="color:#E65100;font-weight:700;"><i class="fas fa-bell"></i> alerta</span>' : '') + (it.id_banco ? '<span title="Salvo no banco" style="color:#2E7D32;"><i class="fas fa-cloud"></i></span>' : '<span title="Só local" style="color:#C1A83C;"><i class="fas fa-laptop"></i></span>') +
                     '</div>' +
                     '<div class="acoes-item-lista">' +
                     '<button type="button" class="btn-item-ed" onclick="editarItemPedidoLista(' + idx + ')" title="Editar"><i class="fas fa-pen"></i></button>' +
@@ -3120,17 +3193,18 @@
                 (it.item_nome || '').toLowerCase() === (item.nome || '').toLowerCase();
         });
         if (ja >= 0) {
-            // incrementa quantidade sugerida em +1 (ou soma a sugerida)
             var extra = Math.max(1, (item.limite_alerta != null ? parseInt(item.limite_alerta, 10) : 5) - (item.quantidade != null ? parseInt(item.quantidade, 10) : 0), 1);
             pedidoItensLista[ja].quantidade_solicitar = (parseInt(pedidoItensLista[ja].quantidade_solicitar, 10) || 0) + extra;
             renderListaItensPedido();
             salvarListaPedidoLocal();
-            if (pedidoItensLista[ja].id_banco) {
-                try {
-                    await salvarItemPedidoNoBanco(pedidoItensLista[ja], ja);
-                } catch (e) {}
+            try {
+                await gravarPedidoPendente(pedidoItensLista[ja]);
+                salvarListaPedidoLocal();
+                renderListaItensPedido();
+                mostrarToast('🔔 Alerta atualizado · qtd ' + pedidoItensLista[ja].quantidade_solicitar + ' · Admin/Almoxarife avisados', 'success');
+            } catch (e) {
+                mostrarToast('⚠️ Na lista, mas alerta falhou: ' + (e.message || e), 'warning');
             }
-            mostrarToast('🛒 Já na lista — qtd agora ' + pedidoItensLista[ja].quantidade_solicitar + ' · ' + pedidoItensLista.length + ' item(ns)', 'info');
             return;
         }
 
@@ -3156,24 +3230,24 @@
             observacao: null,
             lista_id: listaCompraAtual.id,
             lista_nome: listaCompraAtual.nome || nomeLista || '',
-            status_lista: 'rascunho'
+            status_lista: 'pendente',
+            alerta_enviado: false
         });
 
         renderListaItensPedido();
         salvarListaPedidoLocal();
 
-        // salva no banco em segundo plano
-        (async function() {
+        // ALERTA NA HORA para Admin / Almoxarife + fica na lista
+        try {
             var idx = pedidoItensLista.length - 1;
-            var saved = await salvarItemPedidoNoBanco(pedidoItensLista[idx], idx);
-            if (saved && saved.id_banco) {
-                pedidoItensLista[idx].id_banco = saved.id_banco;
-                salvarListaPedidoLocal();
-                renderListaItensPedido();
-            }
-        })();
-
-        mostrarToast('✅ Colocado na lista: ' + (item.nome || 'Item') + ' (' + pedidoItensLista.length + ' na lista)', 'success');
+            await gravarPedidoPendente(pedidoItensLista[idx]);
+            salvarListaPedidoLocal();
+            renderListaItensPedido();
+            mostrarToast('🔔 Alerta enviado: ' + (item.nome || 'Item') + ' · lista com ' + pedidoItensLista.length + ' · Admin/Almoxarife avisados', 'success');
+        } catch (e) {
+            console.warn(e);
+            mostrarToast('⚠️ Entrou na lista, mas o alerta falhou: ' + (e.message || e), 'warning');
+        }
     };
 
     async function enviarPedidoDoBlocoNotas() {
