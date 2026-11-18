@@ -611,6 +611,11 @@
             border: 1px solid #D0D5C6;
         }
         .bn-btn-ghost:hover { background: #F0F2EA; }
+        .bn-btn-danger {
+            background: #8B3A3A;
+            color: #fff;
+        }
+        .bn-btn-danger:hover { background: #6d2d2d; }
         .lista-itens-pedido {
             padding: 0.5rem 1.2rem 1.1rem;
             background: #fff;
@@ -1242,6 +1247,7 @@
                     <div class="lista-toolbar-btns">
                         <button type="button" class="bn-btn bn-btn-sec" id="btnFecharLista" title="Guarda a lista para continuar depois"><i class="fas fa-folder"></i> Guardar lista</button>
                         <button type="button" class="bn-btn bn-btn-ghost" id="btnNovaLista" title="Começa do zero"><i class="fas fa-plus"></i> Começar outra</button>
+                        <button type="button" class="bn-btn bn-btn-danger" id="btnExcluirLista" title="Apaga esta lista e os itens dela"><i class="fas fa-trash-alt"></i> Excluir lista</button>
                     </div>
                 </div>
 
@@ -2100,6 +2106,11 @@
                 e.preventDefault();
                 iniciarNovaLista(true);
             });
+            const btnExcluirLista = document.getElementById('btnExcluirLista');
+            if (btnExcluirLista) btnExcluirLista.addEventListener('click', function(e) {
+                e.preventDefault();
+                excluirListaAtual();
+            });
             const selLista = document.getElementById('notaSelectLista');
             if (selLista) selLista.addEventListener('change', function() {
                 var v = selLista.value;
@@ -2830,6 +2841,91 @@
         mostrarToast('🆕 Nova lista — escolha o nome na lista ou em Outro', 'info');
         var selNome = document.getElementById('notaNomeListaSel');
         if (selNome) selNome.focus();
+    }
+
+
+    async function excluirListaAtual() {
+        var nome = getNomeListaValor() || (listaCompraAtual && listaCompraAtual.nome) || '';
+        var qtd = (pedidoItensLista || []).length;
+        var sel = document.getElementById('notaSelectLista');
+        var listaSel = sel && sel.value ? sel.value : (listaCompraAtual && listaCompraAtual.id) || '';
+
+        if (!qtd && !listaSel) {
+            mostrarToast('⚠️ Nenhuma lista para excluir', 'warning');
+            return;
+        }
+
+        var msg = 'Excluir esta lista';
+        if (nome) msg += ' "' + nome + '"';
+        msg += qtd ? (' com ' + qtd + ' item(ns)') : '';
+        msg += '?\n\nIsso apaga os itens da lista. Pedidos já enviados (alerta) podem ser resolvidos no painel de pedidos.';
+        if (!confirm(msg)) return;
+
+        var apagados = 0;
+        var erros = 0;
+
+        // 1) apaga itens da lista atual no banco
+        for (var i = 0; i < (pedidoItensLista || []).length; i++) {
+            var it = pedidoItensLista[i];
+            if (it && it.id_banco && sb) {
+                try {
+                    var r = await sb.from('pedidos_compra').delete().eq('id', it.id_banco);
+                    if (r.error) {
+                        // se estiver pendente, marca dispensado em vez de falhar
+                        var r2 = await sb.from('pedidos_compra').update({
+                            status: 'dispensado',
+                            atualizado_em: new Date().toISOString()
+                        }).eq('id', it.id_banco);
+                        if (r2.error) { erros++; continue; }
+                    }
+                    apagados++;
+                } catch (e) { erros++; }
+            }
+        }
+
+        // 2) se há id de lista, tenta limpar outros rascunhos/salvos da mesma lista no banco
+        if (sb && listaSel) {
+            try {
+                var eu = (typeof nomeUsuarioSessao === 'function' ? nomeUsuarioSessao() : '') || '';
+                var q = sb.from('pedidos_compra').select('id, observacao, status').in('status', ['rascunho', 'lista_salva']).limit(300);
+                if (eu && eu !== '—') q = q.eq('solicitado_por', eu);
+                var res = await q;
+                var rows = (res && res.data) || [];
+                for (var j = 0; j < rows.length; j++) {
+                    var row = rows[j];
+                    var obs = String(row.observacao || '');
+                    var idMatch = obs.match(/lista_id:([^|\s]+)/);
+                    var nomeMatch = obs.match(/lista_nome:([^|]+)/);
+                    var idL = idMatch ? idMatch[1].trim() : '';
+                    var nomeL = nomeMatch ? nomeMatch[1].trim() : '';
+                    var bate = (idL && String(idL) === String(listaSel)) ||
+                               (nome && nomeL && nomeL.toLowerCase() === String(nome).toLowerCase());
+                    if (!bate) continue;
+                    // evita apagar pendente de alerta sem querer se já tratado acima
+                    try {
+                        var rd = await sb.from('pedidos_compra').delete().eq('id', row.id);
+                        if (!rd.error) apagados++;
+                    } catch (e2) {}
+                }
+            } catch (e3) { console.warn(e3); }
+        }
+
+        // 3) limpa tela
+        pedidoItensLista = [];
+        listaCompraAtual = { id: null, nome: '' };
+        try { localStorage.removeItem(PEDIDO_LISTA_KEY); } catch (e4) {}
+        salvarListaPedidoLocal();
+        renderListaItensPedido();
+        setNomeListaValor('');
+        if (sel) sel.value = '';
+        await atualizarSelectListasSalvas();
+        try { await carregarPedidosCompra(); } catch (e5) {}
+
+        if (erros) {
+            mostrarToast('🗑️ Lista excluída (' + apagados + ' item(ns)), com ' + erros + ' aviso(s)', 'warning');
+        } else {
+            mostrarToast('🗑️ Lista excluída' + (apagados ? ' · ' + apagados + ' item(ns) apagado(s)' : ''), 'success');
+        }
     }
 
     async function abrirListaSalva(listaId) {
@@ -6240,6 +6336,11 @@ function exportarCSVEstoque() {
             if (btnNovaLista) btnNovaLista.addEventListener('click', function(e) {
                 e.preventDefault();
                 iniciarNovaLista(true);
+            });
+            const btnExcluirLista = document.getElementById('btnExcluirLista');
+            if (btnExcluirLista) btnExcluirLista.addEventListener('click', function(e) {
+                e.preventDefault();
+                excluirListaAtual();
             });
             const selLista = document.getElementById('notaSelectLista');
             if (selLista) selLista.addEventListener('change', function() {
