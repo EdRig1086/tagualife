@@ -4459,6 +4459,38 @@ ${secInt}
         return null;
     }
 
+
+    function htmlCabecalhoRelatorioPadrao(titulo, subtitulo, explicacao, geradoEm) {
+        var t = String(titulo || 'Relatório');
+        var s = String(subtitulo || '');
+        var e = String(explicacao || '');
+        var g = String(geradoEm || '');
+        return (
+            '<div class="rel-cabecalho-padrao" style="margin-bottom:1rem;padding-bottom:0.75rem;border-bottom:3px solid #C1CE83;">' +
+              '<div style="font-size:0.72rem;font-weight:700;color:#7A816E;letter-spacing:0.2px;">Taguá<span style="color:#C1CE83;">Life</span> · Life Conceito em Gestão Condominial</div>' +
+              '<h2 style="margin:0.25rem 0 0.2rem;font-size:1.15rem;font-weight:800;color:#191D1B;">' + t + '</h2>' +
+              (s ? '<p style="margin:0;font-size:0.8rem;color:#5A614E;font-weight:600;">' + s + '</p>' : '') +
+              (e ? '<p style="margin:0.45rem 0 0;padding:0.45rem 0.65rem;background:#F0F2EA;border-left:3px solid #7A816E;border-radius:0 8px 8px 0;font-size:0.75rem;color:#3d4538;line-height:1.4;">' + e + '</p>' : '') +
+              (g ? '<p style="margin:0.4rem 0 0;font-size:0.7rem;color:#7A816E;"><strong>Gerado em:</strong> ' + g + '</p>' : '') +
+            '</div>'
+        );
+    }
+
+    function htmlKpisRelatorio(lista) {
+        var items = Array.isArray(lista) ? lista : [];
+        if (!items.length) return '';
+        var cards = items.map(function(k) {
+            var cor = k.alerta ? '#C45C26' : '#191D1B';
+            return (
+                '<div style="flex:1;min-width:110px;background:#FBFBF7;border:1px solid #D8DCCE;border-radius:10px;padding:0.55rem 0.65rem;text-align:center;">' +
+                  '<div style="font-size:1.25rem;font-weight:800;color:' + cor + ';">' + (k.val != null ? k.val : '—') + '</div>' +
+                  '<div style="font-size:0.68rem;font-weight:600;color:#7A816E;margin-top:0.15rem;">' + (k.lbl || '') + '</div>' +
+                '</div>'
+            );
+        }).join('');
+        return '<div style="display:flex;flex-wrap:wrap;gap:0.45rem;margin:0 0 0.85rem;">' + cards + '</div>';
+    }
+
     function htmlFotoPorNomeItem(nomeOuItem) {
         var nome = '';
         var url = null;
