@@ -4476,6 +4476,19 @@ ${secInt}
         );
     }
 
+    function htmlRodapeRelatorioPadrao(geradoEm, resumo) {
+        var g = String(geradoEm || '');
+        var r = String(resumo || '');
+        return (
+            '<div class="rel-rodape-padrao" style="margin-top:1.1rem;padding-top:0.7rem;border-top:2px solid #D8DCCE;font-size:0.72rem;color:#7A816E;">' +
+              '<div><strong>TaguáLife</strong> · Relatório de saídas / almoxarifado</div>' +
+              (r ? '<div style="margin-top:0.2rem;">' + r + '</div>' : '') +
+              (g ? '<div style="margin-top:0.2rem;"><strong>Emitido em:</strong> ' + g + '</div>' : '') +
+              '<div style="margin-top:0.25rem;font-size:0.68rem;">Documento gerado pelo sistema · uso interno do condomínio</div>' +
+            '</div>'
+        );
+    }
+
     function htmlKpisRelatorio(lista) {
         var items = Array.isArray(lista) ? lista : [];
         if (!items.length) return '';
@@ -5536,6 +5549,20 @@ container.innerHTML = html;
         fecharModal('modalRelatorio');
         setTimeout(() => gerarRelatorioPDF('dia'), 300);
     };
+
+    
+    // Expõe funções de relatório para os botões (onclick)
+    try {
+        window.gerarRelatorioPDF = gerarRelatorioPDF;
+        window.gerarRelatorioPorItem = gerarRelatorioPorItem;
+        window.confirmarRelatorioPorItem = confirmarRelatorioPorItem;
+        window.gerarRelatorioNaoCadastrados = gerarRelatorioNaoCadastrados;
+        window.gerarRelatorioDetalhadoSaidas = gerarRelatorioDetalhadoSaidas;
+        window.htmlCabecalhoRelatorioPadrao = htmlCabecalhoRelatorioPadrao;
+        window.htmlKpisRelatorio = htmlKpisRelatorio;
+        window.htmlRodapeRelatorioPadrao = htmlRodapeRelatorioPadrao;
+        window.htmlFotoPorNomeItem = htmlFotoPorNomeItem;
+    } catch (eExp) { console.warn('export relatorios', eExp); }
 
     function imprimirRelatorio() {
         const conteudo = document.getElementById('relatorioConteudo').innerHTML;
