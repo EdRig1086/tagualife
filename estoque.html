@@ -2690,7 +2690,7 @@
             lista_id: meta.id,
             lista_nome: meta.nome,
             status_lista: p.status,
-            observacao: (p.observacao || '').replace(/\[(Normal|Importante|Urgente)\]/gi, '').replace(/\s*\|lista_id:[^|]*/g, '').replace(/\s*\|lista_nome:[^|]*/g, '').replace(/\s*\|?\s*solicitacao:[^|]*/gi, '').trim() || null
+            observacao: (typeof limparObsPedidoExibicao === 'function' ? limparObsPedidoExibicao(p.observacao) : (p.observacao || '')) || null
         };
     }
 
@@ -3532,6 +3532,19 @@
     }
     window.montarPedidoOrcamentoDaLista = montarPedidoOrcamentoDaLista;
 
+    function limparObsPedidoExibicao(obs) {
+        if (obs == null || obs === '') return '';
+        var s = String(obs);
+        s = s.replace(/\s*\|?\s*lista_id\s*:\s*[^|\s]*/gi, '');
+        s = s.replace(/\s*\|?\s*lista_nome\s*:\s*[^|]*/gi, '');
+        s = s.replace(/\s*\|?\s*solicitacao\s*:\s*[^|]*/gi, '');
+        s = s.replace(/\s*\|?\s*via\s*:\s*[^|]*/gi, '');
+        s = s.replace(/\[(Normal|Importante|Urgente)\]/gi, '');
+        s = s.replace(/\s*\|\s*/g, ' · ');
+        s = s.replace(/\s{2,}/g, ' ').replace(/^[·\s|]+|[·\s|]+$/g, '').trim();
+        return s;
+    }
+
     function gerarPdfPedidoCompra(itens) {
         itens = itens || ultimoPedidoEnviado || [];
         if (!itens.length && pedidosCompraCache && pedidosCompraCache.length) {
@@ -3563,7 +3576,7 @@
                 '<td style="text-align:center;font-weight:700;">' + pr + '</td>' +
                 '<td>' + (it.motivo_uso || '—') + '</td>' +
                 '<td>' + (it.local_uso || '—') + '</td>' +
-                '<td>' + (it.observacao ? (String(it.observacao).split('solicitacao:')[0] || '').replace(/\|/g,'').replace(/\[(Normal|Importante|Urgente)\]/gi,'').trim() || '—' : '—') + '</td>' +
+                '<td>' + (limparObsPedidoExibicao(it.observacao) || '—') + '</td>' +
                 '</tr>';
         }).join('');
 
