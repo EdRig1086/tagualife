@@ -1222,8 +1222,7 @@
         <a class="nav-item" href="orcamento.html"><i class="fas fa-file-pdf"></i> Orçamento</a>
         <a class="nav-item" href="fornecedor.html"><i class="fas fa-handshake"></i> Fornecedores</a>
         <a class="nav-item" href="recebido.html"><i class="fas fa-clipboard-check"></i> Recebido</a>
-        <!--<a class="nav-item" href="backup_automatico.html"><i class="fas fa-database"></i> Backup</a>  -->
-        <a class="nav-item" href="usuarios.html" id="navUsuarios" style="display:none;"><i class="fas fa-users-cog"></i> Usuários</a>
+<a class="nav-item" href="usuarios.html" id="navUsuarios" style="display:none;"><i class="fas fa-users-cog"></i> Usuários</a>
         <button class="nav-item btn-theme" onclick="if(typeof toggleTheme==='function')toggleTheme()" style="margin-left:auto;">
             <i class="fas fa-moon" id="themeIcon"></i> <span id="themeLabel">Tema</span>
         </button>
@@ -4258,11 +4257,12 @@ async function gerarRelatorioDetalhadoSaidas() {
             function tabelaLinhas(arr, comEmpresa) {
                 if (!arr || !arr.length) return '<p style="color:#7A816E;font-size:11px;">Sem registros neste grupo.</p>';
                 const col = `<colgroup>
-                  <col class="c-nro"><col class="c-data"><col class="c-colab"><col class="c-item"><col class="c-qtd"><col class="c-dest">
+                  <col class="c-nro"><col class="c-data"><col class="c-colab"><col class="c-foto"><col class="c-item"><col class="c-qtd"><col class="c-dest">
                 </colgroup>`;
                 const head = `<tr>
                   <th class="c-nro">Nº</th><th class="c-data">Data</th>
                   <th class="c-colab">Colaborador / Empresa</th>
+                  <th class="c-foto">Foto</th>
                   <th class="c-item">Cód. / Item</th>
                   <th class="c-qtd">Qtd.</th><th class="c-dest">Destino</th>
                 </tr>`;
@@ -4270,6 +4270,7 @@ async function gerarRelatorioDetalhadoSaidas() {
                   <td class="c-nro">#${esc(String(l.nro).slice(0,8))}</td>
                   <td class="c-data">${esc(l.dataBR)}</td>
                   <td class="c-colab">${esc(l.colaborador)}</td>
+                  <td class="c-foto" style="text-align:center;vertical-align:middle;">${htmlFotoPorNomeItem(l.item)}</td>
                   <td class="c-item">${esc(formatarItemComCodigo(l.item, l.codigo))}${l.naoCadastrado ? ' <span style="color:#C45C26;font-weight:700;font-size:8px;">[NÃO CAD.]</span>' : ''}</td>
                   <td class="c-qtd">${fmtN(l.qtd)}</td>
                   <td class="c-dest">${esc(l.destino)}</td>
@@ -4280,16 +4281,18 @@ async function gerarRelatorioDetalhadoSaidas() {
             function tabelaInterno(arr) {
                 if (!arr || !arr.length) return '';
                 const col = `<colgroup>
-                  <col class="c-nro"><col class="c-data"><col class="c-item" style="width:40%;"><col class="c-qtd"><col class="c-dest" style="width:25%;">
+                  <col class="c-nro"><col class="c-data"><col class="c-foto"><col class="c-item" style="width:36%;"><col class="c-qtd"><col class="c-dest" style="width:22%;">
                 </colgroup>`;
                 const head = `<tr>
                   <th class="c-nro">Nº</th><th class="c-data">Data</th>
+                  <th class="c-foto">Foto</th>
                   <th class="c-item">Cód. / Item</th>
                   <th class="c-qtd">Qtd.</th><th class="c-dest">Destino</th>
                 </tr>`;
                 const body = arr.map(l => `<tr${l.naoCadastrado ? ' style="background:#FCE8E0;"' : ''}>
                   <td class="c-nro">#${esc(String(l.nro).slice(0,8))}</td>
                   <td class="c-data">${esc(l.dataBR)}</td>
+                  <td class="c-foto" style="text-align:center;vertical-align:middle;">${htmlFotoPorNomeItem(l.item)}</td>
                   <td class="c-item">${esc(formatarItemComCodigo(l.item, l.codigo))}${l.naoCadastrado ? ' <span style="color:#C45C26;font-weight:700;font-size:8px;">[NÃO CAD.]</span>' : ''}</td>
                   <td class="c-qtd">${fmtN(l.qtd)}</td>
                   <td class="c-dest">${esc(l.destino)}</td>
@@ -4355,13 +4358,26 @@ td { border-bottom: 1px solid #E4E8DC; padding: 3.5px 5px; vertical-align: top; 
 tr:nth-child(even) td { background: #F7F8F3; }
 tr { page-break-inside: avoid; }
 thead { display: table-header-group; }
-col.c-nro { width: 8%; }
-col.c-data { width: 11%; }
-col.c-colab { width: 18%; }
-col.c-item { width: 32%; }
-col.c-qtd { width: 8%; }
-col.c-dest { width: 23%; }
+col.c-nro { width: 7%; }
+col.c-data { width: 10%; }
+col.c-colab { width: 15%; }
+col.c-foto { width: 7%; }
+col.c-item { width: 30%; }
+col.c-qtd { width: 7%; }
+col.c-dest { width: 20%; }
 td.c-qtd, th.c-qtd { text-align: center; }
+td.c-foto, th.c-foto { text-align: center; vertical-align: middle; }
+.img-rel-foto {
+  width: 32px; height: 32px; object-fit: contain;
+  border-radius: 5px; border: 1px solid #D8DCCE; background: #fff;
+  display: inline-block; vertical-align: middle;
+}
+.img-rel-ph {
+  display: inline-flex; width: 32px; height: 32px;
+  align-items: center; justify-content: center;
+  border-radius: 5px; border: 1px solid #D8DCCE; background: #F0F2EA;
+  color: #9AA08E; font-size: 12px; vertical-align: middle;
+}
 .footer { margin-top: 24px; font-size: 9px; color: #7A816E; text-align: center; border-top: 1px solid #D8DCCE; padding-top: 8px; }
 @media print { .no-print { display: none !important; } body { padding: 0; } }
 </style></head><body>
@@ -5928,4 +5944,3 @@ if ('serviceWorker' in navigator) {
 
 </body>
 </html>
-
